@@ -65,6 +65,37 @@ export function clearWriteInlineEditDebugEntries(): void {
   inlineEditDebugEntries.length = 0
 }
 
+function appendInlineEditPreflightFailure(
+  startedAt: number,
+  settings: AppSettingsV1,
+  request: WriteInlineEditRequest,
+  message: string
+): void {
+  const model = resolveModel(request, settings)
+  const prompt = buildWriteInlineEditPrompt(request, null)
+  appendInlineEditDebugEntry({
+    id: randomUUID(),
+    createdAt: new Date(startedAt).toISOString(),
+    durationMs: Date.now() - startedAt,
+    ok: false,
+    model,
+    currentFilePath: request.currentFilePath,
+    instruction: request.instruction,
+    scopeKind: request.scope.kind,
+    original: request.original,
+    prompt,
+    suffix: request.suffix,
+    rawResponse: '',
+    replacement: '',
+    errorMessage: message,
+    referenceCount: 0,
+    recentEditCount: request.recentEdits?.length ?? 0,
+    promptChars: prompt.length,
+    suffixChars: request.suffix.length,
+    responseChars: 0
+  })
+}
+
 function resolveModel(request: WriteInlineEditRequest, settings: AppSettingsV1): string {
   const trimmed = request.model?.trim() || settings.write.inlineCompletion.model.trim()
   return normalizeWriteInlineCompletionModel(trimmed || DEFAULT_WRITE_INLINE_COMPLETION_MODEL)
@@ -299,17 +330,23 @@ export async function requestWriteInlineEdit(
 ): Promise<WriteInlineEditResult> {
   const startedAt = Date.now()
   if (settings.write.inlineCompletion.enabled === false) {
+    appendInlineEditPreflightFailure(startedAt, settings, request, 'Inline editing is disabled.')
     return { ok: false, message: 'Inline editing is disabled.' }
   }
 
   const instruction = request.instruction.trim()
-  if (!instruction) return { ok: false, message: 'Missing edit instruction.' }
+  if (!instruction) {
+    appendInlineEditPreflightFailure(startedAt, settings, request, 'Missing edit instruction.')
+    return { ok: false, message: 'Missing edit instruction.' }
+  }
   if (!request.original && !allowsEmptyReplacement(instruction)) {
+    appendInlineEditPreflightFailure(startedAt, settings, request, 'Missing edit scope.')
     return { ok: false, message: 'Missing edit scope.' }
   }
 
   const apiKey = settings.deepseek.apiKey.trim()
   if (!apiKey) {
+    appendInlineEditPreflightFailure(startedAt, settings, request, 'Missing API key for inline editing.')
     return { ok: false, message: 'Missing API key for inline editing.' }
   }
 

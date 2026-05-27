@@ -135,6 +135,34 @@ describe('requestWriteInlineEdit', () => {
     expect(debugEntries[0].prompt).toContain('DeepSeek GUI inline edit')
   })
 
+  it('records preflight failures in the debug log', async () => {
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+    const settings = createSettings()
+    settings.deepseek.apiKey = ''
+
+    const result = await requestWriteInlineEdit(settings, createRequest({
+      original: 'Equity terms should stay consistent.',
+      context: {
+        ...createRequest().context,
+        selectedText: 'Equity'
+      }
+    }))
+
+    expect(result).toEqual({ ok: false, message: 'Missing API key for inline editing.' })
+    expect(fetchMock).not.toHaveBeenCalled()
+    const debugEntries = listWriteInlineEditDebugEntries()
+    expect(debugEntries).toHaveLength(1)
+    expect(debugEntries[0]).toMatchObject({
+      ok: false,
+      original: 'Equity terms should stay consistent.',
+      errorMessage: 'Missing API key for inline editing.',
+      referenceCount: 0,
+      responseChars: 0
+    })
+    expect(debugEntries[0].prompt).toContain('Equity terms should stay consistent.')
+  })
+
   it('adds BM25 retrieval snippets to the inline edit FIM prompt', async () => {
     const workspaceRoot = await mkdtemp(join(tmpdir(), 'ds-gui-write-edit-rag-'))
     await mkdir(join(workspaceRoot, 'notes'), { recursive: true })

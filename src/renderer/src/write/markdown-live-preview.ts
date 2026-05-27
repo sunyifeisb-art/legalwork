@@ -101,26 +101,92 @@ const writeMarkdownLiveTheme = EditorView.theme({
   }
 })
 
+function clampOffset(state: EditorState, offset: number): number {
+  const value = Number(offset)
+  if (!Number.isFinite(value)) return 0
+  return Math.max(0, Math.min(state.doc.length, Math.floor(value)))
+}
+
+function focusSourceAt(view: EditorView, offset: number): void {
+  view.focus()
+  view.dispatch({
+    selection: EditorSelection.cursor(clampOffset(view.state, offset)),
+    scrollIntoView: true
+  })
+}
+
+function isPrimaryMouseDown(event: MouseEvent): boolean {
+  return event.button === 0
+}
+
+function preventEditorMouseHandling(event: MouseEvent): void {
+  event.preventDefault()
+  event.stopPropagation()
+}
+
+function tableCellContentBounds(lineText: string, cellIndex: number): { from: number; to: number } | null {
+  const pipes: number[] = []
+  for (let index = 0; index < lineText.length; index += 1) {
+    if (lineText[index] === '|') pipes.push(index)
+  }
+  if (cellIndex < 0 || pipes.length < cellIndex + 2) return null
+
+  let from = pipes[cellIndex] + 1
+  let to = pipes[cellIndex + 1]
+  while (from < to && /\s/.test(lineText[from] ?? '')) from += 1
+  while (to > from && /\s/.test(lineText[to - 1] ?? '')) to -= 1
+  return { from, to }
+}
+
+function proportionalOffsetFromRect(bounds: { from: number; to: number }, rect: DOMRect, clientX: number): number {
+  if (bounds.to <= bounds.from || rect.width <= 0) return bounds.from
+  const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+  return bounds.from + Math.round((bounds.to - bounds.from) * ratio)
+}
+
 class HrWidget extends WidgetType {
-  eq(): boolean {
-    return true
+  constructor(private from: number) {
+    super()
   }
 
-  toDOM(): HTMLElement {
+  eq(other: HrWidget): boolean {
+    return other.from === this.from
+  }
+
+  toDOM(view: EditorView): HTMLElement {
     const element = document.createElement('div')
     element.className = 'cm-write-md-hr'
+    element.title = 'Click to edit divider'
+    element.addEventListener('mousedown', (event) => {
+      if (!isPrimaryMouseDown(event)) return
+      preventEditorMouseHandling(event)
+      focusSourceAt(view, this.from)
+    })
     return element
   }
 }
 
 class ListBulletWidget extends WidgetType {
-  eq(): boolean {
-    return true
+  constructor(
+    private from: number,
+    private to: number
+  ) {
+    super()
   }
 
-  toDOM(): HTMLElement {
+  eq(other: ListBulletWidget): boolean {
+    return other.from === this.from && other.to === this.to
+  }
+
+  toDOM(view: EditorView): HTMLElement {
     const element = document.createElement('span')
     element.className = 'cm-write-md-list-bullet'
+    element.title = 'Click to edit list marker'
+    element.addEventListener('mousedown', (event) => {
+      if (!isPrimaryMouseDown(event)) return
+      preventEditorMouseHandling(event)
+      focusSourceAt(view, this.to)
+    })
     return element
   }
 }
@@ -164,18 +230,28 @@ class ImageWidget extends WidgetType {
   constructor(
     private src: string,
     private alt: string,
+    private from: number,
     private localPath?: string
   ) {
     super()
   }
 
   eq(other: ImageWidget): boolean {
-    return other.src === this.src && other.alt === this.alt && other.localPath === this.localPath
+    return other.src === this.src &&
+      other.alt === this.alt &&
+      other.from === this.from &&
+      other.localPath === this.localPath
   }
 
-  toDOM(): HTMLElement {
+  toDOM(view: EditorView): HTMLElement {
     const wrapper = document.createElement('span')
     wrapper.className = 'cm-write-md-image-wrap'
+    wrapper.title = 'Click to edit image markdown'
+    wrapper.addEventListener('mousedown', (event) => {
+      if (!isPrimaryMouseDown(event)) return
+      preventEditorMouseHandling(event)
+      focusSourceAt(view, this.from)
+    })
     const image = document.createElement('img')
     image.className = 'cm-write-md-image'
     image.src = this.src
@@ -242,17 +318,46 @@ function closingFencePattern(marker: string): RegExp {
 }
 
 class TableWidget extends WidgetType {
-  constructor(private table: ParsedTable) {
+  constructor(
+    private table: ParsedTable,
+    private from: number,
+    private to: number
+  ) {
     super()
   }
 
   eq(other: TableWidget): boolean {
-    return JSON.stringify(other.table) === JSON.stringify(this.table)
+    return other.from === this.from &&
+      other.to === this.to &&
+      JSON.stringify(other.table) === JSON.stringify(this.table)
   }
 
-  toDOM(): HTMLElement {
+  private sourceOffsetFromClick(view: EditorView, event: MouseEvent, table: HTMLTableElement): number {
+    const startLine = view.state.doc.lineAt(this.from)
+    const endLine = view.state.doc.lineAt(Math.max(this.from, this.to - 1))
+    const target = event.target instanceof Element ? event.target : null
+    const row = target?.closest('tr') ?? null
+    const rows = Array.from(table.querySelectorAll('tr'))
+    const rowIndex = row ? rows.indexOf(row) : -1
+    const sourceLineNumber = rowIndex <= 0
+      ? startLine.number
+      : Math.min(endLine.number, startLine.number + rowIndex + 1)
+    const sourceLine = view.state.doc.line(sourceLineNumber)
+
+    const cell = target?.closest('th,td') ?? null
+    if (!(cell instanceof HTMLElement)) return sourceLine.from
+    const cells = row ? Array.from(row.querySelectorAll('th,td')) : []
+    const cellIndex = cells.indexOf(cell)
+    const bounds = tableCellContentBounds(sourceLine.text, cellIndex)
+    if (!bounds) return sourceLine.from
+    const column = proportionalOffsetFromRect(bounds, cell.getBoundingClientRect(), event.clientX)
+    return sourceLine.from + column
+  }
+
+  toDOM(view: EditorView): HTMLElement {
     const table = document.createElement('table')
     table.className = 'cm-write-md-table'
+    table.title = 'Click to edit table markdown'
     const thead = document.createElement('thead')
     const headerRow = document.createElement('tr')
     for (const header of this.table.headers) {
@@ -274,6 +379,11 @@ class TableWidget extends WidgetType {
       tbody.appendChild(tr)
     }
     table.appendChild(tbody)
+    table.addEventListener('mousedown', (event) => {
+      if (!isPrimaryMouseDown(event)) return
+      preventEditorMouseHandling(event)
+      focusSourceAt(view, this.sourceOffsetFromClick(view, event, table))
+    })
     return table
   }
 }
@@ -317,12 +427,17 @@ class CodeBlockWidget extends WidgetType {
   private editSourceAtClick(view: EditorView, event: MouseEvent, html: HTMLElement): void {
     const startLine = view.state.doc.lineAt(this.from)
     const endLine = view.state.doc.lineAt(Math.max(this.from, this.to - 1))
+    const codeLineIndex = this.lineIndexFromClick(event, html)
     const sourceLineNumber = Math.min(
       endLine.number,
-      startLine.number + 1 + this.lineIndexFromClick(event, html)
+      startLine.number + 1 + codeLineIndex
     )
     const sourceLine = view.state.doc.line(sourceLineNumber)
-    const columnOffset = Math.min(sourceLine.length, Math.max(0, Math.round((event.offsetX - 20) / 8)))
+    const lineElement = Array.from(html.querySelectorAll<HTMLElement>('.line'))[codeLineIndex]
+    const lineRect = lineElement?.getBoundingClientRect()
+    const columnOffset = lineRect
+      ? Math.min(sourceLine.length, Math.max(0, Math.round((event.clientX - lineRect.left) / 8)))
+      : 0
 
     view.focus()
     view.dispatch({
@@ -354,7 +469,7 @@ class CodeBlockWidget extends WidgetType {
 
     wrapper.addEventListener('mousedown', (event) => {
       if (event.button !== 0) return
-      event.preventDefault()
+      preventEditorMouseHandling(event)
       this.editSourceAtClick(view, event, html)
     })
 
@@ -455,17 +570,14 @@ class CodeBlockToolbarWidget extends WidgetType {
   }
 }
 
-const hrDecoration = Decoration.replace({
-  widget: new HrWidget()
-})
-
-const listBulletDeco = Decoration.replace({
-  widget: new ListBulletWidget()
-})
-
-function collectActiveLines(view: EditorView): Set<number> {
-  if (!view.hasFocus) return new Set()
+function collectRevealLines(view: EditorView): Set<number> {
+  if (!view.hasFocus || view.state.selection.ranges.some((range) => !range.empty)) return new Set()
   return collectActiveLinesFromState(view.state)
+}
+
+function collectRevealLinesFromState(state: EditorState, hasFocus: boolean): Set<number> {
+  if (!hasFocus || state.selection.ranges.some((range) => !range.empty)) return new Set()
+  return collectActiveLinesFromState(state)
 }
 
 function collectActiveLinesFromState(state: EditorState): Set<number> {
@@ -647,7 +759,8 @@ function collectMarkdownCodeBlockRangesFromState(
 }
 
 export const markdownLivePreviewTestInternals = {
-  collectMarkdownCodeBlockRangesFromState
+  collectMarkdownCodeBlockRangesFromState,
+  collectRevealLinesFromState
 }
 
 function addFencedCodeLineDecorations(
@@ -746,7 +859,7 @@ function buildMarkdownBlockDecorations(state: EditorState): DecorationSet {
     ranges.push({
       from: tableRange.from,
       to: tableRange.to,
-      deco: Decoration.replace({ widget: new TableWidget(tableRange.table), block: true })
+      deco: Decoration.replace({ widget: new TableWidget(tableRange.table, tableRange.from, tableRange.to), block: true })
     })
   }
 
@@ -767,7 +880,7 @@ const markdownBlockPreviewField = StateField.define<DecorationSet>({
 })
 
 function buildMarkdownDecorations(view: EditorView): DecorationSet {
-  const activeLines = collectActiveLines(view)
+  const activeLines = collectRevealLines(view)
   const imageContext = view.state.facet(markdownImageContextFacet)
   const ranges: DecorationRange[] = []
   const renderedBlocks: BlockRange[] = []
@@ -808,7 +921,7 @@ function buildMarkdownDecorations(view: EditorView): DecorationSet {
             break
           case 'HorizontalRule':
             if (!isActive) {
-              ranges.push({ from: node.from, to: node.to, deco: hrDecoration })
+              ranges.push({ from: node.from, to: node.to, deco: Decoration.replace({ widget: new HrWidget(node.from) }) })
               ranges.push({ from: line.from, to: line.from, deco: centerLineDeco })
             }
             return false
@@ -833,7 +946,7 @@ function buildMarkdownDecorations(view: EditorView): DecorationSet {
               ranges.push({
                 from: node.from,
                 to: node.to,
-                deco: Decoration.replace({ widget: new ImageWidget(parsed.src, parsed.alt, parsed.localPath) })
+                deco: Decoration.replace({ widget: new ImageWidget(parsed.src, parsed.alt, node.from, parsed.localPath) })
               })
               return false
             }
@@ -864,7 +977,11 @@ function buildMarkdownDecorations(view: EditorView): DecorationSet {
             if (/^ ?\[[ xX]\]/.test(rest)) {
               ranges.push({ from: node.from, to: hideTo, deco: hideMark })
             } else {
-              ranges.push({ from: node.from, to: hideTo, deco: listBulletDeco })
+              ranges.push({
+                from: node.from,
+                to: hideTo,
+                deco: Decoration.replace({ widget: new ListBulletWidget(node.from, hideTo) })
+              })
             }
             break
           }

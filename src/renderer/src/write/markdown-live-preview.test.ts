@@ -1,8 +1,32 @@
-import { EditorState } from '@codemirror/state'
+import { EditorSelection, EditorState } from '@codemirror/state'
 import { describe, expect, it } from 'vitest'
 import { markdownLivePreviewTestInternals } from './markdown-live-preview'
 
 describe('markdown live preview', () => {
+  it('keeps markdown concealment stable while text is selected', () => {
+    const state = EditorState.create({
+      doc: '**Bold** text',
+      selection: EditorSelection.range(2, 6)
+    })
+
+    const lines = markdownLivePreviewTestInternals.collectRevealLinesFromState(state, true)
+
+    expect(lines.size).toBe(0)
+  })
+
+  it('reveals source marks on the caret line only when the editor is focused', () => {
+    const state = EditorState.create({
+      doc: '**Bold** text',
+      selection: EditorSelection.cursor(4)
+    })
+
+    const focusedLines = markdownLivePreviewTestInternals.collectRevealLinesFromState(state, true)
+    const blurredLines = markdownLivePreviewTestInternals.collectRevealLinesFromState(state, false)
+
+    expect([...focusedLines]).toEqual([1])
+    expect(blurredLines.size).toBe(0)
+  })
+
   it('does not treat a visible closing fence as a new code block opener', () => {
     const state = EditorState.create({
       doc: [

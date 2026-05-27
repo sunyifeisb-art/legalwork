@@ -62,6 +62,35 @@ export function clearWriteInlineCompletionDebugEntries(): void {
   inlineCompletionDebugEntries.length = 0
 }
 
+function appendInlineCompletionPreflightFailure(
+  startedAt: number,
+  settings: AppSettingsV1,
+  request: WriteInlineCompletionRequest,
+  message: string
+): void {
+  const model = resolveModel(request, settings)
+  const mode = resolveMode(request)
+  const prompt = buildWriteInlineCompletionPrompt(request, null)
+  appendInlineCompletionDebugEntry({
+    id: randomUUID(),
+    createdAt: new Date(startedAt).toISOString(),
+    durationMs: Date.now() - startedAt,
+    ok: false,
+    model,
+    mode,
+    currentFilePath: request.currentFilePath,
+    prompt,
+    suffix: request.suffix,
+    rawResponse: '',
+    completion: '',
+    errorMessage: message,
+    referenceCount: 0,
+    promptChars: prompt.length,
+    suffixChars: request.suffix.length,
+    responseChars: 0
+  })
+}
+
 function resolveModel(request: WriteInlineCompletionRequest, settings: AppSettingsV1): string {
   const trimmed = request.model?.trim() || settings.write.inlineCompletion.model.trim()
   return normalizeWriteInlineCompletionModel(trimmed || DEFAULT_WRITE_INLINE_COMPLETION_MODEL)
@@ -170,11 +199,13 @@ export async function requestWriteInlineCompletion(
 ): Promise<WriteInlineCompletionResult> {
   const startedAt = Date.now()
   if (settings.write.inlineCompletion.enabled === false) {
+    appendInlineCompletionPreflightFailure(startedAt, settings, request, 'Inline completion is disabled.')
     return { ok: false, message: 'Inline completion is disabled.' }
   }
 
   const apiKey = settings.deepseek.apiKey.trim()
   if (!apiKey) {
+    appendInlineCompletionPreflightFailure(startedAt, settings, request, 'Missing API key for inline completion.')
     return { ok: false, message: 'Missing API key for inline completion.' }
   }
 

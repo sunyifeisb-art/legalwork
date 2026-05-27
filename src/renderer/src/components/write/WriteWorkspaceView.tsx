@@ -1296,7 +1296,20 @@ export function WriteWorkspaceView({
               className="write-inline-agent-trigger"
               aria-label={t('writeInlineEditOpen')}
               title={t('writeInlineEditOpen')}
-              onMouseDown={(event) => event.preventDefault()}
+              onPointerDown={(event) => {
+                event.stopPropagation()
+                if (event.pointerType !== 'mouse') event.preventDefault()
+              }}
+              onPointerUp={(event) => {
+                if (event.pointerType === 'mouse') return
+                event.preventDefault()
+                event.stopPropagation()
+                setInlineAgentOpen(true)
+              }}
+              onMouseDown={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+              }}
               onClick={() => setInlineAgentOpen(true)}
             >
               <Sparkles className="h-3.5 w-3.5" strokeWidth={1.9} />

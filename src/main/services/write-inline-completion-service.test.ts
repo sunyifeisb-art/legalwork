@@ -155,6 +155,36 @@ describe('requestWriteInlineCompletion', () => {
 
     expect(result).toEqual({ ok: false, message: 'Inline completion is disabled.' })
     expect(fetchMock).not.toHaveBeenCalled()
+    const debugEntries = listWriteInlineCompletionDebugEntries()
+    expect(debugEntries).toHaveLength(1)
+    expect(debugEntries[0]).toMatchObject({
+      ok: false,
+      errorMessage: 'Inline completion is disabled.',
+      completion: '',
+      responseChars: 0
+    })
+  })
+
+  it('records missing API key failures in the debug log', async () => {
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+    const settings = createSettings()
+    settings.deepseek.apiKey = ''
+
+    const result = await requestWriteInlineCompletion(settings, createRequest())
+
+    expect(result).toEqual({ ok: false, message: 'Missing API key for inline completion.' })
+    expect(fetchMock).not.toHaveBeenCalled()
+    const debugEntries = listWriteInlineCompletionDebugEntries()
+    expect(debugEntries).toHaveLength(1)
+    expect(debugEntries[0]).toMatchObject({
+      ok: false,
+      errorMessage: 'Missing API key for inline completion.',
+      mode: 'short',
+      prompt: '# Draft\n\nThis is',
+      suffix: ' a test.',
+      responseChars: 0
+    })
   })
 
   it('preserves an explicit pro completion model', async () => {
