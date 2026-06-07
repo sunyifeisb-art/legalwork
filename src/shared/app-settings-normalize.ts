@@ -9,6 +9,7 @@ import {
   type ScheduleSettingsPatchV1,
   type WriteSettingsPatchV1
 } from './app-settings-types'
+import { normalizeKeyboardShortcuts, type KeyboardShortcutsConfigV1 } from './keyboard-shortcuts'
 import {
   defaultKunRuntimeSettings,
   getKunRuntimeSettings,
@@ -28,6 +29,7 @@ export function normalizeAppSettings(settings: AppSettingsV1): AppSettingsV1 {
     : settings
   const maybeSettings = migrated as AppSettingsV1 & {
     appBehavior?: Partial<AppBehaviorConfigV1>
+    keyboardShortcuts?: Partial<KeyboardShortcutsConfigV1>
     notifications?: Partial<NotificationConfigV1>
     provider?: Parameters<typeof normalizeModelProviderSettings>[0]
     write?: WriteSettingsPatchV1
@@ -64,6 +66,7 @@ export function normalizeAppSettings(settings: AppSettingsV1): AppSettingsV1 {
       turnComplete: maybeSettings.notifications?.turnComplete !== false
     },
     appBehavior: normalizeAppBehaviorSettings(maybeSettings.appBehavior),
+    keyboardShortcuts: normalizeKeyboardShortcuts(maybeSettings.keyboardShortcuts),
     write: normalizeWriteSettings(maybeSettings.write),
     claw: normalizeClawSettings(maybeSettings.claw),
     schedule: normalizeScheduleSettings(maybeSettings.schedule),

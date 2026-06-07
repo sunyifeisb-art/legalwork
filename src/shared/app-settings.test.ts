@@ -16,6 +16,7 @@ import {
   defaultKunRuntimeSettings,
   defaultScheduleSettings,
   defaultWriteSettings,
+  defaultKeyboardShortcuts,
   isKunRuntimeInsecure,
   migrateLegacyAppSettings,
   normalizeAppSettings,
@@ -43,6 +44,7 @@ function settings(): AppSettingsV1 {
     log: { enabled: false, retentionDays: 7 },
     notifications: { turnComplete: true },
     appBehavior: { openAtLogin: false, startMinimized: false, closeToTray: false },
+    keyboardShortcuts: defaultKeyboardShortcuts(),
     write: defaultWriteSettings(),
     claw: defaultClawSettings(),
     schedule: defaultScheduleSettings(),
@@ -172,6 +174,19 @@ describe('app behavior settings', () => {
       openAtLogin: false,
       startMinimized: false,
       closeToTray: true
+    })
+  })
+})
+
+describe('keyboard shortcut settings', () => {
+  it('defaults shortcut overrides to empty', () => {
+    const raw = {
+      ...settings(),
+      keyboardShortcuts: undefined
+    } as unknown as AppSettingsV1
+
+    expect(normalizeAppSettings(raw).keyboardShortcuts).toEqual({
+      bindings: {}
     })
   })
 })

@@ -34,6 +34,7 @@ import {
 } from '../../shared/app-settings'
 import { DESKTOP_COMMANDS } from '../../shared/ds-gui-api'
 import { GUI_UPDATE_CHANNELS } from '../../shared/gui-update'
+import { KEYBOARD_SHORTCUT_COMMANDS } from '../../shared/keyboard-shortcuts'
 import { WRITE_EXPORT_FORMATS } from '../../shared/write-export'
 
 const MAX_BODY_BYTES = 2_000_000
@@ -254,6 +255,18 @@ const appBehaviorPatchSchema = z.object({
   openAtLogin: z.boolean().optional(),
   startMinimized: z.boolean().optional(),
   closeToTray: z.boolean().optional()
+}).strict()
+
+const keyboardShortcutCommandIds = KEYBOARD_SHORTCUT_COMMANDS.map((command) => command.id) as [
+  typeof KEYBOARD_SHORTCUT_COMMANDS[number]['id'],
+  ...Array<typeof KEYBOARD_SHORTCUT_COMMANDS[number]['id']>
+]
+
+const keyboardShortcutsPatchSchema = z.object({
+  bindings: z.record(
+    z.enum(keyboardShortcutCommandIds),
+    z.array(z.string().trim().max(64)).max(4)
+  ).optional()
 }).strict()
 
 const writeInlineCompletionPatchSchema = z.object({
@@ -478,6 +491,7 @@ const settingsPatchObjectSchema = z.object({
   log: logPatchSchema.optional(),
   notifications: notificationsPatchSchema.optional(),
   appBehavior: appBehaviorPatchSchema.optional(),
+  keyboardShortcuts: keyboardShortcutsPatchSchema.optional(),
   write: writeSettingsPatchSchema.optional(),
   claw: clawSettingsPatchSchema.optional(),
   schedule: scheduleSettingsPatchSchema.optional(),

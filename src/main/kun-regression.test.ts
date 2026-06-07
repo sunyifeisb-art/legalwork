@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import {
   DEFAULT_DEEPSEEK_BASE_URL,
   defaultClawSettings,
+  defaultKeyboardShortcuts,
   defaultKunRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
@@ -117,6 +118,7 @@ describe('Kun single-agent regression', () => {
       log: { enabled: true, retentionDays: 7 },
       notifications: { turnComplete: true },
       appBehavior: { openAtLogin: false, startMinimized: false, closeToTray: false },
+      keyboardShortcuts: defaultKeyboardShortcuts(),
       write: defaultWriteSettings(),
       claw: defaultClawSettings(),
       schedule: defaultScheduleSettings(),

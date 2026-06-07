@@ -45,14 +45,16 @@ import {
   splitSettingsList
 } from './settings-utils'
 import { loadKunDiagnostics } from '../lib/load-kun-diagnostics'
+import { emitRendererSettingsChanged } from '../lib/keyboard-shortcut-settings'
 import {
   AgentsSettingsSection,
   ClawSettingsSection,
   GeneralSettingsSection,
+  KeyboardShortcutsSettingsSection,
   WriteSettingsSection
 } from './settings-sections'
 
-type SettingsCategory = 'general' | 'write' | 'agents' | 'claw'
+type SettingsCategory = 'general' | 'write' | 'agents' | 'shortcuts' | 'claw'
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 type SettingsPatch = AppSettingsPatch
 type SkillRootOption = {
@@ -220,6 +222,10 @@ export function SettingsView(): ReactElement {
       setCategory('claw')
       return
     }
+    if (settingsSection === 'shortcuts') {
+      setCategory('shortcuts')
+      return
+    }
     setCategory('agents')
   }, [settingsSection])
 
@@ -229,11 +235,12 @@ export function SettingsView(): ReactElement {
       settingsSection === 'general' ||
       settingsSection === 'write' ||
       settingsSection === 'claw' ||
+      settingsSection === 'shortcuts' ||
       category !== 'agents'
     ) {
       return
     }
-    const refs: Record<Exclude<SettingsRouteSection, 'general' | 'write' | 'claw'>, HTMLDivElement | null> = {
+    const refs: Record<Exclude<SettingsRouteSection, 'general' | 'write' | 'claw' | 'shortcuts'>, HTMLDivElement | null> = {
       agents: agentsSectionRef.current,
       skill: skillSectionRef.current,
       mcp: mcpSectionRef.current
@@ -453,6 +460,7 @@ export function SettingsView(): ReactElement {
       if (version !== draftVersion.current) return
 
       setForm(next)
+      emitRendererSettingsChanged(next)
       await applyI18n(next.locale)
       void reloadUiSettings()
       void probeRuntime('background')
@@ -827,6 +835,7 @@ export function SettingsView(): ReactElement {
           {category === 'general' ? <GeneralSettingsSection ctx={settingsSectionContext} /> : null}
           {category === 'write' ? <WriteSettingsSection ctx={settingsSectionContext} /> : null}
           {category === 'agents' ? <AgentsSettingsSection ctx={settingsSectionContext} /> : null}
+          {category === 'shortcuts' ? <KeyboardShortcutsSettingsSection ctx={settingsSectionContext} /> : null}
           {category === 'claw' ? <ClawSettingsSection ctx={settingsSectionContext} /> : null}
         </div>
       </div>

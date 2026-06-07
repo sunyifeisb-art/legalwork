@@ -2,7 +2,13 @@ import type { ReactElement } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { DesktopCommand } from '@shared/ds-gui-api'
+import {
+  resolveKeyboardShortcutBindings,
+  type KeyboardShortcutBindingsV1,
+  type KeyboardShortcutCommandId
+} from '@shared/keyboard-shortcuts'
 import deepseekLogo from '../../../asset/img/deepseek.png'
+import { useKeyboardShortcutSettings } from '../lib/keyboard-shortcut-settings'
 import { useChatStore } from '../store/chat-store'
 
 type MenuAction = () => void | Promise<void>
@@ -65,49 +71,52 @@ export function supportsDesktopTitleBar(platform: string): boolean {
 
 export function buildWindowsTitleBarMenuSections(
   t: TitleBarTranslate,
-  actions: WindowsTitleBarActions
+  actions: WindowsTitleBarActions,
+  shortcuts: Required<KeyboardShortcutBindingsV1> = resolveKeyboardShortcutBindings()
 ): WindowsTitleBarMenuSection[] {
   const command = (desktopCommand: DesktopCommand): MenuAction =>
     () => actions.runDesktopCommand(desktopCommand)
+  const shortcut = (commandId: KeyboardShortcutCommandId): string | undefined =>
+    shortcuts[commandId][0]
 
   return [
     {
       id: 'file',
       label: t('windowsMenuFile'),
       items: [
-        { id: 'new-chat', label: t('windowsMenuNewChat'), shortcut: 'Ctrl+N', onSelect: actions.createThread },
-        { id: 'choose-workspace', label: t('windowsMenuChooseWorkspace'), shortcut: 'Ctrl+O', onSelect: actions.chooseWorkspace },
+        { id: 'new-chat', label: t('windowsMenuNewChat'), shortcut: shortcut('new-chat'), onSelect: actions.createThread },
+        { id: 'choose-workspace', label: t('windowsMenuChooseWorkspace'), shortcut: shortcut('choose-workspace'), onSelect: actions.chooseWorkspace },
         { kind: 'separator', id: 'file-1' },
-        { id: 'settings', label: t('windowsMenuSettings'), shortcut: 'Ctrl+,', onSelect: actions.openSettings },
+        { id: 'settings', label: t('windowsMenuSettings'), shortcut: shortcut('settings'), onSelect: actions.openSettings },
         { kind: 'separator', id: 'file-2' },
-        { id: 'quit', label: t('windowsMenuQuit'), shortcut: 'Alt+F4', onSelect: command('quit') }
+        { id: 'quit', label: t('windowsMenuQuit'), shortcut: shortcut('quit'), onSelect: command('quit') }
       ]
     },
     {
       id: 'edit',
       label: t('windowsMenuEdit'),
       items: [
-        { id: 'undo', label: t('windowsMenuUndo'), shortcut: 'Ctrl+Z', onSelect: command('undo') },
-        { id: 'redo', label: t('windowsMenuRedo'), shortcut: 'Ctrl+Y', onSelect: command('redo') },
+        { id: 'undo', label: t('windowsMenuUndo'), shortcut: shortcut('undo'), onSelect: command('undo') },
+        { id: 'redo', label: t('windowsMenuRedo'), shortcut: shortcut('redo'), onSelect: command('redo') },
         { kind: 'separator', id: 'edit-1' },
-        { id: 'cut', label: t('windowsMenuCut'), shortcut: 'Ctrl+X', onSelect: command('cut') },
-        { id: 'copy', label: t('windowsMenuCopy'), shortcut: 'Ctrl+C', onSelect: command('copy') },
-        { id: 'paste', label: t('windowsMenuPaste'), shortcut: 'Ctrl+V', onSelect: command('paste') },
+        { id: 'cut', label: t('windowsMenuCut'), shortcut: shortcut('cut'), onSelect: command('cut') },
+        { id: 'copy', label: t('windowsMenuCopy'), shortcut: shortcut('copy'), onSelect: command('copy') },
+        { id: 'paste', label: t('windowsMenuPaste'), shortcut: shortcut('paste'), onSelect: command('paste') },
         { kind: 'separator', id: 'edit-2' },
-        { id: 'select-all', label: t('windowsMenuSelectAll'), shortcut: 'Ctrl+A', onSelect: command('selectAll') }
+        { id: 'select-all', label: t('windowsMenuSelectAll'), shortcut: shortcut('select-all'), onSelect: command('selectAll') }
       ]
     },
     {
       id: 'view',
       label: t('windowsMenuView'),
       items: [
-        { id: 'reload', label: t('windowsMenuReload'), shortcut: 'Ctrl+R', onSelect: command('reload') },
+        { id: 'reload', label: t('windowsMenuReload'), shortcut: shortcut('reload'), onSelect: command('reload') },
         { kind: 'separator', id: 'view-1' },
-        { id: 'zoom-in', label: t('windowsMenuZoomIn'), shortcut: 'Ctrl++', onSelect: command('zoomIn') },
-        { id: 'zoom-out', label: t('windowsMenuZoomOut'), shortcut: 'Ctrl+-', onSelect: command('zoomOut') },
-        { id: 'reset-zoom', label: t('windowsMenuResetZoom'), shortcut: 'Ctrl+0', onSelect: command('resetZoom') },
+        { id: 'zoom-in', label: t('windowsMenuZoomIn'), shortcut: shortcut('zoom-in'), onSelect: command('zoomIn') },
+        { id: 'zoom-out', label: t('windowsMenuZoomOut'), shortcut: shortcut('zoom-out'), onSelect: command('zoomOut') },
+        { id: 'reset-zoom', label: t('windowsMenuResetZoom'), shortcut: shortcut('reset-zoom'), onSelect: command('resetZoom') },
         { kind: 'separator', id: 'view-2' },
-        { id: 'devtools', label: t('windowsMenuDevTools'), shortcut: 'Ctrl+Shift+I', onSelect: command('toggleDevTools') }
+        { id: 'devtools', label: t('windowsMenuDevTools'), shortcut: shortcut('toggle-devtools'), onSelect: command('toggleDevTools') }
       ]
     },
     {
@@ -116,7 +125,7 @@ export function buildWindowsTitleBarMenuSections(
       items: [
         { id: 'minimize', label: t('windowsMenuMinimize'), onSelect: command('minimize') },
         { id: 'maximize', label: t('windowsMenuToggleMaximize'), onSelect: command('toggleMaximize') },
-        { id: 'close', label: t('windowsMenuClose'), shortcut: 'Ctrl+W', onSelect: command('close') }
+        { id: 'close', label: t('windowsMenuClose'), shortcut: shortcut('close'), onSelect: command('close') }
       ]
     },
     {
@@ -171,6 +180,11 @@ export function WindowsTitleBar({ platform, actions }: Props): ReactElement | nu
   const createThread = useChatStore((s) => s.createThread)
   const chooseWorkspace = useChatStore((s) => s.chooseWorkspace)
   const openSettings = useChatStore((s) => s.openSettings)
+  const keyboardShortcuts = useKeyboardShortcutSettings()
+  const keyboardShortcutBindings = useMemo(
+    () => resolveKeyboardShortcutBindings(keyboardShortcuts),
+    [keyboardShortcuts]
+  )
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
   const [isMaximized, setIsMaximized] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
@@ -201,8 +215,8 @@ export function WindowsTitleBar({ platform, actions }: Props): ReactElement | nu
   }), [actions, defaultActions])
 
   const menus = useMemo(
-    () => buildWindowsTitleBarMenuSections(t, resolvedActions),
-    [resolvedActions, t]
+    () => buildWindowsTitleBarMenuSections(t, resolvedActions, keyboardShortcutBindings),
+    [keyboardShortcutBindings, resolvedActions, t]
   )
 
   useEffect(() => {
@@ -338,4 +352,3 @@ export function WindowsTitleBar({ platform, actions }: Props): ReactElement | nu
     </div>
   )
 }
-

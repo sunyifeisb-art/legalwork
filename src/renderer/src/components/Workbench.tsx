@@ -5,7 +5,13 @@ import { useShallow } from 'zustand/react/shallow'
 import { parseClawCommand } from '@shared/claw-commands'
 import { DEFAULT_COMPOSER_MODEL_IDS } from '@shared/default-composer-models'
 import { buildGuiPlanId, buildPlanRelativePath } from '@shared/gui-plan'
-import type { SkillListItem } from '@shared/ds-gui-api'
+import {
+  findKeyboardShortcutCommand,
+  keyboardEventToShortcut,
+  resolveKeyboardShortcutBindings,
+  type KeyboardShortcutCommandId
+} from '@shared/keyboard-shortcuts'
+import type { DesktopCommand, SkillListItem } from '@shared/ds-gui-api'
 import type { ClipboardImageReadResult } from '@shared/workspace-file'
 import type { AttachmentReference, ChatBlock } from '../agent/types'
 import type { CoreRuntimeInfoJson, CoreRuntimeSkillJson } from '../agent/kun-contract'
@@ -56,6 +62,7 @@ import { useWorkbenchPlanController } from './workbench-plan-controller'
 import { prepareImageAttachmentUpload } from '../lib/image-attachment-upload'
 import { isChatAttachmentUploadEnabled } from '../lib/attachment-upload-availability'
 import { normalizeWorkspaceRoot } from '../lib/workspace-path'
+import { useKeyboardShortcutSettings } from '../lib/keyboard-shortcut-settings'
 import {
   buildComposerFileContextPrompt,
   mergeComposerFileReferences,
@@ -94,6 +101,23 @@ type PendingSddPlanTarget = {
 
 const COMPOSER_FILE_CONTEXT_MAX_CHARS_PER_FILE = 60_000
 const COMPOSER_FILE_CONTEXT_MAX_TOTAL_CHARS = 180_000
+const DESKTOP_SHORTCUT_COMMANDS: Partial<Record<KeyboardShortcutCommandId, DesktopCommand>> = {
+  quit: 'quit',
+  undo: 'undo',
+  redo: 'redo',
+  cut: 'cut',
+  copy: 'copy',
+  paste: 'paste',
+  'select-all': 'selectAll',
+  reload: 'reload',
+  'zoom-in': 'zoomIn',
+  'zoom-out': 'zoomOut',
+  'reset-zoom': 'resetZoom',
+  'toggle-devtools': 'toggleDevTools',
+  close: 'close',
+  minimize: 'minimize',
+  'toggle-maximize': 'toggleMaximize'
+}
 
 function fileNameFromPath(path: string): string {
   return path.replaceAll('\\', '/').split('/').filter(Boolean).pop() || 'image'
@@ -337,6 +361,11 @@ export function Workbench(): ReactElement {
     return [...ordered]
   }, [composerPickList, writeAssistantModel])
   const stageInsetClass = 'ds-stage-inset'
+  const keyboardShortcuts = useKeyboardShortcutSettings()
+  const keyboardShortcutBindings = useMemo(
+    () => resolveKeyboardShortcutBindings(keyboardShortcuts),
+    [keyboardShortcuts]
+  )
 
   const draftByThread = useRef<Record<string, string>>({})
   const prevThreadId = useRef<string | null>(null)
@@ -435,6 +464,59 @@ export function Workbench(): ReactElement {
       await useChatStore.getState().refreshThreads()
     }
   })
+
+  useEffect(() => {
+    const runDesktopShortcut = (command: DesktopCommand): void => {
+      if (typeof window.dsGui?.runDesktopCommand !== 'function') return
+      void window.dsGui.runDesktopCommand(command)
+    }
+
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (event.defaultPrevented || event.repeat || event.isComposing) return
+      const commandId = findKeyboardShortcutCommand(
+        keyboardShortcutBindings,
+        keyboardEventToShortcut(event)
+      )
+      if (!commandId) return
+      event.preventDefault()
+
+      if (commandId === 'toggle-plan-mode') {
+        if (mode === 'plan') {
+          setMode('agent')
+        } else {
+          setMode('plan')
+          void handleGuiPlanCommand()
+        }
+        return
+      }
+      if (commandId === 'new-chat') {
+        void createThread()
+        return
+      }
+      if (commandId === 'choose-workspace') {
+        void chooseWorkspace()
+        return
+      }
+      if (commandId === 'settings') {
+        openSettings()
+        return
+      }
+
+      const desktopCommand = DESKTOP_SHORTCUT_COMMANDS[commandId]
+      if (desktopCommand) runDesktopShortcut(desktopCommand)
+    }
+
+    window.addEventListener('keydown', onKeyDown, true)
+    return () => window.removeEventListener('keydown', onKeyDown, true)
+  }, [
+    chooseWorkspace,
+    createThread,
+    handleGuiPlanCommand,
+    keyboardShortcutBindings,
+    mode,
+    openSettings,
+    setMode
+  ])
   const showDevPreviewCard =
     route === 'chat' &&
     latestDevPreviewUrl !== null
