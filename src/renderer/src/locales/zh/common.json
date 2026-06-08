@@ -1244,5 +1244,7 @@
   "toolBuiltinFind": "查找",
   "toolBuiltinLs": "列出",
   "toolBuiltinBash": "命令",
-  "sidebarFooterHint": "连接本地运行后即可创建会话并与代理对话。"
+  "sidebarFooterHint": "连接本地运行后即可创建会话并与代理对话。",
+  "appErrorTitle": "应用出了点问题",
+  "appErrorReload": "重新加载"
 }

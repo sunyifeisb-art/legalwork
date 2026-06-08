@@ -1244,5 +1244,7 @@
   "toolBuiltinFind": "Find",
   "toolBuiltinLs": "List",
   "toolBuiltinBash": "Bash",
-  "sidebarFooterHint": "Connect the local runtime to create threads and chat with the agent."
+  "sidebarFooterHint": "Connect the local runtime to create threads and chat with the agent.",
+  "appErrorTitle": "Something went wrong",
+  "appErrorReload": "Reload"
 }

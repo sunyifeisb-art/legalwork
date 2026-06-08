@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react'
+import { AppErrorBoundary } from './components/AppErrorBoundary'
 
 const AppShell = lazy(() => import('./AppShell'))
 
@@ -15,8 +16,10 @@ function StartupShell(): React.ReactElement {
 
 export default function App(): React.ReactElement {
   return (
-    <Suspense fallback={<StartupShell />}>
-      <AppShell />
-    </Suspense>
+    <AppErrorBoundary>
+      <Suspense fallback={<StartupShell />}>
+        <AppShell />
+      </Suspense>
+    </AppErrorBoundary>
   )
 }
