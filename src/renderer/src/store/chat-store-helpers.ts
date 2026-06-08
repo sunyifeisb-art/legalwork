@@ -13,7 +13,8 @@ import {
   isClawWorkspacePath,
   isInternalDeepSeekGuiWorkspace,
   isInternalTemporaryWorkspace,
-  normalizeWorkspaceRoot
+  normalizeWorkspaceRoot,
+  workspaceRootIdentityKey
 } from '../lib/workspace-path'
 import { readBrowserStorageItem, writeBrowserStorageItem } from '../lib/browser-storage'
 
@@ -46,7 +47,7 @@ export function compactCodeWorkspaceRoots(workspaceRoots: readonly (string | und
     if (isInternalTemporaryWorkspace(normalized)) continue
     if (isInternalDeepSeekGuiWorkspace(normalized)) continue
     if (isClawWorkspacePath(normalized)) continue
-    const key = normalized.toLowerCase()
+    const key = workspaceRootIdentityKey(normalized)
     if (seen.has(key)) continue
     seen.add(key)
     out.push(normalized)
@@ -87,8 +88,9 @@ export function forgetCodeWorkspaceRoot(
   workspaceRoot: string
 ): string[] {
   const normalized = normalizeWorkspaceRoot(workspaceRoot)
+  const key = workspaceRootIdentityKey(normalized)
   const next = compactCodeWorkspaceRoots(
-    currentRoots.filter((root) => normalizeWorkspaceRoot(root).toLowerCase() !== normalized.toLowerCase())
+    currentRoots.filter((root) => workspaceRootIdentityKey(normalizeWorkspaceRoot(root)) !== key)
   )
   saveCodeWorkspaceRoots(next)
   return next

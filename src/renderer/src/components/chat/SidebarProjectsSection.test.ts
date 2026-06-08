@@ -87,6 +87,26 @@ describe('SidebarProjectsSection groups', () => {
     ])
     expect(groups[1]?.[1].map((item) => item.id)).toEqual(['default-code'])
   })
+
+  it('merges default workspace aliases into one sidebar group', () => {
+    const groups = buildSidebarWorkspaceGroups({
+      threads: [
+        thread({ id: 'default-short', workspace: '~/.deepseekgui/default_workspace' }),
+        thread({ id: 'default-absolute', workspace: 'C:\\Users\\zxy\\.deepseekgui\\default_workspace' })
+      ],
+      searchQuery: '',
+      showArchived: false,
+      workspaceRoot: 'C:\\Users\\zxy\\.deepseekgui\\default_workspace',
+      workspaceRoots: [
+        '~/.deepseekgui/default_workspace',
+        'C:\\Users\\zxy\\.deepseekgui\\default_workspace'
+      ]
+    })
+
+    expect(groups).toHaveLength(1)
+    expect(groups[0]?.[0]).toBe('C:\\Users\\zxy\\.deepseekgui\\default_workspace')
+    expect(groups[0]?.[1].map((item) => item.id)).toEqual(['default-short', 'default-absolute'])
+  })
 })
 
 describe('ThreadRenameDialog', () => {

@@ -23,7 +23,8 @@ import {
   isClawWorkspacePath,
   isInternalDeepSeekGuiWorkspace,
   isInternalTemporaryWorkspace,
-  normalizeWorkspaceRoot
+  normalizeWorkspaceRoot,
+  workspaceRootIdentityKey
 } from '../../lib/workspace-path'
 import {
   SidebarIconButton,
@@ -78,9 +79,25 @@ export function buildSidebarWorkspaceGroups(options: {
   workspaceRoot: string
   workspaceRoots: string[]
 }): SidebarWorkspaceGroup[] {
-  const map = new Map<string, NormalizedThread[]>()
+  const map = new Map<string, { workspacePath: string, threads: NormalizedThread[] }>()
   const selectedWorkspace = normalizeWorkspaceRoot(options.workspaceRoot)
+  const selectedWorkspaceKey = workspaceRootIdentityKey(selectedWorkspace)
   const query = options.searchQuery.trim().toLowerCase()
+
+  const upsertWorkspace = (workspacePath: string, threads: NormalizedThread[] = []): void => {
+    const normalized = normalizeWorkspaceRoot(workspacePath)
+    const key = workspaceRootIdentityKey(normalized)
+    if (!key) return
+    const existing = map.get(key)
+    if (existing) {
+      existing.threads.push(...threads)
+      if (key === selectedWorkspaceKey && normalized === selectedWorkspace) {
+        existing.workspacePath = normalized
+      }
+      return
+    }
+    map.set(key, { workspacePath: normalized, threads: [...threads] })
+  }
 
   for (const th of options.threads) {
     if (isInternalTemporaryWorkspace(th.workspace)) continue
@@ -96,28 +113,28 @@ export function buildSidebarWorkspaceGroups(options: {
         .toLowerCase()
       if (!haystack.includes(query)) continue
     }
-    const arr = map.get(key) ?? []
-    arr.push(th)
-    map.set(key, arr)
+    upsertWorkspace(key, [th])
   }
 
-  if (selectedWorkspace && !map.has(selectedWorkspace)) {
-    map.set(selectedWorkspace, [])
+  if (selectedWorkspace && !map.has(selectedWorkspaceKey)) {
+    upsertWorkspace(selectedWorkspace)
   }
   if (!query && !options.showArchived) {
     for (const workspacePath of options.workspaceRoots) {
       const key = normalizeWorkspaceRoot(workspacePath)
-      if (!key || map.has(key)) continue
+      if (!key || map.has(workspaceRootIdentityKey(key))) continue
       if (isInternalTemporaryWorkspace(key)) continue
       if (isInternalDeepSeekGuiWorkspace(key)) continue
       if (isClawWorkspacePath(key)) continue
-      map.set(key, [])
+      upsertWorkspace(key)
     }
   }
 
-  return Array.from(map.entries()).sort(([a], [b]) => {
-    if (a === selectedWorkspace && b !== selectedWorkspace) return -1
-    if (b === selectedWorkspace && a !== selectedWorkspace) return 1
+  return Array.from(map.values()).map(({ workspacePath, threads }): SidebarWorkspaceGroup => [workspacePath, threads]).sort(([a], [b]) => {
+    const aKey = workspaceRootIdentityKey(a)
+    const bKey = workspaceRootIdentityKey(b)
+    if (aKey === selectedWorkspaceKey && bKey !== selectedWorkspaceKey) return -1
+    if (bKey === selectedWorkspaceKey && aKey !== selectedWorkspaceKey) return 1
     return a.localeCompare(b)
   })
 }

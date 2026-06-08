@@ -2,6 +2,19 @@ function normalizePathForMatch(path: string): string {
   return path.replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase()
 }
 
+export function workspaceRootIdentityKey(path?: string): string {
+  const trimmed = path?.trim() ?? ''
+  if (!trimmed) return ''
+  const normalized = normalizePathForMatch(trimmed)
+  if (
+    normalized === '~/.deepseekgui/default_workspace'
+    || normalized.endsWith('/.deepseekgui/default_workspace')
+  ) {
+    return '~/.deepseekgui/default_workspace'
+  }
+  return normalized
+}
+
 export function isInternalTemporaryWorkspace(path?: string): boolean {
   const trimmed = path?.trim() ?? ''
   if (!trimmed) return false

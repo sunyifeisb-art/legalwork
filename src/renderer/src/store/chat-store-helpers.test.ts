@@ -99,6 +99,16 @@ describe('chat-store Claw helpers', () => {
     ])
   })
 
+  it('deduplicates default workspace aliases', () => {
+    expect(
+      compactCodeWorkspaceRoots([
+        '~/.deepseekgui/default_workspace',
+        'C:\\Users\\zxy\\.deepseekgui\\default_workspace',
+        'C:\\Users\\zxy\\.deepseekgui\\default_workspace\\'
+      ])
+    ).toEqual(['~/.deepseekgui/default_workspace'])
+  })
+
   it('caps code workspace roots while keeping the newest unique roots first', () => {
     const roots = Array.from({ length: MAX_CODE_WORKSPACE_ROOTS + 4 }, (_, index) =>
       `/Users/zxy/project-${index}`
