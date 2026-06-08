@@ -9,6 +9,7 @@ import type {
 } from './kun-contract'
 
 export type ToolItemKind = 'tool_call' | 'command_execution' | 'file_change'
+export type RuntimeErrorSeverity = 'info' | 'warning' | 'error'
 
 export type AttachmentReference = {
   id: string
@@ -218,7 +219,15 @@ export type ChatBlock =
   | ToolBlock
   | CompactionBlock
   | ReviewBlock
-  | { kind: 'system'; id: string; createdAt?: string; text: string }
+  | {
+      kind: 'system'
+      id: string
+      createdAt?: string
+      text: string
+      code?: string
+      detail?: string
+      severity?: RuntimeErrorSeverity
+    }
   | {
       kind: 'approval'
       id: string
@@ -272,6 +281,15 @@ export type RuntimeStatusEventPayload = {
   changeKind?: 'additive' | 'breaking'
   toolName?: string
   callId?: string
+}
+
+export type RuntimeErrorEventPayload = {
+  itemId: string
+  createdAt?: string
+  message: string
+  code?: string
+  details?: unknown
+  severity?: RuntimeErrorSeverity
 }
 
 export type CompactionEventPayload = {
@@ -354,6 +372,7 @@ export type ThreadEventSink = {
   onUserInput(req: UserInputRequestPayload): void
   onUserInputStatus(ev: UserInputStatusPayload): void
   onRuntimeStatus?(ev: RuntimeStatusEventPayload): void
+  onRuntimeError?(ev: RuntimeErrorEventPayload): void
   onGoal(ev: { threadId: string; goal: ThreadGoal | null; cleared?: boolean; createdAt?: string }): void
   onTodos?(ev: { threadId: string; todos: ThreadTodoList | null; cleared?: boolean; createdAt?: string }): void
   onTurnComplete(): void

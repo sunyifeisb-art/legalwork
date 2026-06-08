@@ -178,11 +178,15 @@ describe('review mapping', () => {
 
 describe('create_plan tool mapping', () => {
   it('surfaces turn failure messages from Kun lifecycle events', async () => {
-    let captured: string | null = null
+    let capturedError: string | null = null
+    let capturedRuntimeError: unknown = null
     const sink: ThreadEventSink = {
       ...makeSink(),
+      onRuntimeError: (event) => {
+        capturedRuntimeError = event
+      },
       onError: (error) => {
-        captured = error.message
+        capturedError = error.message
       }
     }
 
@@ -195,7 +199,57 @@ describe('create_plan tool mapping', () => {
       message: 'model stream exploded'
     }, sink, async () => undefined)
 
-    expect(captured).toBe('model stream exploded')
+    expect(capturedRuntimeError).toMatchObject({
+      itemId: 'runtime_error_turn_1',
+      message: 'model stream exploded',
+      severity: 'error'
+    })
+    expect(JSON.parse(capturedError ?? '{}')).toMatchObject({
+      message: 'model stream exploded',
+      severity: 'error'
+    })
+  })
+
+  it('routes live error items to runtime error timeline events without fatal stream errors', async () => {
+    let fatalCalled = false
+    let capturedRuntimeError: unknown = null
+    const sink: ThreadEventSink = {
+      ...makeSink(),
+      onRuntimeError: (event) => {
+        capturedRuntimeError = event
+      },
+      onError: () => {
+        fatalCalled = true
+      }
+    }
+
+    await dispatchKunRuntimeEvent({
+      kind: 'item_created',
+      seq: 9,
+      timestamp: '2024-01-01T00:00:00.000Z',
+      threadId: 'thr_1',
+      turnId: 'turn_1',
+      item: {
+        id: 'item_error_1',
+        turnId: 'turn_1',
+        threadId: 'thr_1',
+        role: 'system',
+        status: 'failed',
+        createdAt: '2024-01-01T00:00:00.000Z',
+        kind: 'error',
+        message: 'Authorization: Bearer secret-token failed',
+        code: 'stream_read_error',
+        details: { token: 'secret-token' }
+      }
+    }, sink, async () => undefined)
+
+    expect(fatalCalled).toBe(false)
+    expect(capturedRuntimeError).toMatchObject({
+      itemId: 'item_error_1',
+      message: 'Authorization=<redacted> failed',
+      code: 'stream_read_error',
+      details: { token: 'secret-token' }
+    })
   })
 
   it('maps a successful create_plan result to a tool block with plan metadata', () => {

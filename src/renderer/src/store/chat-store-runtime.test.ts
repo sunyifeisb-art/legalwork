@@ -104,6 +104,42 @@ describe('thread event sink binding', () => {
 })
 
 describe('thread event sink runtime errors', () => {
+  it('adds runtime error events to the timeline with details', () => {
+    const { getState, set, get } = makeSinkHarness({
+      activeThreadId: 'thread-current',
+      busy: true,
+      blocks: [{ kind: 'user', id: 'user-current', text: 'hello' }]
+    })
+    const sink = buildThreadEventSink(set, get, { threadId: 'thread-current' })
+
+    sink.onRuntimeError?.({
+      itemId: 'error-1',
+      createdAt: '2026-06-08T00:00:00.000Z',
+      message: 'Authorization: Bearer secret-token failed',
+      code: 'provider_unavailable',
+      details: { token: 'secret-token' },
+      severity: 'error'
+    })
+    sink.onRuntimeError?.({
+      itemId: 'error-1',
+      createdAt: '2026-06-08T00:00:00.000Z',
+      message: 'Authorization: Bearer secret-token failed again',
+      code: 'provider_unavailable',
+      severity: 'error'
+    })
+
+    const systemBlocks = getState().blocks.filter((block) => block.kind === 'system')
+    expect(systemBlocks).toHaveLength(1)
+    expect(systemBlocks[0]).toMatchObject({
+      kind: 'system',
+      id: 'error-1',
+      code: 'provider_unavailable',
+      severity: 'error'
+    })
+    expect(systemBlocks[0].text).toContain('<redacted>')
+    expect(systemBlocks[0].detail).not.toContain('secret-token')
+  })
+
   it('does not keep an aborted turn busy after interrupt', () => {
     const blocks: ChatBlock[] = [
       { kind: 'user', id: 'user-1', text: 'run command' },

@@ -6,6 +6,7 @@ import type {
   ReviewEventPayload,
   ReviewOutput,
   ReviewTarget,
+  RuntimeErrorEventPayload,
   RuntimeStatusEventPayload,
   ThreadGoal,
   ThreadTodoList,
@@ -18,6 +19,7 @@ import type {
   ToolEventPayload,
   UserInputQuestion
 } from './types'
+import { redactSecrets, redactSecretText } from '@shared/secret-redaction'
 import type {
   CoreChildRuntimeMetadataJson,
   CoreRuntimeEventJson,
@@ -653,13 +655,79 @@ function reviewBlockFromItem(item: CoreTurnItemJson): ReviewBlock {
   }
 }
 
+function errorSeverity(
+  explicit: CoreTurnItemJson['severity'] | CoreRuntimeEventJson['severity'],
+  code?: string
+): 'info' | 'warning' | 'error' {
+  if (explicit === 'info' || explicit === 'warning' || explicit === 'error') return explicit
+  if (code === 'budget_warning' || code === 'compaction_summary_fallback') return 'warning'
+  if (code === 'tool_catalog_changed' || code === 'tool_storm_suppressed') return 'info'
+  return 'error'
+}
+
+function runtimeErrorDetail(message: string, code?: string, details?: unknown): string | undefined {
+  const parts: string[] = []
+  if (code) parts.push(`Code: ${code}`)
+  if (message.trim()) parts.push(`Message:\n${redactSecretText(message)}`)
+  if (details !== undefined) {
+    try {
+      parts.push(`Details:\n${JSON.stringify(redactSecrets(details), null, 2)}`)
+    } catch {
+      parts.push(`Details:\n${redactSecretText(String(details))}`)
+    }
+  }
+  return parts.length > 0 ? parts.join('\n\n') : undefined
+}
+
 function systemErrorBlockFromItem(item: CoreTurnItemJson): ChatBlock {
+  const message = item.message ?? 'Runtime error'
+  const detail = runtimeErrorDetail(message, item.code, item.details)
   return {
     kind: 'system',
     id: item.id,
     createdAt: itemCreatedAt(item),
-    text: item.message ?? 'Runtime error'
+    text: redactSecretText(message),
+    ...(item.code ? { code: item.code } : {}),
+    ...(detail ? { detail } : {}),
+    severity: errorSeverity(item.severity, item.code)
   }
+}
+
+function runtimeErrorFromItem(item: CoreTurnItemJson): RuntimeErrorEventPayload {
+  const message = item.message ?? 'Runtime error'
+  return {
+    itemId: item.id,
+    createdAt: itemCreatedAt(item),
+    message: redactSecretText(message),
+    ...(item.code ? { code: item.code } : {}),
+    ...(item.details !== undefined ? { details: item.details } : {}),
+    severity: errorSeverity(item.severity, item.code)
+  }
+}
+
+function runtimeErrorFromEvent(
+  event: CoreRuntimeEventJson,
+  fallback: string
+): RuntimeErrorEventPayload {
+  const message = event.message ?? fallback
+  const itemId = event.itemId ?? `runtime_error_${event.turnId ?? event.threadId ?? event.seq ?? Date.now()}`
+  return {
+    itemId,
+    createdAt: event.timestamp,
+    message: redactSecretText(message),
+    ...(event.code ? { code: event.code } : {}),
+    ...(event.details !== undefined ? { details: event.details } : {}),
+    severity: errorSeverity(event.severity, event.code)
+  }
+}
+
+function errorForRuntimeEvent(payload: RuntimeErrorEventPayload): Error {
+  return new Error(JSON.stringify({
+    ...(payload.code ? { code: payload.code } : {}),
+    message: payload.message,
+    ...(payload.details !== undefined ? { details: payload.details } : {}),
+    ...(payload.severity ? { severity: payload.severity } : {})
+  }))
 }
 
 /**
@@ -766,7 +834,7 @@ function emitItem(
       sink.onReview?.(reviewFromItem(item))
       return
     case 'error':
-      sink.onError(new Error(item.message ?? 'Kun item failed'))
+      sink.onRuntimeError?.(runtimeErrorFromItem(item))
       return
   }
 }
@@ -966,14 +1034,19 @@ export async function dispatchKunRuntimeEvent(
     case 'turn_aborted':
       sink.onTurnComplete()
       return
-    case 'turn_failed':
+    case 'turn_failed': {
+      const payload = runtimeErrorFromEvent(event, 'Kun turn failed')
+      sink.onRuntimeError?.(payload)
+      sink.onError(errorForRuntimeEvent(payload))
+      return
+    }
     case 'error':
       if (event.code === 'compaction_summary_fallback') {
         const status = runtimeStatusFromEvent(event)
         if (status) sink.onRuntimeStatus?.(status)
         return
       }
-      sink.onError(new Error(event.message ?? 'Kun turn failed'))
+      sink.onRuntimeError?.(runtimeErrorFromEvent(event, 'Runtime error'))
       return
     default:
       return

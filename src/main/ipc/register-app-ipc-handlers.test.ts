@@ -1,4 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import {
   mergeScheduleSettings,
   defaultClawSettings,
@@ -154,6 +157,62 @@ describe('registerAppIpcHandlers', () => {
       }
     })
     expect(applySettingsPatch).toHaveBeenCalledWith(payload)
+  })
+
+  it('writes MCP config JSON and notifies the runtime apply hook', async () => {
+    const { registerAppIpcHandlers } = await import('./register-app-ipc-handlers')
+    const tempRoot = mkdtempSync(join(tmpdir(), 'deepseek-gui-ipc-'))
+    const configPath = join(tempRoot, 'mcp.json')
+    const onKunMcpConfigWritten = vi.fn(async () => undefined)
+    const content = `${JSON.stringify({
+      servers: {
+        filesystem: {
+          command: 'npx',
+          args: ['-y', '@modelcontextprotocol/server-filesystem', '/tmp/project']
+        }
+      }
+    }, null, 2)}\n`
+
+    try {
+      registerAppIpcHandlers(registerOptions({
+        resolveKunConfigPath: () => configPath,
+        onKunMcpConfigWritten
+      }))
+
+      await expect(handlers.get('deepseek:config:write')?.({}, content)).resolves.toEqual({
+        ok: true,
+        path: configPath
+      })
+      expect(readFileSync(configPath, 'utf8')).toBe(content)
+      expect(onKunMcpConfigWritten).toHaveBeenCalledWith(configPath, content)
+    } finally {
+      rmSync(tempRoot, { recursive: true, force: true })
+    }
+  })
+
+  it('rejects invalid MCP config JSON before writing or applying it', async () => {
+    const { registerAppIpcHandlers } = await import('./register-app-ipc-handlers')
+    const tempRoot = mkdtempSync(join(tmpdir(), 'deepseek-gui-ipc-'))
+    const configPath = join(tempRoot, 'mcp.json')
+    const onKunMcpConfigWritten = vi.fn(async () => undefined)
+
+    try {
+      registerAppIpcHandlers(registerOptions({
+        resolveKunConfigPath: () => configPath,
+        onKunMcpConfigWritten
+      }))
+
+      await expect(handlers.get('deepseek:config:write')?.({}, '{')).rejects.toThrow(
+        /MCP config must be JSON/
+      )
+      await expect(handlers.get('deepseek:config:write')?.({}, '[]')).rejects.toThrow(
+        /MCP config must be a JSON object/
+      )
+      expect(existsSync(configPath)).toBe(false)
+      expect(onKunMcpConfigWritten).not.toHaveBeenCalled()
+    } finally {
+      rmSync(tempRoot, { recursive: true, force: true })
+    }
   })
 
   it('uses the GUI-managed WeChat bridge for WeChat install handlers', async () => {

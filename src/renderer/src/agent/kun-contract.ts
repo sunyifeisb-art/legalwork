@@ -349,6 +349,8 @@ export type CoreTurnItemJson = {
   sourceItemIds?: string[]
   message?: string
   code?: string
+  details?: unknown
+  severity?: 'info' | 'warning' | 'error'
   attachmentIds?: string[]
   activeSkillIds?: string[]
   injectedMemoryIds?: string[]
@@ -503,7 +505,7 @@ export type CoreRuntimeEventJson = {
     | 'post_send'
     | 'response_received'
   label?: string
-  details?: Record<string, unknown>
+  details?: unknown
   summary?: string
   prompt?: string
   inputId?: string
@@ -524,6 +526,7 @@ export type CoreRuntimeEventJson = {
   cleared?: boolean
   message?: string
   code?: string
+  severity?: 'info' | 'warning' | 'error'
   child?: CoreChildRuntimeMetadataJson
 }
 
@@ -531,4 +534,6 @@ export type RuntimeErrorJson = {
   code?: string
   error?: string | { message?: string; status?: number }
   message?: string
+  details?: unknown
+  severity?: 'info' | 'warning' | 'error'
 }

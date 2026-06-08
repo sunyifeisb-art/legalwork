@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { TurnItem } from './items.js'
 import { ThreadGoalSchema, ThreadTodoListSchema } from './threads.js'
 import { UsageSnapshotSchema } from './usage.js'
+import { RuntimeErrorSeverity } from './errors.js'
 
 /**
  * Persisted runtime events. Every event has a per-thread `seq` so the
@@ -105,7 +106,10 @@ export const TurnLifecycleEvent = RuntimeEventBase.extend({
   ]),
   status: z.string().optional(),
   text: z.string().optional(),
-  message: z.string().optional()
+  message: z.string().optional(),
+  code: z.string().optional(),
+  details: z.unknown().optional(),
+  severity: RuntimeErrorSeverity.optional()
 })
 export type TurnLifecycleEvent = z.infer<typeof TurnLifecycleEvent>
 
@@ -215,7 +219,9 @@ export type PipelineStageEvent = z.infer<typeof PipelineStageEvent>
 export const ErrorEvent = RuntimeEventBase.extend({
   kind: z.literal('error'),
   message: z.string(),
-  code: z.string().optional()
+  code: z.string().optional(),
+  details: z.unknown().optional(),
+  severity: RuntimeErrorSeverity.optional()
 })
 export type ErrorEvent = z.infer<typeof ErrorEvent>
 

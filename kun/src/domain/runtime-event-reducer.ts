@@ -61,6 +61,8 @@ export type EventSourcedRuntimeProjection = {
     itemId?: string
     message: string
     code?: string
+    details?: unknown
+    severity?: 'info' | 'warning' | 'error'
   }>
 }
 
@@ -169,7 +171,9 @@ export function applyRuntimeEvent(
         ...(event.turnId ? { turnId: event.turnId } : {}),
         ...(event.itemId ? { itemId: event.itemId } : {}),
         message: event.message,
-        ...(event.code ? { code: event.code } : {})
+        ...(event.code ? { code: event.code } : {}),
+        ...(event.details !== undefined ? { details: event.details } : {}),
+        ...(event.severity ? { severity: event.severity } : {})
       })
       if (event.itemId && event.turnId) {
         upsertItem(next, {
@@ -182,7 +186,9 @@ export function applyRuntimeEvent(
           finishedAt: event.timestamp,
           kind: 'error',
           message: event.message,
-          ...(event.code ? { code: event.code } : {})
+          ...(event.code ? { code: event.code } : {}),
+          ...(event.details !== undefined ? { details: event.details } : {}),
+          ...(event.severity ? { severity: event.severity } : {})
         }, 'replace')
       }
       break

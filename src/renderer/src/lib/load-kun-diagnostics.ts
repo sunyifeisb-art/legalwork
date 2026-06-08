@@ -4,6 +4,7 @@ import type {
   CoreRuntimeToolDiagnosticsJson
 } from '../agent/kun-contract'
 import type { AgentProvider } from '../agent/types'
+import { describeRuntimeError } from './format-runtime-error'
 
 type DiagnosticsProvider = Pick<AgentProvider, 'getRuntimeInfo' | 'getToolDiagnostics' | 'listMemories'>
 
@@ -51,5 +52,5 @@ export async function loadKunDiagnostics(
 }
 
 function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error)
+  return describeRuntimeError(error).summary
 }

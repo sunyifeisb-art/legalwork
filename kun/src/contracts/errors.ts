@@ -29,6 +29,9 @@ export const KunErrorCode = z.enum([
 ])
 export type KunErrorCode = z.infer<typeof KunErrorCode>
 
+export const RuntimeErrorSeverity = z.enum(['info', 'warning', 'error'])
+export type RuntimeErrorSeverity = z.infer<typeof RuntimeErrorSeverity>
+
 export const KunErrorBody = z.object({
   code: KunErrorCode,
   message: z.string(),

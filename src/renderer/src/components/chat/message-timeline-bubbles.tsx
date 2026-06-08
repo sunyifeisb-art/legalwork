@@ -837,11 +837,27 @@ export function MessageBubble({ block, nested = false }: { block: ChatBlock; nes
       </div>
     )
   }
-  return (
-    <div className="ds-card-soft rounded-[18px] px-3 py-2 text-[13.5px] text-ds-muted">
-      {block.text}
-    </div>
-  )
+  if (block.kind === 'system') {
+    const errorTone = block.severity === 'error'
+    const warningTone = block.severity === 'warning'
+    return (
+      <div
+        className={`rounded-[18px] border px-3 py-2 text-[13.5px] leading-6 ${
+          errorTone
+            ? 'border-red-300/80 bg-red-500/10 text-red-800 dark:border-red-800/60 dark:bg-red-950/35 dark:text-red-200'
+            : warningTone
+              ? 'border-amber-300/80 bg-amber-500/10 text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/35 dark:text-amber-100'
+              : 'border-ds-border bg-ds-subtle text-ds-muted'
+        }`}
+      >
+        <p className="whitespace-pre-wrap break-words">{block.text}</p>
+        {block.code ? (
+          <p className="mt-1 font-mono text-[11px] opacity-70">{block.code}</p>
+        ) : null}
+      </div>
+    )
+  }
+  return <></>
 }
 
 function ToolEntry({ block, nested = false }: { block: ToolBlock; nested?: boolean }): ReactElement {

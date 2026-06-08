@@ -243,6 +243,8 @@ export function makeErrorItem(input: {
   threadId: string
   message: string
   code?: string
+  details?: unknown
+  severity?: 'info' | 'warning' | 'error'
 }): TurnItem {
   return {
     id: input.id,
@@ -254,6 +256,8 @@ export function makeErrorItem(input: {
     finishedAt: new Date().toISOString(),
     kind: 'error',
     message: input.message,
-    code: input.code
+    ...(input.code ? { code: input.code } : {}),
+    ...(input.details !== undefined ? { details: input.details } : {}),
+    ...(input.severity ? { severity: input.severity } : {})
   }
 }

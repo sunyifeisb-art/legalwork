@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { ReviewOutputSchema, ReviewTargetSchema } from './review.js'
+import { RuntimeErrorSeverity } from './errors.js'
 
 /**
  * Conversation items returned as part of a thread or turn.
@@ -123,7 +124,9 @@ export type ReviewTurnItem = z.infer<typeof ReviewTurnItem>
 export const ErrorTurnItem = TurnItemBase.extend({
   kind: z.literal('error'),
   message: z.string(),
-  code: z.string().optional()
+  code: z.string().optional(),
+  details: z.unknown().optional(),
+  severity: RuntimeErrorSeverity.optional()
 })
 export type ErrorTurnItem = z.infer<typeof ErrorTurnItem>
 

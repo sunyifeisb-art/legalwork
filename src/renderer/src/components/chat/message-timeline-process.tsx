@@ -113,7 +113,8 @@ export function ProcessSectionRow({
     (block) =>
       (block.kind === 'tool' && block.status === 'error') ||
       (block.kind === 'approval' && block.status === 'error') ||
-      (block.kind === 'user_input' && block.status === 'error')
+      (block.kind === 'user_input' && block.status === 'error') ||
+      (block.kind === 'system' && block.severity === 'error')
   )
   const defaultExpanded = hasError || (active && section.kind === 'reasoning')
   const expanded = hasDetails && (userExpanded ?? defaultExpanded)
@@ -241,7 +242,8 @@ function processBlockHasError(block: ChatBlock): boolean {
     (block.kind === 'tool' && block.status === 'error') ||
     (block.kind === 'compaction' && block.status === 'error') ||
     (block.kind === 'approval' && block.status === 'error') ||
-    (block.kind === 'user_input' && block.status === 'error')
+    (block.kind === 'user_input' && block.status === 'error') ||
+    (block.kind === 'system' && block.severity === 'error')
   )
 }
 
@@ -846,6 +848,7 @@ function getProcessDetail(block: ChatBlock, summaryText?: string): ProcessDetail
   if (block.kind === 'approval') return { kind: 'approval' }
   if (block.kind === 'user_input') return { kind: 'user_input' }
   if (block.kind === 'system' && block.text.trim()) {
+    if (block.detail?.trim()) return { kind: 'text', text: block.detail }
     // Short system messages already fit in the summary line — skip the
     // expand affordance so we don't duplicate the same string.
     if (block.text.length <= 140) return { kind: 'none' }

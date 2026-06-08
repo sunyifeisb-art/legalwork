@@ -229,6 +229,7 @@ export function Workbench(): ReactElement {
     liveReasoning,
     liveAssistant,
     error,
+    runtimeErrorDetail,
     busy,
     route,
     pluginHostRoute,
@@ -284,6 +285,7 @@ export function Workbench(): ReactElement {
       liveReasoning: s.liveReasoning,
       liveAssistant: s.liveAssistant,
       error: s.error,
+      runtimeErrorDetail: s.runtimeErrorDetail,
       busy: s.busy,
       route: s.route,
       pluginHostRoute: s.pluginHostRoute,
@@ -340,6 +342,7 @@ export function Workbench(): ReactElement {
   const [attachmentUploadBusy, setAttachmentUploadBusy] = useState(false)
   const [attachmentUploadError, setAttachmentUploadError] = useState<string | null>(null)
   const [connectPhoneSidebarOpen, setConnectPhoneSidebarOpen] = useState(false)
+  const [runtimeLogPath, setRuntimeLogPath] = useState('')
   const writeAssistantOpen = useWriteWorkspaceStore((s) => s.assistantOpen)
   const setWriteAssistantOpen = useWriteWorkspaceStore((s) => s.setAssistantOpen)
   const writeAssistantModel = useWriteWorkspaceStore((s) => s.assistantModel)
@@ -520,6 +523,20 @@ export function Workbench(): ReactElement {
   const showDevPreviewCard =
     route === 'chat' &&
     latestDevPreviewUrl !== null
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.dsGui?.getLogPath !== 'function') return
+    let cancelled = false
+    void window.dsGui
+      .getLogPath()
+      .then((path) => {
+        if (!cancelled) setRuntimeLogPath(path)
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     const previousThreadId = prevThreadId.current
@@ -1351,12 +1368,19 @@ export function Workbench(): ReactElement {
     void createWriteThread(writeWorkspaceRoot)
   }
 
-  const renderRuntimeBanner = (message: string): ReactElement => (
+  const renderRuntimeBanner = (message: string, detail?: string | null): ReactElement => (
     <RuntimeBanner
       message={message}
+      detail={detail}
+      logPath={runtimeLogPath || null}
       runtimeReady={runtimeConnection === 'ready'}
       stageInsetClass={stageInsetClass}
       t={t}
+      onOpenLogDir={
+        typeof window !== 'undefined' && typeof window.dsGui?.openLogDir === 'function'
+          ? () => window.dsGui.openLogDir()
+          : undefined
+      }
       onOpenSettings={() => openSettings('agents')}
       onRetryConnection={() => void probeRuntime('user')}
     />
@@ -1566,7 +1590,7 @@ export function Workbench(): ReactElement {
           </Suspense>
         ) : route === 'write' ? (
           <>
-            {writeRuntimeBannerMessage ? renderRuntimeBanner(writeRuntimeBannerMessage) : null}
+            {writeRuntimeBannerMessage ? renderRuntimeBanner(writeRuntimeBannerMessage, runtimeErrorDetail) : null}
             <div className="flex min-h-0 flex-1">
               <WriteWorkspaceView
                 leftSidebarCollapsed={leftSidebarCollapsed}
@@ -1580,7 +1604,7 @@ export function Workbench(): ReactElement {
           </>
         ) : (
           <>
-        {error && !(runtimeConnection !== 'ready' && !activeThreadId) ? renderRuntimeBanner(error) : null}
+        {error && !(runtimeConnection !== 'ready' && !activeThreadId) ? renderRuntimeBanner(error, runtimeErrorDetail) : null}
 
         <div className="flex min-h-0 flex-1">
           <div className={`flex min-h-0 min-w-0 flex-1 ${activeSddDraft ? '' : stageInsetClass}`}>

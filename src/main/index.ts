@@ -121,11 +121,11 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-function runtimeFailure(code: string, message: string, status = 0) {
+function runtimeFailure(code: string, message: string, status = 0, details?: unknown) {
   return {
     ok: false as const,
     status,
-    body: JSON.stringify({ code, message })
+    body: JSON.stringify({ code, message, ...(details !== undefined ? { details } : {}) })
   }
 }
 
@@ -515,6 +515,30 @@ function queueRuntimeSettingsApply(prev: AppSettingsV1, next: AppSettingsV1): vo
   runtimeSettingsApplyPromise = task
 }
 
+function queueRuntimeMcpConfigApply(settings: AppSettingsV1): void {
+  lastAppliedSettings = settings
+
+  const previousTask = runtimeSettingsApplyPromise ?? Promise.resolve()
+  const task = previousTask
+    .catch(() => undefined)
+    .then(async () => {
+      const current = lastAppliedSettings ?? settings
+      await restartManagedRuntimeForMcpConfigChange(current)
+    })
+    .catch((error: unknown) => {
+      logWarn('mcp-config', 'Failed to apply Kun MCP config change in background', {
+        message: error instanceof Error ? error.message : String(error)
+      })
+    })
+    .finally(() => {
+      if (runtimeSettingsApplyPromise === task) {
+        runtimeSettingsApplyPromise = null
+      }
+    })
+
+  runtimeSettingsApplyPromise = task
+}
+
 async function waitForQueuedRuntimeSettingsApply(): Promise<void> {
   if (!runtimeSettingsApplyPromise) return
   await runtimeSettingsApplyPromise
@@ -742,6 +766,26 @@ async function restartManagedRuntimeForSettingsChange(
   }
 }
 
+async function restartManagedRuntimeForMcpConfigChange(settings: AppSettingsV1): Promise<void> {
+  const runtime = resolveKunRuntimeSettings(settings)
+  const adapter = kunRuntimeAdapter
+  const wasRunning = adapter.isChildRunning()
+
+  if (!wasRunning) return
+  await adapter.stopAndWait()
+  if (!resolveConfiguredApiKey(settings) || !runtime.autoStart) return
+
+  try {
+    await adapter.ensureRunning(settings)
+    const healthy = await waitForKunHealth(settings, 20_000)
+    if (!healthy) {
+      console.warn('[deepseek-gui] Kun restart did not become healthy after MCP config change')
+    }
+  } catch (e) {
+    console.warn('[deepseek-gui] Kun restart failed after MCP config change:', e)
+  }
+}
+
 async function runtimeRequest(
   settings: AppSettingsV1,
   pathAndQuery: string,
@@ -754,7 +798,7 @@ async function runtimeRequest(
     logError('runtime-request', `HTTP request to ${pathAndQuery} failed`, { message })
     const parsed = parseRuntimeErrorBody(message, message)
     if (parsed.code !== 'unknown' || parsed.message !== message) {
-      return runtimeFailure(parsed.code, parsed.message)
+      return runtimeFailure(parsed.code, parsed.message, 0, parsed.details)
     }
     return runtimeFailure('fetch_failed', message)
   }
@@ -886,6 +930,10 @@ app.whenReady().then(async () => {
     startWeixinInstallQrcode,
     pollWeixinInstall,
     resolveKunConfigPath: resolveKunMcpJsonPath,
+    onKunMcpConfigWritten: async () => {
+      const settings = await store.load()
+      queueRuntimeMcpConfigApply(settings)
+    },
     showTurnCompleteNotification,
     getAppVersion: () => app.getVersion(),
     readGuiUpdateState,

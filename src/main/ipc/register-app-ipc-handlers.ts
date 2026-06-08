@@ -116,6 +116,7 @@ type RegisterAppIpcHandlersOptions = {
   startWeixinInstallQrcode: (weixinBridgeUrl?: string) => Promise<ClawImInstallQrResult>
   pollWeixinInstall: (deviceCode: string, weixinBridgeUrl?: string) => Promise<ClawImInstallPollResult>
   resolveKunConfigPath: () => string
+  onKunMcpConfigWritten?: (path: string, content: string) => Promise<void> | void
   showTurnCompleteNotification: (
     payload: TurnCompleteNotificationPayload
   ) => Promise<SystemNotificationResult>
@@ -133,6 +134,20 @@ function parseIpcPayload<T>(channel: string, schema: z.ZodType<T>, payload: unkn
   throw new Error(`Invalid payload for ${channel}: ${issue?.message ?? 'Bad request.'}`)
 }
 
+function validateMcpConfigContent(content: string): void {
+  const trimmed = content.trim()
+  if (!trimmed) return
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(trimmed) as unknown
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    throw new Error(`MCP config must be JSON: ${message}`)
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('MCP config must be a JSON object.')
+  }
+}
 
 function runDesktopCommand(
   command: DesktopCommand,
@@ -210,6 +225,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     startWeixinInstallQrcode,
     pollWeixinInstall,
     resolveKunConfigPath,
+    onKunMcpConfigWritten,
     showTurnCompleteNotification,
     getAppVersion,
     readGuiUpdateState,
@@ -528,8 +544,17 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
       content
     )
     const path = resolveKunConfigPath()
+    validateMcpConfigContent(validatedContent)
     await mkdir(dirname(path), { recursive: true })
     await writeFile(path, validatedContent, 'utf8')
+    try {
+      await onKunMcpConfigWritten?.(path, validatedContent)
+    } catch (error: unknown) {
+      logError('mcp-config', 'Failed to apply MCP config change after write', {
+        path,
+        message: error instanceof Error ? error.message : String(error)
+      })
+    }
     return { ok: true as const, path }
   })
 

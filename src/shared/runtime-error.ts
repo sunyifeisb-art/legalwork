@@ -23,6 +23,11 @@ export type KunErrorCode =
   | 'turn_in_progress'
   | 'turn_not_running'
   | 'approval_not_pending'
+  | 'capability_unavailable'
+  | 'provider_unavailable'
+  | 'policy_blocked'
+  | 'model_modality_unsupported'
+  | 'attachment_validation_failed'
   | 'internal_error'
   | 'not_implemented'
   | 'aborted'
@@ -35,6 +40,7 @@ export type LegacyMainGuardCode =
   | 'runtime_offline'
   | 'runtime_port_conflict'
   | 'runtime_unhealthy'
+  | 'runtime_request_user_input_unsupported'
   | 'missing_api_key'
 
 export type RuntimeErrorCode = KunErrorCode | LegacyMainGuardCode
@@ -55,6 +61,11 @@ const KNOWN_KUN_CODES: ReadonlySet<KunErrorCode> = new Set<KunErrorCode>([
   'turn_in_progress',
   'turn_not_running',
   'approval_not_pending',
+  'capability_unavailable',
+  'provider_unavailable',
+  'policy_blocked',
+  'model_modality_unsupported',
+  'attachment_validation_failed',
   'internal_error',
   'not_implemented',
   'aborted'
@@ -67,6 +78,7 @@ const KNOWN_LEGACY_CODES: ReadonlySet<LegacyMainGuardCode> = new Set<LegacyMainG
   'runtime_offline',
   'runtime_port_conflict',
   'runtime_unhealthy',
+  'runtime_request_user_input_unsupported',
   'missing_api_key'
 ])
 

@@ -1129,7 +1129,8 @@ export class AgentLoop {
         threadId,
         turnId,
         message: `Failed to sync plan checklist to thread todos: ${message}`,
-        code: 'todo_plan_sync_failed'
+        code: 'todo_plan_sync_failed',
+        severity: 'warning'
       })
     }
   }
@@ -1367,7 +1368,8 @@ export class AgentLoop {
         threadId: input.threadId,
         turnId: input.turnId,
         message,
-        code: 'compaction_summary_fallback'
+        code: 'compaction_summary_fallback',
+        severity: 'warning'
       })
     }
     try {
@@ -1510,7 +1512,8 @@ export class AgentLoop {
       threadId: input.threadId,
       turnId: input.turnId,
       message: input.message,
-      code: 'tool_catalog_changed'
+      code: 'tool_catalog_changed',
+      severity: 'info'
     }))
     await this.opts.events.record({
       kind: 'tool_catalog_changed',
@@ -1595,14 +1598,16 @@ export class AgentLoop {
         threadId,
         turnId,
         message,
-        code: 'budget_warning'
+        code: 'budget_warning',
+        severity: 'warning'
       }))
       await this.opts.events.record({
         kind: 'error',
         threadId,
         turnId,
         message,
-        code: 'budget_warning'
+        code: 'budget_warning',
+        severity: 'warning'
       })
     }
     return 'allow'

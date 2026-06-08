@@ -207,7 +207,9 @@ describe('runtime event reducer', () => {
         turnId: 'turn-1',
         itemId: 'error-1',
         message: 'Budget limit reached',
-        code: 'budget_limited'
+        code: 'budget_limited',
+        details: { spent: 2, budget: 1 },
+        severity: 'error'
       })
     ])
 
@@ -223,7 +225,9 @@ describe('runtime event reducer', () => {
         turnId: 'turn-1',
         itemId: 'error-1',
         message: 'Budget limit reached',
-        code: 'budget_limited'
+        code: 'budget_limited',
+        details: { spent: 2, budget: 1 },
+        severity: 'error'
       })
     ])
     expect(projection.items).toEqual([
@@ -232,7 +236,9 @@ describe('runtime event reducer', () => {
         kind: 'error',
         status: 'failed',
         message: 'Budget limit reached',
-        code: 'budget_limited'
+        code: 'budget_limited',
+        details: { spent: 2, budget: 1 },
+        severity: 'error'
       })
     ])
   })
