@@ -174,11 +174,11 @@ const modelProviderPatchSchema = z.object({
   apiKey: z.string().max(MAX_BODY_BYTES).optional(),
   baseUrl: z.string().trim().max(MAX_URL_LENGTH).optional(),
   providers: z.array(z.object({
-    id: z.string().trim().min(1).max(64),
-    name: z.string().trim().min(1).max(80),
-    apiKey: z.string().max(MAX_BODY_BYTES),
-    baseUrl: z.string().trim().max(MAX_URL_LENGTH),
-    models: z.array(z.string().trim().min(1).max(128)).max(200)
+    id: z.string().trim().min(1).max(64).optional(),
+    name: z.string().trim().min(1).max(80).optional(),
+    apiKey: z.string().max(MAX_BODY_BYTES).optional(),
+    baseUrl: z.string().trim().max(MAX_URL_LENGTH).optional(),
+    models: z.array(z.string().trim().min(1).max(128)).max(200).optional()
   }).strict()).max(50).optional()
 }).strict()
 
@@ -263,7 +263,7 @@ const keyboardShortcutCommandIds = KEYBOARD_SHORTCUT_COMMANDS.map((command) => c
 ]
 
 const keyboardShortcutsPatchSchema = z.object({
-  bindings: z.record(
+  bindings: z.partialRecord(
     z.enum(keyboardShortcutCommandIds),
     z.array(z.string().trim().max(64)).max(4)
   ).optional()

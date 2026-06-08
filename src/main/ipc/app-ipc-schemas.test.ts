@@ -233,6 +233,36 @@ describe('app-ipc-schemas', () => {
     expect('quickChat' in (payload.agents ?? {})).toBe(false)
   })
 
+  it('accepts partial provider profiles in settings patches', () => {
+    const payload = settingsPatchSchema.parse({
+      provider: {
+        apiKey: 'sk-updated',
+        providers: [{
+          id: 'deepseek',
+          apiKey: 'sk-updated'
+        }]
+      }
+    })
+
+    expect(payload.provider?.apiKey).toBe('sk-updated')
+    expect(payload.provider?.providers?.[0]).toEqual({
+      id: 'deepseek',
+      apiKey: 'sk-updated'
+    })
+  })
+
+  it('accepts partial keyboard shortcut binding maps in settings patches', () => {
+    const payload = settingsPatchSchema.parse({
+      keyboardShortcuts: {
+        bindings: {
+          settings: ['Ctrl+,']
+        }
+      }
+    })
+
+    expect(payload.keyboardShortcuts?.bindings?.settings).toEqual(['Ctrl+,'])
+  })
+
   it('rejects unknown settings patch fields', () => {
     expect(() =>
       settingsPatchSchema.parse({
