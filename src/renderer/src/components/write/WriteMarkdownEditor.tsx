@@ -8,6 +8,7 @@ import { drawSelection, EditorView, highlightActiveLine, keymap, type ViewUpdate
 import { buildInlineCompletionExtension, buildInlineCompletionPayload } from '../../write/inline-completion'
 import { writeMarkdownLivePreviewExtensions } from '../../write/markdown-live-preview'
 import { createWriteRecentEdit, type WriteRecentEdit } from '../../write/recent-edits'
+import { buildWriteTemplateShortcutExpansion } from '../../write/template-shortcuts'
 import {
   buildWriteCanonicalTermPropagationChanges,
   buildWriteTermPropagationChanges,
@@ -274,6 +275,28 @@ function buildPastedImageMarkdown(
   }
 }
 
+function expandWriteTemplateShortcut(view: EditorView): boolean {
+  const selection = view.state.selection.main
+  if (!selection.empty) return false
+  const expansion = buildWriteTemplateShortcutExpansion({
+    text: view.state.doc.toString(),
+    cursor: selection.head
+  })
+  if (!expansion) return false
+
+  const nextHead = expansion.from + expansion.insert.length
+  view.dispatch({
+    changes: {
+      from: expansion.from,
+      to: expansion.to,
+      insert: expansion.insert
+    },
+    selection: EditorSelection.cursor(nextHead),
+    scrollIntoView: true
+  })
+  return true
+}
+
 export function WriteMarkdownEditor({
   value,
   workspaceRoot,
@@ -414,6 +437,13 @@ export function WriteMarkdownEditor({
         keymap.of([
           ...defaultKeymap,
           ...historyKeymap,
+          {
+            key: 'Tab',
+            run: (view) => {
+              if (readOnlyRef.current) return false
+              return expandWriteTemplateShortcut(view)
+            }
+          },
           indentWithTab,
           {
             key: 'Mod-s',
