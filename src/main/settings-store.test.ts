@@ -137,6 +137,31 @@ describe('JsonSettingsStore', () => {
     expect(loaded.agents.kun.baseUrl).toBe('')
   })
 
+  it('loads settings from the legacy lowercase userData directory and writes them into the current path', async () => {
+    const supportRoot = await mkdtemp(join(tmpdir(), 'ds-gui-settings-compat-'))
+    const legacyUserDataDir = join(supportRoot, 'deepseek-gui')
+    const currentUserDataDir = join(supportRoot, 'DeepSeek GUI')
+    const currentSettingsPath = join(currentUserDataDir, 'deepseek-gui-settings.json')
+
+    await mkdir(legacyUserDataDir, { recursive: true })
+    await writeFile(
+      join(legacyUserDataDir, 'deepseek-gui-settings.json'),
+      JSON.stringify({
+        version: 1,
+        provider: {
+          apiKey: 'sk-legacy-provider'
+        }
+      }),
+      'utf8'
+    )
+
+    const store = new JsonSettingsStore(currentUserDataDir)
+    const loaded = await store.load()
+
+    expect(loaded.provider.apiKey).toBe('sk-legacy-provider')
+    expect(await readFile(currentSettingsPath, 'utf8')).toContain('sk-legacy-provider')
+  })
+
   it('creates the configured code workspace on load', async () => {
     const userDataDir = await mkdtemp(join(tmpdir(), 'ds-gui-settings-'))
     const workspaceRoot = join(userDataDir, 'missing-workspace')
