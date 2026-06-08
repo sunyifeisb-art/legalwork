@@ -8,6 +8,7 @@ import {
 } from './settings-store'
 import deepseekLogoPng from '../asset/img/deepseek.png?url'
 import { createAppIcon } from './app-icon'
+import { configureAppIdentity } from './app-identity'
 import {
   applyKunRuntimePatch,
   kunSettingsEnvelope,
@@ -142,6 +143,13 @@ traceStartup('main module evaluated')
 if (runningClawScheduleMcpServer && process.platform === 'darwin') {
   app.dock.hide()
 }
+
+// 在最早的阶段把 app 名称、AppUserModelId 都设好。
+// Windows 任务栏 / 系统托盘 / 通知中心看到的应用名都来自这里;
+// 设得太晚的话 BrowserWindow title、托盘、IPC 启动时拿到的还是旧的。
+// 抽到 app-identity.ts 是为了让测试可以直接 import,不被 main 的
+// whenReady 副作用污染。
+configureAppIdentity()
 
 if (!runningClawScheduleMcpServer && process.platform === 'win32') {
   app.setAppUserModelId(APP_USER_MODEL_ID)
