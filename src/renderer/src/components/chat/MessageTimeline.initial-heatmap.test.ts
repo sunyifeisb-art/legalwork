@@ -8,12 +8,14 @@ function renderHero(options: {
   route?: 'chat' | 'claw'
   ready?: boolean
   hasWorkspace?: boolean
+  runtimeError?: string | null
 } = {}): string {
   return renderToStaticMarkup(
     createElement(MessageTimelineEmptyHero, {
       route: options.route ?? 'chat',
       ready: options.ready ?? true,
       hasWorkspace: options.hasWorkspace ?? true,
+      runtimeError: options.runtimeError ?? null,
       activeClawChannel: null,
       onPickWorkspace: () => undefined,
       onRetry: () => undefined,
@@ -46,5 +48,14 @@ describe('MessageTimeline initial heatmap empty hero routing', () => {
     expect(clawHtml).toContain('ds-claw-empty-whale-logo')
     expect(clawHtml).toContain('ds-work-logo')
     expect(clawHtml).not.toContain('Kun usage')
+  })
+
+  it('shows the runtime error in the offline hero when one is available', () => {
+    const html = renderHero({
+      ready: false,
+      runtimeError: i18n.t('common:runtimePortConflict')
+    })
+
+    expect(html).toContain('The runtime port is already in use.')
   })
 })

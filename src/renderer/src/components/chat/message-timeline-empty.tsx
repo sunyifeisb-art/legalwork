@@ -68,13 +68,16 @@ function ClawEmptyHero({
 }
 
 function RuntimeWakeHero({
+  runtimeError,
   onRetry,
   onOpenSettings
 }: {
+  runtimeError?: string | null
   onRetry: () => void
   onOpenSettings: () => void
 }): ReactElement {
   const { t } = useTranslation('common')
+  const detail = runtimeError?.trim() || t('runtimeOfflineHeroSub')
 
   return (
     <div className="ds-runtime-wake-hero ds-no-drag px-6 pb-8 pt-12 text-center md:pt-16">
@@ -87,7 +90,7 @@ function RuntimeWakeHero({
         {t('runtimeOfflineHeroTitle')}
       </h1>
       <p className="mt-3 max-w-[620px] text-[15px] leading-7 text-ds-muted">
-        {t('runtimeOfflineHeroSub')}
+        {detail}
       </p>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
         <button
@@ -115,6 +118,7 @@ export function MessageTimelineEmptyHero({
   route,
   ready,
   hasWorkspace,
+  runtimeError,
   activeClawChannel,
   onPickWorkspace,
   onRetry,
@@ -124,6 +128,7 @@ export function MessageTimelineEmptyHero({
   route: 'chat' | 'claw'
   ready: boolean
   hasWorkspace: boolean
+  runtimeError?: string | null
   activeClawChannel: ClawImChannelV1 | null
   onPickWorkspace: () => void
   onRetry: () => void
@@ -133,7 +138,7 @@ export function MessageTimelineEmptyHero({
   const { t } = useTranslation('common')
 
   if (!ready) {
-    return <RuntimeWakeHero onRetry={onRetry} onOpenSettings={onOpenSettings} />
+    return <RuntimeWakeHero runtimeError={runtimeError} onRetry={onRetry} onOpenSettings={onOpenSettings} />
   }
 
   if (!hasWorkspace) {
