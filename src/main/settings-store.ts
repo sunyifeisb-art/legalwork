@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { basename, dirname, join } from 'node:path'
+import { atomicWriteFile } from '../../kun/src/adapters/file/atomic-write.js'
 import {
   applyKunRuntimePatch,
   kunSettingsEnvelope,
@@ -312,7 +313,7 @@ export class JsonSettingsStore {
     await ensureClawChannelWorkspaceRootsExist(normalized)
     this.cache = normalized
     await mkdir(dirname(this.path), { recursive: true })
-    await writeFile(this.path, serializeSettingsForDisk(normalized), 'utf8')
+    await atomicWriteFile(this.path, serializeSettingsForDisk(normalized))
   }
 
   async patch(partial: AppSettingsPatch): Promise<AppSettingsV1> {

@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readFile, readdir, stat, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -351,5 +351,28 @@ describe('JsonSettingsStore', () => {
 
     expect(channel?.threadId).toBe('reasonix-channel')
     expect(conversation?.localThreadId).toBe('reasonix-conversation')
+  })
+
+  it('saves settings atomically (no .tmp file left on success)', async () => {
+    const userDataDir = await mkdtemp(join(tmpdir(), 'ds-gui-settings-atomic-'))
+
+    try {
+      const store = new JsonSettingsStore(userDataDir)
+      const loaded = await store.load()
+      await store.save(loaded)
+
+      // Final file is present and non-empty.
+      const finalContents = await readFile(
+        join(userDataDir, 'deepseek-gui-settings.json'),
+        'utf8'
+      )
+      expect(finalContents.length).toBeGreaterThan(0)
+
+      // No .tmp leftover from the atomic write.
+      const entries = await readdir(userDataDir)
+      expect(entries.filter((entry) => entry.includes('.tmp'))).toEqual([])
+    } finally {
+      await rm(userDataDir, { recursive: true, force: true })
+    }
   })
 })
