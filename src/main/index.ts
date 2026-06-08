@@ -6,7 +6,8 @@ import {
   JsonSettingsStore,
   devServerHintUrl
 } from './settings-store'
-import deepseekLogoPng from '../asset/img/deepseek.png'
+import deepseekLogoPng from '../asset/img/deepseek.png?url'
+import { createAppIcon } from './app-icon'
 import {
   applyKunRuntimePatch,
   kunSettingsEnvelope,
@@ -252,13 +253,6 @@ function installDevPreviewWebviewGuards(): void {
       return isAllowedDevPreviewUrl(url) ? { action: 'allow' } : { action: 'deny' }
     })
   })
-}
-
-
-function createAppIcon(source: string): Electron.NativeImage {
-  return source.startsWith('data:')
-    ? nativeImage.createFromDataURL(source)
-    : nativeImage.createFromPath(source)
 }
 
 
