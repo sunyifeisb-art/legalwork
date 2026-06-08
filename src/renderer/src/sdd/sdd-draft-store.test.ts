@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createSddDraft, readRememberedSddDraft, useSddDraftStore } from './sdd-draft-store'
-import { saveActiveSddDraftToDisk } from './sdd-draft-actions'
+import {
+  createSddDraft,
+  forgetRememberedSddDraft,
+  readRememberedSddDraft,
+  useSddDraftStore
+} from './sdd-draft-store'
+import { saveActiveSddDraftToDisk, syncActiveSddDraftFromDisk } from './sdd-draft-actions'
 
 const SDD_DRAFT_REGISTRY_STORAGE_KEY = 'deepseekgui.sdd.draft.registry.v1'
 
@@ -52,6 +57,45 @@ describe('sdd-draft-store', () => {
     expect(draft.id).toBe('/tmp/app:.kunsdd/draft/123e4567-e89b-12d3-a456-426614174000/requirement.md')
     expect(readRememberedSddDraft('/tmp/app')?.id).toBe(draft.id)
     expect(readRememberedSddDraft('/tmp/other')).toBeNull()
+  })
+
+  it('forgets a completed draft without clearing other workspaces', () => {
+    const firstDraft = createSddDraft({
+      id: '123e4567-e89b-12d3-a456-426614174000',
+      workspaceRoot: '/tmp/app',
+      now: 1
+    })
+    const secondDraft = createSddDraft({
+      id: '123e4567-e89b-12d3-a456-426614174111',
+      workspaceRoot: '/tmp/other',
+      now: 2
+    })
+
+    useSddDraftStore.getState().setActiveDraft(firstDraft, '# First')
+    useSddDraftStore.getState().setActiveDraft(secondDraft, '# Second')
+    forgetRememberedSddDraft(firstDraft)
+
+    expect(readRememberedSddDraft('/tmp/app')).toBeNull()
+    expect(readRememberedSddDraft('/tmp/other')?.id).toBe(secondDraft.id)
+  })
+
+  it('does not clear a newer remembered draft in the same workspace', () => {
+    const oldDraft = createSddDraft({
+      id: '123e4567-e89b-12d3-a456-426614174000',
+      workspaceRoot: '/tmp/app',
+      now: 1
+    })
+    const newDraft = createSddDraft({
+      id: '123e4567-e89b-12d3-a456-426614174111',
+      workspaceRoot: '/tmp/app',
+      now: 2
+    })
+
+    useSddDraftStore.getState().setActiveDraft(oldDraft, '# Old')
+    useSddDraftStore.getState().setActiveDraft(newDraft, '# New')
+    forgetRememberedSddDraft(oldDraft)
+
+    expect(readRememberedSddDraft('/tmp/app')?.id).toBe(newDraft.id)
   })
 
   it('normalizes malformed persisted draft registry data', () => {

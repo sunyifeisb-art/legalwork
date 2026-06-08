@@ -153,6 +153,19 @@ export function readRememberedSddDraft(workspaceRoot: string): SddDraft | null {
   return draft && normalizeWorkspaceRoot(draft.workspaceRoot) === workspace ? draft : null
 }
 
+export function forgetRememberedSddDraft(draft: Pick<SddDraft, 'id' | 'workspaceRoot'>): void {
+  const normalizedId = normalizeText(draft.id)
+  if (!normalizedId) return
+  const registry = readRegistry()
+  delete registry.drafts[normalizedId]
+  for (const [key, activeId] of Object.entries(registry.activeByWorkspace)) {
+    if (activeId === normalizedId) {
+      delete registry.activeByWorkspace[key]
+    }
+  }
+  writeRegistry(registry)
+}
+
 export const useSddDraftStore = create<SddDraftState>((set) => ({
   activeDraft: null,
   content: '',
