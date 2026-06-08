@@ -46,3 +46,14 @@ export function applyUiFontScale(scale: UiFontScale): void {
         : '0.88'
   root.style.setProperty('--ds-ui-scale', factor)
 }
+
+/**
+ * Mirrors the active i18n locale onto `<html lang>` so screen readers,
+ * browser spellcheck, and CSS `:lang()` selectors match the visible UI.
+ */
+export function applyDocumentLocale(locale: 'en' | 'zh'): void {
+  const lang = locale === 'zh' ? 'zh-CN' : 'en'
+  if (document.documentElement.getAttribute('lang') !== lang) {
+    document.documentElement.setAttribute('lang', lang)
+  }
+}

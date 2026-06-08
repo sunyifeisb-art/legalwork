@@ -14,6 +14,7 @@ type CreateAppActionsOptions = {
   setComposerModelLoadPromise: (promise: Promise<void> | null) => void
   applyTheme: (theme: AppSettingsV1['theme']) => void
   applyUiFontScale: (scale: AppSettingsV1['uiFontScale']) => void
+  applyDocumentLocale: (locale: AppSettingsV1['locale']) => void
   workspaceLabelFromPath: (workspaceRoot: string) => string
   normalizeWorkspaceRoot: (workspaceRoot?: string | null) => string
 }
@@ -46,6 +47,7 @@ export function createAppActions(options: CreateAppActionsOptions): Pick<
     setComposerModelLoadPromise,
     applyTheme,
     applyUiFontScale,
+    applyDocumentLocale,
     workspaceLabelFromPath,
     normalizeWorkspaceRoot
   } = options
@@ -119,6 +121,7 @@ export function createAppActions(options: CreateAppActionsOptions): Pick<
 
     applyI18nFromSettings: async (locale) => {
       await i18n.changeLanguage(locale)
+      applyDocumentLocale(locale)
     },
 
     reloadUiSettings: async () => {
