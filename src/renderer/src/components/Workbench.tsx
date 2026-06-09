@@ -1500,7 +1500,7 @@ export function Workbench(): ReactElement {
           ) : (
             <section className="ds-chat-stage ds-drag flex min-h-0 min-w-0 flex-1 flex-col">
             <header className="chat-topbar ds-topbar-surface relative z-10 mt-3 flex min-h-[46px] w-full shrink-0 items-stretch overflow-visible rounded-[24px]">
-              <div className="chat-topbar-grid grid w-full min-w-0 items-center gap-2.5 px-3 py-2 sm:px-4 md:pl-5 md:pr-2">
+              <div className="chat-topbar-grid grid w-full min-w-0 items-start gap-2.5 px-3 py-2 sm:px-4 md:pl-5 md:pr-2">
                 <div
                   className={`chat-topbar-session flex min-w-0 items-center gap-2.5 ${
                     leftSidebarCollapsed ? 'ds-window-controls-safe-inset' : ''
@@ -1515,7 +1515,7 @@ export function Workbench(): ReactElement {
                   ) : null}
                   <SessionHeader compact className="min-w-0 flex-1" />
                 </div>
-                <div className="chat-topbar-actions flex min-w-0 flex-wrap items-center justify-end gap-2">
+                <div className="chat-topbar-actions flex min-w-0 flex-wrap items-center justify-end gap-2 self-start">
                   {busy ? (
                     <span className="inline-flex shrink-0 rounded-full bg-amber-500/16 px-2.5 py-1 text-[11.5px] font-semibold text-amber-950 dark:text-amber-100">
                       {t('running')}

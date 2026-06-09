@@ -2215,20 +2215,23 @@ pre {
 }
 
 .chat-topbar-grid {
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
   gap: 0.5rem;
   padding-block: 0.35rem;
 }
 
 .chat-topbar-session {
   min-width: 0;
+  align-self: start;
 }
 
 .chat-topbar-actions {
-  width: 100%;
+  width: auto;
   flex-wrap: nowrap;
-  overflow-x: auto;
+  overflow-x: visible;
   overflow-y: visible;
+  align-self: start;
   justify-self: end;
   scrollbar-width: none;
 }
@@ -2245,15 +2248,14 @@ pre {
   overflow: hidden;
 }
 
-@container (min-width: 900px) {
+@container (max-width: 640px) {
   .chat-topbar-grid {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .chat-topbar-actions {
-    width: auto;
-    overflow-x: visible;
-    justify-content: flex-end;
+    width: 100%;
+    overflow-x: auto;
   }
 }
 
