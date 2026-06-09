@@ -496,6 +496,8 @@ body {
     'SF Pro Text', 'PingFang SC', 'Noto Sans SC', 'Helvetica Neue', Arial, sans-serif;
   background-color: var(--ds-bg-main);
   color: var(--ds-text);
+  user-select: none;
+  -webkit-user-select: none;
   zoom: var(--ds-ui-scale);
 }
 
@@ -524,6 +526,20 @@ input,
 select,
 textarea {
   font: inherit;
+}
+
+input,
+textarea,
+[contenteditable='true'],
+.ds-markdown,
+.ds-user-message-bubble,
+.ds-code-block-html,
+.ds-file-preview-code-html,
+.write-codemirror-host,
+.write-markdown-preview,
+pre {
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 * {
