@@ -72,6 +72,10 @@ export function armBusyWatchdog(
       }
       return options.flushLiveBlocks(snapshot, base)
     })
+    // The thread is idle again as far as the UI is concerned; queued
+    // messages would otherwise wait for a completion event that will
+    // never come.
+    void get().drainQueuedMessages?.()
   }, options.timeoutMs)
 }
 
