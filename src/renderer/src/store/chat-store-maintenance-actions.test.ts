@@ -28,6 +28,7 @@ type Harness = {
     clearThreadGoal: ReturnType<typeof vi.fn>
     interruptTurn: ReturnType<typeof vi.fn>
   }
+  recoverActiveTurn: ReturnType<typeof vi.fn>
   refreshThreads: ReturnType<typeof vi.fn>
   sendMessage: ReturnType<typeof vi.fn>
   state: ChatState
@@ -94,6 +95,7 @@ function buildHarness(options: {
   })
   const refreshThreads = vi.fn(async () => undefined)
   const drainQueuedMessages = vi.fn(async () => undefined)
+  const recoverActiveTurn = vi.fn(async () => false)
   const sendMessage = vi.fn(async (
     _text: string,
     _mode?: string,
@@ -106,6 +108,7 @@ function buildHarness(options: {
     createThread,
     error: null,
     drainQueuedMessages,
+    recoverActiveTurn,
     refreshThreads,
     runtimeConnection: 'ready',
     sendMessage,
@@ -124,7 +127,7 @@ function buildHarness(options: {
     sseAbortRef: { current: null }
   })
 
-  return { actions, createThread, drainQueuedMessages, get, provider, refreshThreads, sendMessage, state }
+  return { actions, createThread, drainQueuedMessages, get, provider, recoverActiveTurn, refreshThreads, sendMessage, state }
 }
 
 describe('chat-store-maintenance-actions goal actions', () => {
@@ -239,8 +242,8 @@ describe('chat-store-maintenance-actions goal actions', () => {
     expect(refreshThreads).toHaveBeenCalledTimes(1)
   })
 
-  it('settles local runtime work after interrupt succeeds', async () => {
-    const { actions, drainQueuedMessages, provider, refreshThreads, state } = buildHarness()
+  it('settles local runtime work before the backend interrupt resolves', async () => {
+    const { actions, provider, recoverActiveTurn, refreshThreads, state } = buildHarness()
     const blocks: ChatBlock[] = [
       { kind: 'user', id: 'user-1', text: 'run command' },
       {
@@ -278,10 +281,15 @@ describe('chat-store-maintenance-actions goal actions', () => {
       turnReasoningFirstAtByUserId: {},
       turnReasoningLastAtByUserId: {}
     })
+    let busyWhenBackendCalled: boolean | null = null
+    provider.interruptTurn.mockImplementation(async () => {
+      busyWhenBackendCalled = state.busy
+    })
 
     await actions.interrupt()
 
     expect(provider.interruptTurn).toHaveBeenCalledWith('thr_existing', 'turn-1', { discard: false })
+    expect(busyWhenBackendCalled).toBe(false)
     expect(state.busy).toBe(false)
     expect(state.currentTurnId).toBeNull()
     expect(state.currentTurnUserId).toBeNull()
@@ -294,6 +302,40 @@ describe('chat-store-maintenance-actions goal actions', () => {
       'assistant'
     ])
     expect(refreshThreads).toHaveBeenCalledTimes(1)
-    expect(drainQueuedMessages).toHaveBeenCalledTimes(1)
+    expect(recoverActiveTurn).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps the turn settled when the backend interrupt fails', async () => {
+    ;(globalThis as { window?: unknown }).window = {
+      dsGui: {
+        logError: vi.fn(async () => undefined)
+      }
+    }
+    try {
+      const { actions, provider, recoverActiveTurn, state } = buildHarness()
+      Object.assign(state, {
+        blocks: [{ kind: 'user', id: 'user-1', text: 'run command' }],
+        busy: true,
+        currentTurnId: 'turn-1',
+        currentTurnUserId: 'user-1',
+        liveAssistant: '',
+        liveReasoning: '',
+        queuedMessages: [],
+        turnStartedAtByUserId: {},
+        turnDurationByUserId: {},
+        turnReasoningFirstAtByUserId: {},
+        turnReasoningLastAtByUserId: {}
+      })
+      provider.interruptTurn.mockRejectedValueOnce(new Error('runtime timeout'))
+
+      await actions.interrupt()
+
+      expect(state.busy).toBe(false)
+      expect(state.currentTurnId).toBeNull()
+      expect(state.error).toBe('runtime timeout')
+      expect(recoverActiveTurn).toHaveBeenCalledTimes(1)
+    } finally {
+      delete (globalThis as { window?: unknown }).window
+    }
   })
 })
