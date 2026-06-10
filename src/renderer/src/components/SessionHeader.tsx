@@ -27,9 +27,11 @@ export function SessionHeader({ compact = false, className = '' }: Props): React
     : workspaceLabel
   const [editing, setEditing] = useState(false)
   const [draftTitle, setDraftTitle] = useState('')
+  // Usage stats are no longer shown in compact mode (the composer footer
+  // already shows them in the chat route), so skip fetching there.
   const threadUsage = useThreadUsage(
     activeThreadId,
-    runtimeConnection === 'ready',
+    runtimeConnection === 'ready' && !compact,
     `${active?.updatedAt ?? ''}:${busy ? 'busy' : 'idle'}`
   )
   const forkedFromTitle = active?.forkedFromTitle?.trim() ?? ''
@@ -97,21 +99,6 @@ export function SessionHeader({ compact = false, className = '' }: Props): React
                         ? t('sessionForkedFromCompact', { title: forkedFromTitle })
                         : t('sessionForked')}
                     </span>
-                  </span>
-                </>
-              ) : null}
-              {threadUsage ? (
-                <>
-                  <span className="session-meta-usage-separator opacity-70">·</span>
-                  <span
-                    className="session-meta-usage shrink-0 tabular-nums"
-                    title={t('sessionUsageTitle', { turns: threadUsage.turns })}
-                  >
-                    {t('sessionUsageCompact', {
-                      tokens: formatCompactNumber(threadUsage.totalTokens),
-                      cost: formatCost(threadUsage.costUsd, i18n.language, threadUsage.costCny),
-                      cache: formatPercent(threadUsage.cacheHitRate)
-                    })}
                   </span>
                 </>
               ) : null}

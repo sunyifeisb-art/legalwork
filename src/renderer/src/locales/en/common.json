@@ -825,7 +825,6 @@
   "noSessionSelected": "No thread selected",
   "sessionHeaderHint": "Start a thread from the left, or reconnect the runtime to continue working.",
   "sessionUsageTitle": "{{turns}} turns in this thread",
-  "sessionUsageCompact": "{{tokens}} tok / {{cost}} / cache {{cache}}",
   "sessionUsageTokens": "{{tokens}} tokens",
   "sessionUsageCost": "{{cost}}",
   "sessionUsageContextSavings": "saved {{cost}}",

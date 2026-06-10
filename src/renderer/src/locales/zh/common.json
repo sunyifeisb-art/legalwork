@@ -825,7 +825,6 @@
   "noSessionSelected": "未选择会话",
   "sessionHeaderHint": "从左侧进入一个会话，或先恢复运行时连接再继续工作。",
   "sessionUsageTitle": "当前会话 {{turns}} 个回合",
-  "sessionUsageCompact": "{{tokens}} tok / {{cost}} / cache {{cache}}",
   "sessionUsageTokens": "{{tokens}} tokens",
   "sessionUsageCost": "{{cost}}",
   "sessionUsageContextSavings": "省 {{cost}}",
