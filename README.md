@@ -1,198 +1,153 @@
-# legalwork 项目说明
+# LegalWork — 法律人工智能工作台
 
-> ## 许可证声明
->
-> 本仓库包含两部分代码，适用不同的许可证：
->
-> - **`apps/desktop-legalwork/`** — 桌面端 agent runtime，基于 [Kun](https://github.com/KunAgent/Kun)（© 2026 xingyu），
->   遵循 **PolyForm Noncommercial License 1.0.0**（详见 `apps/desktop-legalwork/LICENSE`）。
->   **仅限非商业用途。** 商业使用需联系 Kun 版权方获取书面授权。
->
-> - **根目录下其他文件**（OCR、脱敏、skill engine、知识库等 Python 代码）— 原创内容，
->   遵循 **MIT License**（详见根目录 `LICENSE`），可自由使用。
-
-## 桌面软件在哪里
-
-真正的 legalwork 桌面软件在：
-
-```text
-apps/desktop-legalwork/
-```
-
-这个目录才是桌面端工程入口。打开、开发、测试软件时，以 `apps/desktop-legalwork/package.json` 为准。根目录下的 OCR、脱敏、技能文件是能力包，不是桌面软件入口。
-
-更详细的目录说明见 `软件入口说明.md` 和 `PROJECT_STRUCTURE.md`。
+> 🏛️ 面向法律专业人士的 AI 赋能平台  
+> 集成 OCR 文档识别、敏感信息脱敏、智能案情分析、法律检索、文书生成、合规审查等完整法律 AI 能力
 
 ---
 
-# LegalWork OCR Agent 能力包
+## 📋 许可证声明
 
-> 从 LegalClaw 项目独立出来的 OCR Agent 能力模块。
-> 内置为 Agent 本身的能力，有需要时自动调用。
+本仓库包含两部分代码，适用不同的许可证：
 
-## 目录结构
+- **`apps/desktop-legalwork/`** — 桌面端 agent runtime，基于 [Kun](https://github.com/KunAgent/Kun)（© 2026 xingyu），遵循 **PolyForm Noncommercial License 1.0.0**（详见 `apps/desktop-legalwork/LICENSE`）。**仅限非商业用途。**
+- **根目录下其他文件**（OCR、脱敏、skill engine、知识库等 Python 代码）— 原创内容，遵循 **MIT License**（详见根目录 `LICENSE`）。
 
-```
-legalwork/
-├── __init__.py                 # 包入口
-├── ocr_agent.py                # ★ 独立 OCR Agent 脚本（入口）
-├── README.md                   # 本文件
-└── document/
-    ├── __init__.py
-    ├── pipeline.py             # 文档处理流水线（intake→OCR→LDIR）
-    ├── intake/
-    │   └── router.py           # 文档入口路由（自动判断是否需要OCR）
-    ├── ocr/
-    │   └── router.py           # OCR 引擎路由（PaddleOCR→Tesseract降级）
-    ├── ldir/
-    │   ├── builder.py          # Legal Document IR 结构化输出
-    │   └── schema.json         # LDIR 格式定义
-    ├── parser/
-    │   └── mineru_adapter.py   # MinerU PDF 解析（降级）
-    └── semantic/
-        ├── semantic_layer.py   # 语义增强层
-        ├── entity_extractor.py # 法律实体提取
-        ├── chunker.py          # 语义分块
-        └── clause_parser.py    # 条款层级解析
-```
+---
 
-## 作为 Agent 能力自动调用
+## ✨ 功能全景
 
-### 方式 1：自动 OCR（推荐）
+### 🧠 69 项法律 AI 技能（Skills）
 
-Agent 的 `read_file` 工具已内置 OCR 自动检测：
+LegalWork 内置了覆盖法律工作全流程的 AI 技能库，按领域分类：
 
-- 读取 **原生 PDF**（有文本层）→ 直接提取文字
-- 读取 **扫描 PDF**（无文本层）→ 自动触发 OCR
-- 读取 **图片**（jpg/png/bmp/tiff）→ 自动触发 OCR
-- 读取 **Word/Excel** → 直接提取内容
-
-无需手动调用，扫描件自动识别。
-
-### 方式 2：手动调用 OCR 工具
-
-Agent 提供 `run_ocr` 工具，当需要获取详细的 OCR 结果（置信度、分块信息等）时使用：
-
-```
-run_ocr(file_path="扫描合同.pdf", profile="legal_pdf_parser")
-```
-
-profile 参数：
-- `fast_local_ocr`（默认）：快速中文 OCR
-- `legal_pdf_parser`：法律文档解析（更适合判决书、合同等）
-- `complex_document`：复杂版面文档
-- `browser_local`：浏览器端快速识别
-
-## 独立 CLI 用法
-
-```bash
-# 对单文件执行 OCR
-python3 ocr_agent.py scan 扫描合同.pdf
-
-# 批处理目录下所有文件
-python3 ocr_agent.py batch ./证据材料/
-
-# 完整文档处理流水线（intake→OCR→LDIR）
-python3 ocr_agent.py pipeline 判决书.pdf
-
-# 自动判断是否需要 OCR
-python3 ocr_agent.py auto 文件.docx
-
-# 列出当前可用的 OCR 引擎
-python3 ocr_agent.py engines
-```
-
-## 能力说明
-
-| 能力 | 说明 |
+#### 📊 案件分析与推理
+| 技能 | 说明 |
 |------|------|
-| 自动文件类型检测 | PDF vs 扫描PDF vs 图片 vs Word vs Excel |
-| 双引擎 OCR | PaddleOCR（默认）→ Tesseract（兜底） |
-| 扫描 PDF 逐页 OCR | PyMuPDF 转图片 → OCR |
-| 坐标级输出 | 返回文本块坐标（bbox） |
-| 置信度报告 | 每个文本块的识别置信度 |
-| 批量处理 | 目录批量 OCR |
-| LDIR 结构化 | 统一的法律文档中间表示 |
-| 语义增强 | 实体提取、条款解析、语义分块 |
-| Pipeline 整合 | intake→OCR→LDIR→Semantic 全自动 |
+| `legal-case-analysis` | 案情综合分析 |
+| `fact_extraction` | 案件关键事实抽取 |
+| `evidence_evaluation` | 证据三性认证与证明力评估 |
+| `evidence_argument_chain` | 证据链构建与分析 |
+| `evidence-catalog` | 证据目录生成与管理 |
+| `argument_chain_construction` | 论证链构建 |
+| `argument_strength_evaluation` | 论证强度评估 |
+| `deductive_reasoning` | 演绎推理分析 |
+| `inductive_reasoning` | 归纳推理分析 |
+| `analogical_reasoning` | 类比推理分析 |
+| `counterfactual_reasoning` | 反事实推理 |
+| `legal_abductive_reasoning` | 法律溯因推理 |
+| `systematic_interpretation` | 体系解释分析 |
+| `teleological_interpretation` | 目的解释分析 |
+| `normative_meaning_argumentation` | 规范意义论证 |
+| `judicial_value_judgment` | 司法价值判断分析 |
+| `formal_legal_consequence` | 形式法律后果分析 |
 
-## 依赖安装
+#### ⚖️ 裁判预测与评估
+| 技能 | 说明 |
+|------|------|
+| `legal_judgment_prediction` | 裁判结果预测 |
+| `legal_risk_assessment` | 法律风险评估 |
+| `strategic_risk_prioritization` | 战略风险优先级排序 |
+| `internal_compliance_risk_identification` | 内部合规风险识别 |
+| `conflict_resolution` | 争议解决方案分析 |
+| `dispute_issue_identification` | 争议焦点识别 |
+| `dispute_and_performance_risk` | 履约风险分析 |
+
+#### 📝 法律文书
+| 技能 | 说明 |
+|------|------|
+| `document_drafting` | 法律文书起草 |
+| `legal_document_formatting` | 法律文书格式规范化 |
+| `legal_document_summarization` | 法律文书摘要生成 |
+| `judgment_document_generation` | 判决文书生成 |
+| `legal-memo-generator` | 法律备忘录生成 |
+| `legal-assessment-report-skill` | 法律评估报告生成 |
+| `legal-case-analysis-template` | 案例分析报告模板 |
+| `legal-paper-anti-ai-traces` | 法学论文去 AI 痕迹 |
+| `legal-thesis-ideation` | 法学论文选题构思 |
+| `meeting_minutes` | 会议纪要生成 |
+| `case_notebook` | 案件笔记整理 |
+
+#### 🔍 法律检索与研究
+| 技能 | 说明 |
+|------|------|
+| `legal_research` | 法律研究分析 |
+| `legal_article_retrieval` | 法条检索 |
+| `lawcase-search` | 案例检索 |
+| `legal-source-verifier` | 法律来源验证 |
+| `other_legal_retrieval` | 其他法律资料检索 |
+| `chinese_law_verifier` | 中国法律条文核验 |
+| `legal_norm_validity_check` | 法律规范效力审查 |
+| `new_legislation_analysis` | 新法分析解读 |
+
+#### 🔒 合规与风控
+| 技能 | 说明 |
+|------|------|
+| `compliance_review` | 合规审查 |
+| `contract_risk_review` | 合同风险审查 |
+| `due_diligence` | 尽职调查分析 |
+| `data-compliance-ai-rd` | AI 研发数据合规 |
+| `presidio-data-compliance` | 数据合规（Presidio 集成） |
+| `creator-rights-assistant` | 创作者权益保护 |
+
+#### 📋 案件管理
+| 技能 | 说明 |
+|------|------|
+| `case_management` | 案件管理 |
+| `case_lifecycle_planning` | 案件生命周期规划 |
+| `case_retrieval` | 案件检索 |
+| `trial_scheduling_and_deadline_monitoring` | 庭审排期与期限监控 |
+| `timeline_generation` | 时间线生成 |
+| `billing_and_litigation_budget` | 计费与诉讼预算 |
+| `client_communication` | 客户沟通辅助 |
+| `team_knowledge_sharing` | 团队知识分享 |
+| `legal_professional_growth` | 法律职业成长 |
+| `legal_professional_philosophy` | 法律职业理念 |
+| `legal_time_management` | 法律时间管理 |
+| `legal_terminology` | 法律术语解释 |
+| `legal_concept_comprehension` | 法律概念理解 |
+| `legal_element_extraction` | 法律要素提取 |
+| `structured_element_extraction` | 结构化要素提取 |
+| `multi_document_summarization` | 多文档摘要 |
+| `wps-case-file-organizer` | WPS 案件材料整理 |
+
+#### 🛠️ 平台工具
+| 技能 | 说明 |
+|------|------|
+| `ocr_extraction` | OCR 文字提取 |
+| `redaction` | 文件脱敏 |
+
+### 📄 OCR 智能文档识别
+
+基于 `ocr_agent.py` 的完整文档处理流水线：
+
+- **多格式支持**：PDF（含扫描件）、PNG、JPG、TIFF、BMP、WebP、DOCX
+- **双引擎 OCR**：PaddleOCR（默认高精度）→ Tesseract（自动降级兜底）
+- **自动判断**：`auto` 模式自动识别是否需要 OCR
+- **批量处理**：目录批量 OCR 处理
+- **LDIR 结构化输出**：统一的法律文档中间表示（Legal Document IR）
+- **语义增强**：实体提取、条款层级解析、语义分块
+- **坐标级输出**：返回文本块坐标（bbox）
 
 ```bash
-pip install paddleocr      # 中文 OCR 引擎
-pip install pytesseract     # 兜底 OCR 引擎（需安装 tesseract-ocr）
-pip install pymupdf         # PDF 处理
-pip install Pillow          # 图片处理
+python3 ocr_agent.py scan 扫描合同.pdf
+python3 ocr_agent.py batch ./证据材料/
+python3 ocr_agent.py pipeline 判决书.pdf
+python3 ocr_agent.py auto 文件.docx
 ```
 
----
+### 🔏 智能文件脱敏
 
-# 文件脱敏功能 (Redaction)
+基于 `redact_agent.py` 和 `redaction/` 模块的完整脱敏系统：
 
-> ⚠️ **当前状态：已复制，可独立测试，但尚未集成到 Agent 工具列表。**
-> 下一步：将其注册为 Agent 的 `run_redaction` 工具。
-
-## 目录结构
-
-```
-legalwork/
-└── redaction/
-    ├── __init__.py           # 模块入口，导出所有 public 类
-    ├── detector.py           # 敏感实体检测（身份证、手机号、邮箱、银行卡、案号等）
-    ├── policy.py             # 脱敏策略引擎（3种策略、5种脱敏模式）
-    ├── pipeline.py           # 脱敏处理流水线（detect→policy→render）
-    ├── renderer.py           # 脱敏渲染器（Markdown/HTML/映射表）
-    └── renderer_pdf.py       # PDF 坐标级涂黑渲染器
-skills/redaction/
-    ├── __init__.py           # Skill 入口
-    └── manifest.yaml         # Skill 声明文件
-```
-
-## 核心能力
-
-### 敏感实体识别 (`detector.py`)
-- 身份证号（支持15/18位，含校验位）
-- 手机号
-- 邮箱地址
-- 银行卡号
-- 车牌号
-- 公司名
-- 地址
-- 案号
-- 姓名（NER 预留）
-- 金额（正则 + 上下文）
-
-### 脱敏策略 (`policy.py`)
-
-| 策略 | 适用场景 |
-|------|----------|
-| `external_client` | 对外发送，Mask 敏感信息 |
-| `internal_legal_analysis` | 内部法律分析，Tokenize 后保留可读性 |
-| `public_release` | 公开发布，Full Mask |
-
-### 脱敏模式
-
-| 模式 | 示例 (13800138000) |
-|------|-------------------|
-| MASK | 138****8000 |
-| REPLACE | [手机号] |
-| TOKENIZE | {PHONE:1} |
-| FULL_MASK | **** |
-| PARTIAL_MASK | 138****8000 |
-
-### 输出产物
-
-- `.redacted.md` — 脱敏后的文档
-- `.mapping.enc` — 脱敏映射表（一致性映射，跨实体跟踪）
-- `.redaction_report.html` — 脱敏报告（含置信度、复核项）
-
-### PDF 坐标级脱敏 (`renderer_pdf.py`)
-- 基于 LDIR 坐标定位敏感区域
-- PyMuPDF 像素级涂黑（矩形覆盖）
-- 底层文本层删除（可选）
-- Metadata 清理
-
-## 使用示例
+- **敏感实体识别**：身份证号、手机号、邮箱、银行卡号、车牌号、公司名、地址、案号、姓名、金额
+- **三种脱敏策略**：
+  - `external_client` — 对外发送（遮盖敏感信息）
+  - `internal_legal_analysis` — 内部法律分析（Tokenize 保留可读性）
+  - `public_release` — 公开发布（完全遮盖）
+- **五种脱敏模式**：MASK、REPLACE、TOKENIZE、FULL_MASK、PARTIAL_MASK
+- **PDF 坐标级涂黑**：PyMuPDF 像素级矩形覆盖 + 底层文本删除 + Metadata 清理
+- **输出产物**：脱敏文档（.redacted.md）、脱敏映射表（.mapping.enc）、脱敏报告（.redaction_report.html）
+- **参考规范**：`reference_redaction_mode.py` 提供脱敏模式参考文档
 
 ```python
 from redaction.pipeline import RedactionPipeline
@@ -202,6 +157,195 @@ result = pipeline.process_text(
     text="身份证号：110101199001011234，手机号：13800138000",
     policy_name="external_client",
 )
-print(result["redacted_text"])
-# 输出：身份证号：110101**********1234，手机号：138****8000
 ```
+
+### ⚙️ Skill Engine 技能引擎
+
+`skill_engine/` 提供统一的技能执行框架：
+
+- **标准化流程**：intake（文件读取）→ 技能 prompt 加载 → 结果保存
+- **自动 OCR 触发**：扫描件自动走 OCR 提取
+- **结构化输出**：统一的结果格式（文本、引擎、置信度）
+- **CLI 调用**：`python3 run_skill.py <skill-name> <input-file>`
+
+### 🗂️ 案件管理系统
+
+`case_system/` 提供轻量级案件管理：
+
+- **案件建模**：`core.py` 案件核心数据模型
+- **Flask API**：`flask_api.py` RESTful 案件管理接口
+- **可扩展**：支持自定义案件字段和状态流转
+
+### 📚 法规知识库
+
+`projects/compliance/` 内置海量中国法律法规数据库：
+
+- **法律层级覆盖**：
+  - 国家法律（个人信息保护法、数据安全法、网络安全法等）
+  - 国家标准与行业标准（GB/T、YD/T 等 50+ 项）
+  - 地方规范性文件（覆盖全国各省市）
+- **适用场景**：数据合规审查、AI 研发合规、个人信息保护评估
+- **持续更新**：可扩展的知识库体系
+
+### 🧪 评估系统
+
+`evals/` 提供质量评估框架：
+
+- `redaction_evaluator.py` — 脱敏效果评估
+- 可扩展的评估指标体系
+
+### 📋 项目规划
+
+`plans/` 包含完整的产品与技术规划文档：
+
+- `legalwork-ai-system-plan-v1.md` — AI 系统技术方案
+- `legalwork-product-details-v1.md` — 产品功能详情
+
+---
+
+## 🖥️ 桌面端应用
+
+桌面子项目位于 `apps/desktop-legalwork/`，提供完整的本地 AI Agent 运行时：
+
+- **本地 HTTP/SSE 服务**：`legalwork serve` 启动本地服务
+- **线程管理**：创建、管理、fork 对话线程
+- **模型集成**：支持 DeepSeek 等 API 兼容模型
+- **MCP 协议支持**：集成 MCP 工具服务器
+- **缓存优化**：Cache-first 架构，LRU/TTL 缓存
+- **技能集成**：支持调用上述 69 项法律 AI 技能
+- **记忆系统**：长期记忆存储与检索
+- **知识检索**：RAG 知识库检索
+- **附件处理**：图片上传与处理
+- **Web 搜索**：内置网页抓取与搜索
+- **子代理**：任务委派与并行执行
+
+详见 `apps/desktop-legalwork/README.md`。
+
+---
+
+## 🚀 快速开始
+
+### Python 环境
+
+```bash
+# 安装依赖
+pip install -r requirements.txt
+
+# OCR 依赖（可选）
+pip install paddleocr pytesseract pymupdf Pillow
+
+# 运行 OCR
+python3 ocr_agent.py auto 文档.pdf
+
+# 运行脱敏
+python3 redact_agent.py 文档.docx
+
+# 运行技能
+python3 run_skill.py legal-case-analysis 案件材料.pdf
+```
+
+### 桌面端应用
+
+```bash
+cd apps/desktop-legalwork
+
+# 安装依赖
+npm install
+
+# 开发模式
+npm run dev
+
+# 构建
+npm run build
+
+# 启动服务
+legalwork serve --data-dir ~/.legalwork --api-key $API_KEY
+```
+
+---
+
+## 🧩 项目结构
+
+```
+legalwork/
+├── ocr_agent.py              # OCR 智能识别入口
+├── redact_agent.py           # 文件脱敏入口
+├── run_skill.py              # Skill 执行入口
+├── run.sh                    # 服务启动脚本
+├── setup.sh                  # 环境安装脚本
+├── requirements.txt          # Python 依赖
+│
+├── document/                 # 文档处理流水线
+│   ├── pipeline.py           #   主流水线
+│   ├── intake/               #   文件入口路由
+│   ├── ocr/                  #   OCR 引擎路由
+│   ├── ldir/                 #   LDIR 结构化输出
+│   ├── parser/               #   PDF 解析适配器
+│   └── semantic/             #   语义增强层
+│
+├── redaction/                # 脱敏系统
+│   ├── detector.py           #   敏感实体检测
+│   ├── policy.py             #   脱敏策略引擎
+│   ├── pipeline.py           #   脱敏流水线
+│   ├── renderer.py           #   渲染器
+│   └── renderer_pdf.py       #   PDF 涂黑渲染器
+│
+├── skill_engine/             # 技能引擎
+│   ├── runner.py             #   执行器
+│   ├── intake.py             #   文件读取
+│   └── output.py             #   结果输出
+│
+├── skills/                   # 69 项法律 AI 技能
+│   ├── legal-case-analysis/  #   案情分析
+│   ├── fact_extraction/      #   事实抽取
+│   ├── evidence_evaluation/  #   证据评估
+│   ├── document_drafting/    #   文书起草
+│   ├── legal_research/       #   法律研究
+│   ├── compliance_review/    #   合规审查
+│   ├── ...                   #   （共 69 项）
+│
+├── case_system/              # 案件管理系统
+│
+├── evals/                    # 评估框架
+│
+├── projects/                 # 专业项目模块
+│   └── compliance/           #   数据合规（含法规知识库）
+│
+├── knowledge-base/           # 知识库
+│
+├── plans/                    # 产品与技术规划
+│
+├── tests/                    # 测试
+│
+└── apps/desktop-legalwork/   # 桌面端应用（基于 Kun）
+    └── legalwork/            #   Agent 运行时
+```
+
+---
+
+## 🛠️ 技术栈
+
+| 层 | 技术 |
+|---|------|
+| AI 引擎 | DeepSeek API / OpenAI API 兼容 |
+| OCR | PaddleOCR, Tesseract, PyMuPDF |
+| 文档处理 | python-docx, mammoth, pdf-parse |
+| 脱敏 | 正则 + NER + 策略引擎 |
+| 桌面端 | Electron, TypeScript, React |
+| 数据存储 | SQLite, JSONL |
+| 协议 | HTTP/SSE, MCP |
+
+---
+
+## 📄 许可证
+
+- **原创 Python 代码**（OCR、脱敏、技能引擎、知识库等）：**MIT License**
+- **桌面端应用**（`apps/desktop-legalwork/`）：基于 Kun (KunAgent/Kun)，**PolyForm Noncommercial License 1.0.0**
+
+---
+
+## 🙏 致谢
+
+- 桌面端 agent runtime 基于 [Kun](https://github.com/KunAgent/Kun)（© 2026 xingyu）
+- OCR 引擎使用 [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) 和 [Tesseract](https://github.com/tesseract-ocr/tesseract)
+- 脱敏参考 [Presidio](https://github.com/microsoft/presidio) 设计模式
