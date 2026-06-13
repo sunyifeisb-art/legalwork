@@ -1,5 +1,16 @@
 # legalwork 项目说明
 
+> ## 许可证声明
+>
+> 本仓库包含两部分代码，适用不同的许可证：
+>
+> - **`apps/desktop-legalwork/`** — 桌面端 agent runtime，基于 [Kun](https://github.com/KunAgent/Kun)（© 2026 xingyu），
+>   遵循 **PolyForm Noncommercial License 1.0.0**（详见 `apps/desktop-legalwork/LICENSE`）。
+>   **仅限非商业用途。** 商业使用需联系 Kun 版权方获取书面授权。
+>
+> - **根目录下其他文件**（OCR、脱敏、skill engine、知识库等 Python 代码）— 原创内容，
+>   遵循 **MIT License**（详见根目录 `LICENSE`），可自由使用。
+
 ## 桌面软件在哪里
 
 真正的 legalwork 桌面软件在：
