@@ -1,0 +1,639 @@
+{
+  "document_name": "auto-remediation-v1-demo",
+  "review_scope": "数据合规相关文件审查",
+  "document_type": "privacy_policy",
+  "selected_review_paths": [
+    "disclosure_check",
+    "third_party_sharing_check",
+    "outbound_transfer_check",
+    "lawful_basis_check",
+    "purpose_scope_check",
+    "sensitive_personal_info_check",
+    "field_purpose_legal_basis_check",
+    "consent_feature_coupling_check",
+    "retention_deletion_check",
+    "consistency_check"
+  ],
+  "summary": "共汇总 6 个风险/优化项，其中高风险 0 个、中风险 3 个、建议优化 3 个。",
+  "auto_recheck_triggered": true,
+  "items": [
+    {
+      "risk_point": "重要处理事项披露可能不充分",
+      "risk_level": "中风险",
+      "legal_basis": "《个人信息保护法》第17条",
+      "reason": "触发主题：收集, 使用；已识别要素：处理目的, 信息范围；待补要素：处理方式, 用户权利与联系方式；模糊表述：相关信息, 必要时；证据片段：您同意后方可继续使用基础功能。 / 我们会收集手机号、设备标识、位置信息用于个性化推荐和商业分析。。 处理个人信息前，通常应告知处理目的、方式、种类、保存期限以及行使权利方式等事项。",
+      "suggestion": "说明具体处理方式，而不是只写收集或使用；补充用户权利、联系方式与权利行使渠道。",
+      "auto_recheck": true,
+      "evidence": [
+        "您同意后方可继续使用基础功能。",
+        "我们会收集手机号、设备标识、位置信息用于个性化推荐和商业分析。"
+      ],
+      "coverage_ratio": 0.5,
+      "trigger_hits": [
+        "收集",
+        "使用"
+      ],
+      "missing_groups": [
+        "处理方式",
+        "用户权利与联系方式"
+      ],
+      "ambiguity_hits": [
+        "相关信息",
+        "必要时"
+      ],
+      "path_ids": [
+        "disclosure_check"
+      ],
+      "sources": [
+        "pipl-17"
+      ],
+      "theme_name": "披露与权利告知",
+      "auto_recheck_status": "自动复核后维持中风险",
+      "auto_recheck_notes": "触发原因：中风险项进入自动复核；主题：披露与权利告知；支持分：7；命中路径数：1；证据片段数：2；法条来源数：1；缺失要素数：2；模糊表述数：2；同主题印证项：0；下一步：补充关键缺失要素说明、收窄模糊表述并重新判断",
+      "auto_recheck_decision": "维持",
+      "corroboration_count": 0,
+      "related_risk_points": [],
+      "legal_basis_source": "mapped_or_existing",
+      "supporting_regulations": [
+        {
+          "title": "GB-T 44588-2024数据安全技术 互联网平台及产品服务个人信息处理规则",
+          "standard_code": "GB-T 44588-2024",
+          "doc_category": "standard_or_guideline",
+          "effect_level": "国家标准/行业标准/技术指南",
+          "relative_path": "二、国家标准、行业标准合集/GB-T 44588-2024数据安全技术 互联网平台及产品服务个人信息处理规则.pdf",
+          "match_keywords": [
+            "个人信息",
+            "处理规则",
+            "个人信息处理规则",
+            "个人信息保护",
+            "保存期限",
+            "同意"
+          ],
+          "match_score": 55,
+          "snippet": "发工具包(Software Development Kit) 5概述 制定、发布个人信息处理规则是个人信息处理者遵循公开透明原则的重要体现，是保证个人信息主 体知情权的重要手段，也是约束自身行为和配合监督管理的重要机制。 2  GB/T 44588—2024 6个人信息姐颤则的基本要求 个 人 信 息 处 理 规 则 应 清 晰 、 准 确 、 完 整 地"
+        },
+        {
+          "title": "行业标准-移动互联网应用未成年人个人信息保护技术要求",
+          "standard_code": "",
+          "doc_category": "standard_or_guideline",
+          "effect_level": "国家标准/行业标准/技术指南",
+          "relative_path": "二、国家标准、行业标准合集/行业标准-移动互联网应用未成年人个人信息保护技术要求.pdf",
+          "match_keywords": [
+            "个人信息",
+            "处理规则",
+            "个人信息处理规则",
+            "个人信息保护",
+            "保存期限",
+            "同意"
+          ],
+          "match_score": 45,
+          "snippet": "定者为监护人的场景下，应在监护人专用 APP 中完成儿童个人信息处理的告知及 单独同意； e) 仅向儿童提供服务时，原则上不应使用生物特征识别的方式对儿童进行身份识别。如确需对 儿童进行生物识别，应征得儿童父母或其监护人的单独同意。  删除  符合以下情形时，个人信息处理者应主动删除或匿名化儿童个人信息，法律、法规另有规定的除外： a"
+        },
+        {
+          "title": "《个人信息保护合规审计管理办法》",
+          "standard_code": "",
+          "doc_category": "national_policy",
+          "effect_level": "国家政策/规范",
+          "relative_path": "一、国家规范、政策要求/《个人信息保护合规审计管理办法》.pdf",
+          "match_keywords": [
+            "个人信息",
+            "处理规则",
+            "个人信息处理规则",
+            "个人信息保护",
+            "保存期限",
+            "同意"
+          ],
+          "match_score": 44,
+          "snippet": "个人有权对个人信息保护合规 审计中的违法活动向保护部门进行投诉、举报。收到投 诉、举报的部门应当依法及时处理，并将处理结果告知 投诉、举报人。 第十八条 个人信息处理者、专业机构违反本办法规 定的，依照《中华人民共和国个人信息保护法》、《网  4 络数据安全管理条例》等法律法规的规定处理；"
+        }
+      ]
+    },
+    {
+      "risk_point": "处理目的与信息范围匹配性可能不足",
+      "risk_level": "中风险",
+      "legal_basis": "《个人信息保护法》第6条、第13条",
+      "reason": "涉及信息：位置信息, 设备标识；涉及目的：个性化推荐, 商业分析, 用于；已识别要素：具体业务目的, 必要性边界或最小化说明；待补要素：信息与目的对应关系, 可选性或替代方案；宽泛表述：商业分析；证据片段：我们会收集手机号、设备标识、位置信息用于个性化推荐和商业分析。。 处理个人信息应具有明确、合理目的，并限于实现处理目的的最小范围；处理活动还应有相应合法性基础。",
+      "suggestion": "说明每类信息分别对应什么目的，避免目的与范围脱节；对非核心场景说明可选性、关闭方式或不授权的影响。",
+      "auto_recheck": true,
+      "evidence": [
+        "我们会收集手机号、设备标识、位置信息用于个性化推荐和商业分析。"
+      ],
+      "coverage_ratio": 0.5,
+      "trigger_hits": [
+        "位置信息",
+        "设备标识",
+        "个性化推荐",
+        "商业分析",
+        "用于"
+      ],
+      "missing_groups": [
+        "信息与目的对应关系",
+        "可选性或替代方案"
+      ],
+      "ambiguity_hits": [
+        "商业分析"
+      ],
+      "path_ids": [
+        "purpose_scope_check"
+      ],
+      "sources": [
+        "pipl-6-13-purpose"
+      ],
+      "theme_name": "处理目的与法律基础",
+      "auto_recheck_status": "自动复核后维持中风险（多规则印证）",
+      "auto_recheck_notes": "触发原因：中风险项进入自动复核；主题：处理目的与法律基础；支持分：9；命中路径数：1；证据片段数：1；法条来源数：1；缺失要素数：2；模糊表述数：1；同主题印证项：2；同主题关联：合法性基础与必要性表达可能不足、字段、处理目的与法律基础之间的对应关系可能不足；下一步：补充关键缺失要素说明、结合同主题命中项统一整改",
+      "auto_recheck_decision": "维持",
+      "corroboration_count": 2,
+      "related_risk_points": [
+        "合法性基础与必要性表达可能不足",
+        "字段、处理目的与法律基础之间的对应关系可能不足"
+      ],
+      "legal_basis_source": "mapped_or_existing",
+      "supporting_regulations": [
+        {
+          "title": "GBT 46071-2025《数据安全技术 数据安全和个人信息保护社会责任指南》",
+          "standard_code": "GBT 46071-2025",
+          "doc_category": "standard_or_guideline",
+          "effect_level": "国家标准/行业标准/技术指南",
+          "relative_path": "二、国家标准、行业标准合集/GBT 46071-2025《数据安全技术 数据安全和个人信息保护社会责任指南》.pdf",
+          "match_keywords": [
+            "个人信息",
+            "互联网平台",
+            "APP",
+            "个人信息保护"
+          ],
+          "match_score": 42,
+          "snippet": "对不同的业务 线,根 据 用 户 举 报 情 况,定 期 公 布 数 据 安全和个人信息保护红黑榜,并将其与绩效考核挂钩 92 GB/T 46071—2025  表 B.1 社会责任履行实践案例 (续) 章 相关行动和期望 实践案例 7 合 规 性、创 新 性和价 值 体现 7.1 产 品 或 服 务 的 合规性 案例1:某互联网公司 通 过 专 业 机 构"
+        },
+        {
+          "title": "行业标准-移动互联网应用未成年人个人信息保护技术要求",
+          "standard_code": "",
+          "doc_category": "standard_or_guideline",
+          "effect_level": "国家标准/行业标准/技术指南",
+          "relative_path": "二、国家标准、行业标准合集/行业标准-移动互联网应用未成年人个人信息保护技术要求.pdf",
+          "match_keywords": [
+            "最小必要",
+            "个人信息",
+            "APP",
+            "个人信息保护",
+            "合法性基础"
+          ],
+          "match_score": 41,
+          "snippet": "原则： a) 目的明确—具有明确、清晰、具体的未成年人个人信息处理目的； b) 最小必要—遵循未成年人个人信息收集使用的最小必要原则； c) 选择同意—向未成年人或其监护人明示未成年人个人信息处理的目的、方式、范围等规则， 以同意作为合法性基础的，应征求用户的明示同意； d) 公开透明—处理未成年人敏感个人信息，应具有特定的目的和充分必要性，并依法告知处理"
+        },
+        {
+          "title": "面向个人画像服务的个人信息保护指南",
+          "standard_code": "",
+          "doc_category": "standard_or_guideline",
+          "effect_level": "国家标准/行业标准/技术指南",
+          "relative_path": "二、国家标准、行业标准合集/面向个人画像服务的个人信息保护指南.pdf",
+          "match_keywords": [
+            "最小必要",
+            "个人信息",
+            "APP",
+            "个人信息保护"
+          ],
+          "match_score": 37,
+          "snippet": "中告知和同意的实施指南 T/TAF 077.1—2022 APP收集使用个人信息最小必要评估规范 第1部分：总则  3 术语和定义  下列术语和定义适用于本文件。  3.1  个人画像 personal profile  通过收集、汇聚、分析个人信息，对某特定自然人个人特征，如职业、经济、健康、教育、个人喜 好、信用、行为等方面作出分析或预测，抽象出来的标签"
+        }
+      ]
+    },
+    {
+      "risk_point": "基于同意的可选功能与基础功能绑定关系可能不清",
+      "risk_level": "中风险",
+      "legal_basis": "《个人信息保护法》第16条、第13条",
+      "reason": "涉及功能/权限：个性化推荐；已识别要素：可选功能说明；待补要素：独立同意机制, 关闭或拒绝路径, 不影响基础功能；模糊表述：必要时；证据片段：您同意后方可继续使用基础功能。 / 我们会收集手机号、设备标识、位置信息用于个性化推荐和商业分析。。 基于个人同意处理个人信息的，个人有权撤回同意；个人信息处理者不得以个人不同意处理非提供产品或者服务所必需的个人信息为由，拒绝提供产品或者服务。",
+      "suggestion": "对基于同意的可选功能明确设置独立同意或自主选择机制；补充关闭、拒绝或撤回同意的路径说明；明确拒绝或关闭该授权后，不影响产品/服务的基础功能；补充关闭、拒绝或撤回同意的操作路径。",
+      "auto_recheck": true,
+      "evidence": [
+        "您同意后方可继续使用基础功能。",
+        "我们会收集手机号、设备标识、位置信息用于个性化推荐和商业分析。"
+      ],
+      "coverage_ratio": 0.25,
+      "trigger_hits": [
+        "个性化推荐",
+        "同意"
+      ],
+      "missing_groups": [
+        "独立同意机制",
+        "关闭或拒绝路径",
+        "不影响基础功能"
+      ],
+      "ambiguity_hits": [
+        "必要时"
+      ],
+      "path_ids": [
+        "consent_feature_coupling_check"
+      ],
+      "sources": [
+        "pipl-16-13-consent"
+      ],
+      "theme_name": "同意与功能边界",
+      "auto_recheck_status": "自动复核后维持中风险",
+      "auto_recheck_notes": "触发原因：中风险项进入自动复核；主题：同意与功能边界；支持分：7；命中路径数：1；证据片段数：2；法条来源数：1；缺失要素数：3；模糊表述数：1；同主题印证项：0；下一步：补充关键缺失要素说明",
+      "auto_recheck_decision": "维持",
+      "corroboration_count": 0,
+      "related_risk_points": [],
+      "legal_basis_source": "mapped_or_existing",
+      "supporting_regulations": [
+        {
+          "title": "GBT 46071-2025《数据安全技术 数据安全和个人信息保护社会责任指南》",
+          "standard_code": "GBT 46071-2025",
+          "doc_category": "standard_or_guideline",
+          "effect_level": "国家标准/行业标准/技术指南",
+          "relative_path": "二、国家标准、行业标准合集/GBT 46071-2025《数据安全技术 数据安全和个人信息保护社会责任指南》.pdf",
+          "match_keywords": [
+            "APP",
+            "个人信息",
+            "个人信息保护"
+          ],
+          "match_score": 38,
+          "snippet": "运行和国计民生等具有重要影响的网络平台。 4 缩略语 下列缩略语适用于本文件。 APP:应用程序(Application) 5 总则 数据安全和个人信息保护社会责任是《中华人民共和国数据安全法》《中 华 人 民 共 和 国 个 人 信 息 保 护法》《网络数据安全管理条例》等法律法规中提出的组织应尽义务,履行数据安全和个人信息保护社会 责任是指组织在遵守数据"
+        },
+        {
+          "title": "行业标准-移动互联网应用未成年人个人信息保护技术要求",
+          "standard_code": "",
+          "doc_category": "standard_or_guideline",
+          "effect_level": "国家标准/行业标准/技术指南",
+          "relative_path": "二、国家标准、行业标准合集/行业标准-移动互联网应用未成年人个人信息保护技术要求.pdf",
+          "match_keywords": [
+            "同意",
+            "APP",
+            "个人信息",
+            "个人信息保护"
+          ],
+          "match_score": 37,
+          "snippet": "目的； b) 最小必要—遵循未成年人个人信息收集使用的最小必要原则； c) 选择同意—向未成年人或其监护人明示未成年人个人信息处理的目的、方式、范围等规则， 以同意作为合法性基础的，应征求用户的明示同意； d) 公开透明—处理未成年人敏感个人信息，应具有特定的目的和充分必要性，并依法告知处理 未成年人敏感个人信息的必要性以及对个人权益的影响； e) 分级保护"
+        },
+        {
+          "title": "面向个人画像服务的个人信息保护指南",
+          "standard_code": "",
+          "doc_category": "standard_or_guideline",
+          "effect_level": "国家标准/行业标准/技术指南",
+          "relative_path": "二、国家标准、行业标准合集/面向个人画像服务的个人信息保护指南.pdf",
+          "match_keywords": [
+            "同意",
+            "APP",
+            "个人信息",
+            "个人信息保护"
+          ],
+          "match_score": 37,
+          "snippet": "于本 文件。 GB/T 42574—2023 信息安全技术 个人信息处理中告知和同意的实施指南 T/TAF 077.1—2022 APP收集使用个人信息最小必要评估规范 第1部分：总则  3 术语和定义  下列术语和定义适用于本文件。  3.1  个人画像 personal profile  通过收集、汇聚、分析个人信息，对某特定自然人个人特征，如职业、经济"
+        }
+      ]
+    },
+    {
+      "risk_point": "第三方共享或委托处理披露可能不足",
+      "risk_level": "建议优化",
+      "legal_basis": "《个人信息保护法》第23条",
+      "reason": "触发主题：合作伙伴, 共享；已识别要素：第三方身份或类别, 共享信息范围, 共享目的；待补要素：处理方式或管理要求；模糊表述：合作伙伴, 必要时；证据片段：我们会在必要时与合作伙伴共享相关信息。。 向其他个人信息处理者提供个人信息时，通常应告知接收方名称或姓名、联系方式、处理目的、处理方式和个人信息种类。",
+      "suggestion": "说明共享方式、委托处理安排及管理要求。",
+      "auto_recheck": false,
+      "evidence": [
+        "我们会在必要时与合作伙伴共享相关信息。"
+      ],
+      "coverage_ratio": 0.75,
+      "trigger_hits": [
+        "合作伙伴",
+        "共享"
+      ],
+      "missing_groups": [
+        "处理方式或管理要求"
+      ],
+      "ambiguity_hits": [
+        "合作伙伴",
+        "必要时"
+      ],
+      "path_ids": [
+        "third_party_sharing_check"
+      ],
+      "sources": [
+        "pipl-23"
+      ],
+      "theme_name": "第三方共享与合作方治理",
+      "auto_recheck_status": "未触发",
+      "auto_recheck_notes": "当前风险等级未触发自动复核。",
+      "auto_recheck_decision": "未触发",
+      "corroboration_count": 0,
+      "related_risk_points": [],
+      "legal_basis_source": "mapped_or_existing",
+      "supporting_regulations": [
+        {
+          "title": "《个人信息保护安全要求（征求意见稿）》",
+          "standard_code": "",
+          "doc_category": "standard_or_guideline",
+          "effect_level": "征求意见稿/草案",
+          "relative_path": "二、国家标准、行业标准合集/《个人信息保护安全要求（征求意见稿）》.pdf",
+          "match_keywords": [
+            "第三方",
+            "共享",
+            "SDK",
+            "个人信息",
+            "个人信息保护"
+          ],
+          "match_score": 40,
+          "snippet": ".1.2 间接收集  个人信息处理者间接收集个人信息应当遵守如下要求： a) 从第三方组织或个人间接收集个人信息的，应当： 1) 应要求个人信息提供方说明个人信息来源并提供相应凭证，对其个人信息来源的合法性进 行审查确认，并保留审查记录； 2) 应了解个人信息提供方已获得的个人信息处理的授权同意范围，包括使用目的，个人信息 主体是否同意转让、共享、公开披露、"
+        },
+        {
+          "title": "GBT 46071-2025《数据安全技术 数据安全和个人信息保护社会责任指南》",
+          "standard_code": "GBT 46071-2025",
+          "doc_category": "standard_or_guideline",
+          "effect_level": "国家标准/行业标准/技术指南",
+          "relative_path": "二、国家标准、行业标准合集/GBT 46071-2025《数据安全技术 数据安全和个人信息保护社会责任指南》.pdf",
+          "match_keywords": [
+            "第三方",
+            "共享",
+            "个人信息",
+            "个人信息保护"
+          ],
+          "match_score": 39,
+          "snippet": "的 产 品 或 服 务 的 隐 私 政 策 )的 组 织,可通过向独立监督机构、第三方机构或业界专家征询意见等方式完善规则内容。 7 GB/T 46071—2025  8.2 公平竞争和成果保护 8.2.1 议题描述 构建公平竞争环境,营造优胜劣汰的市场氛围,激励组织和生态内中小企业更加有效率地投资和创 新,为以更优质的产品或服务满足消费需求和促进经济发展创"
+        },
+        {
+          "title": "面向个人画像服务的个人信息保护指南",
+          "standard_code": "",
+          "doc_category": "standard_or_guideline",
+          "effect_level": "国家标准/行业标准/技术指南",
+          "relative_path": "二、国家标准、行业标准合集/面向个人画像服务的个人信息保护指南.pdf",
+          "match_keywords": [
+            "第三方",
+            "共享",
+            "个人信息",
+            "个人信息保护"
+          ],
+          "match_score": 37,
+          "snippet": ") 当个人画像的处理目的、方式发生变更的，需重新告知用户； 3) 如果个人画像由第三方提供或处理，需向用户告知第三方主体身份、处理个人信息类 型，处理方式等； 4) 如果向第三方或其委托的代理商共享个人画像，需明确告知用户关于个人画像处理的预 期用途和后果； 5) 利用个人画像进行信息推送、商业营销的，需告知用户关闭、拒绝或撤回的方式； 6) 提供个人画像标"
+        }
+      ]
+    },
+    {
+      "risk_point": "合法性基础与必要性表达可能不足",
+      "risk_level": "建议优化",
+      "legal_basis": "《个人信息保护法》第13条、第6条",
+      "reason": "触发主题：同意, 必要, 推荐；已识别要素：合法性基础, 必要性边界；待补要素：授权范围；模糊表述：必要时；证据片段：我们会收集手机号、设备标识、位置信息用于个性化推荐和商业分析。 / 您同意后方可继续使用基础功能。。 处理个人信息需要有相应合法性基础，并应具有明确、合理目的，采取对个人权益影响最小的方式。",
+      "suggestion": "明确授权或处理范围，避免范围过宽。",
+      "auto_recheck": false,
+      "evidence": [
+        "我们会收集手机号、设备标识、位置信息用于个性化推荐和商业分析。",
+        "您同意后方可继续使用基础功能。"
+      ],
+      "coverage_ratio": 0.67,
+      "trigger_hits": [
+        "同意",
+        "必要",
+        "推荐"
+      ],
+      "missing_groups": [
+        "授权范围"
+      ],
+      "ambiguity_hits": [
+        "必要时"
+      ],
+      "path_ids": [
+        "lawful_basis_check"
+      ],
+      "sources": [
+        "pipl-13-6"
+      ],
+      "theme_name": "处理目的与法律基础",
+      "auto_recheck_status": "未触发",
+      "auto_recheck_notes": "当前风险等级未触发自动复核。",
+      "auto_recheck_decision": "未触发",
+      "corroboration_count": 2,
+      "related_risk_points": [
+        "处理目的与信息范围匹配性可能不足",
+        "字段、处理目的与法律基础之间的对应关系可能不足"
+      ],
+      "legal_basis_source": "mapped_or_existing",
+      "supporting_regulations": [
+        {
+          "title": "行业标准-移动互联网应用未成年人个人信息保护技术要求",
+          "standard_code": "",
+          "doc_category": "standard_or_guideline",
+          "effect_level": "国家标准/行业标准/技术指南",
+          "relative_path": "二、国家标准、行业标准合集/行业标准-移动互联网应用未成年人个人信息保护技术要求.pdf",
+          "match_keywords": [
+            "个人信息",
+            "同意",
+            "最小必要",
+            "处理规则",
+            "个人信息保护",
+            "合法性基础"
+          ],
+          "match_score": 45,
+          "snippet": "GB/T 41391-2022 信息安全技术 移动互联网应用程序（APP）收集个人信息基本要求 GB/T 43697-2024 数据安全技术 数据分级分类原则  3 术语和定义  下列术语和定义适用于本文件。  未成年人 minors  未满十八周岁的公民。  儿童 children  不满十四周岁的未成年人。  监护人 guardian  对无民事行为能"
+        },
+        {
+          "title": "面向个人画像服务的个人信息保护指南",
+          "standard_code": "",
+          "doc_category": "standard_or_guideline",
+          "effect_level": "国家标准/行业标准/技术指南",
+          "relative_path": "二、国家标准、行业标准合集/面向个人画像服务的个人信息保护指南.pdf",
+          "match_keywords": [
+            "个人信息",
+            "同意",
+            "最小必要",
+            "处理规则",
+            "个人信息保护",
+            "合法性基础"
+          ],
+          "match_score": 45,
+          "snippet": "户个人信息处理环节：算法/模型部署上线后，基于算法/模型生成个 人画像时，对涉及的用户个人信息进行保护，包括个人信息的收集、传输与存储、使用 与加工、删除等处理环节。  图1 个人画像全生命周期个人信息保护框架图  5 个人画像处理基本原则  个人信息处理者对个人画像算法/模型开发"
+        },
+        {
+          "title": "《个人信息保护合规审计管理办法》",
+          "standard_code": "",
+          "doc_category": "national_policy",
+          "effect_level": "国家政策/规范",
+          "relative_path": "一、国家规范、政策要求/《个人信息保护合规审计管理办法》.pdf",
+          "match_keywords": [
+            "个人信息",
+            "同意",
+            "处理规则",
+            "个人信息保护",
+            "合法性基础"
+          ],
+          "match_score": 40,
+          "snippet": "个人有权对个人信息保护合规 审计中的违法活动向保护部门进行投诉、举报。收到投 诉、举报的部门应当依法及时处理，并将处理结果告知 投诉、举报人。 第十八条 个人信息处理者、专业机构违反本办法规 定的，依照《中华人民共和国个人信息保护法》、《网  4 络数据安全管理条例》等法律法规的规定处理；"
+        }
+      ]
+    },
+    {
+      "risk_point": "字段、处理目的与法律基础之间的对应关系可能不足",
+      "risk_level": "建议优化",
+      "legal_basis": "《个人信息保护法》第13条、第17条、第6条",
+      "reason": "涉及字段：手机号, 位置信息, 设备标识；涉及目的：个性化推荐, 商业分析；已识别法律基础：同意；已识别要素：字段信息, 处理目的, 法律基础；待补要素：字段-目的-依据对应关系；高风险目的：个性化推荐, 商业分析；模糊表述：相关信息, 必要时；证据片段：我们会收集手机号、设备标识、位置信息用于个性化推荐和商业分析。 / 您同意后方可继续使用基础功能。。 处理个人信息应有明确、合理目的并限于最小必要范围；处理前通常应告知处理目的、方式、种类等事项，并说明相应的法律基础。",
+      "suggestion": "把字段、目的和法律基础一一对应写清，不要混成一团；把字段、目的、法律基础做一一对应说明，避免混合表述。",
+      "auto_recheck": false,
+      "evidence": [
+        "我们会收集手机号、设备标识、位置信息用于个性化推荐和商业分析。",
+        "您同意后方可继续使用基础功能。"
+      ],
+      "coverage_ratio": 0.75,
+      "trigger_hits": [
+        "手机号",
+        "位置信息",
+        "设备标识",
+        "个性化推荐",
+        "商业分析",
+        "同意"
+      ],
+      "missing_groups": [
+        "字段-目的-依据对应关系"
+      ],
+      "ambiguity_hits": [
+        "相关信息",
+        "必要时"
+      ],
+      "path_ids": [
+        "field_purpose_legal_basis_check"
+      ],
+      "sources": [
+        "pipl-13-17-6-triad"
+      ],
+      "theme_name": "处理目的与法律基础",
+      "auto_recheck_status": "未触发",
+      "auto_recheck_notes": "当前风险等级未触发自动复核。",
+      "auto_recheck_decision": "未触发",
+      "corroboration_count": 2,
+      "related_risk_points": [
+        "处理目的与信息范围匹配性可能不足",
+        "合法性基础与必要性表达可能不足"
+      ],
+      "legal_basis_source": "mapped_or_existing",
+      "supporting_regulations": [
+        {
+          "title": "GB-T 44588-2024数据安全技术 互联网平台及产品服务个人信息处理规则",
+          "standard_code": "GB-T 44588-2024",
+          "doc_category": "standard_or_guideline",
+          "effect_level": "国家标准/行业标准/技术指南",
+          "relative_path": "二、国家标准、行业标准合集/GB-T 44588-2024数据安全技术 互联网平台及产品服务个人信息处理规则.pdf",
+          "match_keywords": [
+            "个人信息",
+            "处理规则",
+            "自动化决策",
+            "个人信息保护",
+            "同意"
+          ],
+          "match_score": 43,
+          "snippet": "发工具包(Software Development Kit) 5概述 制定、发布个人信息处理规则是个人信息处理者遵循公开透明原则的重要体现，是保证个人信息主 体知情权的重要手段，也是约束自身行为和配合监督管理的重要机制。 2  GB/T 44588—2024 6个人信息姐颤则的基本要求 个 人 信 息 处 理 规 则 应 清 晰 、 准 确 、 完 整 地"
+        },
+        {
+          "title": "网络安全标准实践指南——个人信息保护合规审计要求",
+          "standard_code": "",
+          "doc_category": "standard_or_guideline",
+          "effect_level": "国家标准/行业标准/技术指南",
+          "relative_path": "二、国家标准、行业标准合集/网络安全标准实践指南——个人信息保护合规审计要求.pdf",
+          "match_keywords": [
+            "个人信息",
+            "处理规则",
+            "自动化决策",
+            "个人信息保护",
+            "同意"
+          ],
+          "match_score": 41,
+          "snippet": "信息保护合 规审计管理办法》等政策法规及相关国家标准，制定本文件。 本文件提出了个人信息保护合规审计原则，规定了个人 信息保护合规审计的总体要求、实施流程、内容和方法。本 文件适用于个人信息处理者和专业机构开展个人信息保护 合规审计活动。  IV 目 录 1 范围 ..............................................."
+        },
+        {
+          "title": "行业标准-移动互联网应用未成年人个人信息保护技术要求",
+          "standard_code": "",
+          "doc_category": "standard_or_guideline",
+          "effect_level": "国家标准/行业标准/技术指南",
+          "relative_path": "二、国家标准、行业标准合集/行业标准-移动互联网应用未成年人个人信息保护技术要求.pdf",
+          "match_keywords": [
+            "个人信息",
+            "最小必要",
+            "处理规则",
+            "个人信息保护",
+            "同意"
+          ],
+          "match_score": 41,
+          "snippet": "GB/T 41391-2022 信息安全技术 移动互联网应用程序（APP）收集个人信息基本要求 GB/T 43697-2024 数据安全技术 数据分级分类原则  3 术语和定义  下列术语和定义适用于本文件。  未成年人 minors  未满十八周岁的公民。  儿童 children  不满十四周岁的未成年人。  监护人 guardian  对无民事行为能"
+        }
+      ]
+    }
+  ],
+  "notes": [
+    "本报告用于辅助合规审查，不替代律师或法务最终判断。",
+    "当命中高风险、依据不足或判断存在不确定性时，系统会自动触发二次复核。",
+    "[disclosure_check] 命中 2 个触发点；关键要素覆盖 2/4；模糊表述 2 处。",
+    "[third_party_sharing_check] 命中 2 个触发点；关键要素覆盖 3/4；模糊表述 2 处。",
+    "[outbound_transfer_check] 未发现明显触发信号。",
+    "[lawful_basis_check] 命中 3 个触发点；关键要素覆盖 2/3；模糊表述 1 处。",
+    "[purpose_scope_check] 命中 5 个相关信号；关键要素覆盖 2/4；宽泛表述 1 处。",
+    "[sensitive_personal_info_check] 未发现明显的敏感个人信息处理信号。",
+    "[field_purpose_legal_basis_check] 命中 6 个联动信号；关键要素覆盖 3/4；模糊表述 2 处。",
+    "[consent_feature_coupling_check] 命中 2 个相关信号；关键要素覆盖 1/4；模糊表述 1 处。",
+    "[retention_deletion_check] 未发现明显触发信号。",
+    "[consistency_check] 未发现明显的前后表述冲突。"
+  ],
+  "stats": {
+    "total": 6,
+    "high_risk": 0,
+    "medium_risk": 3,
+    "advisory": 3
+  },
+  "auto_recheck_summary": "触发 3 项，维持判断 3 项，仍需补充支持信息 0 项。",
+  "auto_recheck_stats": {
+    "triggered": 3,
+    "maintained": 3,
+    "need_more_support": 0
+  },
+  "risk_clusters": [
+    {
+      "theme_id": "purpose_and_legal_basis",
+      "theme_name": "处理目的与法律基础",
+      "item_count": 3,
+      "high_risk_count": 0,
+      "medium_risk_count": 1,
+      "advisory_count": 2,
+      "risk_points": [
+        "处理目的与信息范围匹配性可能不足",
+        "合法性基础与必要性表达可能不足",
+        "字段、处理目的与法律基础之间的对应关系可能不足"
+      ]
+    },
+    {
+      "theme_id": "disclosure_and_rights",
+      "theme_name": "披露与权利告知",
+      "item_count": 1,
+      "high_risk_count": 0,
+      "medium_risk_count": 1,
+      "advisory_count": 0,
+      "risk_points": [
+        "重要处理事项披露可能不充分"
+      ]
+    },
+    {
+      "theme_id": "consent_and_feature_boundary",
+      "theme_name": "同意与功能边界",
+      "item_count": 1,
+      "high_risk_count": 0,
+      "medium_risk_count": 1,
+      "advisory_count": 0,
+      "risk_points": [
+        "基于同意的可选功能与基础功能绑定关系可能不清"
+      ]
+    },
+    {
+      "theme_id": "third_party_and_sdk",
+      "theme_name": "第三方共享与合作方治理",
+      "item_count": 1,
+      "high_risk_count": 0,
+      "medium_risk_count": 0,
+      "advisory_count": 1,
+      "risk_points": [
+        "第三方共享或委托处理披露可能不足"
+      ]
+    }
+  ],
+  "local_regulation_db": {
+    "enabled": true,
+    "db_name": "local-regulations.sqlite3",
+    "matched_items": 6,
+    "unmatched_items": 0,
+    "total_documents": 430,
+    "searchable_documents": 400,
+    "updated_at": "2026-04-11T20:02:08"
+  }
+}

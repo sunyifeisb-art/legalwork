@@ -1,0 +1,51 @@
+### Node / Electron
+node_modules/
+out/
+dist/
+.cache/
+.deepseek/
+.legalwork/
+*.log
+.DS_Store
+
+### Local environment
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+### Local release secrets
+scripts/release.local.env
+release.local.env
+*.p12
+*.p8
+*.pem
+*.key
+*.mobileprovision
+
+### AL ###
+#Template for AL projects for Dynamics 365 Business Central
+#launch.json folder
+.vscode/
+#Cache folder
+.alcache/
+#Symbols folder
+.alpackages/
+#Snapshots folder
+.snapshots/
+#Testing Output folder
+.output/
+#Extension App-file
+*.app
+#Rapid Application Development File
+rad.json
+#Translation Base-file
+*.g.xlf
+#License-files
+*.bclicense
+*.flf
+#Test results file
+TestResults.xml
+
+### Internal docs
+docs/R2_RELEASE.md

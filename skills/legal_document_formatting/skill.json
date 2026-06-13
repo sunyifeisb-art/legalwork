@@ -1,0 +1,27 @@
+{
+  "name": "legal-document-formatting",
+  "description": "法律文档格式化：规范法律文书的格式和排版",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/format"
+    ],
+    "promptPatterns": [
+      "文档格式|格式化|排版|文书格式|格式规范"
+    ],
+    "fileTypes": [
+      ".docx",
+      ".pdf",
+      ".md"
+    ]
+  },
+  "allowedTools": [
+    "read",
+    "write",
+    "edit",
+    "bash"
+  ],
+  "assets": [],
+  "priority": 0
+}

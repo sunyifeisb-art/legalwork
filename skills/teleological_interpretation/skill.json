@@ -1,0 +1,23 @@
+{
+  "name": "teleological-interpretation",
+  "description": "目的解释：从立法目的出发进行法律解释",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/teleology"
+    ],
+    "promptPatterns": [
+      "目的解释|立法目的|规范目的|利益衡量"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

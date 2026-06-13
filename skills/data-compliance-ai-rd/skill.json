@@ -1,0 +1,23 @@
+{
+  "name": "data-compliance-ai-rd",
+  "description": "AI研发数据合规：评估AI训练和使用中的数据合规风险",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/aicomply"
+    ],
+    "promptPatterns": [
+      "AI合规|数据合规|AI研发|训练数据|算法备案"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

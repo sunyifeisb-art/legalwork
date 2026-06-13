@@ -1,0 +1,23 @@
+{
+  "name": "legal-time-management",
+  "description": "律师时间管理：多案件并行时间规划、倒排工期与效率提升",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/timemanage"
+    ],
+    "promptPatterns": [
+      "时间管理|时间规划|多案件并行|倒排工期|日程安排|优先级"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

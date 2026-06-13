@@ -1,0 +1,23 @@
+{
+  "name": "legal-element-extraction",
+  "description": "法律要件抽取：抽取法律构成要件并进行匹配分析",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/elements"
+    ],
+    "promptPatterns": [
+      "要件抽取|构成要件|法律要件|要件分析"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

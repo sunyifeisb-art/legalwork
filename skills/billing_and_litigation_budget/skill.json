@@ -1,0 +1,23 @@
+{
+  "name": "billing-and-litigation-budget",
+  "description": "计费与诉讼预算：制定案件费用预算和成本估算",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/budget"
+    ],
+    "promptPatterns": [
+      "诉讼预算|费用预算|律师费|诉讼费|费用计算"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

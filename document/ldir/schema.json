@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Legal Document IR (LDIR) v0.1",
+  "description": "LegalClaw 统一文档中间表示",
+  "type": "object",
+  "required": ["doc_id", "source_file", "source_hash", "created_at", "parser", "pages"],
+  "properties": {
+    "doc_id": {
+      "type": "string",
+      "description": "文档唯一标识"
+    },
+    "source_file": {
+      "type": "string",
+      "description": "原始文件路径"
+    },
+    "source_hash": {
+      "type": "string",
+      "description": "原始文件 SHA256 哈希"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "LDIR 生成时间"
+    },
+    "parser": {
+      "type": "object",
+      "required": ["engine"],
+      "properties": {
+        "engine": { "type": "string" },
+        "ocr_engine": { "type": "string" },
+        "version": { "type": "string" }
+      }
+    },
+    "pages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["page_number"],
+        "properties": {
+          "page_number": { "type": "integer" },
+          "width": { "type": "number" },
+          "height": { "type": "number" },
+          "blocks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["block_id", "type"],
+              "properties": {
+                "block_id": { "type": "string" },
+                "type": {
+                  "type": "string",
+                  "enum": ["paragraph", "heading", "table", "image", "list", "other"]
+                },
+                "text": { "type": "string" },
+                "bbox": {
+                  "type": "array",
+                  "items": { "type": "number" },
+                  "minItems": 4,
+                  "maxItems": 4
+                },
+                "confidence": { "type": "number" },
+                "spans": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "span_id": { "type": "string" },
+                      "text": { "type": "string" },
+                      "start": { "type": "integer" },
+                      "end": { "type": "integer" },
+                      "bbox": {
+                        "type": "array",
+                        "items": { "type": "number" },
+                        "minItems": 4,
+                        "maxItems": 4
+                      },
+                      "entity_type": { "type": "string" },
+                      "confidence": { "type": "number" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "附加元数据"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "legal-terminology",
+  "description": "法律术语解释：解释法律专业术语的含义和适用",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/term"
+    ],
+    "promptPatterns": [
+      "法律术语|术语解释|法律名词|概念解释"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

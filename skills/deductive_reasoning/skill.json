@@ -1,0 +1,23 @@
+{
+  "name": "deductive-reasoning",
+  "description": "演绎推理：通过法律三段论从一般规范推导具体结论",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/deduce"
+    ],
+    "promptPatterns": [
+      "三段论|演绎推理|法律三段论|涵摄"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

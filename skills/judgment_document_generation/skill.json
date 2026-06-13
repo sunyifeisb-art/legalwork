@@ -1,0 +1,23 @@
+{
+  "name": "judgment-document-generation",
+  "description": "判决文书生成：辅助生成判决文书草案",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/draftjudgment"
+    ],
+    "promptPatterns": [
+      "判决书|判决文书|文书生成|判决草案"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

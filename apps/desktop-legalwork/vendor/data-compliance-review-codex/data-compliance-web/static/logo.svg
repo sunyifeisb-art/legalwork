@@ -1,0 +1,20 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logoBg" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1a5c59"/>
+      <stop offset="100%" stop-color="#0f2e2c"/>
+    </linearGradient>
+    <linearGradient id="logoAccent" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3a9e9a"/>
+      <stop offset="100%" stop-color="#2a7e7a"/>
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="56" fill="url(#logoBg)"/>
+  <circle cx="60" cy="60" r="56" stroke="url(#logoAccent)" stroke-width="2"/>
+  <!-- Shield outline -->
+  <path d="M60 28L86 42V62C86 78.5 74 92 60 96C46 92 34 78.5 34 62V42L60 28Z" fill="none" stroke="white" stroke-width="3.5" stroke-linejoin="round"/>
+  <!-- Checkmark -->
+  <path d="M48 62L56 70L72 52" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Subtle inner glow -->
+  <circle cx="60" cy="60" r="40" fill="url(#logoAccent)" opacity="0.08"/>
+</svg>

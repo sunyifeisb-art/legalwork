@@ -1,0 +1,22 @@
+{
+  "document_name": "测试文档",
+  "review_scope": "数据合规相关文件审查",
+  "document_type": "unknown",
+  "selected_review_paths": [
+    "disclosure_check",
+    "lawful_basis_check",
+    "third_party_sharing_check",
+    "purpose_scope_check",
+    "sensitive_personal_info_check",
+    "field_purpose_legal_basis_check",
+    "consent_feature_coupling_check",
+    "consistency_check"
+  ],
+  "summary": "",
+  "auto_recheck_triggered": false,
+  "items": [],
+  "notes": [
+    "本报告用于辅助合规审查，不替代律师或法务最终判断。",
+    "当命中高风险、依据不足或判断存在不确定性时，系统会自动触发二次复核。"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "updated": "2026-06-10",
+  "note": "同步 default-norm-mappings.json v2 格式。使用时请根据实际外部规范数据库补充完整映射。",
+  "mappings": [
+    {
+      "risk_point": "数据出境相关披露可能不足",
+      "path_id": "outbound_transfer_check",
+      "legal_basis": "《个人信息保护法》第39条",
+      "reference_note": "涉及向境外接收方提供个人信息时，应履行相应告知义务。",
+      "source_id": "pipl-39",
+      "file_path": "一、国家法律、法规、规范文件/中华人民共和国个人信息保护法-eba47ff909.md",
+      "article_anchors": [39]
+    }
+  ]
+}

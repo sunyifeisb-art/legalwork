@@ -1,0 +1,849 @@
+{
+  "library_name": "foreign-regulations",
+  "coverage_note": "Seed index for foreign personal information, privacy, and data laws. Entries are structured legal-reference records with official or regulator source URLs, not a substitute for authoritative local legal advice.",
+  "built_at": "2026-04-29T13:43:14+00:00",
+  "jurisdiction_count": 84,
+  "document_count": 146,
+  "jurisdictions": [
+    {
+      "region": "AE",
+      "slug": "ae",
+      "name": "United Arab Emirates",
+      "db_path": "ae/regulations.sqlite3",
+      "index_path": "ae.json",
+      "markdown_dir": "ae",
+      "document_count": 2,
+      "chunk_count": 3
+    },
+    {
+      "region": "AR",
+      "slug": "ar",
+      "name": "Argentina",
+      "db_path": "ar/regulations.sqlite3",
+      "index_path": "ar.json",
+      "markdown_dir": "ar",
+      "document_count": 2,
+      "chunk_count": 3
+    },
+    {
+      "region": "AT",
+      "slug": "at",
+      "name": "Austria",
+      "db_path": "at/regulations.sqlite3",
+      "index_path": "at.json",
+      "markdown_dir": "at",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "AU",
+      "slug": "au",
+      "name": "Australia",
+      "db_path": "au/regulations.sqlite3",
+      "index_path": "au.json",
+      "markdown_dir": "au",
+      "document_count": 6,
+      "chunk_count": 7
+    },
+    {
+      "region": "BE",
+      "slug": "be",
+      "name": "Belgium",
+      "db_path": "be/regulations.sqlite3",
+      "index_path": "be.json",
+      "markdown_dir": "be",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "BH",
+      "slug": "bh",
+      "name": "Bahrain",
+      "db_path": "bh/regulations.sqlite3",
+      "index_path": "bh.json",
+      "markdown_dir": "bh",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "BR",
+      "slug": "br",
+      "name": "Brazil",
+      "db_path": "br/regulations.sqlite3",
+      "index_path": "br.json",
+      "markdown_dir": "br",
+      "document_count": 4,
+      "chunk_count": 35
+    },
+    {
+      "region": "CA",
+      "slug": "ca",
+      "name": "Canada",
+      "db_path": "ca/regulations.sqlite3",
+      "index_path": "ca.json",
+      "markdown_dir": "ca",
+      "document_count": 4,
+      "chunk_count": 5
+    },
+    {
+      "region": "CA-AB",
+      "slug": "ca-ab",
+      "name": "Canada - Alberta",
+      "db_path": "ca-ab/regulations.sqlite3",
+      "index_path": "ca-ab.json",
+      "markdown_dir": "ca-ab",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "CA-BC",
+      "slug": "ca-bc",
+      "name": "Canada - British Columbia",
+      "db_path": "ca-bc/regulations.sqlite3",
+      "index_path": "ca-bc.json",
+      "markdown_dir": "ca-bc",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "CA-QC",
+      "slug": "ca-qc",
+      "name": "Canada - Quebec",
+      "db_path": "ca-qc/regulations.sqlite3",
+      "index_path": "ca-qc.json",
+      "markdown_dir": "ca-qc",
+      "document_count": 1,
+      "chunk_count": 2
+    },
+    {
+      "region": "CH",
+      "slug": "ch",
+      "name": "Switzerland",
+      "db_path": "ch/regulations.sqlite3",
+      "index_path": "ch.json",
+      "markdown_dir": "ch",
+      "document_count": 2,
+      "chunk_count": 3
+    },
+    {
+      "region": "CZ",
+      "slug": "cz",
+      "name": "Czech Republic",
+      "db_path": "cz/regulations.sqlite3",
+      "index_path": "cz.json",
+      "markdown_dir": "cz",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "DE",
+      "slug": "de",
+      "name": "Germany",
+      "db_path": "de/regulations.sqlite3",
+      "index_path": "de.json",
+      "markdown_dir": "de",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "DK",
+      "slug": "dk",
+      "name": "Denmark",
+      "db_path": "dk/regulations.sqlite3",
+      "index_path": "dk.json",
+      "markdown_dir": "dk",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "EG",
+      "slug": "eg",
+      "name": "Egypt",
+      "db_path": "eg/regulations.sqlite3",
+      "index_path": "eg.json",
+      "markdown_dir": "eg",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "ES",
+      "slug": "es",
+      "name": "Spain",
+      "db_path": "es/regulations.sqlite3",
+      "index_path": "es.json",
+      "markdown_dir": "es",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "EU",
+      "slug": "eu",
+      "name": "European Union / EEA",
+      "db_path": "eu/regulations.sqlite3",
+      "index_path": "eu.json",
+      "markdown_dir": "eu",
+      "document_count": 17,
+      "chunk_count": 529
+    },
+    {
+      "region": "FI",
+      "slug": "fi",
+      "name": "Finland",
+      "db_path": "fi/regulations.sqlite3",
+      "index_path": "fi.json",
+      "markdown_dir": "fi",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "FR",
+      "slug": "fr",
+      "name": "France",
+      "db_path": "fr/regulations.sqlite3",
+      "index_path": "fr.json",
+      "markdown_dir": "fr",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "GH",
+      "slug": "gh",
+      "name": "Ghana",
+      "db_path": "gh/regulations.sqlite3",
+      "index_path": "gh.json",
+      "markdown_dir": "gh",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "HK",
+      "slug": "hk",
+      "name": "Hong Kong SAR",
+      "db_path": "hk/regulations.sqlite3",
+      "index_path": "hk.json",
+      "markdown_dir": "hk",
+      "document_count": 2,
+      "chunk_count": 2
+    },
+    {
+      "region": "ID",
+      "slug": "id",
+      "name": "Indonesia",
+      "db_path": "id/regulations.sqlite3",
+      "index_path": "id.json",
+      "markdown_dir": "id",
+      "document_count": 1,
+      "chunk_count": 2
+    },
+    {
+      "region": "IE",
+      "slug": "ie",
+      "name": "Ireland",
+      "db_path": "ie/regulations.sqlite3",
+      "index_path": "ie.json",
+      "markdown_dir": "ie",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "IL",
+      "slug": "il",
+      "name": "Israel",
+      "db_path": "il/regulations.sqlite3",
+      "index_path": "il.json",
+      "markdown_dir": "il",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "IN",
+      "slug": "in",
+      "name": "India",
+      "db_path": "in/regulations.sqlite3",
+      "index_path": "in.json",
+      "markdown_dir": "in",
+      "document_count": 4,
+      "chunk_count": 106
+    },
+    {
+      "region": "IT",
+      "slug": "it",
+      "name": "Italy",
+      "db_path": "it/regulations.sqlite3",
+      "index_path": "it.json",
+      "markdown_dir": "it",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "JP",
+      "slug": "jp",
+      "name": "Japan",
+      "db_path": "jp/regulations.sqlite3",
+      "index_path": "jp.json",
+      "markdown_dir": "jp",
+      "document_count": 3,
+      "chunk_count": 4
+    },
+    {
+      "region": "KE",
+      "slug": "ke",
+      "name": "Kenya",
+      "db_path": "ke/regulations.sqlite3",
+      "index_path": "ke.json",
+      "markdown_dir": "ke",
+      "document_count": 1,
+      "chunk_count": 2
+    },
+    {
+      "region": "KR",
+      "slug": "kr",
+      "name": "South Korea",
+      "db_path": "kr/regulations.sqlite3",
+      "index_path": "kr.json",
+      "markdown_dir": "kr",
+      "document_count": 3,
+      "chunk_count": 4
+    },
+    {
+      "region": "MA",
+      "slug": "ma",
+      "name": "Morocco",
+      "db_path": "ma/regulations.sqlite3",
+      "index_path": "ma.json",
+      "markdown_dir": "ma",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "MO",
+      "slug": "mo",
+      "name": "Macao SAR",
+      "db_path": "mo/regulations.sqlite3",
+      "index_path": "mo.json",
+      "markdown_dir": "mo",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "MU",
+      "slug": "mu",
+      "name": "Mauritius",
+      "db_path": "mu/regulations.sqlite3",
+      "index_path": "mu.json",
+      "markdown_dir": "mu",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "MX",
+      "slug": "mx",
+      "name": "Mexico",
+      "db_path": "mx/regulations.sqlite3",
+      "index_path": "mx.json",
+      "markdown_dir": "mx",
+      "document_count": 2,
+      "chunk_count": 3
+    },
+    {
+      "region": "MY",
+      "slug": "my",
+      "name": "Malaysia",
+      "db_path": "my/regulations.sqlite3",
+      "index_path": "my.json",
+      "markdown_dir": "my",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "NG",
+      "slug": "ng",
+      "name": "Nigeria",
+      "db_path": "ng/regulations.sqlite3",
+      "index_path": "ng.json",
+      "markdown_dir": "ng",
+      "document_count": 1,
+      "chunk_count": 2
+    },
+    {
+      "region": "NL",
+      "slug": "nl",
+      "name": "Netherlands",
+      "db_path": "nl/regulations.sqlite3",
+      "index_path": "nl.json",
+      "markdown_dir": "nl",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "NO",
+      "slug": "no",
+      "name": "Norway",
+      "db_path": "no/regulations.sqlite3",
+      "index_path": "no.json",
+      "markdown_dir": "no",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "NZ",
+      "slug": "nz",
+      "name": "New Zealand",
+      "db_path": "nz/regulations.sqlite3",
+      "index_path": "nz.json",
+      "markdown_dir": "nz",
+      "document_count": 2,
+      "chunk_count": 3
+    },
+    {
+      "region": "OM",
+      "slug": "om",
+      "name": "Oman",
+      "db_path": "om/regulations.sqlite3",
+      "index_path": "om.json",
+      "markdown_dir": "om",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "PH",
+      "slug": "ph",
+      "name": "Philippines",
+      "db_path": "ph/regulations.sqlite3",
+      "index_path": "ph.json",
+      "markdown_dir": "ph",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "PL",
+      "slug": "pl",
+      "name": "Poland",
+      "db_path": "pl/regulations.sqlite3",
+      "index_path": "pl.json",
+      "markdown_dir": "pl",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "PT",
+      "slug": "pt",
+      "name": "Portugal",
+      "db_path": "pt/regulations.sqlite3",
+      "index_path": "pt.json",
+      "markdown_dir": "pt",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "QA",
+      "slug": "qa",
+      "name": "Qatar",
+      "db_path": "qa/regulations.sqlite3",
+      "index_path": "qa.json",
+      "markdown_dir": "qa",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "RW",
+      "slug": "rw",
+      "name": "Rwanda",
+      "db_path": "rw/regulations.sqlite3",
+      "index_path": "rw.json",
+      "markdown_dir": "rw",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "SA",
+      "slug": "sa",
+      "name": "Saudi Arabia",
+      "db_path": "sa/regulations.sqlite3",
+      "index_path": "sa.json",
+      "markdown_dir": "sa",
+      "document_count": 2,
+      "chunk_count": 3
+    },
+    {
+      "region": "SE",
+      "slug": "se",
+      "name": "Sweden",
+      "db_path": "se/regulations.sqlite3",
+      "index_path": "se.json",
+      "markdown_dir": "se",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "SG",
+      "slug": "sg",
+      "name": "Singapore",
+      "db_path": "sg/regulations.sqlite3",
+      "index_path": "sg.json",
+      "markdown_dir": "sg",
+      "document_count": 4,
+      "chunk_count": 5
+    },
+    {
+      "region": "TH",
+      "slug": "th",
+      "name": "Thailand",
+      "db_path": "th/regulations.sqlite3",
+      "index_path": "th.json",
+      "markdown_dir": "th",
+      "document_count": 1,
+      "chunk_count": 2
+    },
+    {
+      "region": "TN",
+      "slug": "tn",
+      "name": "Tunisia",
+      "db_path": "tn/regulations.sqlite3",
+      "index_path": "tn.json",
+      "markdown_dir": "tn",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "TR",
+      "slug": "tr",
+      "name": "Türkiye",
+      "db_path": "tr/regulations.sqlite3",
+      "index_path": "tr.json",
+      "markdown_dir": "tr",
+      "document_count": 2,
+      "chunk_count": 3
+    },
+    {
+      "region": "TW",
+      "slug": "tw",
+      "name": "Taiwan",
+      "db_path": "tw/regulations.sqlite3",
+      "index_path": "tw.json",
+      "markdown_dir": "tw",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "TZ",
+      "slug": "tz",
+      "name": "Tanzania",
+      "db_path": "tz/regulations.sqlite3",
+      "index_path": "tz.json",
+      "markdown_dir": "tz",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "UG",
+      "slug": "ug",
+      "name": "Uganda",
+      "db_path": "ug/regulations.sqlite3",
+      "index_path": "ug.json",
+      "markdown_dir": "ug",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "UK",
+      "slug": "uk",
+      "name": "United Kingdom",
+      "db_path": "uk/regulations.sqlite3",
+      "index_path": "uk.json",
+      "markdown_dir": "uk",
+      "document_count": 8,
+      "chunk_count": 221
+    },
+    {
+      "region": "US-AL",
+      "slug": "us-al",
+      "name": "United States - Alabama",
+      "db_path": "us-al/regulations.sqlite3",
+      "index_path": "us-al.json",
+      "markdown_dir": "us-al",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "US-CA",
+      "slug": "us-ca",
+      "name": "United States - California",
+      "db_path": "us-ca/regulations.sqlite3",
+      "index_path": "us-ca.json",
+      "markdown_dir": "us-ca",
+      "document_count": 4,
+      "chunk_count": 40
+    },
+    {
+      "region": "US-CO",
+      "slug": "us-co",
+      "name": "United States - Colorado",
+      "db_path": "us-co/regulations.sqlite3",
+      "index_path": "us-co.json",
+      "markdown_dir": "us-co",
+      "document_count": 1,
+      "chunk_count": 2
+    },
+    {
+      "region": "US-CT",
+      "slug": "us-ct",
+      "name": "United States - Connecticut",
+      "db_path": "us-ct/regulations.sqlite3",
+      "index_path": "us-ct.json",
+      "markdown_dir": "us-ct",
+      "document_count": 1,
+      "chunk_count": 2
+    },
+    {
+      "region": "US-DE",
+      "slug": "us-de",
+      "name": "United States - Delaware",
+      "db_path": "us-de/regulations.sqlite3",
+      "index_path": "us-de.json",
+      "markdown_dir": "us-de",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "US-FED",
+      "slug": "us-fed",
+      "name": "United States - Federal",
+      "db_path": "us-fed/regulations.sqlite3",
+      "index_path": "us-fed.json",
+      "markdown_dir": "us-fed",
+      "document_count": 6,
+      "chunk_count": 6
+    },
+    {
+      "region": "US-FL",
+      "slug": "us-fl",
+      "name": "United States - Florida",
+      "db_path": "us-fl/regulations.sqlite3",
+      "index_path": "us-fl.json",
+      "markdown_dir": "us-fl",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "US-IA",
+      "slug": "us-ia",
+      "name": "United States - Iowa",
+      "db_path": "us-ia/regulations.sqlite3",
+      "index_path": "us-ia.json",
+      "markdown_dir": "us-ia",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "US-IL",
+      "slug": "us-il",
+      "name": "United States - Illinois",
+      "db_path": "us-il/regulations.sqlite3",
+      "index_path": "us-il.json",
+      "markdown_dir": "us-il",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "US-IN",
+      "slug": "us-in",
+      "name": "United States - Indiana",
+      "db_path": "us-in/regulations.sqlite3",
+      "index_path": "us-in.json",
+      "markdown_dir": "us-in",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "US-KY",
+      "slug": "us-ky",
+      "name": "United States - Kentucky",
+      "db_path": "us-ky/regulations.sqlite3",
+      "index_path": "us-ky.json",
+      "markdown_dir": "us-ky",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "US-MA",
+      "slug": "us-ma",
+      "name": "United States - Massachusetts",
+      "db_path": "us-ma/regulations.sqlite3",
+      "index_path": "us-ma.json",
+      "markdown_dir": "us-ma",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "US-MD",
+      "slug": "us-md",
+      "name": "United States - Maryland",
+      "db_path": "us-md/regulations.sqlite3",
+      "index_path": "us-md.json",
+      "markdown_dir": "us-md",
+      "document_count": 2,
+      "chunk_count": 3
+    },
+    {
+      "region": "US-MN",
+      "slug": "us-mn",
+      "name": "United States - Minnesota",
+      "db_path": "us-mn/regulations.sqlite3",
+      "index_path": "us-mn.json",
+      "markdown_dir": "us-mn",
+      "document_count": 1,
+      "chunk_count": 2
+    },
+    {
+      "region": "US-MT",
+      "slug": "us-mt",
+      "name": "United States - Montana",
+      "db_path": "us-mt/regulations.sqlite3",
+      "index_path": "us-mt.json",
+      "markdown_dir": "us-mt",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "US-NE",
+      "slug": "us-ne",
+      "name": "United States - Nebraska",
+      "db_path": "us-ne/regulations.sqlite3",
+      "index_path": "us-ne.json",
+      "markdown_dir": "us-ne",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "US-NH",
+      "slug": "us-nh",
+      "name": "United States - New Hampshire",
+      "db_path": "us-nh/regulations.sqlite3",
+      "index_path": "us-nh.json",
+      "markdown_dir": "us-nh",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "US-NJ",
+      "slug": "us-nj",
+      "name": "United States - New Jersey",
+      "db_path": "us-nj/regulations.sqlite3",
+      "index_path": "us-nj.json",
+      "markdown_dir": "us-nj",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "US-NV",
+      "slug": "us-nv",
+      "name": "United States - Nevada",
+      "db_path": "us-nv/regulations.sqlite3",
+      "index_path": "us-nv.json",
+      "markdown_dir": "us-nv",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "US-NY",
+      "slug": "us-ny",
+      "name": "United States - New York",
+      "db_path": "us-ny/regulations.sqlite3",
+      "index_path": "us-ny.json",
+      "markdown_dir": "us-ny",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "US-OR",
+      "slug": "us-or",
+      "name": "United States - Oregon",
+      "db_path": "us-or/regulations.sqlite3",
+      "index_path": "us-or.json",
+      "markdown_dir": "us-or",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "US-RI",
+      "slug": "us-ri",
+      "name": "United States - Rhode Island",
+      "db_path": "us-ri/regulations.sqlite3",
+      "index_path": "us-ri.json",
+      "markdown_dir": "us-ri",
+      "document_count": 1,
+      "chunk_count": 2
+    },
+    {
+      "region": "US-TN",
+      "slug": "us-tn",
+      "name": "United States - Tennessee",
+      "db_path": "us-tn/regulations.sqlite3",
+      "index_path": "us-tn.json",
+      "markdown_dir": "us-tn",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "US-TX",
+      "slug": "us-tx",
+      "name": "United States - Texas",
+      "db_path": "us-tx/regulations.sqlite3",
+      "index_path": "us-tx.json",
+      "markdown_dir": "us-tx",
+      "document_count": 1,
+      "chunk_count": 2
+    },
+    {
+      "region": "US-UT",
+      "slug": "us-ut",
+      "name": "United States - Utah",
+      "db_path": "us-ut/regulations.sqlite3",
+      "index_path": "us-ut.json",
+      "markdown_dir": "us-ut",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "US-VA",
+      "slug": "us-va",
+      "name": "United States - Virginia",
+      "db_path": "us-va/regulations.sqlite3",
+      "index_path": "us-va.json",
+      "markdown_dir": "us-va",
+      "document_count": 1,
+      "chunk_count": 2
+    },
+    {
+      "region": "US-WA",
+      "slug": "us-wa",
+      "name": "United States - Washington",
+      "db_path": "us-wa/regulations.sqlite3",
+      "index_path": "us-wa.json",
+      "markdown_dir": "us-wa",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "VN",
+      "slug": "vn",
+      "name": "Vietnam",
+      "db_path": "vn/regulations.sqlite3",
+      "index_path": "vn.json",
+      "markdown_dir": "vn",
+      "document_count": 1,
+      "chunk_count": 1
+    },
+    {
+      "region": "ZA",
+      "slug": "za",
+      "name": "South Africa",
+      "db_path": "za/regulations.sqlite3",
+      "index_path": "za.json",
+      "markdown_dir": "za",
+      "document_count": 2,
+      "chunk_count": 3
+    }
+  ]
+}

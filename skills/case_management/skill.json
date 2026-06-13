@@ -1,0 +1,18 @@
+{
+  "name": "case-management",
+  "description": "案件管理：案件基本信息管理和状态跟踪",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/casemanage"
+    ],
+    "promptPatterns": [
+      "案件管理|案件信息|案件状态|案件跟踪"
+    ],
+    "fileTypes": []
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

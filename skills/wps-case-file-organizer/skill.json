@@ -1,0 +1,27 @@
+{
+  "name": "wps-case-file-organizer",
+  "description": "卷宗整理：辅助整理电子卷宗和文档归类",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/organize"
+    ],
+    "promptPatterns": [
+      "卷宗整理|卷宗管理|电子卷宗|文档归类"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".md"
+    ]
+  },
+  "allowedTools": [
+    "read",
+    "write",
+    "edit",
+    "bash"
+  ],
+  "assets": [],
+  "priority": 0
+}

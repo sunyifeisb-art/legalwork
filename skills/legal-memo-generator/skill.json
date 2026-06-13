@@ -1,0 +1,23 @@
+{
+  "name": "legal-memo-generator",
+  "description": "法律备忘录生成：生成专业法律备忘录",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/memo"
+    ],
+    "promptPatterns": [
+      "法律备忘录|备忘录|法律意见|memo"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

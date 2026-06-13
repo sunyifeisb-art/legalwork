@@ -1,0 +1,23 @@
+{
+  "name": "legal-professional-growth",
+  "description": "律师成长进阶：经验转化、知识沉淀、AI时代法律人发展路径",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/growth"
+    ],
+    "promptPatterns": [
+      "成长|进阶|律师成长|经验转化|知识沉淀|复盘|一鱼多吃|AI时代"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

@@ -1,0 +1,23 @@
+{
+  "name": "judicial-value-judgment",
+  "description": "司法价值判断：分析司法裁判中的价值判断要素",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/judicialvalue"
+    ],
+    "promptPatterns": [
+      "司法价值|价值判断|司法哲学|裁判价值"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

@@ -1,0 +1,23 @@
+{
+  "name": "counterfactual-reasoning",
+  "description": "反事实推理：推演改变事实后法律结果的变化",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/whatif"
+    ],
+    "promptPatterns": [
+      "反事实|如果当初|假设.*会怎样|counterfactual"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

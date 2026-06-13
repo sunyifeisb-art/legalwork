@@ -1,0 +1,2815 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>审查结果 — ComplianceAI</title>
+    <style>
+        :root {
+            --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            --font-reading: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            --font-mono: "SF Mono", Menlo, Monaco, Consolas, monospace;
+            --bg: #ffffff;
+            --bg-subtle: #f5f5f3;
+            --bg-elevated: #ffffff;
+            --accent: #111111;
+            --accent-light: #f0f0ed;
+            --accent-hover: #333333;
+            --text-primary: #111111;
+            --text-secondary: #52525b;
+            --text-muted: #71717a;
+            --border: #d4d4d4;
+            --shadow: 0 10px 26px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 14px 34px rgba(0, 0, 0, 0.1);
+            --red: #8d1f1f;
+            --red-bg: #f3e4df;
+            --red-border: #e0bdb4;
+            --orange: #a75b12;
+            --orange-bg: #f6ead8;
+            --orange-border: #e8c694;
+            --blue: #315f72;
+            --blue-bg: #e6eef1;
+            --blue-border: #bed2db;
+            --green: #36673a;
+            --green-bg: #edf5ec;
+            --green-border: #c8ddc5;
+            --yellow: #8a5a13;
+            --yellow-bg: #fbf2dc;
+            --yellow-border: #e8c87a;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: var(--font-ui);
+            background: #ffffff;
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.65;
+            font-size: 16px;
+            font-weight: 400;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+        }
+        body.dark {
+            --bg: #18181a;
+            --bg-subtle: #242426;
+            --bg-elevated: #1e1e20;
+            --accent: #e4e4e7;
+            --accent-light: #2a2a2d;
+            --accent-hover: #fafafa;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border: #3f3f46;
+            --shadow: 0 10px 26px rgba(0,0,0,0.4);
+            --shadow-lg: 0 14px 34px rgba(0,0,0,0.5);
+            --red: #f87171;
+            --red-bg: #3d1a1a;
+            --red-border: #5c2a2a;
+            --orange: #fbbf24;
+            --orange-bg: #3d2e0a;
+            --orange-border: #5c4a14;
+            --blue: #7dd3fc;
+            --blue-bg: #0a2e3d;
+            --blue-border: #145c5c;
+            --green: #6ee7b7;
+            --green-bg: #0a3d2e;
+            --green-border: #145c3d;
+            --yellow: #fde68a;
+            --yellow-bg: #3d2e0a;
+            --yellow-border: #5c4a14;
+        }
+        body.dark,
+        body.dark .page-wrap { background: #18181a; }
+        body.dark header,
+        body.dark .sidebar { background: #1e1e20; }
+        body.dark .ov-card,
+        body.dark .risk-item,
+        body.dark .suggestion-box,
+        body.dark .analysis-box,
+        body.dark .rewrite-box,
+        body.dark .pack-container,
+        body.dark .cluster-card,
+        body.dark .task-card,
+        body.dark .evidence-table,
+        body.dark .ev-card,
+        body.dark .reg-card { background: var(--bg); }
+        body.dark .section-title { color: var(--text-primary); }
+        body.dark .pa-title { color: var(--text-primary); }
+        body.dark .risk-point { color: var(--text-primary); }
+        body.dark .risk-quote { background: var(--bg-subtle); color: var(--text-secondary); }
+        body.dark .side-nav-list a { color: var(--text-secondary); }
+        body.dark .side-nav-list a:hover { background: var(--accent-light); color: var(--text-primary); }
+        body.dark .dl-link { background: var(--bg); color: var(--text-secondary); border-color: var(--border); }
+        body.dark .dl-link:hover { color: var(--text-primary); border-color: var(--text-primary); }
+        body.dark .dl-link.primary { background: var(--accent); color: #18181a; border-color: var(--accent); }
+        body.dark .dl-link.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+        body.dark .pack-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+        body.dark .pack-scenario { background: var(--bg-subtle); }
+        body.dark .pack-trigger { background: rgba(184,104,22,0.1); border-color: rgba(184,104,22,0.25); }
+        body.dark .ev-why { background: var(--bg-subtle); }
+        body.dark .ev-verify { background: rgba(58,158,154,0.1); border-color: rgba(58,158,154,0.25); }
+        body.dark .ev-meta-tag { background: var(--bg-subtle); }
+        body.dark .ev-meta-tag.owner { background: rgba(58,158,154,0.15); }
+        body.dark .pack-section { background: var(--bg-subtle); }
+        body.dark .section-meta { color: var(--text-muted); }
+        body.dark .fold-row { background: var(--bg-subtle); border-top-color: var(--border); }
+        body.dark .risk-desc { color: var(--text-secondary); }
+        body.dark .analysis-text { color: var(--text-secondary); }
+        body.dark .suggestion-text { color: var(--text-secondary); }
+        body.dark .rewrite-text { color: var(--text-secondary); }
+        body.dark .reg-code { background: var(--bg-subtle); }
+        body.dark .reg-title { color: var(--text-primary); }
+        body.dark .reg-meta { color: var(--text-muted); }
+        body.dark .reg-snippet { color: var(--text-secondary); }
+        body.dark .dl-head { color: var(--text-muted); }
+        body.dark .side-nav-title { color: var(--text-muted); }
+        body.dark .detail-label { color: var(--text-muted); }
+        body.dark .detail-text { color: var(--text-secondary); }
+        body.dark .analysis-head { color: var(--yellow); }
+        body.dark .recheck-note { color: var(--yellow); background: var(--yellow-bg); border-color: var(--yellow-border); }
+        body.dark .notice-bar { background: var(--yellow-bg); border-color: var(--yellow-border); color: var(--yellow); }
+        body.dark footer { background: #1e1e20; border-top-color: #3f3f46; }
+        body.dark .footer-note { color: #71717a; }
+        body.dark .state-page .state-icon { background: var(--bg); }
+        body.dark .state-title { color: var(--text-primary); }
+        body.dark .state-sub { color: var(--text-secondary); }
+        body.dark .btn-retry { background: var(--accent); color: #18181a; }
+        body.dark .btn-retry:hover { background: var(--accent-hover); }
+        body.dark .mobile-nav { background: var(--bg); border-bottom-color: var(--border); }
+        body.dark .mobile-nav-inner a { color: var(--text-secondary); }
+        body.dark .mobile-nav-inner a:hover { background: var(--bg-subtle); color: var(--text-primary); }
+        body.dark .tally-label { color: var(--text-secondary); }
+        body.dark .download-toast { background: var(--accent); color: #18181a; }
+
+        @media (min-width: 761px) {
+            header.desktop-header { display: none; }
+        }
+
+        /* Header */
+        header {
+            background: var(--bg);
+            border-right: 1px solid var(--border);
+            position: fixed;
+            inset: 0 auto 0 0;
+            width: 264px;
+            z-index: 50;
+            overflow: auto;
+        }
+        .header-inner {
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: flex-start;
+        }
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .header-logo-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .header-left .theme-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .header-left .theme-toggle:hover {
+            color: var(--text-primary);
+            border-color: var(--text-primary);
+        }
+        .theme-icon-dark { display: none; }
+        body.dark .theme-icon-light { display: none; }
+        body.dark .theme-icon-dark { display: inline; }
+        .brand-logo {
+            display: block;
+            text-decoration: none;
+        }
+        .brand-logo img {
+            display: block;
+            width: 150px;
+            height: auto;
+        }
+        body.dark .brand-logo img {
+            filter: brightness(2) contrast(0.85);
+        }
+        .header-doc {
+            display: block;
+            padding: 8px 2px 0;
+            font-size: 12px;
+            line-height: 1.45;
+            color: var(--text-muted);
+            max-width: 220px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        /* Layout */
+        .page-wrap {
+            max-width: 1120px;
+            margin: 0 auto 0 264px;
+            padding: 36px 32px;
+            display: block;
+            padding-bottom: 80px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 264px;
+            z-index: 51;
+            overflow: auto;
+            padding: 6px 12px 8px;
+            background: var(--bg);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-main {
+            flex: 1 1 auto;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .side-nav-wrap {
+            flex: 1 1 auto;
+            overflow-y: auto;
+            min-height: 0;
+        }
+        .side-nav-wrap::-webkit-scrollbar { width: 4px; }
+        .side-nav-wrap::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+        .sidebar-logo-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin: 10px 0 6px;
+        }
+        .sidebar-logo-row .theme-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .sidebar-logo-row .theme-toggle:hover {
+            color: var(--text-primary);
+            border-color: var(--text-primary);
+        }
+        .sidebar-backdrop { display: none; }
+        .sidebar-btn { display: none; }
+        .back-prev {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            padding: 10px 10px;
+            border: 0;
+            border-radius: 7px;
+            background: #111;
+            color: #fff;
+            font: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 8px 0 0;
+            flex-shrink: 0;
+            transition: all 0.15s;
+        }
+        .back-prev:hover {
+            background: #333;
+        }
+        body.dark .back-prev {
+            background: #e4e4e7;
+            color: #18181a;
+        }
+        body.dark .back-prev:hover {
+            background: #fafafa;
+        }
+        .sidebar-top {
+            padding: 6px 10px 16px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 16px;
+        }
+        .side-nav-title {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0;
+            text-transform: none;
+            color: var(--text-muted);
+            margin: 10px 10px 4px;
+        }
+        .side-nav-list { list-style: none; }
+        .side-nav-list li + li { margin-top: 0; }
+        .side-nav-list a {
+            display: block;
+            min-height: 30px;
+            padding: 5px 10px;
+            font-size: 15px;
+            font-weight: 450;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .side-nav-list a:hover {
+            background: var(--accent-light);
+            color: var(--text-primary);
+        }
+        .side-nav-list a.active {
+            background: #111;
+            color: #fff;
+            font-weight: 600;
+        }
+        body.dark .side-nav-list a.active {
+            background: #e4e4e7;
+            color: #18181a;
+        }
+        .side-count {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-left: 4px;
+        }
+        .risk-sub-nav {
+            margin: 4px 0 2px;
+            padding-left: 8px;
+            border-left: 2px solid var(--border);
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: max-height 0.25s ease, opacity 0.2s ease;
+        }
+        .risk-sub-nav.expanded {
+            max-height: 420px;
+            opacity: 1;
+            overflow-y: auto;
+        }
+        /* In single-page view, always show risk sub-nav when risks section is active */
+        .risk-sub-nav.always-show {
+            max-height: 420px;
+            opacity: 1;
+            overflow-y: auto;
+        }
+        .risk-chevron {
+            flex-shrink: 0;
+            transition: transform 0.2s;
+            margin-left: auto;
+        }
+        .risk-chevron.open { transform: rotate(180deg); }
+        .side-nav-list > li > a[data-nav="risks"] {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .risk-sub-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 6px;
+            transition: all 0.15s;
+            line-height: 1.4;
+            min-height: auto;
+            font-weight: 400;
+        }
+        .risk-sub-item:hover {
+            background: var(--accent-light);
+            color: var(--text-primary);
+        }
+        .risk-sub-item.active {
+            background: #111;
+            color: #fff;
+            font-weight: 500;
+        }
+        body.dark .risk-sub-item.active {
+            background: #e4e4e7;
+            color: #18181a;
+        }
+        .risk-sub-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .risk-sub-lvl-high .risk-sub-dot { background: var(--red); }
+        .risk-sub-lvl-medium .risk-sub-dot { background: var(--orange); }
+        .risk-sub-lvl-low .risk-sub-dot { background: var(--blue); }
+        .risk-sub-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        body.dark .risk-sub-nav { border-left-color: var(--border); }
+        .side-downloads {
+            margin: 8px 0 0;
+            padding: 10px 10px 8px;
+            border-top: 1px solid var(--border);
+        }
+        .dl-head {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0;
+            text-transform: none;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+	        .dl-link {
+	            display: flex;
+	            align-items: center;
+	            gap: 10px;
+            padding: 7px 10px;
+            margin-bottom: 4px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            transition: all 0.2s;
+	        }
+	        .dl-link:hover {
+            color: var(--text-primary);
+            border-color: var(--text-primary);
+            background: var(--bg-subtle);
+        }
+        .dl-link.primary {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+        .dl-link.primary:hover {
+            background: var(--accent-hover);
+            border-color: var(--accent-hover);
+            color: #fff;
+        }
+	        .download-toast {
+	            position: fixed;
+	            left: 50%;
+	            bottom: 28px;
+	            transform: translateX(-50%);
+	            max-width: min(560px, calc(100vw - 32px));
+	            padding: 12px 16px;
+	            border: 1px solid var(--border);
+	            border-radius: 12px;
+	            background: var(--text-primary);
+	            color: #fff;
+	            font-size: 13px;
+	            box-shadow: var(--shadow-lg);
+	            z-index: 200;
+	            display: none;
+	        }
+	        .download-toast.show { display: block; }
+
+        /* Content */
+        .content { min-width: 0; }
+        section { margin-bottom: 48px; }
+        .section-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 34px;
+            line-height: 1.25;
+            font-weight: 720;
+            color: var(--text-primary);
+        }
+        .section-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* Overview Cards */
+        .overview-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        .ov-card {
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 28px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+        .ov-label {
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0;
+            text-transform: none;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .ov-label::before {
+            content: '';
+            display: inline-block;
+            width: 3px;
+            height: 14px;
+            background: var(--accent);
+            border-radius: 1px;
+        }
+        .ov-headline {
+            font-family: var(--font-display);
+            font-size: 22px;
+            font-weight: 680;
+            line-height: 1.35;
+            color: var(--text-primary);
+            margin-bottom: 24px;
+        }
+        .ov-headline .hl-accent { color: var(--accent); }
+        .ov-headline .hl-red { color: var(--red); }
+        .risk-tally {
+            display: flex;
+            gap: 40px;
+            margin-top: 20px;
+        }
+        .tally-item { text-align: center; }
+        .tally-num {
+            font-family: var(--font-display);
+            font-size: 36px;
+            font-weight: 720;
+            line-height: 1;
+        }
+        .tally-num.red { color: var(--red); }
+        .tally-num.orange { color: var(--orange); }
+        .tally-num.blue { color: var(--blue); }
+        .tally-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .tally-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* Priority Badge */
+        .priority-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            border-radius: 999px;
+            margin-bottom: 12px;
+        }
+        .priority-p1 { background: var(--red-bg); color: var(--red); }
+        .priority-p2 { background: var(--orange-bg); color: var(--orange); }
+        .priority-p3 { background: var(--bg-subtle); color: var(--text-muted); border: 1px solid var(--border); }
+
+        .pa-title { font-size: 18px; font-weight: 680; color: var(--text-primary); margin-bottom: 10px; line-height: 1.4; }
+        .pa-objective { font-size: 15px; color: var(--text-secondary); line-height: 1.7; }
+        .pa-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 16px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .pa-link:hover { color: var(--text-secondary); }
+
+        /* Notice Bar */
+        .notice-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: #fefce8;
+            border: 1px solid #fde047;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #a16207;
+            margin-top: 16px;
+        }
+
+        /* Risk Items */
+        .risk-list { display: flex; flex-direction: column; gap: 16px; }
+        .risk-item {
+            background: var(--bg);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--text-muted);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            max-width: 100%;
+            min-width: 0;
+        }
+        .risk-item.lvl-high { border-left-color: var(--red); }
+        .risk-item.lvl-medium { border-left-color: var(--orange); }
+        .risk-item.lvl-low { border-left-color: var(--blue); }
+        .risk-item.lvl-none { border-left-color: var(--green); }
+
+        .risk-body {
+            padding: 24px;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 28px;
+            align-items: start;
+            min-width: 0;
+        }
+        .risk-col-l {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-width: 0;
+        }
+        .risk-col-r {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-width: 0;
+        }
+        .risk-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .risk-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 999px;
+        }
+        .rb-high { background: var(--red-bg); color: var(--red); }
+        .rb-medium { background: var(--orange-bg); color: var(--orange); }
+        .rb-low { background: var(--blue-bg); color: var(--blue); }
+        .rb-none { background: var(--green-bg); color: var(--green); }
+        .theme-tag {
+            font-size: 12px;
+            color: var(--text-muted);
+            padding: 4px 10px;
+            background: var(--bg-subtle);
+            border-radius: 999px;
+        }
+        .risk-point {
+            font-family: var(--font-display);
+            font-size: 17px;
+            font-weight: 680;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+        .field-head {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0;
+            text-transform: none;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        .risk-quote {
+            display: block;
+            border-left: 3px solid var(--border);
+            padding: 8px 14px;
+            font-size: 13px;
+            line-height: 1.7;
+            color: var(--text-secondary);
+            font-family: var(--font-reading);
+            background: var(--bg-subtle);
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 8px;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+        .risk-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-top: 12px;
+        }
+        .risk-desc strong { color: var(--text-primary); font-weight: 600; }
+
+        /* Suggestion Box */
+        .suggestion-box {
+            background: var(--accent-light);
+            border-radius: 8px;
+            padding: 20px;
+            min-width: 0;
+            max-width: 100%;
+        }
+        .suggestion-head {
+            font-size: 14px;
+            font-weight: 650;
+            letter-spacing: 0;
+            text-transform: none;
+            color: var(--accent);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .suggestion-text {
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--text-secondary);
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        /* Analysis Box */
+        .analysis-box {
+            background: var(--yellow-bg);
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid var(--yellow-border);
+        }
+        .analysis-head {
+            font-size: 14px;
+            font-weight: 650;
+            letter-spacing: 0;
+            text-transform: none;
+            color: var(--yellow);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .analysis-text { font-size: 14px; line-height: 1.7; color: var(--text-secondary); }
+
+        /* Rewrite Box */
+        .rewrite-box {
+            background: var(--green-bg);
+            border: 1px solid var(--green-border);
+            border-radius: 8px;
+            padding: 20px;
+            min-width: 0;
+            max-width: 100%;
+        }
+        .rewrite-head {
+            font-size: 14px;
+            font-weight: 650;
+            letter-spacing: 0;
+            text-transform: none;
+            color: var(--green);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .rewrite-text {
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--text-secondary);
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+        .code-fix {
+            margin: 0;
+            padding: 14px;
+            width: 100%;
+            max-width: 100%;
+            background: #171412;
+            color: #f3f0ea;
+            border-radius: 10px;
+            overflow-x: auto;
+            box-sizing: border-box;
+            font-size: 12px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+        .code-fix code {
+            display: block;
+            max-width: 100%;
+            white-space: inherit;
+            font-family: var(--font-mono);
+        }
+
+        /* Fold */
+        .fold-row {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            background: var(--bg-subtle);
+        }
+        .fold-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-family: inherit;
+            padding: 0;
+            transition: color 0.2s;
+        }
+        .fold-toggle:hover { color: var(--text-primary); }
+        .fold-icon { transition: transform 0.2s; }
+        .fold-content { display: none; padding: 20px 0 8px; }
+        .fold-content.open { display: block; }
+
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .detail-block.full { grid-column: 1 / -1; }
+        .detail-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0;
+            text-transform: none;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        .detail-text { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+
+        .reg-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+        }
+        .reg-code {
+            font-size: 11px;
+            padding: 2px 8px;
+            background: var(--bg-subtle);
+            border-radius: 4px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .reg-title { font-size: 13px; font-weight: 600; color: var(--text-primary); margin: 8px 0 4px; }
+        .reg-meta { font-size: 12px; color: var(--text-muted); }
+        .reg-snippet { font-size: 12px; color: var(--text-secondary); margin-top: 8px; line-height: 1.6; }
+
+        .recheck-note {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: var(--yellow-bg);
+            border: 1px solid var(--yellow-border);
+            border-radius: 8px;
+            font-size: 12px;
+            color: var(--yellow);
+        }
+
+        /* Clusters */
+        .cluster-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .cluster-card {
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            transition: all 0.2s;
+        }
+        .cluster-card:hover {
+            border-color: var(--text-primary);
+            transform: translateY(-2px);
+        }
+        .cluster-name { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 10px; }
+        .cluster-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+        .cluster-count {
+            font-family: var(--font-display);
+            font-size: 32px;
+            font-weight: 720;
+            color: var(--text-muted);
+            line-height: 1;
+        }
+
+        /* Tasks */
+        .task-list { display: flex; flex-direction: column; gap: 12px; }
+        .task-card {
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 20px 24px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+        .task-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        .task-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+        .task-owner {
+            font-size: 12px;
+            color: var(--text-muted);
+            background: var(--bg-subtle);
+            padding: 4px 10px;
+            border-radius: 999px;
+            white-space: nowrap;
+        }
+        .task-obj { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+
+        /* Evidence Cards */
+        .evidence-intro {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 24px;
+            padding: 16px 20px;
+            background: var(--bg-subtle);
+            border-radius: 8px;
+            border-left: 3px solid var(--accent);
+        }
+        .evidence-cards { display: flex; flex-direction: column; gap: 16px; }
+        .ev-card {
+            background: var(--bg);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: box-shadow 0.2s;
+        }
+        .ev-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+        .ev-card-head {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 18px 20px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+        .ev-card-body { padding: 16px 20px 20px; }
+        .ev-card-point {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 15px;
+            line-height: 1.5;
+            flex: 1;
+        }
+        .ev-card-meta {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .ev-meta-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background: var(--bg-subtle);
+            color: var(--text-secondary);
+        }
+        .ev-meta-tag.owner { background: rgba(58,158,154,0.1); color: #3a9e9a; }
+        .ev-why {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            padding: 10px 14px;
+            background: var(--bg-subtle);
+            border-radius: 6px;
+            margin-bottom: 14px;
+        }
+        .ev-why-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .ev-materials { list-style: none; }
+        .ev-materials li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            padding: 6px 0;
+        }
+        .ev-materials li::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            margin-top: 8px;
+            flex-shrink: 0;
+        }
+        .ev-verify {
+            margin-top: 14px;
+            padding: 10px 14px;
+            background: rgba(58,158,154,0.06);
+            border: 1px solid rgba(58,158,154,0.15);
+            border-radius: 6px;
+            font-size: 13px;
+            color: #3a9e9a;
+            line-height: 1.6;
+        }
+        .ev-verify-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            color: #3a9e9a;
+        }
+
+        /* Packs */
+        .pack-intro {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 24px;
+            padding: 16px 20px;
+            background: var(--bg-subtle);
+            border-radius: 8px;
+            border-left: 3px solid var(--accent);
+        }
+        .pack-container {
+            background: var(--bg);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        .pack-tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-subtle);
+        }
+        .pack-tab {
+            padding: 14px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: none;
+            border: none;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .pack-tab:hover { color: var(--text-secondary); }
+        .pack-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .pack-panel { padding: 24px; }
+        .pack-scenario-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 16px;
+        }
+        .pack-trigger {
+            padding: 12px 16px;
+            background: rgba(184,104,22,0.06);
+            border: 1px solid rgba(184,104,22,0.15);
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .pack-trigger-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: #b86816;
+            margin-bottom: 6px;
+        }
+        .pack-trigger-points {
+            list-style: none;
+        }
+        .pack-trigger-points li {
+            font-size: 13px;
+            color: var(--text-secondary);
+            padding: 3px 0;
+            padding-left: 16px;
+            position: relative;
+        }
+        .pack-trigger-points li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: #b86816;
+            font-weight: 600;
+        }
+        .pack-steps {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 24px;
+            padding: 0 8px;
+        }
+        .pack-step {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+        .pack-step-num {
+            width: 32px;
+            height: 32px;
+            line-height: 32px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: white;
+            font-size: 13px;
+            font-weight: 700;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        .pack-step-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+            margin-top: 8px;
+            text-align: center;
+        }
+        .pack-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 16px;
+            left: calc(50% + 16px);
+            right: calc(-50% + 16px);
+            height: 2px;
+            background: var(--border);
+        }
+        .pack-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .pack-section {
+            background: var(--bg-subtle);
+            border-radius: 8px;
+            padding: 18px 20px;
+        }
+        .pack-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 14px;
+        }
+        .pack-items { list-style: none; }
+        .pack-items li {
+            display: flex;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            padding: 5px 0;
+        }
+        .pack-items li::before {
+            content: '✓';
+            color: var(--accent);
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--border);
+            background: var(--bg);
+            padding: 24px 40px;
+            margin-left: 264px;
+        }
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .footer-note { font-size: 13px; color: var(--text-muted); }
+
+        /* Mobile nav */
+        .mobile-nav {
+            display: none;
+            overflow-x: auto;
+            scrollbar-width: none;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 72px;
+            z-index: 40;
+        }
+        .mobile-nav::-webkit-scrollbar { display: none; }
+        .mobile-nav-inner {
+            display: flex;
+            padding: 8px 20px;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        .mobile-nav-inner a {
+            padding: 8px 14px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 999px;
+            transition: all 0.2s;
+        }
+        .mobile-nav-inner a:hover {
+            background: var(--bg-subtle);
+            color: var(--text-primary);
+        }
+
+        /* Loading states */
+        .state-page {
+            max-width: 480px;
+            margin: 100px auto;
+            padding: 48px 40px;
+            text-align: center;
+            background: var(--bg);
+            border-radius: 24px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+        }
+        .state-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 24px;
+            background: var(--bg);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: var(--shadow);
+        }
+        .state-icon.err {
+            background: var(--red-bg);
+            color: var(--red);
+        }
+        .state-title {
+            font-family: var(--font-display);
+            font-size: 28px;
+            font-weight: 720;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+        .state-sub { font-size: 15px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 28px; }
+        .btn-retry {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 28px;
+            background: var(--accent);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s;
+            box-shadow: var(--shadow);
+        }
+        .btn-retry:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .animate-spin { animation: spin 1.2s linear infinite; }
+
+        @media (max-width: 760px) {
+            header {
+                position: sticky;
+                top: 0;
+                width: auto;
+                border-right: 0;
+                border-bottom: 1px solid var(--border);
+            }
+            .page-wrap { margin-left: 0; grid-template-columns: 1fr; padding: 24px 20px 60px; gap: 32px; }
+            .sidebar {
+                display: block;
+                position: fixed;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                z-index: 100;
+                transform: translateX(-100%);
+                transition: transform 0.25s ease;
+                width: 280px;
+                background: var(--bg);
+                border-right: 1px solid var(--border);
+                padding: 16px 12px 14px;
+                overflow-y: auto;
+            }
+            .sidebar.open { transform: translateX(0); }
+            .sidebar-backdrop {
+                display: block;
+                position: fixed;
+                inset: 0;
+                z-index: 99;
+                background: rgba(0,0,0,0.4);
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.25s ease;
+            }
+            .sidebar-backdrop.open {
+                opacity: 1;
+                pointer-events: auto;
+            }
+            .sidebar-btn {
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+                position: fixed;
+                bottom: 24px;
+                right: 24px;
+                width: 48px;
+                height: 48px;
+                border-radius: 50%;
+                background: var(--accent);
+                color: #fff;
+                border: none;
+                box-shadow: var(--shadow-lg);
+                z-index: 60;
+                cursor: pointer;
+                font-size: 20px;
+            }
+            .header-inner { min-height: 0; padding: 14px 20px; }
+            .header-doc { display: none; }
+            footer { margin-left: 0; }
+            .overview-grid { grid-template-columns: 1fr; }
+            .risk-body { grid-template-columns: 1fr; }
+            .detail-grid { grid-template-columns: 1fr; }
+            .cluster-grid { grid-template-columns: 1fr; }
+            .pack-grid { grid-template-columns: 1fr; }
+            footer { padding: 20px; }
+            .footer-inner { flex-direction: column; gap: 8px; text-align: center; }
+        }
+
+        /* ===== File Preview Sidebar ===== */
+        .preview-sidebar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 760px;
+            max-width: 92vw;
+            height: 100vh;
+            background: var(--bg);
+            border-left: 1px solid var(--border);
+            box-shadow: -8px 0 32px rgba(0,0,0,0.12);
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .preview-sidebar.open {
+            transform: translateX(0);
+        }
+        .preview-sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-subtle);
+            flex-shrink: 0;
+        }
+        .preview-sidebar-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .preview-sidebar-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: background 0.2s;
+        }
+        .preview-sidebar-close:hover {
+            background: var(--accent-light);
+            color: var(--text-primary);
+        }
+        .preview-sidebar-body {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 20px;
+            position: relative;
+            min-height: 0;
+        }
+        .preview-info-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            background: var(--accent-light);
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .preview-info-bar .page-indicator {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .preview-fulltext {
+            font-family: -apple-system, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", serif;
+            font-size: 15px;
+            line-height: 1.9;
+            color: var(--text-primary);
+            white-space: pre-wrap;
+            word-break: break-word;
+            padding: 0 4px;
+            position: relative;
+        }
+        .preview-fulltext .risk-hl {
+            background: rgba(245, 158, 11, 0.25);
+            border-bottom: 2px solid #f59e0b;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .preview-fulltext .risk-hl:hover {
+            background: rgba(245, 158, 11, 0.4);
+        }
+        .preview-fulltext .risk-hl.active {
+            background: rgba(239, 68, 68, 0.25);
+            border-bottom-color: #ef4444;
+        }
+        .preview-document {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            padding: 4px;
+        }
+        .pdf-page {
+            position: relative;
+            width: 100%;
+            background: #fff;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+        .pdf-page img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+        .pdf-highlight {
+            position: absolute;
+            background: rgba(245, 158, 11, 0.28);
+            border-bottom: 2px solid #f59e0b;
+            border-radius: 2px;
+            pointer-events: none;
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+        .pdf-highlight.active {
+            background: rgba(239, 68, 68, 0.28);
+            border-bottom-color: #ef4444;
+            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.16);
+        }
+        .word-document {
+            background: #e5e7eb;
+            padding: 18px;
+        }
+        .word-page {
+            max-width: 720px;
+            min-height: 960px;
+            margin: 0 auto;
+            padding: 56px 64px;
+            background: #fff;
+            border: 1px solid #d1d5db;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+            color: #111827;
+            font-family: "Times New Roman", "Noto Serif SC", "Songti SC", serif;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+        .word-page h1,
+        .word-page h2,
+        .word-page h3 {
+            margin: 18px 0 10px;
+            font-family: "Noto Serif SC", "Songti SC", serif;
+            line-height: 1.35;
+        }
+        .word-page p {
+            margin: 0 0 10px;
+        }
+        .word-page table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 14px 0;
+            font-size: 13px;
+        }
+        .word-page td {
+            border: 1px solid #9ca3af;
+            padding: 6px 8px;
+            vertical-align: top;
+        }
+        .word-page .risk-hl {
+            background: rgba(245, 158, 11, 0.3);
+            border-bottom: 2px solid #f59e0b;
+            border-radius: 2px;
+        }
+        .word-page .risk-hl.active {
+            background: rgba(239, 68, 68, 0.26);
+            border-bottom-color: #ef4444;
+        }
+        .preview-navbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0 12px;
+            flex-wrap: wrap;
+        }
+        .preview-navbar .nav-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            height: 32px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg);
+            color: var(--text-primary);
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .preview-navbar .nav-btn:hover {
+            background: var(--accent-light);
+        }
+        .preview-navbar .nav-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .preview-navbar .nav-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin: 0 4px;
+        }
+        .preview-navbar .nav-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            background: var(--accent-light);
+            color: var(--text-secondary);
+        }
+        .preview-loading,
+        .preview-error {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        @keyframes highlightPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .preview-text-content {
+            font-family: var(--font-reading);
+            font-size: 14px;
+            line-height: 1.8;
+            color: var(--text-primary);
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: calc(100vh - 180px);
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .preview-text-content .highlight-snippet {
+            background: rgba(245, 158, 11, 0.2);
+            border-left: 3px solid #f59e0b;
+            padding: 8px 12px;
+            margin: 8px 0;
+            border-radius: 0 4px 4px 0;
+            display: block;
+        }
+        .preview-empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 40px;
+        }
+        .preview-empty-state svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 16px;
+            opacity: 0.4;
+        }
+        .preview-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.3);
+            z-index: 199;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .preview-backdrop.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .locate-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 8px;
+        }
+        .locate-btn:hover {
+            background: var(--accent-light);
+            color: var(--text-primary);
+            border-color: var(--text-muted);
+        }
+        .locate-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+        .locate-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .preview-context {
+            font-family: var(--font-reading);
+            font-size: 14px;
+            line-height: 1.8;
+            color: var(--text-primary);
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 70vh;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+        .preview-highlight {
+            background: rgba(245, 158, 11, 0.25);
+            color: var(--text-primary);
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: 600;
+            box-decoration-break: clone;
+            -webkit-box-decoration-break: clone;
+        }
+        .preview-highlight-box {
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 3px solid #f59e0b;
+            padding: 12px 16px;
+            border-radius: 0 8px 8px 0;
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--text-primary);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .preview-notice {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            background: var(--bg-subtle);
+            border-radius: 6px;
+        }
+        .preview-ellipsis {
+            color: var(--text-muted);
+            font-style: italic;
+            display: inline;
+        }
+        @media (max-width: 900px) {
+            .preview-sidebar {
+                width: 100%;
+                max-width: 100%;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="/static/animations.css">
+</head>
+<body>
+
+<!-- Header -->
+<header class="desktop-header">
+    <div class="header-inner">
+        <div class="header-left">
+            <div class="header-logo-row">
+                <a href="/" class="brand-logo">
+                    <img src="/static/brand-logo.png" alt="ComplianceAI">
+                </a>
+                <button class="theme-toggle" id="themeToggle" type="button" aria-label="切换主题">
+                    <span class="theme-icon-light">☀</span>
+                    <span class="theme-icon-dark">☾</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</header>
+
+{% if task.status == 'pending' or task.status == 'running' %}
+<!-- Loading -->
+<div class="state-page">
+    <div class="state-icon">
+        <svg class="animate-spin" width="28" height="28" fill="none" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" stroke="var(--border)" stroke-width="3"></circle>
+            <path fill="var(--accent)" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+    </div>
+    <h2 class="state-title">正在审查中</h2>
+    <p class="state-sub">请稍候，系统正在分析文档合规性</p>
+</div>
+
+{% elif task.status == 'failed' %}
+<!-- Error -->
+<div class="state-page">
+    <div class="state-icon err">⚠️</div>
+    <h2 class="state-title">审查失败</h2>
+    <p class="state-sub">{{ task.error or '发生未知错误，请重新提交' }}</p>
+    <a href="/" class="btn-retry ca-btn">重新审查</a>
+</div>
+
+{% elif task.status == 'completed' and report %}
+{% set is_code_review = task.review_type == 'code' or report.document_type == 'source_code' %}
+
+<!-- Mobile nav -->
+<nav class="mobile-nav">
+    <div class="mobile-nav-inner">
+        <a href="#overview">概览</a>
+        <a href="#risks">风险详情</a>
+        {% if report.risk_clusters %}<a href="#clusters">风险聚类</a>{% endif %}
+        {% if remediation and remediation.tasks %}<a href="#tasks">整改任务</a>{% endif %}
+        {% if evidence and evidence.checklist %}<a href="#evidence">整改材料准备</a>{% endif %}
+                {% if (sdk_pack and sdk_pack.enabled) or (cross_border_pack and cross_border_pack.enabled) or (privacy_pack and privacy_pack.enabled) %}<a href="#packs">场景化整改方案</a>{% endif %}
+    </div>
+</nav>
+
+<div class="page-wrap">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-main">
+            <div class="sidebar-logo-row">
+                <a href="/" class="brand-logo">
+                    <img src="/static/brand-logo.png" alt="ComplianceAI">
+                </a>
+                <button class="theme-toggle" id="themeToggle" type="button" aria-label="切换主题">
+                    <span class="theme-icon-light">☀</span>
+                    <span class="theme-icon-dark">☾</span>
+                </button>
+            </div>
+            <div class="side-nav-wrap">
+            <p class="side-nav-title">导航</p>
+            <ul class="side-nav-list">
+                <li><a href="#overview" data-nav="overview" class="active">概览</a></li>
+                <li>
+                    <a href="#risks" data-nav="risks" class="risk-head">风险详情 <span class="side-count">({{ items|length }})</span>
+                        <svg class="risk-chevron" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </a>
+                    <div class="risk-sub-nav" id="riskSubNav">
+                        {% for item in items %}
+                        {% set rp = item.risk_point or '' %}
+                        <a href="#risk-item-{{ loop.index }}" data-nav="risk-item-{{ loop.index }}" class="risk-sub-item risk-sub-lvl-{% if item.risk_level == '高风险' %}high{% elif item.risk_level == '中风险' %}medium{% else %}low{% endif %}">
+                            <span class="risk-sub-dot"></span>
+                            <span class="risk-sub-text">{{ rp[:35] }}{% if rp|length > 35 %}…{% endif %}</span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </li>
+                {% if report.risk_clusters %}<li><a href="#clusters" data-nav="clusters">风险聚类</a></li>{% endif %}
+                {% if remediation and remediation.tasks %}<li><a href="#tasks" data-nav="tasks">整改任务</a></li>{% endif %}
+                {% if evidence and evidence.checklist %}<li><a href="#evidence" data-nav="evidence">整改材料准备</a></li>{% endif %}
+                {% if (sdk_pack and sdk_pack.enabled) or (cross_border_pack and cross_border_pack.enabled) or (privacy_pack and privacy_pack.enabled) %}<li><a href="#packs" data-nav="packs">场景化整改方案</a></li>{% endif %}
+            </ul>
+            </div>
+            <div class="side-downloads">
+                <p class="dl-head">导出</p>
+		            <a href="/api/download/{{ task.id }}/report" class="dl-link" data-download-type="report">
+		                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+		                完整报告 JSON
+		            </a>
+		            <a href="/api/download/{{ task.id }}/report_md" class="dl-link" data-download-type="report_md">
+		                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+		                完整报告 Markdown
+		            </a>
+		            <a href="/api/download/{{ task.id }}/remediation" class="dl-link" data-download-type="remediation">
+		                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+		                整改任务清单
+		            </a>
+		            {% if task.result and task.result.code_suggestions %}
+		            <a href="/api/download/{{ task.id }}/code_suggestions" class="dl-link" data-download-type="code_suggestions">
+		                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l-3 3 3 3m8-6l3 3-3 3M13 5l-2 14"/></svg>
+		                代码修改建议
+		            </a>
+		            {% endif %}
+		        </div>
+        </div>
+        <button class="back-prev ca-btn" type="button" onclick="location.href='/?workspace=review'">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            返回上一页
+        </button>
+    </aside>
+    <div class="sidebar-backdrop"></div>
+    <button class="sidebar-btn" type="button" aria-label="打开导航">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+
+    <!-- Content -->
+    <div class="content">
+
+        <!-- Overview -->
+        <section id="overview">
+            <div class="section-head">
+                <h2 class="section-title">审查概览</h2>
+            </div>
+            <div class="overview-grid">
+                <div class="ov-card">
+                    <p class="ov-label">审查结论</p>
+                    <p class="ov-headline">
+                        共发现 <span class="hl-accent">{{ items|length }}</span> 项合规关注点{% if risk_stats['高风险'] > 0 %}，其中 <span class="hl-red">{{ risk_stats['高风险'] }} 项高风险</span>需优先处理{% endif %}
+                    </p>
+                    <div class="risk-tally">
+                        {% if risk_stats['高风险'] > 0 %}
+                        <div class="tally-item">
+                            <div class="tally-num red ca-counter" data-counter="{{ risk_stats['高风险'] }}">{{ risk_stats['高风险'] }}</div>
+                            <div class="tally-label"><span class="tally-dot" style="background:var(--red)"></span>高风险</div>
+                        </div>
+                        {% endif %}
+                        {% if risk_stats['中风险'] > 0 %}
+                        <div class="tally-item">
+                            <div class="tally-num orange ca-counter" data-counter="{{ risk_stats['中风险'] }}">{{ risk_stats['中风险'] }}</div>
+                            <div class="tally-label"><span class="tally-dot" style="background:var(--orange)"></span>中风险</div>
+                        </div>
+                        {% endif %}
+                        {% if risk_stats['建议优化'] > 0 %}
+                        <div class="tally-item">
+                            <div class="tally-num blue ca-counter" data-counter="{{ risk_stats['建议优化'] }}">{{ risk_stats['建议优化'] }}</div>
+                            <div class="tally-label"><span class="tally-dot" style="background:var(--blue)"></span>建议优化</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% if report.auto_recheck_triggered %}
+                    <div class="notice-bar" style="margin-top:16px">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        已触发自动复核
+                    </div>
+                    {% endif %}
+                    {% if report.local_regulation_db and report.local_regulation_db.enabled %}
+                    <div class="notice-bar" style="margin-top:8px">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                        法规库增强已生效：{{ report.local_regulation_db.matched_items }} 项命中，{{ report.local_regulation_db.unmatched_items }} 项暂未命中
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="ov-card">
+                    <p class="ov-label">优先行动</p>
+                    {% if remediation and remediation.tasks %}
+                        {% set top = remediation.tasks | selectattr('priority','equalto','P1') | first %}
+                        {% if not top %}{% set top = remediation.tasks | first %}{% endif %}
+                        {% if top %}
+                        <div class="priority-badge priority-{{ top.priority | lower }}">{{ top.priority }}</div>
+                        <p class="pa-title">{{ top.title }}</p>
+                        <p class="pa-objective">{{ top.objective }}</p>
+                        <a href="#tasks" class="pa-link">
+                            查看全部 {{ remediation.tasks|length }} 项整改任务
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </a>
+                        {% endif %}
+                    {% else %}
+                        <p style="font-size:15px;color:var(--green);font-weight:500">✓ 暂无需立即处理的整改任务</p>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+
+        <!-- Risk Details -->
+        <section id="risks">
+            <div class="section-head">
+                <h2 class="section-title">风险详情</h2>
+                <span class="section-meta">{{ items|length }} 项发现</span>
+            </div>
+            <div class="risk-list">
+                {% for item in items %}
+                <article id="risk-item-{{ loop.index }}" class="risk-item lvl-{% if item.risk_level == '高风险' %}high{% elif item.risk_level == '中风险' %}medium{% elif item.risk_level == '建议优化' %}low{% else %}none{% endif %}">
+                    <div class="risk-body">
+                        <div class="risk-col-l">
+                            <div class="risk-meta">
+                                <span class="risk-badge rb-{% if item.risk_level == '高风险' %}high{% elif item.risk_level == '中风险' %}medium{% elif item.risk_level == '建议优化' %}low{% else %}none{% endif %}">{{ item.risk_level }}</span>
+                                {% if item.theme_name %}<span class="theme-tag">{{ item.theme_name }}</span>{% endif %}
+                            </div>
+                            <p class="risk-point">{{ item.risk_point }}</p>
+                            {% if item.source_sections or item.evidence %}
+                            <p class="field-head">{{ '代码位置' if is_code_review else '原文摘录' }}</p>
+                            {% if item.source_sections %}
+                                {% for s in item.source_sections[:2] %}
+                                <blockquote class="risk-quote">{{ s.snippet }}</blockquote>
+                                {% endfor %}
+                            {% elif item.evidence %}
+                                {% for ev in item.evidence[:2] %}
+                                <blockquote class="risk-quote">{{ ev }}</blockquote>
+                                {% endfor %}
+                            {% endif %}
+                            {% endif %}
+                            <div class="analysis-box">
+                                <p class="analysis-head">{{ '代码风险分析' if is_code_review else '风险分析' }}</p>
+                                <p class="analysis-text">
+                                    {% if item.missing_groups %}
+                                        该处未明确 <strong>{{ item.missing_groups | join('、') }}</strong>，存在 {{ item.risk_point }}。
+                                    {% elif item.ambiguity_hits %}
+                                        该处存在 <strong>「{{ item.ambiguity_hits | join('、') }}」</strong> 等模糊表述，存在 {{ item.risk_point }}。
+                                    {% else %}
+                                        该处存在 {{ item.risk_point }}。
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="risk-col-r">
+                            <div class="suggestion-box">
+                                <p class="suggestion-head">{{ '代码修改建议' if is_code_review else '修改建议' }}</p>
+                                <p class="suggestion-text">{{ item.suggestion }}</p>
+                            </div>
+                            {% if is_code_review and item.fix_snippet %}
+                            <div class="rewrite-box">
+                                <p class="rewrite-head">建议修复代码</p>
+                                <pre class="code-fix"><code>{{ item.fix_snippet }}</code></pre>
+                            </div>
+                            {% elif item.rewritten_clause %}
+                            <div class="rewrite-box">
+                                <p class="rewrite-head">{{ '修复实现思路' if is_code_review else '改写后条款' }}</p>
+                                <p class="rewrite-text">{{ item.rewritten_clause }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if item.source_sections %}
+                    <button class="locate-btn" data-locate-id="risk-{{ loop.index }}" data-locate-index="{{ loop.index }}" data-locate-risk="{{ item.risk_point|e }}" data-locate-snippet="{{ item.source_sections[0].snippet|e }}" data-locate-page="{{ item.source_sections[0].page }}" data-locate-segment="{{ item.source_sections[0].segment_index }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
+                        定位原文
+                    </button>
+                    {% endif %}
+                    <div class="fold-row">
+                        <button class="fold-toggle" data-target="fold-{{ loop.index }}">
+                            <svg class="fold-icon" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            法规依据与定位详情
+                        </button>
+                        <div class="fold-content" id="fold-{{ loop.index }}">
+                            <div class="detail-grid">
+                                {% if item.legal_basis %}
+                                <div class="detail-block">
+                                    <p class="detail-label">法规依据</p>
+                                    <p class="detail-text" style="font-weight:600;color:var(--text-primary);margin-bottom:6px">{{ item.legal_basis }}</p>
+                                    {% if item.legal_basis_detail %}<p class="detail-text">{{ item.legal_basis_detail }}</p>{% endif %}
+                                </div>
+                                {% endif %}
+                                {% if item.supporting_regulations %}
+                                <div class="detail-block full">
+                                    <p class="detail-label">补充规范索引</p>
+                                    {% for reg in item.supporting_regulations %}
+                                    <div class="reg-card">
+                                        {% if reg.standard_code %}<span class="reg-code">{{ reg.standard_code }}</span>{% endif %}
+                                        <p class="reg-title">{{ reg.title }}</p>
+                                        <p class="reg-meta">
+                                            {{ reg.effect_level or reg.doc_category }}
+                                            {% if reg.clause_references %} · 条款：{{ reg.clause_references | join('、') }}{% endif %}
+                                            {% if reg.match_keywords %} · 命中词：{{ reg.match_keywords | join('、') }}{% endif %}
+                                        </p>
+                                        {% if reg.snippet %}<p class="reg-snippet">{{ reg.snippet }}</p>{% endif %}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                {% if item.evidence %}
+                                <div class="detail-block full">
+                                    <p class="detail-label">补充证据片段</p>
+                                    {% for ev in item.evidence %}
+                                    <blockquote class="risk-quote">{{ ev }}</blockquote>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                {% if item.auto_recheck %}
+                                <div class="detail-block full">
+                                    <div class="recheck-note">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                        {{ item.auto_recheck_status or '已触发自动复核' }}
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% if item.reason %}
+                                <div class="detail-block full">
+                                    <p class="detail-label">系统判断详情</p>
+                                    <p class="detail-text">{{ item.reason }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Clusters -->
+        {% if report.risk_clusters %}
+        <section id="clusters">
+            <div class="section-head">
+                <h2 class="section-title">风险聚类</h2>
+            </div>
+            <div class="cluster-grid">
+                {% for cluster in report.risk_clusters %}
+                <div class="cluster-card">
+                    <div>
+                        <p class="cluster-name">{{ cluster.theme_name }}</p>
+                        <div class="cluster-tags">
+                            {% if cluster.high_risk_count > 0 %}<span class="risk-badge rb-high">{{ cluster.high_risk_count }} 高</span>{% endif %}
+                            {% if cluster.medium_risk_count > 0 %}<span class="risk-badge rb-medium">{{ cluster.medium_risk_count }} 中</span>{% endif %}
+                            {% if cluster.advisory_count > 0 %}<span class="risk-badge rb-low">{{ cluster.advisory_count }} 建议</span>{% endif %}
+                        </div>
+                    </div>
+                    <div class="cluster-count">{{ cluster.item_count }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Tasks -->
+        {% if remediation and remediation.tasks %}
+        <section id="tasks">
+            <div class="section-head">
+                <h2 class="section-title">整改任务</h2>
+                <div style="display:flex;gap:10px;align-items:center">
+	                    {% set pc = remediation.get('priority_counts', {}) %}
+	                    <span class="risk-badge rb-high">P1 {{ pc.get('P1', 0) }}</span>
+	                    <span class="risk-badge rb-medium">P2 {{ pc.get('P2', 0) }}</span>
+	                    <span class="risk-badge" style="background:var(--bg-subtle);color:var(--text-muted);border:1px solid var(--border)">P3 {{ pc.get('P3', 0) }}</span>
+                </div>
+            </div>
+            <div class="task-list">
+                {% for t in remediation.tasks %}
+                <div class="task-card">
+                    <div class="task-meta">
+                        <div style="display:flex;align-items:center;gap:12px">
+                            <span class="priority-badge priority-{{ t.priority | lower }}">{{ t.priority }}</span>
+                            <p class="task-title">{{ t.title }}</p>
+                        </div>
+                        {% if t.owner_hint %}<span class="task-owner">{{ t.owner_hint }}</span>{% endif %}
+                    </div>
+	                    <p class="task-obj">{{ t.objective or t.suggestion or t.implementation_hint }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Evidence -->
+        {% if evidence and evidence.checklist %}
+        <section id="evidence">
+            <div class="section-head">
+                <h2 class="section-title">整改材料准备</h2>
+            </div>
+            <div class="evidence-intro">
+                以下是你需要为每个风险点准备的证明材料。准备好后可用于：应对监管检查、支撑整改留痕、触发自动复核验证风险是否已消除。
+            </div>
+            <div class="evidence-cards">
+                {% for row in evidence.checklist %}
+                <div class="ev-card">
+                    <div class="ev-card-head">
+                        <span class="risk-badge rb-{% if row.risk_level == '高风险' %}high{% elif row.risk_level == '中风险' %}medium{% else %}low{% endif %}">{{ row.risk_level }}</span>
+                        <div style="flex:1">
+                            <div class="ev-card-point">{{ row.risk_point }}</div>
+                            <div class="ev-card-meta">
+                                {% if row.owner_hint and row.owner_hint != '待指派' %}
+                                <span class="ev-meta-tag owner">负责人：{{ row.owner_hint }}</span>
+                                {% endif %}
+                                {% if row.related_scenarios and row.related_scenarios | length > 0 %}
+                                <span class="ev-meta-tag">关联场景：{{ row.related_scenarios | join('、') }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ev-card-body">
+                        {% if row.why_needed and row.why_needed != '用于支撑风险判断、自动复核与整改留痕。' %}
+                        <div class="ev-why">
+                            <div class="ev-why-label">为什么需要</div>
+                            {{ row.why_needed }}
+                        </div>
+                        {% else %}
+                        <div class="ev-why">
+                            <div class="ev-why-label">为什么需要</div>
+                            准备这些材料可以核对风险是否属实，整改后可用于自动复核验证。
+                        </div>
+                        {% endif %}
+                        <ul class="ev-materials">
+                            {% for ei in row.evidence_items %}<li>{{ ei }}</li>{% endfor %}
+                        </ul>
+                        <div class="ev-verify">
+                            <div class="ev-verify-label">准备就绪后</div>
+                            将材料上传或补充到系统中，可触发自动复核，验证该风险点是否已消除。
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Special Packs -->
+        {% if (sdk_pack and sdk_pack.enabled) or (cross_border_pack and cross_border_pack.enabled) or (privacy_pack and privacy_pack.enabled) %}
+        <section id="packs">
+            <div class="section-head">
+                <h2 class="section-title">场景化整改方案</h2>
+            </div>
+            <div class="pack-intro">
+                根据你文档中的风险点，系统自动匹配了以下整改场景。每个场景提供从检查到整改的完整步骤，帮你把风险点变成可落地的行动。
+            </div>
+            <div class="pack-container">
+                <div class="pack-tabs" id="packTabs">
+                    {% if sdk_pack and sdk_pack.enabled %}<button class="pack-tab active" data-tab="sdk">SDK 与合作方</button>{% endif %}
+                    {% if cross_border_pack and cross_border_pack.enabled %}<button class="pack-tab {% if not (sdk_pack and sdk_pack.enabled) %}active{% endif %}" data-tab="cross">数据出境</button>{% endif %}
+                    {% if privacy_pack and privacy_pack.enabled %}<button class="pack-tab {% if not ((sdk_pack and sdk_pack.enabled) or (cross_border_pack and cross_border_pack.enabled)) %}active{% endif %}" data-tab="privacy">隐私文档整改</button>{% endif %}
+                </div>
+                {% for pack_key, pack_data, pack_desc, pack_steps in [
+                    ('sdk', sdk_pack, '你的文档涉及第三方 SDK 接入或合作方数据共享，需要逐一核对清单、披露和合同是否到位。', ['盘点第三方', '核对披露', '检查合同', '执行整改']),
+                    ('cross', cross_border_pack, '你的文档涉及数据跨境传输，需要核查出境对象、法律基础和保障机制是否齐备。', ['列出接收方', '核查必要性', '确认保障', '执行整改']),
+                    ('privacy', privacy_pack, '你的隐私政策存在条款缺口或口径冲突，需要补齐条款并统一表述。', ['盘点缺口', '确定优先级', '统一口径', '输出交付'])
+                ] %}
+                    {% if pack_data and pack_data.enabled %}
+                    <div id="panel-{{ pack_key }}" class="pack-panel {% if loop.first and pack_data.enabled %}block{% else %}hidden{% endif %}" style="{% if not (loop.first and pack_data.enabled) %}display:none{% endif %}">
+                        <div class="pack-scenario-desc">{{ pack_desc }}</div>
+                        {% if pack_data.matched_risk_points and pack_data.matched_risk_points | length > 0 %}
+                        <div class="pack-trigger">
+                            <div class="pack-trigger-label">触发此场景的风险点</div>
+                            <ul class="pack-trigger-points">
+                                {% for rp in pack_data.matched_risk_points %}<li>{{ rp }}</li>{% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                        <div class="pack-steps">
+                            {% for step in pack_steps %}
+                            <div class="pack-step">
+                                <div class="pack-step-num">{{ loop.index }}</div>
+                                <div class="pack-step-label">{{ step }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="pack-grid">
+                            {% for section in pack_data.sections %}
+                            <div class="pack-section">
+                                <p class="pack-section-title">{{ section.title }}</p>
+                                <ul class="pack-items">
+                                    {% for req in section.required_items %}<li>{{ req }}</li>{% endfor %}
+                                </ul>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Mobile downloads -->
+        <div style="display:none;" class="mobile-dl">
+            <p style="font-size:12px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px">下载报告</p>
+	            <a href="/api/download/{{ task.id }}/report" data-download-type="report" style="display:block;padding:14px 0;border-bottom:1px solid var(--border);font-size:14px;color:var(--text-secondary);text-decoration:none">完整报告 JSON</a>
+	            <a href="/api/download/{{ task.id }}/report_md" data-download-type="report_md" style="display:block;padding:14px 0;border-bottom:1px solid var(--border);font-size:14px;color:var(--text-secondary);text-decoration:none">完整报告 Markdown</a>
+	            <a href="/api/download/{{ task.id }}/remediation" data-download-type="remediation" style="display:block;padding:14px 0;font-size:14px;color:var(--text-secondary);text-decoration:none">整改任务清单</a>
+	            {% if task.result and task.result.code_suggestions %}
+	            <a href="/api/download/{{ task.id }}/code_suggestions" data-download-type="code_suggestions" style="display:block;padding:14px 0;border-top:1px solid var(--border);font-size:14px;color:var(--text-secondary);text-decoration:none">代码修改建议</a>
+	            {% endif %}
+	        </div>
+        <style>@media(max-width:900px){.mobile-dl{display:block!important;margin-top:32px}}</style>
+
+    </div><!-- /content -->
+</div><!-- /page-wrap -->
+
+{% endif %}
+
+<!-- Footer -->
+<footer>
+    <div class="footer-inner">
+        <p class="footer-note">ComplianceAI — 辅助决策，不替代专业法律判断</p>
+        <p class="footer-note">个保法 · 网安法 · 数安法 · GDPR</p>
+    </div>
+</footer>
+<div id="downloadToast" class="download-toast"></div>
+
+<!-- File Preview Sidebar -->
+<div class="preview-backdrop" id="previewBackdrop"></div>
+<div class="preview-sidebar" id="previewSidebar">
+    <div class="preview-sidebar-header">
+        <div class="preview-sidebar-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <span id="previewFilename">文件预览</span>
+        </div>
+        <button class="preview-sidebar-close" id="previewClose" aria-label="关闭预览">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+    </div>
+    <div class="preview-sidebar-body" id="previewBody">
+        <div class="preview-empty-state" id="previewEmpty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <p>点击风险卡片上的「定位」按钮<br>查看原文对应位置</p>
+        </div>
+        <div class="preview-info-bar" id="previewInfoBar" style="display:none;">
+            <span id="previewLocationInfo"></span>
+            <span class="page-indicator" id="previewPageIndicator"></span>
+        </div>
+        <div class="preview-navbar" id="previewNavbar" style="display:none;">
+            <button class="nav-btn" id="prevRiskBtn" title="上一个风险">↑</button>
+            <button class="nav-btn" id="nextRiskBtn" title="下一个风险">↓</button>
+            <span class="nav-label" id="riskCounter"></span>
+            <span style="flex:1"></span>
+            <span class="nav-badge" id="totalBadge"></span>
+        </div>
+        <div class="preview-fulltext" id="previewFullText" style="display:none;"></div>
+    </div>
+</div>
+
+<script>
+    function apiUrl(path) {
+        try {
+            return new URL(path, window.location.href).toString();
+        } catch (_) {
+            return path;
+        }
+    }
+    function showDownloadToast(message) {
+        const toast = document.getElementById('downloadToast');
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 4200);
+    }
+    document.querySelectorAll('[data-download-type]').forEach(link => {
+        link.addEventListener('click', async event => {
+            event.preventDefault();
+            const type = link.dataset.downloadType;
+            try {
+                const res = await fetch(apiUrl(`/api/save-download/{{ task.id }}/${encodeURIComponent(type)}`), { method: 'POST' });
+                const data = await res.json();
+                if (!res.ok || !data.ok) throw new Error(data.error || '保存失败');
+                showDownloadToast(`已保存到：${data.path}`);
+            } catch (error) {
+                showDownloadToast(error?.message || '保存失败');
+                window.location.href = link.href;
+            }
+        });
+    });
+
+    // Fold toggles
+    document.querySelectorAll('.fold-toggle').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const target = document.getElementById(btn.dataset.target);
+            const icon = btn.querySelector('.fold-icon');
+            const open = target.classList.toggle('open');
+            icon.style.transform = open ? 'rotate(180deg)' : '';
+        });
+    });
+
+    // Pack tabs
+    document.querySelectorAll('.pack-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.pack-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            document.querySelectorAll('.pack-panel').forEach(p => p.style.display = 'none');
+            const panel = document.getElementById('panel-' + tab.dataset.tab);
+            if (panel) panel.style.display = 'block';
+        });
+    });
+
+    // ===== Single Page View Mode =====
+    const allSections = document.querySelectorAll('.content > section[id]');
+    const navLinks = document.querySelectorAll('.side-nav-list > li > a');
+    const subNavLinks = document.querySelectorAll('.risk-sub-item');
+    let currentView = 'overview';
+
+    // Sidebar toggle (mobile) - define before showSection
+    const sidebarBtn = document.querySelector('.sidebar-btn');
+    const sidebarEl = document.querySelector('.sidebar');
+    const sidebarBackdrop = document.querySelector('.sidebar-backdrop');
+    function toggleSidebar(open) {
+        if (!sidebarEl || !sidebarBackdrop) return;
+        sidebarEl.classList.toggle('open', open);
+        sidebarBackdrop.classList.toggle('open', open);
+        document.body.style.overflow = open ? 'hidden' : '';
+    }
+    if (sidebarBtn) {
+        sidebarBtn.addEventListener('click', () => toggleSidebar(true));
+    }
+    if (sidebarBackdrop) {
+        sidebarBackdrop.addEventListener('click', () => toggleSidebar(false));
+    }
+
+    function showSection(sectionId, skipScroll) {
+        // Toggle sub-nav when clicking 风险详情 while already on that section
+        if (sectionId === 'risks' && currentView === 'risks') {
+            const subNav = document.getElementById('riskSubNav');
+            if (subNav) {
+                const isExpanded = subNav.classList.toggle('expanded');
+                subNav.classList.toggle('always-show', isExpanded);
+                document.querySelector('.risk-chevron')?.classList.toggle('open', isExpanded);
+            }
+            if (!skipScroll) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+            return;
+        }
+
+        currentView = sectionId;
+        allSections.forEach(s => {
+            s.style.display = 'none';
+        });
+        const target = document.getElementById(sectionId);
+        if (target) {
+            target.style.display = 'block';
+            if (!skipScroll) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+        navLinks.forEach(l => l.classList.remove('active'));
+        subNavLinks.forEach(l => l.classList.remove('active'));
+        const sectionLink = document.querySelector(`.side-nav-list > li > a[data-nav="${sectionId}"]`);
+        if (sectionLink) sectionLink.classList.add('active');
+        const subLink = document.querySelector(`.risk-sub-item[data-nav="${sectionId}"]`);
+        if (subLink) {
+            subLink.classList.add('active');
+            document.querySelector('.side-nav-list > li > a[data-nav="risks"]')?.classList.add('active');
+        }
+        const subNav = document.getElementById('riskSubNav');
+        if (subNav) {
+            if (sectionId === 'risks' || sectionId.startsWith('risk-item-')) {
+                subNav.classList.add('expanded');
+                subNav.classList.add('always-show');
+                const chevron = document.querySelector('.risk-chevron');
+                if (chevron) chevron.classList.add('open');
+            } else {
+                subNav.classList.remove('always-show');
+            }
+        }
+        toggleSidebar(false);
+    }
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const navId = link.getAttribute('data-nav');
+            showSection(navId);
+        });
+    });
+
+    subNavLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const navId = link.getAttribute('data-nav');
+            // 只在非风险页面时才切换 section，避免收回 sub-nav
+            if (currentView !== 'risks') {
+                showSection('risks', true);
+            }
+            const riskItem = document.getElementById(navId);
+            if (riskItem) {
+                // Wait for layout to stabilize after display:none -> display:block
+                setTimeout(() => {
+                    riskItem.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 150);
+            }
+            subNavLinks.forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+            document.querySelector('.side-nav-list > li > a[data-nav="risks"]')?.classList.add('active');
+        });
+    });
+
+    showSection('overview');
+
+    // Theme toggle
+    const themeToggle = document.getElementById('themeToggle');
+    function applyTheme(dark) {
+        document.body.classList.toggle('dark', dark);
+        localStorage.setItem('theme', dark ? 'dark' : 'light');
+    }
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') applyTheme(true);
+    else if (savedTheme === null && window.matchMedia('(prefers-color-scheme: dark)').matches) applyTheme(true);
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            applyTheme(!document.body.classList.contains('dark'));
+        });
+    }
+
+    // ===== File Preview & Location Feature =====
+    class FullTextPreview {
+        constructor() {
+            this.sidebar = document.getElementById('previewSidebar');
+            this.backdrop = document.getElementById('previewBackdrop');
+            this.closeBtn = document.getElementById('previewClose');
+            this.filenameEl = document.getElementById('previewFilename');
+            this.emptyState = document.getElementById('previewEmpty');
+            this.navbar = document.getElementById('previewNavbar');
+            this.fullText = document.getElementById('previewFullText');
+            this.body = document.getElementById('previewBody');
+            this.infoBar = document.getElementById('previewInfoBar');
+            this.locationInfo = document.getElementById('previewLocationInfo');
+            this.pageIndicator = document.getElementById('previewPageIndicator');
+            this.prevBtn = document.getElementById('prevRiskBtn');
+            this.nextBtn = document.getElementById('nextRiskBtn');
+            this.riskCounter = document.getElementById('riskCounter');
+            this.totalBadge = document.getElementById('totalBadge');
+
+            this.risks = [];
+            this.currentRiskIndex = -1;
+            this.taskId = this.getTaskId();
+
+            this.initEvents();
+        }
+
+        getTaskId() {
+            const path = window.location.pathname;
+            const parts = path.split('/');
+            for (let i = 0; i < parts.length; i++) {
+                if (parts[i] === 'result' && i + 1 < parts.length) {
+                    return parts[i + 1].split('?')[0];
+                }
+                if (parts[i] === 'desensitize' && i + 2 < parts.length) {
+                    return parts[i + 2].split('?')[0];
+                }
+            }
+            return path.split('/').pop();
+        }
+
+        initEvents() {
+            this.closeBtn?.addEventListener('click', () => this.close());
+            this.backdrop?.addEventListener('click', () => this.close());
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') this.close();
+            });
+
+            document.addEventListener('click', (e) => {
+                const btn = e.target.closest('.locate-btn');
+                if (!btn) return;
+                e.preventDefault();
+                e.stopPropagation();
+                this.openToRisk({
+                    id: btn.dataset.locateId || '',
+                    riskPoint: btn.dataset.locateRisk || '',
+                    snippet: btn.dataset.locateSnippet || ''
+                });
+            });
+
+            this.prevBtn?.addEventListener('click', () => this.navigateRisk(-1));
+            this.nextBtn?.addEventListener('click', () => this.navigateRisk(1));
+        }
+
+        async openToRisk(target) {
+            this.openSidebar();
+            if (!this.taskId) return;
+            if (!this._loaded) {
+                await this.loadFullText();
+            }
+            let idx = this.risks.findIndex(r => r.risk_id === target.id);
+            if (idx < 0) idx = this.risks.findIndex(r => r.snippet === target.snippet);
+            if (idx < 0) idx = this.risks.findIndex(r => r.risk_point === target.riskPoint);
+            if (idx >= 0) {
+                this.currentRiskIndex = idx;
+                this.updateHighlight();
+            }
+        }
+
+        async loadFullText() {
+            this.emptyState.style.display = 'none';
+            this.fullText.style.display = 'none';
+            this.navbar.style.display = 'none';
+            this.infoBar.style.display = 'none';
+
+            const loadingEl = document.createElement('div');
+            loadingEl.className = 'preview-loading';
+            loadingEl.textContent = '正在加载原文...';
+            this.body.appendChild(loadingEl);
+
+            try {
+                const res = await fetch(apiUrl('/api/task/' + this.taskId + '/preview-document'));
+                if (!res.ok) {
+                    loadingEl.textContent = '无法加载原文';
+                    return;
+                }
+                const data = await res.json();
+                if (data.error) {
+                    loadingEl.textContent = data.error;
+                    return;
+                }
+
+                this.risks = data.risks || [];
+                this.mode = data.mode || 'text';
+                this._loaded = true;
+                this.filenameEl.textContent = data.filename || '文件预览';
+                this.pageCount = data.page_count || null;
+                loadingEl.remove();
+                if (this.mode === 'pdf') {
+                    this.renderPdf(data);
+                } else if (this.mode === 'word') {
+                    this.renderWord(data);
+                } else {
+                    this.renderText(data.full_text || '');
+                }
+
+            } catch (err) {
+                console.error('Preview error:', err);
+                loadingEl.textContent = '预览加载失败: ' + err.message;
+            }
+        }
+
+        showChrome() {
+            this.fullText.style.display = 'block';
+            this.navbar.style.display = 'flex';
+            this.infoBar.style.display = 'flex';
+            this.totalBadge.textContent = this.risks.length + ' \u9879\u98ce\u9669';
+            this.updateHighlight();
+        }
+
+        renderPdf(data) {
+            const risksByPage = new Map();
+            for (const risk of this.risks) {
+                for (const hl of risk.highlights || []) {
+                    const page = String(hl.page);
+                    if (!risksByPage.has(page)) risksByPage.set(page, []);
+                    risksByPage.get(page).push({ risk, hl });
+                }
+            }
+            this.fullText.className = 'preview-document pdf-document';
+            this.fullText.innerHTML = (data.pages || []).map(page => {
+                const pageHighlights = risksByPage.get(String(page.page)) || [];
+                const overlays = pageHighlights.map(({ risk, hl }) => {
+                    return '<span class="pdf-highlight" data-risk-ids="' + this.escapeHtml(risk.risk_id) + '" title="' + this.escapeHtml(risk.risk_point) + '" style="left:' + hl.x + '%;top:' + hl.y + '%;width:' + hl.w + '%;height:' + hl.h + '%"></span>';
+                }).join('');
+                return '<section class="pdf-page" data-page="' + page.page + '" style="aspect-ratio:' + page.width + '/' + page.height + '">' +
+                    '<img loading="lazy" src="' + this.escapeHtml(page.image_url) + '" alt="第 ' + page.page + ' 页">' +
+                    overlays +
+                '</section>';
+            }).join('');
+            this.showChrome();
+        }
+
+        renderWord(data) {
+            this.fullText.className = 'preview-document word-document';
+            this.fullText.innerHTML = data.html || '<article class="word-page"></article>';
+            for (const risk of this.risks) {
+                this.highlightWordRisk(risk);
+            }
+            this.showChrome();
+        }
+
+        renderText(fullText) {
+            if (!fullText) {
+                this.fullText.className = 'preview-fulltext';
+                this.fullText.textContent = '(原文为空)';
+                this.fullText.style.display = 'block';
+                return;
+            }
+            this.fullText.className = 'preview-fulltext';
+
+            // Build segments: split by risk positions to avoid HTML-escaping offset issues.
+            const sorted = [...this.risks].filter(r => Number.isFinite(r.start) && Number.isFinite(r.end) && r.start >= 0 && r.end > r.start);
+            sorted.sort((a, b) => a.start - b.start);
+
+            // Merge overlapping risk ranges
+            const merged = [];
+            for (const r of sorted) {
+                if (merged.length > 0 && r.start <= merged[merged.length - 1].end) {
+                    const last = merged[merged.length - 1];
+                    last.end = Math.max(last.end, r.end);
+                    last.riskIds.push(r.risk_id);
+                    last.riskLabels.push(r.risk_point);
+                } else {
+                    merged.push({ start: r.start, end: r.end, riskIds: [r.risk_id], riskLabels: [r.risk_point] });
+                }
+            }
+
+            // Build parts: interleave plain text and risk spans
+            let parts = [];
+            let cursor = 0;
+            for (const seg of merged) {
+                if (seg.start > cursor) {
+                    parts.push({ text: fullText.slice(cursor, seg.start), hl: false });
+                }
+                parts.push({ text: fullText.slice(seg.start, seg.end), hl: true, riskIds: seg.riskIds, riskLabels: seg.riskLabels });
+                cursor = seg.end;
+            }
+            if (cursor < fullText.length) {
+                parts.push({ text: fullText.slice(cursor), hl: false });
+            }
+
+            // Escape and wrap
+            let html = '';
+            for (const part of parts) {
+                const escaped = this.escapeHtml(part.text);
+                if (part.hl) {
+                    html += '<span class="risk-hl" data-risk-ids="' + this.escapeHtml(part.riskIds.join(',')) + '" title="' + this.escapeHtml([...new Set(part.riskLabels)].join(' / ')) + '">' + escaped + '</span>';
+                } else {
+                    html += escaped;
+                }
+            }
+
+            this.fullText.innerHTML = html;
+            this.showChrome();
+        }
+
+        highlightWordRisk(risk) {
+            const root = this.fullText.querySelector('.word-page') || this.fullText;
+            let matched = false;
+            const sections = risk.sections?.length ? risk.sections : [{ snippet: risk.snippet || '' }];
+            for (const section of sections) {
+                for (const phrase of this.searchPhrases(section.snippet || '')) {
+                    matched = this.wrapFirstPhrase(root, phrase, risk) || matched;
+                }
+            }
+            return matched;
+        }
+
+        searchPhrases(snippet) {
+            const cleaned = String(snippet || '').replace(/\s+/g, ' ').trim();
+            const phrases = [];
+            if (cleaned.length >= 12) phrases.push(cleaned.slice(0, 80));
+            cleaned.split(/[。；;.!?？]/).forEach(part => {
+                const p = part.trim();
+                if (p.length < 8) return;
+                if (p.length <= 80) {
+                    phrases.push(p);
+                    return;
+                }
+                p.split(/[，,、]/).forEach(clause => {
+                    const c = clause.trim();
+                    if (c.length >= 8) phrases.push(c.slice(0, 80));
+                });
+                for (let start = 0; start < p.length; start += 60) {
+                    const chunk = p.slice(start, start + 80).trim();
+                    if (chunk.length >= 12) phrases.push(chunk);
+                }
+            });
+            return [...new Set(phrases)].filter(Boolean);
+        }
+
+        wrapFirstPhrase(root, phrase, risk) {
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+                acceptNode(node) {
+                    if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+                    if (node.parentElement?.closest('.risk-hl')) return NodeFilter.FILTER_REJECT;
+                    return NodeFilter.FILTER_ACCEPT;
+                }
+            });
+            let node;
+            while ((node = walker.nextNode())) {
+                const idx = node.nodeValue.indexOf(phrase);
+                if (idx < 0) continue;
+                const after = node.splitText(idx);
+                const tail = after.splitText(phrase.length);
+                const mark = document.createElement('mark');
+                mark.className = 'risk-hl';
+                mark.dataset.riskIds = risk.risk_id;
+                mark.title = risk.risk_point || '';
+                mark.textContent = after.nodeValue;
+                after.parentNode.replaceChild(mark, after);
+                return true;
+            }
+            return false;
+        }
+
+        updateHighlight() {
+            this.fullText.querySelectorAll('.risk-hl.active, .pdf-highlight.active').forEach(function(el) { el.classList.remove('active'); });
+
+            if (this.currentRiskIndex < 0 || this.currentRiskIndex >= this.risks.length) {
+                this.riskCounter.textContent = '';
+                this.prevBtn.disabled = true;
+                this.nextBtn.disabled = true;
+                return;
+            }
+
+            const risk = this.risks[this.currentRiskIndex];
+            this.riskCounter.textContent = (this.currentRiskIndex + 1) + ' / ' + this.risks.length;
+            this.prevBtn.disabled = this.currentRiskIndex <= 0;
+            this.nextBtn.disabled = this.currentRiskIndex >= this.risks.length - 1;
+            const locationParts = [];
+            if (risk.label) locationParts.push(risk.label);
+            if (risk.segment_index) locationParts.push('第 ' + risk.segment_index + ' 段');
+            this.locationInfo.textContent = locationParts.join(' · ') || risk.risk_point || '原文定位';
+            if (risk.page) {
+                this.pageIndicator.textContent = this.pageCount ? ('第 ' + risk.page + ' / ' + this.pageCount + ' 页') : ('第 ' + risk.page + ' 页');
+            } else {
+                this.pageIndicator.textContent = '';
+            }
+
+            const spans = this.fullText.querySelectorAll('.risk-hl');
+            let firstMatch = null;
+            for (const span of spans) {
+                const ids = (span.dataset.riskIds || '').split(',');
+                if (ids.includes(risk.risk_id)) {
+                    span.classList.add('active');
+                    firstMatch = firstMatch || span;
+                }
+            }
+            if (firstMatch) {
+                firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+            const pdfHighlights = this.fullText.querySelectorAll('.pdf-highlight');
+            firstMatch = null;
+            for (const span of pdfHighlights) {
+                const ids = (span.dataset.riskIds || '').split(',');
+                if (ids.includes(risk.risk_id)) {
+                    span.classList.add('active');
+                    firstMatch = firstMatch || span;
+                }
+            }
+            if (firstMatch) {
+                firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+            const page = this.fullText.querySelector('.pdf-page[data-page="' + risk.page + '"]');
+            if (page) page.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        navigateRisk(direction) {
+            const next = this.currentRiskIndex + direction;
+            if (next < 0 || next >= this.risks.length) return;
+            this.currentRiskIndex = next;
+            this.updateHighlight();
+        }
+
+        openSidebar() {
+            this.sidebar.classList.add('open');
+            this.backdrop.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        close() {
+            this.sidebar.classList.remove('open');
+            this.backdrop.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        escapeHtml(value) {
+            return String(value).replace(/[&<>"']/g, function(ch) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
+            });
+        }
+    }
+
+    const preview = new FullTextPreview();
+</script>
+<script src="/static/animations.js"></script>
+</body>
+</html>

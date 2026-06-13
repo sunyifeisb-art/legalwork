@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RegulationFrontmatter",
+  "description": "中国法规文件 frontmatter schema。与实际生成的 MD 文件字段对齐。注意：来源分组不同则字段可能略有差异（如 foreign-regulations 使用不同字段集）。",
+  "type": "object",
+  "required": ["法规名称", "文档分类", "效力层级", "来源文件", "来源相对路径", "来源分组"],
+  "properties": {
+    "法规名称": {
+      "type": "string",
+      "description": "法规全称"
+    },
+    "标准编号": {
+      "type": "string",
+      "description": "标准编号（如 GB/T 37932-2025），国家标准/行业标准必填"
+    },
+    "文档分类": {
+      "type": "string",
+      "description": "文档分类：national_law / national_policy / standard_or_guideline / local_policy / other",
+      "enum": ["national_law", "national_policy", "standard_or_guideline", "local_policy", "other"]
+    },
+    "效力层级": {
+      "type": "string",
+      "description": "效力层级描述"
+    },
+    "地区": {
+      "type": "string",
+      "description": "适用地区（地方性法规必填）"
+    },
+    "是否征求意见稿": {
+      "type": "boolean",
+      "description": "是否为征求意见稿/草案"
+    },
+    "来源文件": {
+      "type": "string",
+      "description": "源 PDF 文件路径（原始导入时的路径）"
+    },
+    "来源相对路径": {
+      "type": "string",
+      "description": "源文件在来源目录中的相对路径"
+    },
+    "来源分组": {
+      "type": "string",
+      "description": "来源分组名称（如：一、国家法律、法规、规范文件）"
+    },
+    "OCR来源文件": {
+      "type": "string",
+      "description": "OCR 版 PDF 文件路径（仅 OCR 提取的文件有）"
+    },
+    "页数": {
+      "type": "integer",
+      "description": "源 PDF 页数"
+    },
+    "提取方式": {
+      "type": "string",
+      "description": "文本提取方式：pdftotext / pypdf / ocr:pypdf / ocr:pdftotext / fitz / web_fetch",
+      "enum": ["pdftotext", "pypdf", "ocr:pypdf", "ocr:pdftotext", "fitz", "web_fetch"]
+    },
+    "文件SHA256": {
+      "type": "string",
+      "description": "源 PDF 文件的 SHA256 哈希值"
+    },
+    "源文件更新时间": {
+      "type": "string",
+      "description": "源 PDF 文件在导入时的时间戳"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "提取方式": { "const": "ocr:pypdf" } }
+      },
+      "then": {
+        "required": ["OCR来源文件"]
+      }
+    },
+    {
+      "if": {
+        "properties": { "文档分类": { "const": "standard_or_guideline" } }
+      },
+      "then": {
+        "recommended": ["标准编号"]
+      }
+    },
+    {
+      "if": {
+        "properties": { "文档分类": { "const": "local_policy" } }
+      },
+      "then": {
+        "recommended": ["地区"]
+      }
+    }
+  ],
+  "additionalProperties": true
+}

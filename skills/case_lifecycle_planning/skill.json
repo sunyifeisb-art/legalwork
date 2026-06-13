@@ -1,0 +1,23 @@
+{
+  "name": "case-lifecycle-planning",
+  "description": "案件生命周期规划：制定案件全程处理策略和时间规划",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/caseplan"
+    ],
+    "promptPatterns": [
+      "案件规划|诉讼策略|诉讼计划|案件生命周期"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

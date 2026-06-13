@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RegulationFrontmatter",
+  "type": "object",
+  "required": ["法规名称", "发布机关", "效力层级", "适用场景", "相关条款", "来源", "更新时间"],
+  "properties": {
+    "法规名称": {"type": "string"},
+    "发布机关": {"type": "string"},
+    "效力层级": {"type": "string"},
+    "适用场景": {"type": "array", "items": {"type": "string"}},
+    "相关条款": {"type": "array", "items": {"type": "string"}},
+    "来源": {"type": "string"},
+    "更新时间": {"type": "string"},
+    "版本备注": {"type": "string"}
+  }
+}

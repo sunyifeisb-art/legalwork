@@ -1,0 +1,23 @@
+{
+  "name": "argument-chain-construction",
+  "description": "论证链构建：构建完整的法律论证逻辑链条",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/argchain"
+    ],
+    "promptPatterns": [
+      "论证链|论证结构|逻辑链条|推理链条"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

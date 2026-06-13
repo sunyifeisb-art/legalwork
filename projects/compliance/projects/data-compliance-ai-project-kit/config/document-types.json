@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "types": [
+    {
+      "id": "privacy_policy",
+      "name": "隐私政策",
+      "keywords": ["隐私政策", "个人信息", "第三方", "收集", "使用", "共享", "跨境", "境外接收方", "位置信息", "设备标识", "浏览记录", "营销推荐", "个性化推荐", "画像", "注销", "删除", "人脸", "指纹", "生物识别", "医疗健康", "银行卡", "金融账户", "未成年人", "儿童"],
+      "default_review_paths": ["disclosure_check", "third_party_sharing_check", "outbound_transfer_check", "lawful_basis_check", "purpose_scope_check", "sensitive_personal_info_check", "field_purpose_legal_basis_check", "consent_feature_coupling_check", "retention_deletion_check", "consistency_check"]
+    },
+    {
+      "id": "contract",
+      "name": "合同/协议",
+      "keywords": ["合同", "协议", "甲方", "乙方", "委托处理", "数据处理", "违约", "责任"],
+      "default_review_paths": ["contract_obligation_check", "third_party_sharing_check", "lawful_basis_check", "sensitive_personal_info_check", "field_purpose_legal_basis_check", "consent_feature_coupling_check", "retention_deletion_check", "consistency_check"]
+    },
+    {
+      "id": "data_export",
+      "name": "数据出境材料",
+      "keywords": ["数据出境", "标准合同", "安全评估", "境外接收方", "出境", "备案", "申报", "跨境"],
+      "keyword_weights": {
+        "数据出境": 4,
+        "标准合同": 4,
+        "安全评估": 4,
+        "境外接收方": 3,
+        "出境": 3,
+        "跨境": 3,
+        "备案": 2,
+        "申报": 2
+      },
+      "default_review_paths": ["outbound_transfer_check", "disclosure_check", "lawful_basis_check", "purpose_scope_check", "sensitive_personal_info_check", "field_purpose_legal_basis_check", "consent_feature_coupling_check", "consistency_check"]
+    },
+    {
+      "id": "generic_compliance",
+      "name": "通用合规文本",
+      "keywords": ["合规", "个人信息保护", "数据安全", "处理规则", "制度", "敏感个人信息", "单独同意", "监护人同意"],
+      "default_review_paths": ["disclosure_check", "lawful_basis_check", "third_party_sharing_check", "purpose_scope_check", "sensitive_personal_info_check", "field_purpose_legal_basis_check", "consent_feature_coupling_check", "consistency_check"]
+    }
+  ],
+  "fallback_type": "unknown",
+  "fallback_review_paths": ["disclosure_check", "lawful_basis_check", "third_party_sharing_check", "purpose_scope_check", "sensitive_personal_info_check", "field_purpose_legal_basis_check", "consent_feature_coupling_check", "consistency_check"]
+}

@@ -1,0 +1,33 @@
+name: compliance-document-review
+stage: first-phase
+goal: 审查单份数据合规相关文件或文本中的潜在合规风险，并输出系统性报告
+inputs:
+  - input_file_or_text
+  - external_normative_corpus
+outputs:
+  - structured_risk_report
+steps:
+  - id: intake
+    action: 接收文件或文本，并抽取可处理内容
+  - id: preprocess
+    action: 做轻量清洗、标准化与分段
+  - id: classify_document
+    action: 判断文档更接近隐私政策、合同、数据出境材料或其他合规文本
+  - id: choose_review_paths
+    action: 选择审查路径，如条款识别、规则比对、风险归纳、交叉校验
+  - id: retrieve_authorities
+    action: 从外部规范数据库中检索相关规范与具体条款
+  - id: assess_risks
+    action: 输出风险点、风险等级、判断原因与建议动作
+  - id: attach_citations
+    action: 为关键结论附上法规依据
+  - id: auto_recheck_high_risk
+    action: 对高风险或依据不足项触发系统自动二次复核
+  - id: render_report
+    action: 生成固定格式系统性报告
+failure_modes:
+  - 输入内容不可处理
+  - 文档类型识别不稳定
+  - 检索不到可靠依据
+  - 输出无法给出明确依据
+  - 需要数据库能力但当前接口不可用

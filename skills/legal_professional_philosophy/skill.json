@@ -1,0 +1,23 @@
+{
+  "name": "legal-professional-philosophy",
+  "description": "律师职业理念：以终为始、共情之心、综合智慧、全程担当的职业哲学",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/philosophy"
+    ],
+    "promptPatterns": [
+      "职业理念|律师价值观|执业哲学|以终为始|共情|信任|败诉"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

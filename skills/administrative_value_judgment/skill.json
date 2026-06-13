@@ -1,0 +1,23 @@
+{
+  "name": "administrative-value-judgment",
+  "description": "行政价值判断：分析行政行为中的价值判断和裁量",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/adminvalue"
+    ],
+    "promptPatterns": [
+      "行政价值|行政裁量|比例原则|信赖保护"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

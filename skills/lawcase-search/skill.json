@@ -1,0 +1,23 @@
+{
+  "name": "lawcase-search",
+  "description": "案例搜索：根据法律问题搜索相关案例",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/lawcase"
+    ],
+    "promptPatterns": [
+      "案例搜索|案件查询|找案例"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

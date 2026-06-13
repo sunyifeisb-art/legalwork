@@ -1,0 +1,23 @@
+{
+  "name": "analogical-reasoning",
+  "description": "类比推理：通过相似性将法律效果类推适用于待决案件",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/analogy"
+    ],
+    "promptPatterns": [
+      "类比|类推|类比推理|参照|比照|类推适用|相似案件"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

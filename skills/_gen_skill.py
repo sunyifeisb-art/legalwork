@@ -1,0 +1,1 @@
+[cache hygiene: omitted completed write.content argument, 6.6KB, approx 2193 token(s), 94 line(s); see following tool result] preview="#!/usr/bin/env python3 \"\"\"Generate skill content\"\"\" import re, os def write_skill(name, body): SKILLS_DIR = \"skills\" path = os.path.join(SKILLS_DIR,"

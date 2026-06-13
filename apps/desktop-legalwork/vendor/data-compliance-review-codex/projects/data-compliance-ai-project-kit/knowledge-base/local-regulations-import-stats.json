@@ -1,0 +1,20 @@
+{
+  "source_dir": "/Users/xiangyang/Desktop/研发测试/data-compliance-review-law-update/projects/data-compliance-ai-project-kit/knowledge-base/regulations-source",
+  "db_path": "/Users/xiangyang/Desktop/研发测试/data-compliance-review-law-update/projects/data-compliance-ai-project-kit/knowledge-base/local-regulations.sqlite3",
+  "generated_at": "2026-04-14T19:00:10",
+  "totals": {
+    "documents": 433,
+    "ok": 433,
+    "empty_text": 0,
+    "drafts": 73,
+    "with_standard_code": 57
+  },
+  "by_category": {
+    "standard_or_guideline": 172,
+    "local_policy": 167,
+    "national_policy": 90,
+    "national_law": 3,
+    "other": 1
+  },
+  "markdown_dir": "/Users/xiangyang/Desktop/研发测试/data-compliance-review-law-update/projects/data-compliance-ai-project-kit/knowledge-base/regulations-md"
+}

@@ -1,0 +1,23 @@
+{
+  "name": "evidence-argument-chain",
+  "description": "证据论证链：构建从证据到事实认定的论证链",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/evidentchain"
+    ],
+    "promptPatterns": [
+      "证据链|证据论证|证明链|证据链条"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

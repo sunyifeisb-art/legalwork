@@ -1,0 +1,23 @@
+{
+  "name": "legal-judgment-prediction",
+  "description": "法律裁判预测：基于事实和法律规定预测裁判结果",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/predict"
+    ],
+    "promptPatterns": [
+      "裁判预测|判决预测|诉讼预测|结果预测|胜诉"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

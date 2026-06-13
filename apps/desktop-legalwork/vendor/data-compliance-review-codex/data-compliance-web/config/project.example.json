@@ -1,0 +1,15 @@
+{
+  "projectName": "data-compliance-ai-project-kit",
+  "scope": "privacy-policy-data-outbound-review",
+  "jurisdiction": "CN",
+  "firstPhase": {
+    "enableOCR": false,
+    "enableMultimodal": false,
+    "enableCloudVectorDB": false,
+    "requireCitation": true,
+    "requireHumanReviewForHighRisk": true
+  },
+  "outputs": {
+    "riskLevels": ["高风险", "中风险", "建议优化"]
+  }
+}

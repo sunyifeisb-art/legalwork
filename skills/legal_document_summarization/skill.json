@@ -1,0 +1,28 @@
+{
+  "name": "legal-document-summarization",
+  "description": "法律文档摘要：生成结构化法律文档摘要",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/summarize"
+    ],
+    "promptPatterns": [
+      "摘要|文档摘要|法律摘要|判决摘要|合同摘要"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".md",
+      ".txt"
+    ]
+  },
+  "allowedTools": [
+    "read",
+    "write",
+    "edit",
+    "bash"
+  ],
+  "assets": [],
+  "priority": 0
+}

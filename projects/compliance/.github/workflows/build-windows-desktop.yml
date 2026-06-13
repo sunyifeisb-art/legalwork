@@ -1,0 +1,177 @@
+name: Build Windows Desktop
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Release tag to upload installer to
+        required: true
+        default: v1.2.0
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows-x64:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Set up Python for asset prep
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Pillow for Windows icon conversion
+        run: python -m pip install pillow
+
+      - name: Prepare folders
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist/windows/ComplianceAI | Out-Null
+          New-Item -ItemType Directory -Force dist/windows-installer | Out-Null
+          New-Item -ItemType Directory -Force build/windows/python | Out-Null
+          New-Item -ItemType Directory -Force build/windows/icon | Out-Null
+
+      - name: Download embeddable Python
+        shell: pwsh
+        run: |
+          $url = "https://www.python.org/ftp/python/3.11.9/python-3.11.9-embed-amd64.zip"
+          Invoke-WebRequest -Uri $url -OutFile build/windows/python-embed.zip
+          Expand-Archive -Path build/windows/python-embed.zip -DestinationPath build/windows/python -Force
+
+      - name: Enable site-packages in embeddable Python
+        shell: pwsh
+        run: |
+          $pth = Get-ChildItem build/windows/python -Filter "python*._pth" | Select-Object -First 1
+          $content = @(
+            'python311.zip',
+            '.',
+            'Lib\site-packages',
+            'import site'
+          )
+          Set-Content -Path $pth.FullName -Value $content
+          New-Item -ItemType Directory -Force build/windows/python/Lib/site-packages | Out-Null
+
+      - name: Install pip into embeddable Python
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri https://bootstrap.pypa.io/get-pip.py -OutFile build/windows/get-pip.py
+          & build/windows/python/python.exe build/windows/get-pip.py
+
+      - name: Install Python dependencies
+        shell: pwsh
+        run: |
+          & build/windows/python/python.exe -m pip install --upgrade pip
+          & build/windows/python/python.exe -m pip install -r data-compliance-web/requirements.txt
+
+      - name: Prepare runtime payload
+        shell: pwsh
+        run: |
+          Copy-Item -Recurse data-compliance-web dist/windows/ComplianceAI/payload/web
+          Remove-Item -Recurse -Force dist/windows/ComplianceAI/payload/web/venv -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force dist/windows/ComplianceAI/payload/web/output -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force dist/windows/ComplianceAI/payload/web/uploads -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force dist/windows/ComplianceAI/payload/web/__pycache__ -ErrorAction SilentlyContinue
+          Copy-Item -Recurse projects/data-compliance-ai-project-kit dist/windows/ComplianceAI/payload/projects/data-compliance-ai-project-kit
+          Remove-Item -Recurse -Force dist/windows/ComplianceAI/payload/projects/data-compliance-ai-project-kit/tests -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force dist/windows/ComplianceAI/payload/projects/data-compliance-ai-project-kit/docs -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force dist/windows/ComplianceAI/payload/projects/data-compliance-ai-project-kit/references -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force dist/windows/ComplianceAI/payload/projects/data-compliance-ai-project-kit/workflows -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force dist/windows/ComplianceAI/payload/projects/data-compliance-ai-project-kit/skill -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force dist/windows/ComplianceAI/payload/projects/data-compliance-ai-project-kit/samples -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force dist/windows/ComplianceAI/payload/projects/data-compliance-ai-project-kit/knowledge-base/regulations-md -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force dist/windows/ComplianceAI/payload/projects/data-compliance-ai-project-kit/knowledge-base/data-outbound -ErrorAction SilentlyContinue
+          Copy-Item -Recurse build/windows/python dist/windows/ComplianceAI/python
+
+      - name: Smoke test bundled Python server
+        shell: pwsh
+        run: |
+          $logPath = (Resolve-Path dist/windows/ComplianceAI).Path + "\startup.log"
+          $webDir = (Resolve-Path dist/windows/ComplianceAI/payload/web).Path
+          $pythonExe = (Resolve-Path dist/windows/ComplianceAI/python/python.exe).Path
+          $port = 5110
+
+          $env:COMPLIANCEAI_PYTHON = $pythonExe
+          $env:COMPLIANCEAI_LOG_PATH = $logPath
+          $env:PYTHONUNBUFFERED = "1"
+
+          $proc = Start-Process -FilePath $pythonExe -ArgumentList "server_entry.py --port $port" -WorkingDirectory $webDir -PassThru -NoNewWindow
+          try {
+            $ok = $false
+            for ($i = 0; $i -lt 40; $i++) {
+              Start-Sleep -Milliseconds 500
+              try {
+                $resp = Invoke-WebRequest -Uri "http://127.0.0.1:$port/" -UseBasicParsing -TimeoutSec 2
+                if ($resp.StatusCode -eq 200) {
+                  $ok = $true
+                  break
+                }
+              } catch {
+              }
+            }
+
+            if (-not $ok) {
+              if (Test-Path $logPath) {
+                Write-Host "---- startup.log ----"
+                Get-Content $logPath
+              }
+              throw "Bundled Python server smoke test failed"
+            }
+          } finally {
+            if ($proc -and -not $proc.HasExited) {
+              Stop-Process -Id $proc.Id -Force
+            }
+          }
+
+      - name: Copy icon asset
+        shell: pwsh
+        run: |
+          Copy-Item desktop/assets/complianceai-icon.png build/windows/icon/complianceai-icon.png
+          python -c "from PIL import Image; img = Image.open(r'build/windows/icon/complianceai-icon.png').convert('RGBA'); img.save(r'build/windows/icon/complianceai-icon.ico', sizes=[(256,256),(128,128),(64,64),(48,48),(32,32),(16,16)])"
+
+      - name: Publish Windows launcher
+        shell: pwsh
+        run: |
+          $iconPath = (Resolve-Path build/windows/icon/complianceai-icon.ico).Path
+          dotnet publish desktop/windows/ComplianceAI.Windows/ComplianceAI.Windows.csproj `
+            -c Release `
+            -r win-x64 `
+            --self-contained true `
+            -o dist/windows/ComplianceAI `
+            /p:PublishSingleFile=false `
+            /p:PublishTrimmed=false `
+            /p:ApplicationIcon="$iconPath"
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup -y --no-progress
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" desktop/windows/installer.iss
+
+      - name: Upload installer to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.event.inputs.release_tag || 'v1.2.0' }}
+        shell: pwsh
+        run: |
+          gh release upload "$env:RELEASE_TAG" dist/windows-installer/ComplianceAI-Windows-x64-Setup.exe --repo "${{ github.repository }}" --clobber
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: dist/windows-installer/ComplianceAI-Windows-x64-Setup.exe

@@ -1,0 +1,122 @@
+{
+  "enabled": true,
+  "scenario_name": "SDK与合作方合规审查",
+  "matched_risk_points": [
+    "第三方共享或委托处理披露可能不足"
+  ],
+  "sections": [
+    {
+      "id": "partner_inventory",
+      "title": "第三方 / SDK 基础清单",
+      "required_items": [
+        "第三方/SDK 名称",
+        "业务角色（SDK / 受托方 / 独立处理者 / 合作方）",
+        "接入场景或业务环节",
+        "处理字段/信息类型",
+        "处理目的",
+        "是否涉及敏感个人信息",
+        "是否涉及跨境"
+      ],
+      "related_evidence": [
+        {
+          "risk_point": "第三方共享或委托处理披露可能不足",
+          "risk_level": "建议优化",
+          "owner_hint": "产品/采购/法务",
+          "evidence_items": [
+            "第三方/SDK清单",
+            "共享字段与处理目的说明",
+            "委托处理协议或数据处理协议"
+          ],
+          "why_needed": "用于确认共享对象、字段范围、处理方式与合同口径是否一致。",
+          "related_scenarios": [
+            "隐私文档整改",
+            "SDK与合作方合规审查"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "disclosure_alignment",
+      "title": "对外披露与实际处理对齐检查",
+      "required_items": [
+        "隐私政策中是否披露该对象",
+        "披露的字段范围是否与实际一致",
+        "披露的处理目的是否与实际一致",
+        "是否说明处理方式或共享方式",
+        "是否存在仅写合作伙伴但未展开的情形"
+      ],
+      "related_evidence": [
+        {
+          "risk_point": "第三方共享或委托处理披露可能不足",
+          "risk_level": "建议优化",
+          "owner_hint": "产品/采购/法务",
+          "evidence_items": [
+            "第三方/SDK清单",
+            "共享字段与处理目的说明",
+            "委托处理协议或数据处理协议"
+          ],
+          "why_needed": "用于确认共享对象、字段范围、处理方式与合同口径是否一致。",
+          "related_scenarios": [
+            "隐私文档整改",
+            "SDK与合作方合规审查"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "contract_alignment",
+      "title": "合同 / 数据处理协议检查",
+      "required_items": [
+        "是否签署主协议或数据处理协议",
+        "是否约定处理目的、期限、方式、种类",
+        "是否约定保密与安全措施",
+        "是否约定删除、返还、终止后处理",
+        "是否约定违约责任与审计/监督机制"
+      ],
+      "related_evidence": [
+        {
+          "risk_point": "第三方共享或委托处理披露可能不足",
+          "risk_level": "建议优化",
+          "owner_hint": "产品/采购/法务",
+          "evidence_items": [
+            "第三方/SDK清单",
+            "共享字段与处理目的说明",
+            "委托处理协议或数据处理协议"
+          ],
+          "why_needed": "用于确认共享对象、字段范围、处理方式与合同口径是否一致。",
+          "related_scenarios": [
+            "隐私文档整改",
+            "SDK与合作方合规审查"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rectification_actions",
+      "title": "专项整改动作",
+      "required_items": [
+        "需补披露的第三方/SDK",
+        "需补协议条款",
+        "需补证据材料",
+        "需自动复核的高风险点"
+      ],
+      "related_evidence": [
+        {
+          "risk_point": "第三方共享或委托处理披露可能不足",
+          "risk_level": "建议优化",
+          "owner_hint": "产品/采购/法务",
+          "evidence_items": [
+            "第三方/SDK清单",
+            "共享字段与处理目的说明",
+            "委托处理协议或数据处理协议"
+          ],
+          "why_needed": "用于确认共享对象、字段范围、处理方式与合同口径是否一致。",
+          "related_scenarios": [
+            "隐私文档整改",
+            "SDK与合作方合规审查"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+Flask==3.0.0
+python-docx==1.1.0
+pypdf==6.10.0
+Werkzeug==3.0.1
+openai>=1.30.0
+presidio-analyzer>=2.2.359
+presidio-anonymizer>=2.2.359
+pandas>=2.2.0
+openpyxl>=3.1.2
+xlrd>=2.0.1
+odfpy>=1.4.1
+python-pptx>=0.6.23
+PyMuPDF>=1.24.0
+Pillow>=10.0.0
+pytesseract>=0.3.10
+gunicorn>=21.2.0

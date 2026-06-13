@@ -1,0 +1,23 @@
+{
+  "name": "presidio-data-compliance",
+  "description": "数据合规分析：敏感数据识别和合规评估",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/datacomply"
+    ],
+    "promptPatterns": [
+      "数据合规|Presidio|PII|敏感数据|数据脱敏"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

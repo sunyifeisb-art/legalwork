@@ -1,0 +1,23 @@
+{
+  "name": "fact-extraction",
+  "description": "案件事实抽取：从材料中抽取关键法律事实",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/facts"
+    ],
+    "promptPatterns": [
+      "事实抽取|事实认定|案件事实|事实分析|提取事实"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

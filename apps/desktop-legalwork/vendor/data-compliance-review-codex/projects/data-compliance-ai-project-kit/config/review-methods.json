@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "methods": [
+    {
+      "id": "keyword_probe",
+      "name": "关键词探测",
+      "description": "通过风险信号词定位值得重点审查的段落"
+    },
+    {
+      "id": "disclosure_probe",
+      "name": "披露充分性探测",
+      "description": "识别提到但未说清楚的披露不足问题"
+    },
+    {
+      "id": "structure_probe",
+      "name": "结构缺口探测",
+      "description": "识别应有模块缺失或结构不完整的问题"
+    },
+    {
+      "id": "conflict_probe",
+      "name": "内部一致性探测",
+      "description": "识别文本前后表述冲突或边界不清的问题"
+    },
+    {
+      "id": "external_norm_probe",
+      "name": "外部规范映射探测",
+      "description": "若外部规范数据库可用，则把发现项映射到具体规范依据"
+    },
+    {
+      "id": "auto_recheck_gate",
+      "name": "自动复核门",
+      "description": "对高风险、依据不足、不确定问题统一触发系统二次复核"
+    }
+  ],
+  "default_method_chain": [
+    "keyword_probe",
+    "disclosure_probe",
+    "structure_probe",
+    "conflict_probe",
+    "external_norm_probe",
+    "auto_recheck_gate"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "name": "team-knowledge-sharing",
+  "description": "团队知识共享：知识整理表格、一问一答式沉淀、团队内共享机制",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/teamshare"
+    ],
+    "promptPatterns": [
+      "知识整理|知识共享|团队共享|知识沉淀|一问一答|知识库"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

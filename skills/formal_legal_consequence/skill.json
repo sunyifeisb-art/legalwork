@@ -1,0 +1,23 @@
+{
+  "name": "formal-legal-consequence",
+  "description": "形式法律后果分析：分析法律行为所产生的法定后果",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/consequence"
+    ],
+    "promptPatterns": [
+      "法律后果|法律效果|形式后果|法律效果分析"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

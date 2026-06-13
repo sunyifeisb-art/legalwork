@@ -1,0 +1,1644 @@
+import type { ChangeEvent, MouseEvent, ReactElement } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  AlertCircle,
+  CheckCircle2,
+  Download,
+  Eye,
+  FileSearch,
+  FileText,
+  Folder,
+  History,
+  Loader2,
+  RefreshCw,
+  ScanEye,
+  ShieldCheck,
+  Trash2
+} from 'lucide-react'
+import type {
+  DataComplianceRequestResult,
+  DataComplianceStatus,
+  DataComplianceSubmitPayload
+} from '@shared/ds-gui-api'
+import { useChatStore } from '../../store/chat-store'
+import { formatWorkspacePickerError } from '../../lib/format-workspace-picker-error'
+
+export type DataComplianceSection = 'review' | 'history' | 'results'
+export type DesensitizeSection = 'info' | 'material' | 'history'
+
+type ComplianceTask = {
+  id?: string
+  task_id?: string
+  document_name?: string
+  product_type?: string
+  status?: string
+  created_at?: string
+  review_type?: string
+}
+
+type ComplianceResult = {
+  task_id?: string
+  status?: string
+  product_type?: string
+  document_name?: string
+  output_dir?: string
+  report?: {
+    summary?: unknown
+    overview?: string
+    items?: Array<Record<string, unknown>>
+    findings?: Array<Record<string, unknown>>
+    statistics?: Record<string, unknown>
+    stats?: Record<string, unknown>
+    auto_recheck_stats?: Record<string, unknown>
+    risk_clusters?: Array<Record<string, unknown>>
+    notes?: unknown
+    [key: string]: unknown
+  }
+  remediation?: unknown
+  evidence?: unknown
+  sdk_pack?: unknown
+  cross_border_pack?: unknown
+  privacy_pack?: unknown
+  progress?: unknown
+  error?: string
+}
+
+type SubmitMode = 'review' | 'desensitize'
+type DesensitizeKind = Exclude<DesensitizeSection, 'history'>
+type ReviewType = 'document' | 'code'
+type Notice = { tone: 'info' | 'error' | 'success'; text: string }
+
+const FALLBACK_API_BASE = ''
+
+const sectionMeta: Record<DataComplianceSection, { title: string; kicker: string }> = {
+  review: { title: '合规审查', kicker: '文档、代码与数据处理链路风险识别' },
+  history: { title: '历史任务', kicker: '查看已提交的合规审查任务' },
+  results: { title: '结果中心', kicker: '按任务编号查询报告和整改包' }
+}
+
+function taskIdOf(task: ComplianceTask): string {
+  return task.task_id ?? task.id ?? ''
+}
+
+function isReviewTask(task: ComplianceTask): boolean {
+  const productType = (task.product_type ?? '').toLowerCase()
+  if (productType) return productType !== 'desensitize'
+  return Boolean(task.review_type)
+}
+
+function isDesensitizeTask(task: ComplianceTask): boolean {
+  const productType = (task.product_type ?? '').toLowerCase()
+  if (productType) return productType === 'desensitize'
+  return !task.review_type
+}
+
+function statusTone(status: string | undefined): string {
+  const value = (status ?? '').toLowerCase()
+  if (value === 'completed') return 'bg-emerald-500/12 text-emerald-700 dark:text-emerald-200'
+  if (value === 'failed' || value === 'error') return 'bg-red-500/12 text-red-700 dark:text-red-200'
+  if (value === 'running' || value === 'processing' || value === 'pending') {
+    return 'bg-amber-500/14 text-amber-700 dark:text-amber-200'
+  }
+  return 'bg-ds-subtle text-ds-muted'
+}
+
+function labelStatus(status: string | undefined, isDesensitize = false): string {
+  const value = (status ?? '').toLowerCase()
+  if (value === 'completed') return '已完成'
+  if (value === 'failed' || value === 'error') return '失败'
+  if (value === 'running' || value === 'processing') return '处理中'
+  if (value === 'pending') return isDesensitize ? '待处理' : '审查中'
+  return status || '未知'
+}
+
+function summarizeResult(result: ComplianceResult | null): string {
+  if (!result) return ''
+  if (result.error) return result.error
+  if (typeof result.report?.summary === 'string') return result.report.summary
+  if (typeof result.report?.overview === 'string') return result.report.overview
+  const progress = asRecord(result.progress)
+  if (progress && typeof progress.message === 'string' && progress.message.trim()) {
+    return progress.message
+  }
+  if (result.status && result.status !== 'completed') return '任务仍在处理，legalwork 会继续刷新结果。'
+  return '报告已生成，可在结果明细中查看结构化数据。'
+}
+
+function resultItems(result: ComplianceResult | null): Array<Record<string, unknown>> {
+  if (!result?.report) return []
+  const items = result.report.items ?? result.report.findings ?? []
+  return Array.isArray(items) ? items.filter(isRecord) : []
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value))
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return isRecord(value) ? value : null
+}
+
+function recordArray(value: unknown): Array<Record<string, unknown>> {
+  return Array.isArray(value) ? value.filter(isRecord) : []
+}
+
+function stringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  return value.map(stringifyShort).map((item) => item.trim()).filter(Boolean)
+}
+
+function firstText(record: Record<string, unknown>, keys: string[]): string {
+  for (const key of keys) {
+    const text = stringifyShort(record[key]).trim()
+    if (text) return text
+  }
+  return ''
+}
+
+function stringifyShort(value: unknown): string {
+  if (typeof value === 'string') return value
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value)
+  if (value == null) return ''
+  try {
+    return JSON.stringify(value)
+  } catch {
+    return String(value)
+  }
+}
+
+function riskToneClass(level: string): string {
+  if (level.includes('高')) return 'border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-200'
+  if (level.includes('中')) return 'border-amber-500/30 bg-amber-500/12 text-amber-700 dark:text-amber-200'
+  if (level.includes('低') || level.includes('建议')) {
+    return 'border-blue-500/25 bg-blue-500/10 text-blue-700 dark:text-blue-200'
+  }
+  return 'border-ds-border bg-ds-subtle text-ds-muted'
+}
+
+function parseJsonBody<T>(body: string): T {
+  return JSON.parse(body) as T
+}
+
+function errorFromBody(body: string, fallback: string): Error {
+  try {
+    const payload = JSON.parse(body) as { error?: string; message?: string }
+    return new Error(payload.error || payload.message || fallback)
+  } catch {
+    return new Error(body.trim() || fallback)
+  }
+}
+
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer)
+  const chunks: string[] = []
+  for (let index = 0; index < bytes.length; index += 0x8000) {
+    chunks.push(String.fromCharCode(...bytes.subarray(index, index + 0x8000)))
+  }
+  return btoa(chunks.join(''))
+}
+
+async function fileToPayload(file: File): Promise<DataComplianceSubmitPayload['file']> {
+  return {
+    name: file.name,
+    type: file.type || 'application/octet-stream',
+    dataBase64: arrayBufferToBase64(await file.arrayBuffer())
+  }
+}
+
+async function fallbackRequest(
+  path: string,
+  method: 'GET' | 'POST' | 'DELETE' = 'GET',
+  body?: string
+): Promise<DataComplianceRequestResult> {
+  const response = await fetch(`${FALLBACK_API_BASE}${path}`, {
+    method,
+    headers: body ? { 'content-type': 'application/json' } : undefined,
+    body
+  })
+  return {
+    ok: response.ok,
+    status: response.status,
+    body: await response.text(),
+    contentType: response.headers.get('content-type') ?? undefined
+  }
+}
+
+async function requestJson<T>(
+  path: string,
+  method: 'GET' | 'POST' | 'DELETE' = 'GET',
+  body?: string
+): Promise<T> {
+  const result = typeof window.dsGui?.dataComplianceRequest === 'function'
+    ? await window.dsGui.dataComplianceRequest(path, method, body)
+    : await fallbackRequest(path, method, body)
+  if (!result.ok) throw errorFromBody(result.body, `HTTP ${result.status}`)
+  return parseJsonBody<T>(result.body)
+}
+
+async function submitViaFallback(payload: DataComplianceSubmitPayload): Promise<DataComplianceRequestResult> {
+  const form = new FormData()
+  if (payload.file) {
+    const bytes = Uint8Array.from(atob(payload.file.dataBase64), (char) => char.charCodeAt(0))
+    form.set('file', new Blob([bytes], { type: payload.file.type || 'application/octet-stream' }), payload.file.name)
+  }
+  if (payload.inputText?.trim()) form.set('input_text', payload.inputText.trim())
+  if (payload.documentName?.trim()) form.set('document_name', payload.documentName.trim())
+  if (payload.mode === 'review') form.set('review_type', payload.reviewType ?? 'document')
+  if (payload.mode === 'desensitize' && payload.outputDir?.trim()) {
+    form.set('output_dir', payload.outputDir.trim())
+  }
+  const endpoint = payload.mode === 'review' ? '/api/upload' : '/api/desensitize'
+  const response = await fetch(`${FALLBACK_API_BASE}${endpoint}`, { method: 'POST', body: form })
+  return {
+    ok: response.ok,
+    status: response.status,
+    body: await response.text(),
+    contentType: response.headers.get('content-type') ?? undefined
+  }
+}
+
+async function submitComplianceTask(payload: DataComplianceSubmitPayload): Promise<{ task_id?: string; error?: string }> {
+  const result = typeof window.dsGui?.submitDataComplianceTask === 'function'
+    ? await window.dsGui.submitDataComplianceTask(payload)
+    : await submitViaFallback(payload)
+  const parsed = parseJsonBody<{ task_id?: string; error?: string }>(result.body)
+  if (!result.ok || parsed.error) throw new Error(parsed.error || `HTTP ${result.status}`)
+  return parsed
+}
+
+type ProgressState =
+  | { kind: 'idle' }
+  | { kind: 'running'; step: number; message: string; percent: number }
+  | { kind: 'completed' }
+  | { kind: 'failed'; message: string }
+
+function useComplianceProgress(taskId: string | null, backendBaseUrl: string): ProgressState {
+  const [state, setState] = useState<ProgressState>({ kind: 'idle' })
+  const abortRef = useRef<AbortController | null>(null)
+
+  useEffect(() => {
+    if (!taskId) {
+      setState({ kind: 'idle' })
+      return
+    }
+    const targetId = taskId.trim()
+    if (!targetId) {
+      setState({ kind: 'idle' })
+      return
+    }
+
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+    setState({ kind: 'running', step: 0, message: '任务已提交，等待开始处理…', percent: 0 })
+
+    // Use the backend base URL directly via EventSource — SSE does not go through IPC proxy
+    const url = `${backendBaseUrl}/api/progress/${encodeURIComponent(targetId)}`
+
+    const connect = (): void => {
+      if (controller.signal.aborted) return
+      const eventSource = new EventSource(url)
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data) as {
+            status?: string
+            progress?: { step?: number; message?: string; percent?: number }
+            error?: string
+          }
+          const status = (data.status ?? '').toLowerCase()
+          const progress = asRecord(data.progress)
+          if (status === 'completed') {
+            setState({ kind: 'completed' })
+            eventSource.close()
+          } else if (status === 'failed' || status === 'error' || data.error) {
+            setState({ kind: 'failed', message: data.error || '任务处理失败' })
+            eventSource.close()
+          } else {
+            const step = typeof progress?.step === 'number' ? progress.step : 0
+            const message = typeof progress?.message === 'string' ? progress.message : '正在处理…'
+            const percent = typeof progress?.percent === 'number' ? progress.percent : Math.min(step * 9, 95)
+            setState({ kind: 'running', step, message, percent })
+          }
+        } catch {
+          // ignore malformed events
+        }
+      }
+      eventSource.onerror = () => {
+        eventSource.close()
+        if (!controller.signal.aborted) {
+          // Retry after a short delay
+          window.setTimeout(connect, 2000)
+        }
+      }
+      controller.signal.addEventListener('abort', () => eventSource.close())
+    }
+
+    connect()
+
+    return () => {
+      controller.abort()
+    }
+  }, [taskId, backendBaseUrl])
+
+  return state
+}
+
+function ProgressModal({ state, onDismiss, modeScope = 'review' }: { state: ProgressState; onDismiss: () => void; modeScope?: SubmitMode }): ReactElement | null {
+  if (state.kind === 'idle') return null
+  if (state.kind === 'completed' || state.kind === 'failed') return null
+  const running = state.kind === 'running'
+  const isDesensitize = modeScope === 'desensitize'
+  const title = isDesensitize ? '正在脱敏中' : '正在审查中'
+  const subtitle = isDesensitize ? '请稍候，系统正在处理脱敏任务' : '请稍候，系统正在分析文档合规性'
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm"
+      onClick={(e) => { if (e.target === e.currentTarget) onDismiss() }}>
+      <div className="w-full max-w-md rounded-[18px] border border-ds-border bg-ds-card p-6 shadow-[0_24px_60px_rgba(0,0,0,0.28)] relative">
+        <button
+          type="button"
+          onClick={onDismiss}
+          title="后台运行"
+          aria-label="后台运行"
+          className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full text-ds-faint transition hover:bg-ds-hover hover:text-ds-muted"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+        <div className="mb-4 flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--ds-accent-soft)] text-[var(--ds-accent)]">
+            <Loader2 className="h-5 w-5 animate-spin" />
+          </div>
+          <div>
+            <h3 className="text-[15px] font-semibold text-ds-ink">{title}</h3>
+            <p className="text-[12px] text-ds-muted">{subtitle}</p>
+          </div>
+        </div>
+        <div className="mb-2 h-2 w-full overflow-hidden rounded-full bg-ds-subtle">
+          <div
+            className="h-full rounded-full bg-[var(--ds-accent)] transition-all duration-500 ease-out"
+            style={{ width: `${running ? state.percent : 0}%` }}
+          />
+        </div>
+        <div className="flex items-center justify-between text-[12px] text-ds-muted">
+          <span className="truncate pr-4">{running ? state.message : '处理中…'}</span>
+          <span className="shrink-0">{running ? `${state.percent}%` : ''}</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function InlineList({ items }: { items: string[] }): ReactElement | null {
+  if (items.length === 0) return null
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {items.map((item, index) => (
+        <span
+          key={`${item}-${index}`}
+          className="rounded-full border border-ds-border-muted bg-ds-card px-2 py-1 text-[11.5px] text-ds-muted"
+        >
+          {item}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+function BulletList({ items }: { items: string[] }): ReactElement | null {
+  if (items.length === 0) return null
+  return (
+    <ul className="space-y-1.5 text-[12px] leading-5 text-ds-muted">
+      {items.map((item, index) => (
+        <li key={`${item}-${index}`} className="flex gap-2">
+          <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-current opacity-45" />
+          <span className="min-w-0 whitespace-pre-wrap">{item}</span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function DetailField({ title, value }: { title: string; value: unknown }): ReactElement | null {
+  const text = stringifyShort(value).trim()
+  if (!text) return null
+  return (
+    <div>
+      <div className="text-[11.5px] font-semibold text-ds-faint">{title}</div>
+      <div className="mt-1 whitespace-pre-wrap text-[12.5px] leading-5 text-ds-muted">{text}</div>
+    </div>
+  )
+}
+
+function StatCards({ stats }: { stats: Record<string, unknown> | null }): ReactElement | null {
+  if (!stats) return null
+  const items = [
+    ['total', '总项'],
+    ['high_risk', '高风险'],
+    ['medium_risk', '中风险'],
+    ['advisory', '建议优化'],
+    ['triggered', '触发复核'],
+    ['maintained', '维持判断']
+  ]
+    .map(([key, label]) => [label, stringifyShort(stats[key]).trim()] as const)
+    .filter(([, value]) => value)
+  if (items.length === 0) return null
+  return (
+    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      {items.map(([label, value]) => (
+        <div key={label} className="rounded-[12px] border border-ds-border-muted bg-ds-card px-3 py-2">
+          <div className="text-[11px] text-ds-faint">{label}</div>
+          <div className="mt-1 text-[18px] font-semibold text-ds-ink">{value}</div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function RiskItemCard({ item, index }: { item: Record<string, unknown>; index: number }): ReactElement {
+  const [foldOpen, setFoldOpen] = useState(false)
+  const title = firstText(item, ['risk_point', 'title', 'name', 'rule']) || `风险项 ${index + 1}`
+  const level = firstText(item, ['risk_level'])
+  const theme = firstText(item, ['theme_name'])
+  const evidence = stringArray(item.evidence)
+  const sourceSections = recordArray(item.source_sections)
+  const supportingRegulations = recordArray(item.supporting_regulations)
+  const missingGroups = stringArray(item.missing_groups)
+  const related = stringArray(item.related_risk_points)
+  const fixSnippet = firstText(item, ['fix_snippet'])
+  const rewrittenClause = firstText(item, ['rewritten_clause'])
+  const isCodeReview = firstText(item, ['review_type']) === 'code'
+
+  return (
+    <article className="rounded-[14px] border border-ds-border-muted bg-ds-card p-4">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="min-w-0">
+          <div className="text-[11.5px] font-medium text-ds-faint">风险项 {index + 1}</div>
+          <h3 className="mt-1 text-[14px] font-semibold leading-6 text-ds-ink">{title}</h3>
+        </div>
+        {level ? (
+          <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[11.5px] font-medium ${riskToneClass(level)}`}>
+            {level}
+          </span>
+        ) : null}
+      </div>
+
+      {(sourceSections.length > 0 || evidence.length > 0) ? (
+        <div className="mt-4 rounded-[12px] border border-ds-border-muted bg-ds-subtle p-3">
+          <div className="mb-2 text-[12px] font-semibold text-ds-ink">{isCodeReview ? '代码位置' : '原文摘录'}</div>
+          {sourceSections.length > 0 ? (
+            <div className="space-y-2">
+              {sourceSections.slice(0, 2).map((section, sectionIndex) => {
+                const snippet = firstText(section, ['snippet', 'text'])
+                const page = firstText(section, ['page'])
+                return (
+                  <div key={sectionIndex} className="rounded-[10px] border-l-2 border-ds-border bg-ds-card px-3 py-2">
+                    {snippet ? (
+                      <div className="whitespace-pre-wrap text-[12px] leading-5 text-ds-muted">{snippet}</div>
+                    ) : null}
+                    {page ? <div className="mt-1 text-[11px] text-ds-faint">页 {page}</div> : null}
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <BulletList items={evidence.slice(0, 2)} />
+          )}
+        </div>
+      ) : null}
+
+      <div className="mt-4 grid gap-3 lg:grid-cols-2">
+        <div className="rounded-[12px] border border-amber-500/20 bg-amber-500/8 p-3">
+          <div className="mb-2 flex items-center gap-1.5 text-[12px] font-semibold text-amber-700 dark:text-amber-200">
+            <span>{isCodeReview ? '代码风险分析' : '风险分析'}</span>
+          </div>
+          <div className="whitespace-pre-wrap text-[12.5px] leading-5 text-ds-muted">
+            {item.reason ? stringifyShort(item.reason) : (
+              missingGroups.length > 0
+                ? `该处未明确 ${missingGroups.join('、')}，存在 ${title}。`
+                : `该处存在 ${title}。`
+            )}
+          </div>
+        </div>
+        <div className="rounded-[12px] border border-ds-border-muted bg-ds-subtle p-3">
+          <div className="mb-2 text-[12px] font-semibold text-ds-ink">{isCodeReview ? '代码修改建议' : '修改建议'}</div>
+          <div className="whitespace-pre-wrap text-[12.5px] leading-5 text-ds-muted">{stringifyShort(item.suggestion) || '—'}</div>
+        </div>
+        {fixSnippet ? (
+          <div className="lg:col-span-2 rounded-[12px] border border-emerald-500/20 bg-emerald-500/8 p-3">
+            <div className="mb-2 text-[12px] font-semibold text-emerald-700 dark:text-emerald-200">建议修复代码</div>
+            <pre className="overflow-x-auto rounded-[10px] bg-[#171412] p-3 text-[12px] leading-5 text-[#f3f0ea]">
+              <code>{fixSnippet}</code>
+            </pre>
+          </div>
+        ) : rewrittenClause ? (
+          <div className="lg:col-span-2 rounded-[12px] border border-emerald-500/20 bg-emerald-500/8 p-3">
+            <div className="mb-2 text-[12px] font-semibold text-emerald-700 dark:text-emerald-200">{isCodeReview ? '修复实现思路' : '改写后条款'}</div>
+            <div className="whitespace-pre-wrap text-[12.5px] leading-5 text-ds-muted">{rewrittenClause}</div>
+          </div>
+        ) : null}
+      </div>
+
+      {missingGroups.length > 0 || related.length > 0 ? (
+        <div className="mt-3 grid gap-3 lg:grid-cols-2">
+          {missingGroups.length > 0 ? (
+            <div>
+              <div className="mb-2 text-[11.5px] font-semibold text-ds-faint">待补要素</div>
+              <InlineList items={missingGroups} />
+            </div>
+          ) : null}
+          {related.length > 0 ? (
+            <div>
+              <div className="mb-2 text-[11.5px] font-semibold text-ds-faint">关联风险</div>
+              <InlineList items={related} />
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      <div className="mt-3 border-t border-ds-border-muted pt-3">
+        <button
+          type="button"
+          onClick={() => setFoldOpen((v) => !v)}
+          className="flex items-center gap-2 text-[12px] font-medium text-ds-muted transition hover:text-ds-ink"
+        >
+          <span className={`transition-transform ${foldOpen ? 'rotate-180' : ''}`}>▼</span>
+          法规依据与定位详情
+        </button>
+        {foldOpen ? (
+          <div className="mt-3 space-y-3">
+            <div className="grid gap-3 lg:grid-cols-2">
+              <DetailField title="法律依据" value={item.legal_basis} />
+              <DetailField title="依据说明" value={item.legal_basis_detail} />
+              <DetailField title="主题" value={theme} />
+              <DetailField title="自动复核" value={item.auto_recheck_status || item.auto_recheck_notes} />
+            </div>
+            {supportingRegulations.length > 0 ? (
+              <div className="rounded-[12px] border border-ds-border-muted bg-ds-subtle p-3">
+                <div className="mb-2 text-[12px] font-semibold text-ds-ink">补充规范索引</div>
+                <div className="space-y-2">
+                  {supportingRegulations.map((regulation, regulationIndex) => {
+                    const regTitle = firstText(regulation, ['title', 'standard_code']) || `规范 ${regulationIndex + 1}`
+                    const snippet = firstText(regulation, ['snippet'])
+                    const score = firstText(regulation, ['match_score'])
+                    return (
+                      <div key={`${regTitle}-${regulationIndex}`} className="rounded-[10px] border border-ds-border bg-ds-card px-3 py-2">
+                        <div className="flex flex-wrap items-center gap-2 text-[12px] font-medium text-ds-ink">
+                          <span>{regTitle}</span>
+                          {score ? <span className="text-[11px] text-ds-faint">匹配 {score}</span> : null}
+                        </div>
+                        {snippet ? <div className="mt-1 whitespace-pre-wrap text-[12px] leading-5 text-ds-muted">{snippet}</div> : null}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ) : null}
+            {evidence.length > 0 ? (
+              <div className="rounded-[12px] border border-ds-border-muted bg-ds-subtle p-3">
+                <div className="mb-2 text-[12px] font-semibold text-ds-ink">补充证据片段</div>
+                <BulletList items={evidence} />
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+    </article>
+  )
+}
+
+function RemediationSection({ remediation }: { remediation: unknown }): ReactElement | null {
+  const data = asRecord(remediation)
+  if (!data) return null
+  const tasks = recordArray(data.tasks)
+  if (tasks.length === 0) return null
+  return (
+    <section className="rounded-[14px] border border-ds-border-muted bg-ds-subtle p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-[15px] font-semibold text-ds-ink">整改任务</h3>
+        <span className="text-[12px] text-ds-faint">共 {stringifyShort(data.task_count || tasks.length)} 项</span>
+      </div>
+      <div className="mt-3 space-y-2">
+        {tasks.map((task, index) => {
+          const title = firstText(task, ['title', 'risk_point']) || `整改任务 ${index + 1}`
+          const priority = firstText(task, ['priority'])
+          const actions = stringArray(task.suggested_actions)
+          const deliverables = stringArray(task.deliverables)
+          const evidence = stringArray(task.required_evidence)
+          return (
+            <div key={`${title}-${index}`} className="rounded-[12px] border border-ds-border bg-ds-card p-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="text-[13px] font-semibold text-ds-ink">{title}</div>
+                {priority ? <span className="rounded-full bg-ds-subtle px-2 py-0.5 text-[11px] text-ds-muted">{priority}</span> : null}
+              </div>
+              <DetailField title="目标" value={task.objective || task.summary} />
+              {actions.length > 0 ? <div className="mt-2"><div className="mb-1 text-[11.5px] font-semibold text-ds-faint">建议动作</div><BulletList items={actions} /></div> : null}
+              {evidence.length > 0 ? <div className="mt-2"><div className="mb-1 text-[11.5px] font-semibold text-ds-faint">所需证据</div><BulletList items={evidence} /></div> : null}
+              {deliverables.length > 0 ? <div className="mt-2"><div className="mb-1 text-[11.5px] font-semibold text-ds-faint">交付物</div><InlineList items={deliverables} /></div> : null}
+            </div>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
+function EvidenceSection({ evidence }: { evidence: unknown }): ReactElement | null {
+  const data = asRecord(evidence)
+  const checklist = data ? recordArray(data.checklist) : []
+  if (checklist.length === 0) return null
+  return (
+    <section className="rounded-[14px] border border-ds-border-muted bg-ds-subtle p-4">
+      <h3 className="text-[15px] font-semibold text-ds-ink">证据清单</h3>
+      <div className="mt-3 grid gap-2 lg:grid-cols-2">
+        {checklist.map((item, index) => {
+          const title = firstText(item, ['risk_point']) || `证据项 ${index + 1}`
+          const items = stringArray(item.evidence_items)
+          return (
+            <div key={`${title}-${index}`} className="rounded-[12px] border border-ds-border bg-ds-card p-3">
+              <div className="text-[13px] font-semibold text-ds-ink">{title}</div>
+              <div className="mt-1 text-[11.5px] text-ds-faint">{firstText(item, ['owner_hint'])}</div>
+              <DetailField title="用途" value={item.why_needed} />
+              {items.length > 0 ? <div className="mt-2"><BulletList items={items} /></div> : null}
+            </div>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
+function ScenarioPackSection({ title, pack }: { title: string; pack: unknown }): ReactElement | null {
+  const data = asRecord(pack)
+  if (!data || data.enabled === false) return null
+  const sections = recordArray(data.sections)
+  if (sections.length === 0) return null
+  return (
+    <section className="rounded-[14px] border border-ds-border-muted bg-ds-subtle p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-[15px] font-semibold text-ds-ink">{title}</h3>
+        <span className="text-[12px] text-ds-faint">{firstText(data, ['scenario_name'])}</span>
+      </div>
+      <InlineList items={stringArray(data.matched_risk_points)} />
+      <div className="mt-3 grid gap-2 lg:grid-cols-2">
+        {sections.map((section, index) => {
+          const sectionTitle = firstText(section, ['title', 'id']) || `核查项 ${index + 1}`
+          const requiredItems = stringArray(section.required_items)
+          return (
+            <div key={`${sectionTitle}-${index}`} className="rounded-[12px] border border-ds-border bg-ds-card p-3">
+              <div className="text-[13px] font-semibold text-ds-ink">{sectionTitle}</div>
+              {requiredItems.length > 0 ? <div className="mt-2"><BulletList items={requiredItems} /></div> : null}
+            </div>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
+function DesensitizeReport({ result }: { result: ComplianceResult }): ReactElement | null {
+  const report = result.report
+  if (!report || result.product_type !== 'desensitize') return null
+  const findings = recordArray(report.findings)
+  const summary = asRecord(report.summary)
+  return (
+    <div className="space-y-4">
+      <StatCards stats={asRecord(summary?.entity_counts)} />
+      <section className="rounded-[14px] border border-ds-border-muted bg-ds-subtle p-4">
+        <h3 className="text-[15px] font-semibold text-ds-ink">脱敏命中</h3>
+        {findings.length === 0 ? (
+          <div className="mt-3 rounded-[12px] border border-ds-border-muted bg-ds-card px-4 py-6 text-center text-[13px] text-ds-faint">
+            未识别到敏感信息或法律主体。
+          </div>
+        ) : (
+          <div className="mt-3 space-y-2">
+            {findings.map((finding, index) => (
+              <div key={`${firstText(finding, ['entity_type'])}-${index}`} className="rounded-[12px] border border-ds-border bg-ds-card p-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[13px] font-semibold text-ds-ink">{firstText(finding, ['entity_type']) || `命中 ${index + 1}`}</span>
+                  <span className="rounded-full bg-ds-subtle px-2 py-0.5 text-[11px] text-ds-muted">置信度 {firstText(finding, ['score'])}</span>
+                </div>
+                <div className="mt-2 grid gap-2 text-[12px] lg:grid-cols-3">
+                  <DetailField title="预览" value={finding.preview} />
+                  <DetailField title="替换后" value={finding.replacement} />
+                  <DetailField title="位置" value={`${firstText(finding, ['locator'])} ${firstText(finding, ['start'])}-${firstText(finding, ['end'])}`.trim()} />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+      <section className="rounded-[14px] border border-ds-border-muted bg-ds-subtle p-4">
+        <h3 className="text-[15px] font-semibold text-ds-ink">脱敏策略</h3>
+        <div className="mt-3 grid gap-3 lg:grid-cols-2">
+          <DetailField title="策略" value={report.strategy} />
+          <DetailField title="剩余风险" value={report.residual_risk} />
+          <DetailField title="输入类型" value={report.input_type} />
+          <DetailField title="输出文件" value={asRecord(report.output)?.file_name} />
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function OverviewSection({
+  result,
+  items,
+  remediation
+}: {
+  result: ComplianceResult
+  items: Array<Record<string, unknown>>
+  remediation: unknown
+}): ReactElement | null {
+  const high = items.filter((i) => String(i.risk_level).includes('高')).length
+  const medium = items.filter((i) => String(i.risk_level).includes('中')).length
+  const advisory = items.filter((i) => {
+    const level = String(i.risk_level)
+    return level.includes('低') || level.includes('建议')
+  }).length
+  const report = result.report
+  const autoRecheck = asRecord(report?.auto_recheck_triggered)
+  const regulationDb = asRecord(report?.local_regulation_db)
+  const remediationData = asRecord(remediation)
+  const tasks = recordArray(remediationData?.tasks)
+  const topTask = tasks.find((t) => firstText(t, ['priority']) === 'P1') ?? tasks[0]
+
+  return (
+    <section className="rounded-[16px] border border-ds-border bg-ds-card p-4 shadow-[0_14px_36px_rgba(15,23,42,0.06)]">
+      <h3 className="text-[16px] font-semibold text-ds-ink">审查概览</h3>
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <div className="rounded-[14px] border border-ds-border-muted bg-ds-subtle p-4">
+          <div className="text-[11.5px] font-semibold text-ds-faint">审查结论</div>
+          <div className="mt-2 text-[15px] font-medium leading-7 text-ds-ink">
+            共发现 <span className="text-[var(--ds-accent)] font-semibold">{items.length}</span> 项合规关注点
+            {high > 0 ? (
+              <>
+                ，其中 <span className="text-red-600 dark:text-red-200 font-semibold">{high} 项高风险</span> 需优先处理
+              </>
+            ) : null}
+          </div>
+          <div className="mt-4 flex flex-wrap gap-6">
+            {high > 0 ? (
+              <div className="text-center">
+                <div className="text-[26px] font-semibold leading-none text-red-600 dark:text-red-200">{high}</div>
+                <div className="mt-1.5 flex items-center gap-1.5 text-[11.5px] text-ds-muted">
+                  <span className="h-2 w-2 rounded-full bg-red-500" /> 高风险
+                </div>
+              </div>
+            ) : null}
+            {medium > 0 ? (
+              <div className="text-center">
+                <div className="text-[26px] font-semibold leading-none text-amber-600 dark:text-amber-200">{medium}</div>
+                <div className="mt-1.5 flex items-center gap-1.5 text-[11.5px] text-ds-muted">
+                  <span className="h-2 w-2 rounded-full bg-amber-500" /> 中风险
+                </div>
+              </div>
+            ) : null}
+            {advisory > 0 ? (
+              <div className="text-center">
+                <div className="text-[26px] font-semibold leading-none text-blue-600 dark:text-blue-200">{advisory}</div>
+                <div className="mt-1.5 flex items-center gap-1.5 text-[11.5px] text-ds-muted">
+                  <span className="h-2 w-2 rounded-full bg-blue-500" /> 建议优化
+                </div>
+              </div>
+            ) : null}
+          </div>
+          {autoRecheck ? (
+            <div className="mt-4 flex items-center gap-2 rounded-[10px] border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-[12px] text-amber-700 dark:text-amber-200">
+              <RefreshCw className="h-3.5 w-3.5" />
+              已触发自动复核
+            </div>
+          ) : null}
+          {regulationDb?.enabled === true ? (
+            <div className="mt-3 flex items-center gap-2 rounded-[10px] border border-ds-border-muted bg-ds-card px-3 py-2 text-[12px] text-ds-muted">
+              <ShieldCheck className="h-3.5 w-3.5" />
+              法规库增强已生效：{stringifyShort(regulationDb.matched_items)} 项命中，{stringifyShort(regulationDb.unmatched_items)} 项暂未命中
+            </div>
+          ) : null}
+        </div>
+
+        <div className="rounded-[14px] border border-ds-border-muted bg-ds-subtle p-4">
+          <div className="text-[11.5px] font-semibold text-ds-faint">优先行动</div>
+          {topTask ? (
+            <>
+              <div className="mt-2 inline-flex items-center rounded-full bg-red-500/10 px-2.5 py-1 text-[11px] font-medium text-red-600 dark:text-red-200">
+                {firstText(topTask, ['priority']) || 'P1'}
+              </div>
+              <div className="mt-2 text-[15px] font-medium text-ds-ink">
+                {firstText(topTask, ['title', 'risk_point']) || '整改任务'}
+              </div>
+              <div className="mt-1 text-[12.5px] leading-5 text-ds-muted">
+                {firstText(topTask, ['objective', 'summary', 'suggestion'])}
+              </div>
+              {tasks.length > 1 ? (
+                <div className="mt-3 text-[12px] text-ds-faint">
+                  查看全部 {tasks.length} 项整改任务
+                </div>
+              ) : null}
+            </>
+          ) : (
+            <div className="mt-3 flex items-center gap-2 text-[13px] font-medium text-emerald-600 dark:text-emerald-200">
+              <CheckCircle2 className="h-4 w-4" />
+              暂无需立即处理的整改任务
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function EmbeddedComplianceReport({
+  result,
+  resultSummary
+}: {
+  result: ComplianceResult
+  resultSummary: string
+}): ReactElement {
+  const report = result.report
+  const items = resultItems(result)
+  const stats = asRecord(report?.stats)
+  const autoRecheckStats = asRecord(report?.auto_recheck_stats)
+  const notes = stringArray(report?.notes)
+  const riskClusters = recordArray(report?.risk_clusters)
+
+  if (result.product_type === 'desensitize') {
+    if (!report) return <div className="text-[13px] text-ds-muted">{resultSummary}</div>
+    return (
+      <div className="space-y-4">
+        <DesensitizeReport result={result} />
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      <OverviewSection result={result} items={items} remediation={result.remediation} />
+      <StatCards stats={stats} />
+      <StatCards stats={autoRecheckStats} />
+
+      {riskClusters.length > 0 ? (
+        <section className="rounded-[14px] border border-ds-border-muted bg-ds-subtle p-4">
+          <h3 className="text-[15px] font-semibold text-ds-ink">主题聚类</h3>
+          <div className="mt-3 grid gap-2 lg:grid-cols-2">
+            {riskClusters.map((cluster, index) => (
+              <div key={`${firstText(cluster, ['theme_id', 'theme_name'])}-${index}`} className="rounded-[12px] border border-ds-border bg-ds-card p-3">
+                <div className="text-[13px] font-semibold text-ds-ink">{firstText(cluster, ['theme_name']) || `主题 ${index + 1}`}</div>
+                <div className="mt-1 text-[11.5px] text-ds-faint">
+                  共 {firstText(cluster, ['item_count'])} 项，高风险 {firstText(cluster, ['high_risk_count']) || '0'}，中风险 {firstText(cluster, ['medium_risk_count']) || '0'}，建议 {firstText(cluster, ['advisory_count']) || '0'}
+                </div>
+                <div className="mt-2">
+                  <InlineList items={stringArray(cluster.risk_points)} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      <section className="rounded-[14px] border border-ds-border-muted bg-ds-subtle p-4">
+        <h3 className="text-[15px] font-semibold text-ds-ink">风险清单</h3>
+        <p className="mt-1 text-[12.5px] text-ds-muted">{resultSummary}</p>
+        <div className="mt-3 space-y-3">
+          {items.map((item, index) => (
+            <RiskItemCard key={`${firstText(item, ['risk_point', 'title'])}-${index}`} item={item} index={index} />
+          ))}
+        </div>
+      </section>
+
+      <RemediationSection remediation={result.remediation} />
+      <EvidenceSection evidence={result.evidence} />
+      <ScenarioPackSection title="隐私文档整改包" pack={result.privacy_pack} />
+      <ScenarioPackSection title="数据出境专项包" pack={result.cross_border_pack} />
+      <ScenarioPackSection title="SDK 与合作方审查包" pack={result.sdk_pack} />
+
+      {notes.length > 0 ? (
+        <section className="rounded-[14px] border border-ds-border-muted bg-ds-subtle p-4">
+          <h3 className="text-[15px] font-semibold text-ds-ink">审查说明</h3>
+          <div className="mt-3">
+            <BulletList items={notes} />
+          </div>
+        </section>
+      ) : null}
+    </div>
+  )
+}
+
+export function DataComplianceSidebarNav({
+  activeSection,
+  onSectionChange
+}: {
+  activeSection: DataComplianceSection
+  onSectionChange: (section: DataComplianceSection) => void
+}): ReactElement {
+  const items: Array<{ section: DataComplianceSection; label: string; icon: ReactElement }> = [
+    { section: 'review', label: '合规审查', icon: <ShieldCheck className="h-4 w-4" strokeWidth={1.8} /> },
+    { section: 'history', label: '历史任务', icon: <History className="h-4 w-4" strokeWidth={1.8} /> },
+    { section: 'results', label: '结果中心', icon: <FileSearch className="h-4 w-4" strokeWidth={1.8} /> }
+  ]
+
+  return (
+    <div className="ds-no-drag flex min-h-0 flex-1 flex-col px-2 pt-1">
+      <div className="mb-2 px-1">
+        <div className="text-[15px] font-medium text-ds-ink">数据合规</div>
+      </div>
+      <div className="space-y-1">
+        {items.map((item) => {
+          const active = activeSection === item.section
+          return (
+            <button
+              key={item.section}
+              type="button"
+              onClick={() => onSectionChange(item.section)}
+              className={`flex w-full items-center gap-2 rounded-[10px] px-2.5 py-2 text-left text-[15px] transition ${
+                active
+                  ? 'bg-[var(--ds-accent-soft)] text-[var(--ds-accent)] shadow-[inset_0_0_0_1px_rgba(0,136,255,0.14)]'
+                  : 'text-ds-muted hover:bg-ds-hover hover:text-ds-ink'
+              }`}
+            >
+              <span className="shrink-0">{item.icon}</span>
+              <span className="truncate">{item.label}</span>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+export function DesensitizeSidebarNav({
+  activeSection,
+  onSectionChange
+}: {
+  activeSection: DesensitizeSection
+  onSectionChange: (section: DesensitizeSection) => void
+}): ReactElement {
+  const items: Array<{ section: DesensitizeSection; label: string; icon: ReactElement }> = [
+    { section: 'info', label: '个人信息脱敏', icon: <ScanEye className="h-4 w-4" strokeWidth={1.8} /> },
+    { section: 'material', label: '材料脱敏', icon: <FileText className="h-4 w-4" strokeWidth={1.8} /> },
+    { section: 'history', label: '脱敏记录', icon: <History className="h-4 w-4" strokeWidth={1.8} /> }
+  ]
+
+  return (
+    <div className="ds-no-drag flex min-h-0 flex-1 flex-col px-2 pt-1">
+      <div className="mb-2 px-1">
+        <div className="text-[15px] font-medium text-ds-ink">脱敏</div>
+      </div>
+      <div className="space-y-1">
+        {items.map((item) => {
+          const active = activeSection === item.section
+          return (
+            <button
+              key={item.section}
+              type="button"
+              onClick={() => onSectionChange(item.section)}
+              className={`flex w-full items-center gap-2 rounded-[10px] px-2.5 py-2 text-left text-[15px] transition ${
+                active
+                  ? 'bg-[var(--ds-accent-soft)] text-[var(--ds-accent)] shadow-[inset_0_0_0_1px_rgba(0,136,255,0.14)]'
+                  : 'text-ds-muted hover:bg-ds-hover hover:text-ds-ink'
+              }`}
+            >
+              <span className="shrink-0">{item.icon}</span>
+              <span className="truncate">{item.label}</span>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+export function DataCompliancePanel({
+  activeSection,
+  onSectionChange,
+  modeScope = 'review',
+  desensitizeKind = 'info'
+}: {
+  activeSection: DataComplianceSection
+  onSectionChange: (section: DataComplianceSection) => void
+  modeScope?: SubmitMode
+  desensitizeKind?: DesensitizeKind
+}): ReactElement {
+  const workspaceRoot = useChatStore((s) => s.workspaceRoot)
+  const [reviewType, setReviewType] = useState<ReviewType>('document')
+  const [documentName, setDocumentName] = useState('')
+  const [inputText, setInputText] = useState('')
+  const [file, setFile] = useState<File | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [notice, setNotice] = useState<Notice | null>(null)
+  const [taskId, setTaskId] = useState('')
+  const [history, setHistory] = useState<ComplianceTask[]>([])
+  const [historyBusy, setHistoryBusy] = useState(false)
+  const [resultBusy, setResultBusy] = useState(false)
+  const [result, setResult] = useState<ComplianceResult | null>(null)
+  const [serverStatus, setServerStatus] = useState<DataComplianceStatus | null>({
+    ok: false, running: false, installing: false,
+    baseUrl: 'http://127.0.0.1:5100', message: '检测中...'
+  })
+  const [statusBusy, setStatusBusy] = useState(false)
+  const [outputDir, setOutputDir] = useState(workspaceRoot || '')
+
+  useEffect(() => {
+    if (workspaceRoot && !outputDir.trim()) {
+      setOutputDir(workspaceRoot)
+    }
+  }, [workspaceRoot, outputDir])
+
+  const resolvedActiveSection: DataComplianceSection = Object.prototype.hasOwnProperty.call(sectionMeta, activeSection)
+    ? activeSection
+    : 'review'
+  const meta = modeScope === 'desensitize'
+    ? resolvedActiveSection === 'history'
+      ? { title: '脱敏记录', kicker: '查看个人信息与材料脱敏任务' }
+      : desensitizeKind === 'material'
+        ? { title: '材料脱敏', kicker: '文档材料批量脱敏处理' }
+        : { title: '个人信息脱敏', kicker: '个人敏感信息识别、替换与脱敏报告' }
+    : sectionMeta[resolvedActiveSection]
+  const selectedTaskId = taskId.trim()
+  const baseUrl = serverStatus?.baseUrl || FALLBACK_API_BASE || window.location.origin
+  const [progressDismissed, setProgressDismissed] = useState(false)
+  const progress = useComplianceProgress(
+    progressDismissed ? null : (selectedTaskId || result?.task_id || null),
+    baseUrl
+  )
+  const resultSummary = summarizeResult(result)
+
+  const serverHint = useMemo(() => {
+    if (!serverStatus) return '服务状态：正在检测'
+    if (!serverStatus.ok) return `服务状态：${serverStatus.message}`
+    if (serverStatus.installing) return '服务状态：正在准备依赖'
+    return serverStatus.running ? '服务状态：运行中' : '服务状态：可启动'
+  }, [serverStatus])
+
+  const ensureServer = useCallback(async (): Promise<DataComplianceStatus | null> => {
+    if (typeof window.dsGui?.getDataComplianceStatus !== 'function') {
+      return null
+    }
+    setStatusBusy(true)
+    try {
+      const status = await window.dsGui.getDataComplianceStatus()
+      setServerStatus(status)
+      if (!status.ok) setNotice({ tone: 'error', text: status.message })
+      return status
+    } catch (error) {
+      const text = error instanceof Error ? error.message : '数据合规服务启动失败。'
+      setServerStatus({
+        ok: false,
+        running: false,
+        installing: false,
+        baseUrl: FALLBACK_API_BASE || window.location.origin,
+        message: text
+      })
+      setNotice({ tone: 'error', text })
+      return null
+    } finally {
+      setStatusBusy(false)
+    }
+  }, [])
+
+  const refreshHistory = useCallback(async (): Promise<void> => {
+    setHistoryBusy(true)
+    try {
+      await ensureServer()
+      const payload = await requestJson<{ items?: ComplianceTask[] }>('/api/history')
+      const items = Array.isArray(payload.items) ? payload.items : []
+      setHistory(items.filter(modeScope === 'desensitize' ? isDesensitizeTask : isReviewTask))
+    } catch (error) {
+      setNotice({
+        tone: 'error',
+        text: error instanceof Error ? `历史读取失败：${error.message}` : '历史读取失败。'
+      })
+    } finally {
+      setHistoryBusy(false)
+    }
+  }, [ensureServer, modeScope])
+
+  const loadResult = useCallback(async (id = selectedTaskId, options: { quiet?: boolean } = {}): Promise<ComplianceResult | null> => {
+    const targetId = id.trim()
+    if (!targetId) {
+      setNotice({ tone: 'error', text: '请输入任务编号。' })
+      return null
+    }
+    setResultBusy(true)
+    if (!options.quiet) setNotice(null)
+    try {
+      await ensureServer()
+      const payload = await requestJson<ComplianceResult>(`/api/result/${encodeURIComponent(targetId)}`)
+      if (payload.error) throw new Error(payload.error)
+      setTaskId(targetId)
+      setResult(payload)
+      onSectionChange('results')
+      return payload
+    } catch (error) {
+      if (!options.quiet) {
+        setNotice({
+          tone: 'error',
+          text: error instanceof Error ? `结果读取失败：${error.message}` : '结果读取失败。'
+        })
+      }
+      return null
+    } finally {
+      setResultBusy(false)
+    }
+  }, [ensureServer, onSectionChange, selectedTaskId])
+
+  useEffect(() => {
+    void refreshHistory()
+  }, [refreshHistory, modeScope])
+
+  useEffect(() => {
+    const activeTaskId = result?.task_id ?? selectedTaskId
+    const status = (result?.status ?? '').toLowerCase()
+    if (!activeTaskId || status === 'completed' || status === 'failed' || status === 'error') return
+    const timer = window.setInterval(() => {
+      void loadResult(activeTaskId, { quiet: true })
+    }, 1500)
+    return () => window.clearInterval(timer)
+  }, [loadResult, result?.status, result?.task_id, selectedTaskId])
+
+  // Dismiss progress modal when result loads as completed/failed/error
+  useEffect(() => {
+    const status = (result?.status ?? '').toLowerCase()
+    if (status === 'completed' || status === 'failed' || status === 'error') {
+      setProgressDismissed(true)
+    }
+  }, [result?.status])
+
+  const onPickFile = (event: ChangeEvent<HTMLInputElement>): void => {
+    const nextFile = event.target.files?.[0] ?? null
+    setFile(nextFile)
+    if (nextFile && !documentName.trim()) {
+      setDocumentName(nextFile.name.replace(/\.[^.]+$/, ''))
+    }
+  }
+
+  const pickOutputDir = async (): Promise<void> => {
+    if (typeof window.dsGui?.pickWorkspaceDirectory !== 'function') {
+      setNotice({ tone: 'error', text: '目录选择器不可用。' })
+      return
+    }
+    try {
+      const picked = await window.dsGui.pickWorkspaceDirectory(outputDir || undefined)
+      if (!picked.canceled && picked.path) {
+        setOutputDir(picked.path)
+      }
+    } catch (error) {
+      setNotice({ tone: 'error', text: formatWorkspacePickerError(error) })
+    }
+  }
+
+  const submitTask = async (mode: SubmitMode): Promise<void> => {
+    if (!file && !inputText.trim()) {
+      setNotice({ tone: 'error', text: '请先上传文件或输入待处理文本。' })
+      return
+    }
+    setBusy(true)
+    setNotice(null)
+    try {
+      await ensureServer()
+      const payload: DataComplianceSubmitPayload = {
+        mode,
+        documentName,
+        inputText,
+        reviewType: reviewType === 'code' ? 'code' : 'document',
+        file: file ? await fileToPayload(file) : undefined
+      }
+      if (mode === 'desensitize' && desensitizeKind === 'material') {
+        payload.outputDir = outputDir.trim() || workspaceRoot
+      }
+      const submitted = await submitComplianceTask(payload)
+      const nextTaskId = submitted.task_id ?? ''
+      setProgressDismissed(false)
+      setTaskId(nextTaskId)
+      setResult(nextTaskId ? { task_id: nextTaskId, status: 'processing', document_name: documentName || file?.name } : null)
+      setNotice({ tone: 'success', text: `任务已提交：${nextTaskId}` })
+      onSectionChange('results')
+      void refreshHistory()
+      if (nextTaskId) void loadResult(nextTaskId, { quiet: true })
+    } catch (error) {
+      setNotice({
+        tone: 'error',
+        text: error instanceof Error ? `提交失败：${error.message}` : '提交失败。'
+      })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const deleteHistoryTask = async (id: string, event: MouseEvent<HTMLButtonElement>): Promise<void> => {
+    event.stopPropagation()
+    if (!id) return
+    try {
+      await requestJson<{ ok?: boolean }>(`/api/history/${encodeURIComponent(id)}`, 'DELETE')
+      setHistory((items) => items.filter((item) => taskIdOf(item) !== id))
+      if (selectedTaskId === id) {
+        setTaskId('')
+        setResult(null)
+      }
+    } catch (error) {
+      setNotice({
+        tone: 'error',
+        text: error instanceof Error ? `删除失败：${error.message}` : '删除失败。'
+      })
+    }
+  }
+
+  const openExternalUrl = (url: string): void => {
+    if (typeof window.dsGui?.openExternal === 'function') {
+      void window.dsGui.openExternal(url).catch(() => window.open(url, '_blank', 'noreferrer'))
+      return
+    }
+    window.open(url, '_blank', 'noreferrer')
+  }
+
+  const reportTaskId = result?.task_id ?? selectedTaskId
+  const isDesensitizeResult = result?.product_type === 'desensitize'
+  const downloadPrefix = isDesensitizeResult ? '/api/desensitize/download' : '/api/download'
+
+  const renderSubmitForm = (mode: SubmitMode): ReactElement => {
+    const submitTitle = mode === 'review'
+      ? '提交审查材料'
+      : desensitizeKind === 'material'
+        ? '提交材料脱敏'
+        : '提交个人信息脱敏'
+    const namePlaceholder = mode === 'review'
+      ? '例如：隐私政策合规审查'
+      : desensitizeKind === 'material'
+        ? '例如：合同材料脱敏'
+        : '例如：客户个人信息脱敏'
+    const textPlaceholder = mode === 'review'
+      ? '粘贴待审查的制度文本、隐私政策或代码片段...'
+      : desensitizeKind === 'material'
+        ? '粘贴待脱敏的合同、证据材料或业务文档...'
+        : '粘贴待脱敏的姓名、身份证号、手机号、地址等个人信息...'
+
+    return (
+      <section className="rounded-[16px] border border-ds-border bg-ds-card p-4 shadow-[0_14px_36px_rgba(15,23,42,0.06)]">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-[16px] font-semibold text-ds-ink">
+            {submitTitle}
+          </h2>
+          <p className="mt-1 text-[12.5px] text-ds-muted">支持文件或文本输入，提交后自动追踪结果。</p>
+        </div>
+        {mode === 'review' ? (
+          <div className="flex rounded-[10px] border border-ds-border-muted bg-ds-subtle p-1">
+            {(['document', 'code'] as const).map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setReviewType(type)}
+                className={`rounded-[8px] px-3 py-1.5 text-[12px] font-medium transition ${
+                  reviewType === type
+                    ? 'bg-ds-card text-[var(--ds-accent)] shadow-sm'
+                    : 'text-ds-muted hover:text-ds-ink'
+                }`}
+              >
+                {type === 'document' ? '文档审查' : '代码审查'}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+
+      <div className="mt-4 space-y-3">
+        <label className="block">
+          <span className="text-[12px] font-medium text-ds-muted">材料名称</span>
+          <input
+            value={documentName}
+            onChange={(event) => setDocumentName(event.target.value)}
+            placeholder={namePlaceholder}
+            className="mt-1.5 w-full rounded-[12px] border border-ds-border bg-ds-card px-3 py-2 text-[13.5px] text-ds-ink outline-none transition focus:border-accent/40 focus:ring-2 focus:ring-accent/15"
+          />
+        </label>
+        <label className="block">
+          <span className="text-[12px] font-medium text-ds-muted">上传文件</span>
+          <input
+            type="file"
+            onChange={onPickFile}
+            className="mt-1.5 block w-full rounded-[12px] border border-ds-border bg-ds-card px-3 py-2 text-[13px] text-ds-muted file:mr-3 file:rounded-[8px] file:border-0 file:bg-ds-subtle file:px-3 file:py-1.5 file:text-[12px] file:font-medium file:text-ds-ink"
+          />
+        </label>
+        <label className="block">
+          <span className="text-[12px] font-medium text-ds-muted">直接输入</span>
+          <textarea
+            value={inputText}
+            onChange={(event) => setInputText(event.target.value)}
+            rows={9}
+            placeholder={textPlaceholder}
+            className="mt-1.5 w-full resize-none rounded-[14px] border border-ds-border bg-ds-card px-3 py-2 text-[13.5px] leading-6 text-ds-ink outline-none transition focus:border-accent/40 focus:ring-2 focus:ring-accent/15"
+          />
+        </label>
+        {mode === 'desensitize' && desensitizeKind === 'material' ? (
+          <label className="block">
+            <span className="text-[12px] font-medium text-ds-muted">输出目录</span>
+            <div className="mt-1.5 flex items-center gap-2">
+              <div className="flex min-w-0 flex-1 items-center gap-2 rounded-[12px] border border-ds-border bg-ds-card px-3 py-2">
+                <Folder className="h-4 w-4 shrink-0 text-ds-muted" strokeWidth={1.8} />
+                <span className="min-w-0 truncate text-[13.5px] text-ds-ink" title={outputDir}>
+                  {outputDir || '未选择输出目录'}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => void pickOutputDir()}
+                disabled={busy || statusBusy}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-[10px] border border-ds-border bg-ds-subtle px-3 py-2 text-[12.5px] font-medium text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink disabled:opacity-55"
+              >
+                浏览
+              </button>
+            </div>
+            <p className="mt-1.5 text-[11.5px] text-ds-faint">
+              脱敏后的文件和主体映射表将保存到该目录。
+            </p>
+          </label>
+        ) : null}
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-ds-border-muted pt-4">
+        <div className="flex items-center gap-2 text-[12px] text-ds-faint">
+          {statusBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+          {serverHint}
+        </div>
+        <button
+          type="button"
+          disabled={busy || statusBusy}
+          onClick={() => void submitTask(mode)}
+          className="inline-flex items-center gap-2 rounded-full bg-[var(--ds-accent)] px-4 py-2 text-[13px] font-semibold text-white shadow-sm transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-55"
+        >
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+          {mode === 'review' ? '开始审查' : '开始脱敏'}
+        </button>
+      </div>
+      </section>
+    )
+  }
+
+  return (
+    <div className="flex h-full w-full min-h-0 flex-col bg-ds-main">
+      <div className="border-b border-ds-border-muted bg-ds-main/85 px-8 py-5 backdrop-blur">
+        <div className="flex w-full items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 text-[12px] font-semibold text-[var(--ds-accent)]">
+              {modeScope === 'desensitize'
+                ? <Eye className="h-4 w-4" strokeWidth={1.8} />
+                : <ShieldCheck className="h-4 w-4" strokeWidth={1.8} />}
+              {modeScope === 'desensitize' ? 'DESENSITIZE' : '数据合规'}
+            </div>
+            <h1 className="mt-2 text-[24px] font-semibold text-ds-ink">{meta.title}</h1>
+            <p className="mt-1 text-[13.5px] text-ds-muted">{meta.kicker}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void refreshHistory()}
+            className="inline-flex shrink-0 items-center gap-2 rounded-full border border-ds-border bg-ds-card px-3 py-2 text-[12.5px] font-medium text-ds-muted shadow-sm transition hover:bg-ds-hover hover:text-ds-ink"
+          >
+            {historyBusy || statusBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            同步历史
+          </button>
+        </div>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto px-8 py-6">
+        <div className="w-full space-y-4">
+          {notice ? (
+            <div className={`flex items-start gap-2 rounded-[14px] border px-4 py-3 text-[13px] ${
+              notice.tone === 'error'
+                ? 'border-red-500/25 bg-red-500/10 text-red-700 dark:text-red-200'
+                : notice.tone === 'success'
+                  ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-200'
+                  : 'border-ds-border bg-ds-card text-ds-muted'
+            }`}
+            >
+              {notice.tone === 'error'
+                ? <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                : <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />}
+              <span>{notice.text}</span>
+            </div>
+          ) : null}
+
+          {resolvedActiveSection === 'review' ? renderSubmitForm(modeScope) : null}
+
+          {resolvedActiveSection === 'history' ? (
+            <section className="rounded-[16px] border border-ds-border bg-ds-card p-4 shadow-[0_14px_36px_rgba(15,23,42,0.06)]">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-[16px] font-semibold text-ds-ink">历史任务</h2>
+                <button
+                  type="button"
+                  onClick={() => void refreshHistory()}
+                  className="inline-flex items-center gap-2 rounded-full border border-ds-border bg-ds-card px-3 py-1.5 text-[12px] font-medium text-ds-muted hover:bg-ds-hover hover:text-ds-ink"
+                >
+                  {historyBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                  刷新
+                </button>
+              </div>
+              <div className="mt-4 divide-y divide-ds-border-muted overflow-hidden rounded-[12px] border border-ds-border-muted">
+                {history.length === 0 ? (
+                  <div className="px-4 py-8 text-center text-[13px] text-ds-faint">暂无历史任务。</div>
+                ) : history.map((task) => {
+                  const id = taskIdOf(task)
+                  return (
+                    <button
+                      key={id || task.document_name}
+                      type="button"
+                      onClick={() => {
+                        if (id) void loadResult(id)
+                      }}
+                      className="flex w-full items-center justify-between gap-3 bg-ds-card px-4 py-3 text-left transition hover:bg-ds-hover"
+                    >
+                      <div className="min-w-0">
+                        <div className="truncate text-[13.5px] font-medium text-ds-ink">{task.document_name || id || '未命名任务'}</div>
+                        <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11.5px] text-ds-faint">
+                          <span>{id}</span>
+                          {task.created_at ? <span>{new Date(task.created_at).toLocaleString()}</span> : null}
+                          {task.review_type ? <span>{task.review_type}</span> : null}
+                          {task.product_type ? <span>{task.product_type}</span> : null}
+                        </div>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <span className={`rounded-full px-2.5 py-1 text-[11.5px] font-medium ${statusTone(task.status)}`}>
+                          {labelStatus(task.status, task.product_type === 'desensitize')}
+                        </span>
+                        {id ? (
+                          <button
+                            type="button"
+                            onClick={(event) => void deleteHistoryTask(id, event)}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-ds-faint transition hover:bg-red-500/10 hover:text-red-600"
+                            aria-label="删除历史任务"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        ) : null}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </section>
+          ) : null}
+
+          {resolvedActiveSection === 'results' ? (
+            <section className="rounded-[16px] border border-ds-border bg-ds-card p-4 shadow-[0_14px_36px_rgba(15,23,42,0.06)]">
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <h2 className="text-[16px] font-semibold text-ds-ink">结果查询</h2>
+                  <p className="mt-1 text-[12.5px] text-ds-muted">输入任务编号，读取结构化报告。</p>
+                </div>
+                <div className="flex min-w-[280px] max-w-md flex-1 items-center gap-2">
+                  <input
+                    value={taskId}
+                    onChange={(event) => setTaskId(event.target.value)}
+                    placeholder="任务编号"
+                    className="min-w-0 flex-1 rounded-full border border-ds-border bg-ds-card px-3 py-2 text-[13px] text-ds-ink outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/15"
+                  />
+                  <button
+                    type="button"
+                    disabled={resultBusy}
+                    onClick={() => void loadResult()}
+                    className="inline-flex items-center gap-2 rounded-full bg-[var(--ds-accent)] px-4 py-2 text-[13px] font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-55"
+                  >
+                    {resultBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileSearch className="h-4 w-4" />}
+                    查询
+                  </button>
+                </div>
+              </div>
+
+              {result ? (
+                <div className="mt-5 space-y-4">
+                  <div className="rounded-[14px] border border-ds-border-muted bg-ds-subtle p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-[15px] font-semibold text-ds-ink">{result.document_name || result.task_id || selectedTaskId}</span>
+                          <span className={`rounded-full px-2.5 py-1 text-[11.5px] font-medium ${statusTone(result.status)}`}>
+                            {labelStatus(result.status, result.product_type === 'desensitize')}
+                          </span>
+                        </div>
+                        <p className="mt-2 text-[13px] leading-6 text-ds-muted">{resultSummary}</p>
+                        {isDesensitizeResult && result.output_dir ? (
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                            <span className="text-[12px] text-ds-faint">输出目录：</span>
+                            <span className="min-w-0 truncate text-[12px] text-ds-muted" title={result.output_dir}>
+                              {result.output_dir}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                openExternalUrl(
+                                  `file://${encodeURIComponent(result.output_dir ?? '')}`
+                                )
+                              }
+                              className="inline-flex items-center gap-1 rounded-full border border-ds-border bg-ds-card px-2 py-1 text-[11.5px] font-medium text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink"
+                            >
+                              <Folder className="h-3 w-3" strokeWidth={1.8} />
+                              打开文件夹
+                            </button>
+                          </div>
+                        ) : null}
+                      </div>
+                      <div className="flex shrink-0 flex-wrap gap-2">
+                        <button
+                          type="button"
+                          disabled={!reportTaskId}
+                          onClick={() => openExternalUrl(`${baseUrl}${downloadPrefix}/${encodeURIComponent(reportTaskId)}/${isDesensitizeResult ? 'desensitization_report' : 'report'}`)}
+                          className="inline-flex items-center gap-2 rounded-full border border-ds-border bg-ds-card px-3 py-2 text-[12.5px] font-medium text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink disabled:opacity-50"
+                        >
+                          <Download className="h-4 w-4" />
+                          下载报告
+                        </button>
+                        {!isDesensitizeResult ? (
+                          <button
+                            type="button"
+                            disabled={!reportTaskId}
+                            onClick={() => openExternalUrl(`${baseUrl}/api/download/${encodeURIComponent(reportTaskId)}/report_md`)}
+                            className="inline-flex items-center gap-2 rounded-full border border-ds-border bg-ds-card px-3 py-2 text-[12.5px] font-medium text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink disabled:opacity-50"
+                          >
+                            <Download className="h-4 w-4" />
+                            Markdown
+                          </button>
+                        ) : null}
+                        {isDesensitizeResult ? (
+                          <>
+                            <button
+                              type="button"
+                              disabled={!reportTaskId}
+                              onClick={() => openExternalUrl(`${baseUrl}${downloadPrefix}/${encodeURIComponent(reportTaskId)}/desensitized_output`)}
+                              className="inline-flex items-center gap-2 rounded-full border border-ds-border bg-ds-card px-3 py-2 text-[12.5px] font-medium text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink disabled:opacity-50"
+                            >
+                              <Download className="h-4 w-4" />
+                              下载脱敏文件
+                            </button>
+                            <button
+                              type="button"
+                              disabled={!reportTaskId}
+                              onClick={() => openExternalUrl(`${baseUrl}${downloadPrefix}/${encodeURIComponent(reportTaskId)}/subject_mapping_md`)}
+                              className="inline-flex items-center gap-2 rounded-full border border-ds-border bg-ds-card px-3 py-2 text-[12.5px] font-medium text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink disabled:opacity-50"
+                            >
+                              <Download className="h-4 w-4" />
+                              下载主体映射表
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              disabled={!reportTaskId}
+                              onClick={() => openExternalUrl(`${baseUrl}/api/download/${encodeURIComponent(reportTaskId)}/remediation`)}
+                              className="inline-flex items-center gap-2 rounded-full border border-ds-border bg-ds-card px-3 py-2 text-[12.5px] font-medium text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink disabled:opacity-50"
+                            >
+                              <Download className="h-4 w-4" />
+                              下载整改包
+                            </button>
+                            {result?.report?.document_type === 'source_code' ? (
+                              <button
+                                type="button"
+                                disabled={!reportTaskId}
+                                onClick={() => openExternalUrl(`${baseUrl}/api/download/${encodeURIComponent(reportTaskId)}/code_suggestions`)}
+                                className="inline-flex items-center gap-2 rounded-full border border-ds-border bg-ds-card px-3 py-2 text-[12.5px] font-medium text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink disabled:opacity-50"
+                              >
+                                <Download className="h-4 w-4" />
+                                代码修改建议
+                              </button>
+                            ) : null}
+                          </>
+                        )}
+                      </div>
+                  </div>
+                  </div>
+                  <EmbeddedComplianceReport result={result} resultSummary={resultSummary} />
+                </div>
+              ) : (
+                <div className="mt-5 rounded-[14px] border border-ds-border-muted bg-ds-subtle px-4 py-8 text-center text-[13px] text-ds-faint">
+                  选择历史任务或输入任务编号后，这里会显示结果摘要。
+                </div>
+              )}
+            </section>
+          ) : null}
+        </div>
+      </div>
+      <ProgressModal state={progress} onDismiss={() => setProgressDismissed(true)} modeScope={modeScope} />
+    </div>
+  )
+}
+
+export function DesensitizationPanel({
+  activeSection,
+  onSectionChange
+}: {
+  activeSection: DesensitizeSection
+  onSectionChange: (section: DesensitizeSection) => void
+}): ReactElement {
+  const panelSection: DataComplianceSection = activeSection === 'history' ? 'history' : 'review'
+
+  return (
+    <DataCompliancePanel
+      activeSection={panelSection}
+      onSectionChange={(section) => {
+        if (section === 'history') onSectionChange('history')
+      }}
+      modeScope="desensitize"
+      desensitizeKind={activeSection === 'material' ? 'material' : 'info'}
+    />
+  )
+}

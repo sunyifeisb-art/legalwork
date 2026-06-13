@@ -1,0 +1,23 @@
+{
+  "name": "strategic-risk-prioritization",
+  "description": "战略风险优先级：对法律风险进行优先级排序",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/riskprior"
+    ],
+    "promptPatterns": [
+      "风险优先级|风险排序|风险管理|风险评估"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

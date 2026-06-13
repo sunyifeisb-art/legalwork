@@ -1,0 +1,23 @@
+{
+  "name": "legal-case-analysis-template",
+  "description": "案情分析模板：生成标准化的案情分析框架",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/template"
+    ],
+    "promptPatterns": [
+      "分析模板|案情模板|案件模板|分析框架"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

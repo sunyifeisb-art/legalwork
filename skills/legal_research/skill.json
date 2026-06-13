@@ -1,0 +1,23 @@
+{
+  "name": "legal-research",
+  "description": "法律研究：进行法律检索和研究分析",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/research"
+    ],
+    "promptPatterns": [
+      "法律研究|法律检索|类案研究|法律调研"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

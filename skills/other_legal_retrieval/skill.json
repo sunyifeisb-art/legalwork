@@ -1,0 +1,23 @@
+{
+  "name": "other-legal-retrieval",
+  "description": "其他法律检索：监管文件、学术文献等综合检索",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/findother"
+    ],
+    "promptPatterns": [
+      "监管文件|学术文献|标准规范|国际条约|法律检索"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}
