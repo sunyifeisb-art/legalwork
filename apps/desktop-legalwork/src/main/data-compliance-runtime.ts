@@ -4,7 +4,7 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join, delimiter } from 'node:path'
 import { app } from 'electron'
 import type { AppSettingsV1 } from '../shared/app-settings'
-import { getLegalworkRuntimeSettings } from '../shared/app-settings-legalwork'
+import { resolveLegalworkRuntimeSettings } from '../shared/app-settings-provider'
 
 export type DataComplianceStatus =
   | {
@@ -374,7 +374,7 @@ export class DataComplianceRuntime {
     if (this.getSettings) {
       try {
         const settings = await this.getSettings()
-        const runtime = getLegalworkRuntimeSettings(settings)
+        const runtime = resolveLegalworkRuntimeSettings(settings)
         if (runtime.apiKey?.trim()) {
           agentEnv.LEGALWORK_API_KEY = runtime.apiKey.trim()
         }

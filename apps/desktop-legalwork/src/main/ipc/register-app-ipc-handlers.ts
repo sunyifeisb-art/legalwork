@@ -32,6 +32,7 @@ import {
   clawMirrorPayloadSchema,
   clawImInstallPollPayloadSchema,
   clawTaskFromTextPayloadSchema,
+  dataComplianceDownloadFilePayloadSchema,
   dataComplianceRequestPayloadSchema,
   dataComplianceSubmitPayloadSchema,
   deepseekConfigContentSchema,
@@ -457,6 +458,42 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
         status: 503,
         body: JSON.stringify({ error: message }),
         contentType: 'application/json'
+      }
+    }
+  })
+
+  ipcMain.handle('data-compliance:download-file', async (_, payload: unknown) => {
+    const request = parseIpcPayload(
+      'data-compliance:download-file',
+      dataComplianceDownloadFilePayloadSchema,
+      payload
+    )
+    try {
+      await reconnectRuntime()
+      const settings = await store.load()
+      const base = getRuntimeBaseUrlForSettings(settings)
+      const headers = runtimeAuthHeaders(settings)
+      const url = `${base}/data-compliance/tasks/${encodeURIComponent(request.taskId)}/files/${encodeURIComponent(request.fileKey)}`
+      const res = await fetch(url, { headers, signal: AbortSignal.timeout(30_000) })
+      if (!res.ok) {
+        const text = await res.text().catch(() => '')
+        return { ok: false as const, message: text || `HTTP ${res.status}` }
+      }
+      const buffer = Buffer.from(await res.arrayBuffer())
+      const contentDisposition = res.headers.get('content-disposition') || ''
+      const filenameMatch = /filename="([^"]+)"/.exec(contentDisposition)
+      const filename = filenameMatch ? decodeURIComponent(filenameMatch[1]) : `${request.taskId}_${request.fileKey}`
+      const contentType = res.headers.get('content-type') || 'application/octet-stream'
+      return {
+        ok: true as const,
+        dataBase64: buffer.toString('base64'),
+        filename,
+        contentType
+      }
+    } catch (error) {
+      return {
+        ok: false as const,
+        message: error instanceof Error ? error.message : String(error)
       }
     }
   })

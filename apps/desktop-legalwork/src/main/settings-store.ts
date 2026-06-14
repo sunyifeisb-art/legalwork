@@ -12,6 +12,7 @@ import {
   defaultModelProviderSettings,
   defaultScheduleSettings,
   getLegalworkRuntimeSettings,
+  getModelProviderProfile,
   mergeLegalworkRuntimeSettings,
   mergeModelProviderSettings,
   defaultWriteSettings,
@@ -348,6 +349,24 @@ export class JsonSettingsStore {
     }
 
     const normalized = normalizeStoredSettings(buildMergedSettings(parsed))
+    const runtime = getLegalworkRuntimeSettings(normalized)
+    const activeProvider = getModelProviderProfile(normalized, runtime.providerId)
+    const activeKey = activeProvider.apiKey.trim()
+    // Only backfill an empty runtime API key when the file is not in the middle
+    // of a legacy migration that moves the runtime key into the shared provider
+    // settings. During that migration the runtime override is intentionally left
+    // empty so it inherits from the selected provider profile at runtime.
+    const hasTopLevelProvider = typeof parsed.provider === 'object' && parsed.provider !== null
+    const hasRuntimeCredential =
+      typeof parsed.agents?.legalwork?.apiKey === 'string' &&
+      parsed.agents.legalwork.apiKey.trim().length > 0
+    const migratingRuntimeCredentialToProvider = !hasTopLevelProvider && hasRuntimeCredential
+    const needsBackfill = activeKey && !runtime.apiKey.trim() && !migratingRuntimeCredentialToProvider
+    if (needsBackfill) {
+      normalized.agents = legalworkSettingsEnvelope(
+        mergeLegalworkRuntimeSettings(runtime, { apiKey: activeKey })
+      )
+    }
     await ensureWorkspaceRootExists(normalized.workspaceRoot)
     await ensureWriteWorkspaceRootsExist(normalized)
     await ensureClawChannelWorkspaceRootsExist(normalized)

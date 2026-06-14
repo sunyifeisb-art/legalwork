@@ -1,14 +1,16 @@
 import {
   DEFAULT_DEEPSEEK_BASE_URL,
   DEFAULT_MODEL_PROVIDER_ID,
+  type AppSettingsPatch,
   type AppSettingsV1,
+  type LegalworkRuntimeSettingsPatchV1,
   type LegalworkRuntimeSettingsV1,
   type ModelProviderProfilePatchV1,
   type ModelProviderProfileV1,
   type ModelProviderSettingsPatchV1,
   type ModelProviderSettingsV1
 } from './app-settings-types'
-import { getLegalworkRuntimeSettings } from './app-settings-legalwork'
+import { getLegalworkRuntimeSettings, mergeLegalworkRuntimeSettings } from './app-settings-legalwork'
 import { normalizeDeepseekBaseUrl } from './app-settings-normalizers'
 import { DEFAULT_COMPOSER_MODEL_IDS } from './default-composer-models'
 import {
@@ -140,6 +142,60 @@ export function resolveLegalworkRuntimeSettings(settings: AppSettingsV1): Legalw
         ? normalizeDeepseekBaseUrl(runtimeBaseUrl)
         : normalizeDeepseekBaseUrl(providerBaseUrl),
     endpointFormat: runtime.endpointFormat?.trim() || preset?.endpointFormat || 'chat_completions'
+  }
+}
+
+export type LegalworkRuntimeCredentialPatch = {
+  legalwork: LegalworkRuntimeSettingsPatchV1 & {
+    apiKey?: string
+    baseUrl?: string
+  }
+}
+
+/**
+ * Compute the Legalwork runtime credential patch that should accompany a settings
+ * patch. The runtime override inherits the active provider profile's credentials
+ * unless the user explicitly edited the override in Settings > Agents.
+ */
+export function computeLegalworkRuntimeCredentialPatch(
+  prev: AppSettingsV1,
+  partial: Pick<AppSettingsPatch, 'agents' | 'provider'>
+): LegalworkRuntimeCredentialPatch {
+  const { agents: agentsPatch, provider: providerPatch } = partial
+  const mergedProvider = mergeModelProviderSettings(prev.provider, providerPatch)
+  const runtimeBeforePatch = getLegalworkRuntimeSettings(prev)
+  const patchedRuntime = agentsPatch?.legalwork
+    ? mergeLegalworkRuntimeSettings(runtimeBeforePatch, agentsPatch.legalwork)
+    : runtimeBeforePatch
+  const activeProviderProfile = getModelProviderProfile(
+    { ...prev, provider: mergedProvider },
+    patchedRuntime.providerId
+  )
+
+  const legalworkPatch = agentsPatch?.legalwork
+  const agentKeyValue = legalworkPatch && 'apiKey' in legalworkPatch ? legalworkPatch.apiKey : undefined
+  const agentBaseUrlValue = legalworkPatch && 'baseUrl' in legalworkPatch ? legalworkPatch.baseUrl : undefined
+
+  // The renderer often sends the full settings object as a patch, so a present
+  // agents.legalwork.apiKey does not by itself mean the user edited it. Treat the
+  // field as user-edited only when its value differs from what is already stored.
+  const userEditedAgentKey = agentKeyValue !== undefined && agentKeyValue !== runtimeBeforePatch.apiKey
+  const userEditedAgentBaseUrl = agentBaseUrlValue !== undefined && agentBaseUrlValue !== runtimeBeforePatch.baseUrl
+
+  const inheritedAgentKey = userEditedAgentKey
+    ? (agentKeyValue ?? '').trim()
+    : activeProviderProfile.apiKey.trim() || mergedProvider.apiKey.trim()
+
+  const inheritedAgentBaseUrl = userEditedAgentBaseUrl
+    ? (agentBaseUrlValue ?? '').trim()
+    : activeProviderProfile.baseUrl.trim()
+
+  return {
+    legalwork: {
+      ...(legalworkPatch ?? {}),
+      ...(userEditedAgentKey || !inheritedAgentKey ? {} : { apiKey: inheritedAgentKey }),
+      ...(userEditedAgentBaseUrl || !inheritedAgentBaseUrl ? {} : { baseUrl: inheritedAgentBaseUrl })
+    }
   }
 }
 

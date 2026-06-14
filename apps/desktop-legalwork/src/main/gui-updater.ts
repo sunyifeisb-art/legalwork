@@ -133,6 +133,13 @@ function resolveGithubReleaseUrl(): string | null {
   return repo ? `https://github.com/${repo}/releases` : null
 }
 
+function resolveGithubOwnerRepo(): string | null {
+  const releaseUrl = resolveGithubReleaseUrl()
+  if (!releaseUrl) return null
+  const match = releaseUrl.match(/^https:\/\/github\.com\/([^/]+\/[^/]+)\/releases$/i)
+  return match?.[1] ?? null
+}
+
 function downloadPageUrl(): string {
   const direct = process.env.LEGALWORK_DOWNLOAD_URL?.trim()
   if (direct) return direct
@@ -326,12 +333,22 @@ async function resolveUpdateChannel(requested?: GuiUpdateChannel): Promise<GuiUp
 
 function configureUpdaterChannel(channel: GuiUpdateChannel): void {
   const normalized = normalizeGuiUpdateChannel(channel)
-  const feedUrl = updateFeedUrl(normalized)
+  const repo = resolveGithubOwnerRepo()
+  const feedUrl = repo ? `github:${repo}` : updateFeedUrl(normalized)
   const changed = normalized !== configuredChannel || feedUrl !== configuredFeedUrl
   configuredChannel = normalized
   configuredFeedUrl = feedUrl
   autoUpdater.allowPrerelease = normalized === 'frontier'
-  autoUpdater.setFeedURL({ provider: 'generic', url: feedUrl })
+  if (repo) {
+    const [owner, repoName] = repo.split('/')
+    autoUpdater.setFeedURL({
+      provider: 'github',
+      owner,
+      repo: repoName
+    })
+  } else {
+    autoUpdater.setFeedURL({ provider: 'generic', url: feedUrl })
+  }
   if (!changed) return
   downloaded = false
   downloadPromise = null
@@ -343,13 +360,41 @@ export function setGuiUpdateChannel(channel: GuiUpdateChannel): void {
   configureUpdaterChannel(channel)
 }
 
+async function resolveGithubManifestUrl(channel: GuiUpdateChannel): Promise<string | null> {
+  const repo = resolveGithubOwnerRepo()
+  if (!repo) return null
+
+  if (channel === 'stable') {
+    return `https://github.com/${repo}/releases/latest/download/${platformManifestName()}`
+  }
+
+  // frontier: GitHub releases do not have a /latest/download for prereleases,
+  // so we query the API and pick the newest prerelease tag.
+  const apiUrl = `https://api.github.com/repos/${repo}/releases`
+  try {
+    const res = await fetch(apiUrl, {
+      headers: {
+        Accept: 'application/vnd.github+json',
+        'User-Agent': `legalwork/${app.getVersion()}`
+      }
+    })
+    if (!res.ok) return null
+    const releases = (await res.json()) as Array<{ prerelease: boolean; tag_name: string }>
+    const pre = releases.find((r) => r.prerelease)
+    if (!pre) return null
+    return `https://github.com/${repo}/releases/download/${pre.tag_name}/${platformManifestName()}`
+  } catch {
+    return null
+  }
+}
+
 async function checkManualUpdate(
   channel: GuiUpdateChannel,
   code: GuiUpdateFailureCode = 'unsupported'
 ): Promise<GuiUpdateInfo> {
   const currentVersion = app.getVersion()
   try {
-    const url = `${updateFeedUrl(channel)}${platformManifestName()}`
+    const url = (await resolveGithubManifestUrl(channel)) ?? `${updateFeedUrl(channel)}${platformManifestName()}`
     const res = await fetch(url, {
       headers: {
         Accept: 'application/x-yaml,text/yaml,text/plain,*/*',

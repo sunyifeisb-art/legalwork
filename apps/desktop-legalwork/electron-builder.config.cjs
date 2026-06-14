@@ -126,8 +126,7 @@ module.exports = {
   artifactName: `legalwork-${artifactVersion}-\${os}-\${arch}.\${ext}`,
   publish: [
     {
-      provider: 'generic',
-      url: genericUpdateUrl
+      provider: 'github'
     }
   ],
   afterPack: './scripts/after-pack.cjs',

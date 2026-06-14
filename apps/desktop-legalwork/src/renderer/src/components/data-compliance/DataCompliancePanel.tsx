@@ -272,7 +272,7 @@ type ProgressState =
   | { kind: 'completed' }
   | { kind: 'failed'; message: string }
 
-function useComplianceProgress(taskId: string | null, _backendBaseUrl: string): ProgressState {
+function useComplianceProgress(taskId: string | null): ProgressState {
   const [state, setState] = useState<ProgressState>({ kind: 'idle' })
   const abortRef = useRef<AbortController | null>(null)
 
@@ -330,7 +330,7 @@ function useComplianceProgress(taskId: string | null, _backendBaseUrl: string): 
     return () => {
       controller.abort()
     }
-  }, [taskId, _backendBaseUrl])
+  }, [taskId])
 
   return state
 }
@@ -1026,7 +1026,7 @@ export function DataCompliancePanel({
   const [result, setResult] = useState<ComplianceResult | null>(null)
   const [serverStatus, setServerStatus] = useState<DataComplianceStatus | null>({
     ok: false, running: false, installing: false,
-    baseUrl: 'http://127.0.0.1:5100', message: '检测中...'
+    baseUrl: '', message: '检测中...'
   })
   const [statusBusy, setStatusBusy] = useState(false)
   const [outputDir, setOutputDir] = useState(workspaceRoot || '')
@@ -1048,11 +1048,9 @@ export function DataCompliancePanel({
         : { title: '个人信息脱敏', kicker: '个人敏感信息识别、替换与脱敏报告' }
     : sectionMeta[resolvedActiveSection]
   const selectedTaskId = taskId.trim()
-  const baseUrl = serverStatus?.baseUrl || FALLBACK_API_BASE || window.location.origin
   const [progressDismissed, setProgressDismissed] = useState(false)
   const progress = useComplianceProgress(
-    progressDismissed ? null : (selectedTaskId || result?.task_id || null),
-    baseUrl
+    progressDismissed ? null : (selectedTaskId || result?.task_id || null)
   )
   const resultSummary = summarizeResult(result)
 
@@ -1079,7 +1077,7 @@ export function DataCompliancePanel({
         ok: false,
         running: false,
         installing: false,
-        baseUrl: FALLBACK_API_BASE || window.location.origin,
+        baseUrl: '',
         message: text
       })
       setNotice({ tone: 'error', text })
@@ -1093,7 +1091,7 @@ export function DataCompliancePanel({
     setHistoryBusy(true)
     try {
       await ensureServer()
-      const payload = await requestJson<{ items?: ComplianceTask[] }>('/api/history')
+      const payload = await requestJson<{ items?: ComplianceTask[] }>('/data-compliance/tasks')
       const items = Array.isArray(payload.items) ? payload.items : []
       setHistory(items.filter(modeScope === 'desensitize' ? isDesensitizeTask : isReviewTask))
     } catch (error) {
@@ -1116,7 +1114,7 @@ export function DataCompliancePanel({
     if (!options.quiet) setNotice(null)
     try {
       await ensureServer()
-      const payload = await requestJson<ComplianceResult>(`/api/result/${encodeURIComponent(targetId)}`)
+      const payload = await requestJson<ComplianceResult>(`/data-compliance/tasks/${encodeURIComponent(targetId)}`)
       if (payload.error) throw new Error(payload.error)
       setTaskId(targetId)
       setResult(payload)
@@ -1222,7 +1220,7 @@ export function DataCompliancePanel({
     event.stopPropagation()
     if (!id) return
     try {
-      await requestJson<{ ok?: boolean }>(`/api/history/${encodeURIComponent(id)}`, 'DELETE')
+      await requestJson<{ ok?: boolean }>(`/data-compliance/tasks/${encodeURIComponent(id)}`, 'DELETE')
       setHistory((items) => items.filter((item) => taskIdOf(item) !== id))
       if (selectedTaskId === id) {
         setTaskId('')
@@ -1244,9 +1242,36 @@ export function DataCompliancePanel({
     window.open(url, '_blank', 'noreferrer')
   }
 
+  const downloadComplianceFile = async (taskId: string, fileKey: string): Promise<void> => {
+    if (typeof window.dsGui?.downloadDataComplianceFile !== 'function') {
+      setNotice({ tone: 'error', text: '当前环境不支持文件下载。' })
+      return
+    }
+    try {
+      const result = await window.dsGui.downloadDataComplianceFile(taskId, fileKey)
+      if (!result.ok) {
+        throw new Error(result.message || '下载失败')
+      }
+      const bytes = Uint8Array.from(atob(result.dataBase64), (char) => char.charCodeAt(0))
+      const blob = new Blob([bytes], { type: result.contentType })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = result.filename
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      setNotice({
+        tone: 'error',
+        text: error instanceof Error ? `下载失败：${error.message}` : '下载失败。'
+      })
+    }
+  }
+
   const reportTaskId = result?.task_id ?? selectedTaskId
   const isDesensitizeResult = result?.product_type === 'desensitize'
-  const downloadPrefix = isDesensitizeResult ? '/api/desensitize/download' : '/api/download'
 
   const renderSubmitForm = (mode: SubmitMode): ReactElement => {
     const submitTitle = mode === 'review'
@@ -1533,7 +1558,7 @@ export function DataCompliancePanel({
                         <button
                           type="button"
                           disabled={!reportTaskId}
-                          onClick={() => openExternalUrl(`${baseUrl}${downloadPrefix}/${encodeURIComponent(reportTaskId)}/${isDesensitizeResult ? 'desensitization_report' : 'report'}`)}
+                          onClick={() => { if (reportTaskId) void downloadComplianceFile(reportTaskId, isDesensitizeResult ? 'desensitization_report' : 'report') }}
                           className="inline-flex items-center gap-2 rounded-full border border-ds-border bg-ds-card px-3 py-2 text-[12.5px] font-medium text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink disabled:opacity-50"
                         >
                           <Download className="h-4 w-4" />
@@ -1543,7 +1568,7 @@ export function DataCompliancePanel({
                           <button
                             type="button"
                             disabled={!reportTaskId}
-                            onClick={() => openExternalUrl(`${baseUrl}/api/download/${encodeURIComponent(reportTaskId)}/report_md`)}
+                            onClick={() => { if (reportTaskId) void downloadComplianceFile(reportTaskId, 'report_md') }}
                             className="inline-flex items-center gap-2 rounded-full border border-ds-border bg-ds-card px-3 py-2 text-[12.5px] font-medium text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink disabled:opacity-50"
                           >
                             <Download className="h-4 w-4" />
@@ -1555,7 +1580,7 @@ export function DataCompliancePanel({
                             <button
                               type="button"
                               disabled={!reportTaskId}
-                              onClick={() => openExternalUrl(`${baseUrl}${downloadPrefix}/${encodeURIComponent(reportTaskId)}/desensitized_output`)}
+                              onClick={() => { if (reportTaskId) void downloadComplianceFile(reportTaskId, 'desensitized_output') }}
                               className="inline-flex items-center gap-2 rounded-full border border-ds-border bg-ds-card px-3 py-2 text-[12.5px] font-medium text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink disabled:opacity-50"
                             >
                               <Download className="h-4 w-4" />
@@ -1564,7 +1589,7 @@ export function DataCompliancePanel({
                             <button
                               type="button"
                               disabled={!reportTaskId}
-                              onClick={() => openExternalUrl(`${baseUrl}${downloadPrefix}/${encodeURIComponent(reportTaskId)}/subject_mapping_md`)}
+                              onClick={() => { if (reportTaskId) void downloadComplianceFile(reportTaskId, 'subject_mapping_md') }}
                               className="inline-flex items-center gap-2 rounded-full border border-ds-border bg-ds-card px-3 py-2 text-[12.5px] font-medium text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink disabled:opacity-50"
                             >
                               <Download className="h-4 w-4" />
@@ -1576,7 +1601,7 @@ export function DataCompliancePanel({
                             <button
                               type="button"
                               disabled={!reportTaskId}
-                              onClick={() => openExternalUrl(`${baseUrl}/api/download/${encodeURIComponent(reportTaskId)}/remediation`)}
+                              onClick={() => { if (reportTaskId) void downloadComplianceFile(reportTaskId, 'remediation') }}
                               className="inline-flex items-center gap-2 rounded-full border border-ds-border bg-ds-card px-3 py-2 text-[12.5px] font-medium text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink disabled:opacity-50"
                             >
                               <Download className="h-4 w-4" />
@@ -1586,7 +1611,7 @@ export function DataCompliancePanel({
                               <button
                                 type="button"
                                 disabled={!reportTaskId}
-                                onClick={() => openExternalUrl(`${baseUrl}/api/download/${encodeURIComponent(reportTaskId)}/code_suggestions`)}
+                                onClick={() => { if (reportTaskId) void downloadComplianceFile(reportTaskId, 'code_suggestions') }}
                                 className="inline-flex items-center gap-2 rounded-full border border-ds-border bg-ds-card px-3 py-2 text-[12.5px] font-medium text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink disabled:opacity-50"
                               >
                                 <Download className="h-4 w-4" />

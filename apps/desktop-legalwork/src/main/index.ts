@@ -10,11 +10,10 @@ import legalworkLogoPng from '../asset/img/legalwork.png?url'
 import { createAppIcon } from './app-icon'
 import {
   applyLegalworkRuntimePatch,
+  computeLegalworkRuntimeCredentialPatch,
   getActiveAgentApiKey,
   getLegalworkRuntimeSettings,
-  getModelProviderProfile,
   mergeClawSettings,
-  mergeLegalworkRuntimeSettings,
   mergeModelProviderSettings,
   mergeScheduleSettings,
   mergeWriteSettings,
@@ -840,7 +839,6 @@ app.whenReady().then(async () => {
     retentionDays: initial.log.retentionDays
   })
   traceStartup('logger configured')
-  dataComplianceRuntime = new DataComplianceRuntime(app.getAppPath(), logDir, () => store.load())
   scheduleRuntime = createScheduleRuntime({ store, runtimeRequest, logError, powerSaveBlocker })
   scheduleRuntime.sync(initial)
   clawRuntime = createClawRuntime({
@@ -870,35 +868,16 @@ app.whenReady().then(async () => {
     const prev = await store.load()
     const { agents: agentsPatch, provider: providerPatch, ...restPatch } = partial
 
-    // Keep the Legalwork runtime API key in sync with whichever provider the
-    // runtime is actually configured to use. The first-run dialog and Settings
-    // > General only edit the shared/default provider key, but the runtime uses
-    // agents.legalwork.apiKey (override) or the profile selected by
-    // agents.legalwork.providerId. If that active profile has no key, the GUI
-    // keeps prompting for setup and upstream /v1/models fails. Copy the active
-    // provider's key into the runtime override so the configuration "sticks".
+    // Keep the Legalwork runtime API key/base URL in sync with whichever provider
+    // profile the runtime is actually configured to use. Settings > General edits the
+    // active profile's credentials; the runtime override at agents.legalwork.apiKey
+    // should inherit from that profile unless the user explicitly edited the override
+    // in Settings > Agents.
     const mergedProvider = mergeModelProviderSettings(prev.provider, providerPatch)
-    const runtimeBeforePatch = getLegalworkRuntimeSettings(prev)
-    const patchedRuntime = agentsPatch?.legalwork
-      ? mergeLegalworkRuntimeSettings(runtimeBeforePatch, agentsPatch.legalwork)
-      : runtimeBeforePatch
-    const activeProviderProfile = getModelProviderProfile(
-      { ...prev, provider: mergedProvider },
-      patchedRuntime.providerId
-    )
-    const prevAgentKey = runtimeBeforePatch.apiKey.trim()
-    const patchedAgentKey = agentsPatch?.legalwork?.apiKey?.trim() ?? ''
-    const inheritedAgentKey =
-      patchedAgentKey ||
-      prevAgentKey ||
-      activeProviderProfile.apiKey.trim() ||
-      mergedProvider.apiKey.trim()
-    const agentsPatchWithKey: AppSettingsPatch['agents'] = {
-      legalwork: {
-        ...(agentsPatch?.legalwork ?? {}),
-        ...(inheritedAgentKey ? { apiKey: inheritedAgentKey } : {})
-      }
-    }
+    const agentsPatchWithKey = computeLegalworkRuntimeCredentialPatch(prev, {
+      agents: agentsPatch,
+      provider: providerPatch
+    })
 
     const next = normalizeAppSettings({
       ...applyLegalworkRuntimePatch(prev, agentsPatchWithKey.legalwork),
@@ -970,7 +949,6 @@ app.whenReady().then(async () => {
     fetchUpstreamModels: fetchModels,
     getClawRuntime: () => clawRuntime,
     getScheduleRuntime: () => scheduleRuntime,
-    getDataComplianceRuntime: () => dataComplianceRuntime,
     startFeishuInstallQrcode,
     pollFeishuInstall,
     startWeixinInstallQrcode,

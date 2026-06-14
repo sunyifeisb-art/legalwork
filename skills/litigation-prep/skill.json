@@ -1,0 +1,39 @@
+{
+  "name": "litigation-prep",
+  "description": "公司诉讼案件指导专家：面向中国公司、股权、合同、合伙、劳动等纠纷的诉讼准备 Skill，提供案由识别、请求权基础分析、构成要件事实拆解、证据清单与诉讼路径建议。",
+  "version": "0.2.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/litigate",
+      "/诉讼准备",
+      "/公司诉讼",
+      "/案由分析"
+    ],
+    "promptPatterns": [
+      "案由|请求权|构成要件|证据清单|诉讼准备|公司诉讼|股权纠纷|合伙纠纷|股东纠纷|技术服务合同|买卖合同|不当得利|网络服务合同|知识产权合同|劳动争议|投资合同|民间借贷|准备起诉|能不能告|怎么起诉|证据够不够"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".doc",
+      ".txt",
+      ".md",
+      ".png",
+      ".jpg",
+      ".jpeg"
+    ]
+  },
+  "allowedTools": [
+    "knowledge_search",
+    "case_create",
+    "material_add",
+    "redact"
+  ],
+  "assets": [
+    "case-database.md",
+    "case-intake-template.md",
+    "litigation-report-template.md"
+  ],
+  "priority": 10
+}

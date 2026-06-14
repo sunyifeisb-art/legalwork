@@ -90,7 +90,7 @@ export function normalizeAppBehaviorSettings(
   }
 }
 
-function shouldMigrateLegacySettings(settings: AppSettingsV1): boolean {
+export function shouldMigrateLegacySettings(settings: AppSettingsV1): boolean {
   const raw = settings as AppSettingsV1 & {
     agentProvider?: unknown
     deepseek?: unknown
