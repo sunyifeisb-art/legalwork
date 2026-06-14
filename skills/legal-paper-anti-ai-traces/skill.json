@@ -1,0 +1,26 @@
+{
+  "name": "legal-paper-anti-ai-traces",
+  "description": "法律论文去AI痕迹：润色论文去除AI生成痕迹",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/polish"
+    ],
+    "promptPatterns": [
+      "论文润色|去AI痕迹|学术润色|论文修改"
+    ],
+    "fileTypes": [
+      ".md",
+      ".docx"
+    ]
+  },
+  "allowedTools": [
+    "read",
+    "write",
+    "edit",
+    "bash"
+  ],
+  "assets": [],
+  "priority": 0
+}

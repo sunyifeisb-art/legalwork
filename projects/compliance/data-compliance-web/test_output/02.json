@@ -1,0 +1,84 @@
+{
+  "type": "unknown",
+  "name": "未知",
+  "score": 0,
+  "matched_keywords": [],
+  "default_review_paths": [
+    "disclosure_check",
+    "lawful_basis_check",
+    "third_party_sharing_check",
+    "purpose_scope_check",
+    "sensitive_personal_info_check",
+    "field_purpose_legal_basis_check",
+    "consent_feature_coupling_check",
+    "consistency_check"
+  ],
+  "candidates": [
+    {
+      "type": "privacy_policy",
+      "name": "隐私政策",
+      "score": 0,
+      "matched_keywords": [],
+      "default_review_paths": [
+        "disclosure_check",
+        "third_party_sharing_check",
+        "outbound_transfer_check",
+        "lawful_basis_check",
+        "purpose_scope_check",
+        "sensitive_personal_info_check",
+        "field_purpose_legal_basis_check",
+        "consent_feature_coupling_check",
+        "retention_deletion_check",
+        "consistency_check"
+      ]
+    },
+    {
+      "type": "contract",
+      "name": "合同/协议",
+      "score": 0,
+      "matched_keywords": [],
+      "default_review_paths": [
+        "contract_obligation_check",
+        "third_party_sharing_check",
+        "lawful_basis_check",
+        "sensitive_personal_info_check",
+        "field_purpose_legal_basis_check",
+        "consent_feature_coupling_check",
+        "retention_deletion_check",
+        "consistency_check"
+      ]
+    },
+    {
+      "type": "data_export",
+      "name": "数据出境材料",
+      "score": 0,
+      "matched_keywords": [],
+      "default_review_paths": [
+        "outbound_transfer_check",
+        "disclosure_check",
+        "lawful_basis_check",
+        "purpose_scope_check",
+        "sensitive_personal_info_check",
+        "field_purpose_legal_basis_check",
+        "consent_feature_coupling_check",
+        "consistency_check"
+      ]
+    },
+    {
+      "type": "generic_compliance",
+      "name": "通用合规文本",
+      "score": 0,
+      "matched_keywords": [],
+      "default_review_paths": [
+        "disclosure_check",
+        "lawful_basis_check",
+        "third_party_sharing_check",
+        "purpose_scope_check",
+        "sensitive_personal_info_check",
+        "field_purpose_legal_basis_check",
+        "consent_feature_coupling_check",
+        "consistency_check"
+      ]
+    }
+  ]
+}

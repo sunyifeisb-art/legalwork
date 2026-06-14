@@ -1,0 +1,31 @@
+{
+  "source": "ima",
+  "stage": "temporary_training_data_only",
+  "note": "当前阶段仅将已加入的 IMA 知识库作为训练/迭代数据库；后续用户会提供正式数据库，再切换为正式数据源。",
+  "knowledge_bases": [
+    {
+      "knowledge_base_name": "数据合规知识库",
+      "knowledge_base_id": "wqRHNg8_jNf10tLGQK4BDJ312LJIQvsTfzrOTA2HMEI=",
+      "discovered_at": "2026-04-04T14:21:00+08:00",
+      "status": "discovered_but_content_access_blocked",
+      "role_type": "普通成员",
+      "notes": [
+        "已通过 search_knowledge_base 成功定位知识库。",
+        "当前凭证下对 get_knowledge_list / search_knowledge / get_knowledge_base 返回 220030 没有权限。",
+        "在内容读取权限打通前，不应把该知识库内容当作已成功接入。"
+      ]
+    },
+    {
+      "knowledge_base_name": "网络安全与数据合规",
+      "knowledge_base_id": "qJcRCerFHwcA7VL-BWRmcaNdGBDTJMM117mmPi4NF38=",
+      "discovered_at": "2026-04-04T14:24:00+08:00",
+      "status": "discovered_but_content_access_blocked",
+      "role_type": "普通成员",
+      "notes": [
+        "已通过 search_knowledge_base 成功定位知识库。",
+        "当前凭证下对 get_knowledge_list / search_knowledge / get_knowledge_base 返回 220030 没有权限。",
+        "在内容读取权限打通前，不应把该知识库内容当作已成功接入。"
+      ]
+    }
+  ]
+}

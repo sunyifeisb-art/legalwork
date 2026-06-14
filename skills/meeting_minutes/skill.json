@@ -1,0 +1,23 @@
+{
+  "name": "meeting-minutes",
+  "description": "会议记录：法律会议/案件讨论会的结构化记录与待办追踪",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/meeting"
+    ],
+    "promptPatterns": [
+      "会议记录|会议纪要|案件讨论|案情沟通会|会议录音"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RiskReport",
+  "type": "object",
+  "required": ["document_name", "review_scope", "summary", "items"],
+  "properties": {
+    "document_name": {"type": "string"},
+    "review_scope": {"type": "string"},
+    "summary": {"type": "string"},
+    "auto_recheck_triggered": {"type": "boolean"},
+    "auto_recheck_summary": {"type": "string"},
+    "auto_recheck_stats": {
+      "type": "object",
+      "properties": {
+        "triggered": {"type": "integer"},
+        "maintained": {"type": "integer"},
+        "need_more_support": {"type": "integer"}
+      }
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["risk_point", "risk_level", "legal_basis", "reason", "suggestion", "auto_recheck"],
+        "properties": {
+          "risk_point": {"type": "string"},
+          "risk_level": {"type": "string", "enum": ["高风险", "中风险", "建议优化"]},
+          "legal_basis": {"type": "string"},
+          "reason": {"type": "string"},
+          "suggestion": {"type": "string"},
+          "auto_recheck": {"type": "boolean"},
+          "rewritten_clause": {"type": "string"},
+          "llm_enhanced": {"type": "boolean"},
+          "auto_recheck_status": {"type": "string"},
+          "auto_recheck_notes": {"type": "string"},
+          "auto_recheck_decision": {"type": "string"},
+          "legal_basis_source": {"type": "string"},
+          "theme_name": {"type": "string"},
+          "corroboration_count": {"type": "integer"},
+          "supporting_regulations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": {"type": "string"},
+                "standard_code": {"type": "string"},
+                "doc_category": {"type": "string"},
+                "effect_level": {"type": "string"},
+                "relative_path": {"type": "string"},
+                "match_keywords": {
+                  "type": "array",
+                  "items": {"type": "string"}
+                },
+                "match_score": {"type": "integer"},
+                "snippet": {"type": "string"}
+              }
+            }
+          },
+          "related_risk_points": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
+        }
+      }
+    },
+    "local_regulation_db": {
+      "type": "object",
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "db_name": {"type": "string"},
+        "matched_items": {"type": "integer"},
+        "unmatched_items": {"type": "integer"},
+        "total_documents": {"type": "integer"},
+        "searchable_documents": {"type": "integer"},
+        "updated_at": {"type": "string"}
+      }
+    },
+    "risk_clusters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "theme_id": {"type": "string"},
+          "theme_name": {"type": "string"},
+          "item_count": {"type": "integer"},
+          "high_risk_count": {"type": "integer"},
+          "medium_risk_count": {"type": "integer"},
+          "advisory_count": {"type": "integer"},
+          "risk_points": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
+        }
+      }
+    }
+  }
+}

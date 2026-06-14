@@ -1,0 +1,23 @@
+{
+  "name": "due-diligence",
+  "description": "尽职调查：进行法律尽职调查分析",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/duediligence"
+    ],
+    "promptPatterns": [
+      "尽职调查|尽调|DD|法律尽调|尽职审查"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

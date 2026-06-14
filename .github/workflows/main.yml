@@ -1,0 +1,88 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  LEGALWORK_APP_VERSION: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || '' }}
+
+jobs:
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+        working-directory: apps/desktop-legalwork
+      - run: npm run build
+        working-directory: apps/desktop-legalwork
+      - run: npm run dist:mac:x64:dmg
+        working-directory: apps/desktop-legalwork
+      - run: npm run dist:mac:arm64:dmg
+        working-directory: apps/desktop-legalwork
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mac-builds
+          path: apps/desktop-legalwork/dist/*.dmg
+
+  build-win:
+    runs-on: windows-latest
+    steps:
+      - name: Enable long paths for Git checkout
+        run: git config --global core.longpaths true
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+        working-directory: apps/desktop-legalwork
+      - run: npm run build
+        working-directory: apps/desktop-legalwork
+      - run: npm run dist:win
+        working-directory: apps/desktop-legalwork
+      - uses: actions/upload-artifact@v4
+        with:
+          name: win-builds
+          path: apps/desktop-legalwork/dist/*.exe
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+        working-directory: apps/desktop-legalwork
+      - run: npm run build
+        working-directory: apps/desktop-legalwork
+      - run: npm run dist:linux
+        working-directory: apps/desktop-legalwork
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-builds
+          path: apps/desktop-legalwork/dist/*.AppImage
+
+  release:
+    needs: [build-mac, build-win, build-linux]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/download-artifact@v4
+      - name: Upload to Release
+        run: |
+          gh release view ${{ github.ref_name }} --repo ${{ github.repository }} >/dev/null 2>&1 || \
+            gh release create ${{ github.ref_name }} --repo ${{ github.repository }} --generate-notes
+          gh release upload ${{ github.ref_name }} \
+            mac-builds/*.dmg win-builds/*.exe linux-builds/*.AppImage \
+            --repo ${{ github.repository }} --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

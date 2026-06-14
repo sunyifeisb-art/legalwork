@@ -1,0 +1,23 @@
+{
+  "name": "legal-concept-comprehension",
+  "description": "法律概念理解：深度分析法律概念的内涵和外延",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/concept"
+    ],
+    "promptPatterns": [
+      "法律概念|概念分析|概念理解|法理分析"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

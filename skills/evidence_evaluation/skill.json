@@ -1,0 +1,23 @@
+{
+  "name": "evidence-evaluation",
+  "description": "证据评估：对证据三性进行系统认证和证明力评估",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/evidenteval"
+    ],
+    "promptPatterns": [
+      "证据评估|证据三性|真实性|合法性|关联性|证明力"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

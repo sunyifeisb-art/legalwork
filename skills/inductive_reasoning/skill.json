@@ -1,0 +1,23 @@
+{
+  "name": "inductive-reasoning",
+  "description": "归纳推理：从多个案例中归纳一般性法律原则",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/induce"
+    ],
+    "promptPatterns": [
+      "归纳|归纳推理|从案例中总结|共同规律"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

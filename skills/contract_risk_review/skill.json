@@ -1,0 +1,27 @@
+{
+  "name": "contract-risk-review",
+  "description": "合同风险审查：审查合同风险并输出修改建议",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/contract"
+    ],
+    "promptPatterns": [
+      "合同审查|合同风险|合同评估|风险条款|审合同"
+    ],
+    "fileTypes": [
+      ".docx",
+      ".pdf",
+      ".md"
+    ]
+  },
+  "allowedTools": [
+    "read",
+    "write",
+    "edit",
+    "bash"
+  ],
+  "assets": [],
+  "priority": 0
+}

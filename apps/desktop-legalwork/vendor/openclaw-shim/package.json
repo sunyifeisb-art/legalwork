@@ -1,0 +1,12 @@
+{
+  "name": "openclaw",
+  "version": "2026.5.18",
+  "description": "DeepSeek GUI compatibility shim for @tencent-weixin/openclaw-weixin peer imports.",
+  "type": "module",
+  "exports": {
+    "./plugin-sdk/account-id": "./plugin-sdk/account-id.js",
+    "./plugin-sdk/infra-runtime": "./plugin-sdk/infra-runtime.js",
+    "./plugin-sdk/config-runtime": "./plugin-sdk/config-runtime.js",
+    "./plugin-sdk/channel-config-schema": "./plugin-sdk/channel-config-schema.js"
+  }
+}

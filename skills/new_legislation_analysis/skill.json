@@ -1,0 +1,23 @@
+{
+  "name": "new-legislation-analysis",
+  "description": "新法分析：新法出台后的分析文章撰写与业务影响评估",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/newlaw"
+    ],
+    "promptPatterns": [
+      "新法|新法规|新出台|立法动态|法规解读|法律修订"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

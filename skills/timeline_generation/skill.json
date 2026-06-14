@@ -1,0 +1,23 @@
+{
+  "name": "timeline-generation",
+  "description": "时间线生成：生成案件事实时间线",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/timeline"
+    ],
+    "promptPatterns": [
+      "时间线|时间轴|事件时间|案件时间线"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

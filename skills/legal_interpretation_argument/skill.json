@@ -1,0 +1,23 @@
+{
+  "name": "legal-interpretation-argument",
+  "description": "法律解释论证：多维度系统性法律解释分析",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/interpret"
+    ],
+    "promptPatterns": [
+      "法律解释|解释论证|文义解释|体系解释|目的解释"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

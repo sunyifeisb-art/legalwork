@@ -1,0 +1,23 @@
+{
+  "name": "argument-strength-evaluation",
+  "description": "论证强度评估：评估法律论证的说服力和可靠性",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/argstrength"
+    ],
+    "promptPatterns": [
+      "论证强度|论证评估|说服力|论证评价"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

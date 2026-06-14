@@ -1,0 +1,23 @@
+{
+  "name": "systematic-interpretation",
+  "description": "体系解释：从法律体系位置进行规范解释",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/systemic"
+    ],
+    "promptPatterns": [
+      "体系解释|系统解释|内部体系|外部体系|法律体系"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

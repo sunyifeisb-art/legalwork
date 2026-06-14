@@ -1,0 +1,665 @@
+/* ===== ComplianceAI Animation System ===== */
+
+/* ---- Easing Variables ---- */
+:root {
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ---- Keyframes ---- */
+@keyframes ca-fadeInUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ca-fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes ca-scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes ca-slideInRight {
+  from { opacity: 0; transform: translateX(28px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes ca-slideInLeft {
+  from { opacity: 0; transform: translateX(-28px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes ca-countPulse {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+@keyframes ca-ripple {
+  to   { transform: scale(4); opacity: 0; }
+}
+
+@keyframes ca-spin {
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes ca-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+@keyframes ca-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.5; }
+}
+
+@keyframes ca-toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(16px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes ca-toastOut {
+  from { opacity: 1; transform: translateX(-50%) translateY(0); }
+  to   { opacity: 0; transform: translateX(-50%) translateY(16px); }
+}
+
+@keyframes ca-progressShine {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ---- Entrance Animation Classes ---- */
+.ca-entrance {
+  opacity: 0;
+  animation: ca-fadeInUp 0.65s var(--ease-out-expo) forwards;
+}
+
+.ca-entrance-scale {
+  opacity: 0;
+  animation: ca-scaleIn 0.55s var(--ease-out-expo) forwards;
+}
+
+.ca-entrance-right {
+  opacity: 0;
+  animation: ca-slideInRight 0.6s var(--ease-out-expo) forwards;
+}
+
+.ca-entrance-left {
+  opacity: 0;
+  animation: ca-slideInLeft 0.6s var(--ease-out-expo) forwards;
+}
+
+/* Stagger delays */
+.ca-d1  { animation-delay: 0.06s; }
+.ca-d2  { animation-delay: 0.12s; }
+.ca-d3  { animation-delay: 0.18s; }
+.ca-d4  { animation-delay: 0.24s; }
+.ca-d5  { animation-delay: 0.30s; }
+.ca-d6  { animation-delay: 0.36s; }
+.ca-d7  { animation-delay: 0.42s; }
+.ca-d8  { animation-delay: 0.48s; }
+
+/* ---- Scroll-Triggered Animation ---- */
+.ca-scroll {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.55s var(--ease-out-expo), transform 0.55s var(--ease-out-expo);
+}
+
+.ca-scroll.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.ca-scroll-right {
+  opacity: 0;
+  transform: translateX(24px);
+  transition: opacity 0.55s var(--ease-out-expo), transform 0.55s var(--ease-out-expo);
+}
+
+.ca-scroll-right.is-visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Stagger children when parent becomes visible */
+.ca-stagger-children > .ca-scroll,
+.ca-stagger-children > .ca-scroll-right {
+  transition-delay: calc(var(--ca-index, 0) * 0.08s);
+}
+
+/* ---- Card Hover Enhancements ---- */
+.ca-card-hover {
+  transition: transform 0.25s var(--ease-out-quart),
+              box-shadow 0.25s var(--ease-out-quart),
+              border-color 0.2s ease;
+}
+
+.ca-card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.1);
+}
+
+body.dark .ca-card-hover:hover {
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.35);
+}
+
+/* ---- Button Micro-interactions ---- */
+.ca-btn {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.12s var(--ease-out-quart),
+              background 0.18s ease,
+              border-color 0.18s ease,
+              box-shadow 0.18s ease,
+              color 0.18s ease;
+}
+
+.ca-btn:active {
+  transform: scale(0.97);
+}
+
+/* Ripple effect container */
+.ca-btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ca-btn.ca-ripple-active::after {
+  animation: ca-ripple 0.5s linear forwards;
+}
+
+/* ---- Smooth Fold / Collapse ---- */
+.ca-fold {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s var(--ease-out-quart),
+              opacity 0.3s var(--ease-out-quart);
+  opacity: 0;
+}
+
+.ca-fold.open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.ca-fold > .ca-fold-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Fallback for non-grid browsers: keep original behavior */
+@supports not (grid-template-rows: 0fr) {
+  .ca-fold { display: none; opacity: 1; }
+  .ca-fold.open { display: block; }
+}
+
+/* ---- Tab Panel Transition ---- */
+.ca-tab-panel {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s var(--ease-out-quart), transform 0.3s var(--ease-out-quart);
+}
+
+.ca-tab-panel.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---- Toast Enhancement ---- */
+#downloadToast.show {
+  animation: ca-toastIn 0.3s var(--ease-out-expo) forwards;
+}
+
+#downloadToast.hiding {
+  animation: ca-toastOut 0.25s var(--ease-out-quart) forwards;
+}
+
+/* ---- Upload Zone Enhancement ---- */
+.upload-zone {
+  transition: border-color 0.2s ease,
+              background 0.2s ease,
+              transform 0.25s var(--ease-out-quart),
+              box-shadow 0.25s var(--ease-out-quart);
+}
+
+.upload-zone.drag-active {
+  transform: scale(1.01);
+  box-shadow: 0 0 0 4px rgba(0, 109, 106, 0.1);
+}
+
+/* ---- Progress Bar Enhancement ---- */
+.progress-fill {
+  background: linear-gradient(90deg, var(--teal), #009e99, var(--teal));
+  background-size: 200% 100%;
+  animation: ca-progressShine 1.5s linear infinite;
+}
+
+/* ---- Sidebar Active Indicator ---- */
+.side-nav-list a[data-nav] {
+  position: relative;
+}
+
+.side-nav-list a[data-nav]::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  background: currentColor;
+  border-radius: 0 2px 2px 0;
+  transform: scaleY(0);
+  transition: transform 0.3s var(--ease-out-expo);
+}
+
+.side-nav-list a[data-nav].active::before {
+  transform: scaleY(1);
+}
+
+/* ---- Counter Animation ---- */
+.ca-counter {
+  display: inline-block;
+  transition: transform 0.2s var(--ease-out-quart);
+}
+
+.ca-counter.ca-pop {
+  animation: ca-countPulse 0.35s var(--ease-out-quart);
+}
+
+/* ---- Loading Spinner ---- */
+.animate-spin {
+  animation: ca-spin 1s linear infinite;
+}
+
+/* ---- Shake for Error ---- */
+.ca-shake {
+  animation: ca-shake 0.4s var(--ease-out-quart);
+}
+
+/* ---- Preview Sidebar ---- */
+.preview-sidebar {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.preview-backdrop {
+  transition: opacity 0.3s ease;
+}
+
+/* ---- Mobile Sidebar ---- */
+.sidebar {
+  transition: transform 0.3s var(--ease-out-expo);
+}
+
+.sidebar-backdrop {
+  transition: opacity 0.25s ease;
+}
+
+/* ---- Dark mode smooth transition helper ---- */
+.ca-theme-transition {
+  transition: background-color 0.35s ease,
+              border-color 0.35s ease,
+              color 0.25s ease,
+              box-shadow 0.35s ease;
+}
+
+/* ---- Input Focus Glow ---- */
+.field-input:focus,
+.text-input-area:focus {
+  box-shadow: 0 0 0 4px rgba(0, 109, 106, 0.12);
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* ---- Risk Item Left Border Glow on Hover ---- */
+.risk-item {
+  transition: box-shadow 0.25s var(--ease-out-quart),
+              transform 0.2s var(--ease-out-quart),
+              border-color 0.2s ease;
+}
+
+.risk-item:hover {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.1);
+}
+
+body.dark .risk-item:hover {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}
+
+/* ---- Cluster Card Hover ---- */
+.cluster-card {
+  transition: transform 0.25s var(--ease-out-quart),
+              box-shadow 0.25s var(--ease-out-quart),
+              border-color 0.2s ease;
+}
+
+/* ---- Evidence Card Hover ---- */
+.ev-card {
+  transition: box-shadow 0.25s var(--ease-out-quart),
+              transform 0.2s var(--ease-out-quart);
+}
+
+.ev-card:hover {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+body.dark .ev-card:hover {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}
+
+/* ---- Task Card Hover ---- */
+.task-card {
+  transition: box-shadow 0.25s var(--ease-out-quart),
+              transform 0.2s var(--ease-out-quart),
+              border-color 0.2s ease;
+}
+
+.task-card:hover {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+body.dark .task-card:hover {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}
+
+/* ---- Suggestion / Analysis / Rewrite Boxes ---- */
+.suggestion-box,
+.analysis-box,
+.rewrite-box {
+  transition: box-shadow 0.25s var(--ease-out-quart),
+              transform 0.2s var(--ease-out-quart);
+}
+
+.suggestion-box:hover,
+.analysis-box:hover,
+.rewrite-box:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+}
+
+body.dark .suggestion-box:hover,
+body.dark .analysis-box:hover,
+body.dark .rewrite-box:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+/* ---- Locate Button ---- */
+.locate-btn {
+  transition: background 0.2s ease,
+              border-color 0.2s ease,
+              color 0.2s ease,
+              transform 0.15s var(--ease-out-quart),
+              box-shadow 0.2s ease;
+}
+
+.locate-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.locate-btn:active {
+  transform: scale(0.97);
+}
+
+/* ---- History Item Hover ---- */
+.history-item {
+  transition: transform 0.2s var(--ease-out-quart),
+              box-shadow 0.2s var(--ease-out-quart),
+              border-color 0.2s ease,
+              background 0.2s ease;
+}
+
+.history-item:hover {
+  transform: translateX(3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  border-color: var(--teal);
+}
+
+body.dark .history-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* ---- Product Card Hover ---- */
+.product-card {
+  transition: transform 0.25s var(--ease-out-quart),
+              border-color 0.2s ease,
+              background 0.2s ease,
+              box-shadow 0.25s var(--ease-out-quart);
+}
+
+.product-card:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+body.dark .product-card:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+
+/* ---- Feature Item Hover ---- */
+.feature-item {
+  transition: transform 0.25s var(--ease-out-quart),
+              box-shadow 0.25s var(--ease-out-quart),
+              border-color 0.2s ease;
+}
+
+.feature-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border-color: var(--teal);
+}
+
+body.dark .feature-item:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+/* ---- File Card ---- */
+.file-card {
+  transition: transform 0.2s var(--ease-out-quart),
+              box-shadow 0.2s var(--ease-out-quart);
+}
+
+.file-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* ---- Overview Card ---- */
+.ov-card {
+  transition: transform 0.25s var(--ease-out-quart),
+              box-shadow 0.25s var(--ease-out-quart);
+}
+
+.ov-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+}
+
+body.dark .ov-card:hover {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+/* ---- Pack Section Hover ---- */
+.pack-section {
+  transition: transform 0.2s var(--ease-out-quart),
+              box-shadow 0.2s var(--ease-out-quart);
+}
+
+.pack-section:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+body.dark .pack-section:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* ---- Modal ---- */
+.modal-backdrop {
+  transition: opacity 0.25s ease;
+}
+
+.modal-box {
+  transition: transform 0.35s var(--ease-out-expo), opacity 0.3s ease;
+  transform: scale(0.96);
+  opacity: 0;
+}
+
+.modal-backdrop.show .modal-box {
+  transform: scale(1);
+  opacity: 1;
+}
+
+/* ---- Reg Card Hover ---- */
+.reg-card {
+  transition: transform 0.2s var(--ease-out-quart),
+              border-color 0.2s ease,
+              box-shadow 0.2s ease;
+}
+
+.reg-card:hover {
+  transform: translateX(3px);
+  border-color: var(--text-primary);
+}
+
+/* ---- DL Link Hover ---- */
+.dl-link {
+  transition: transform 0.18s var(--ease-out-quart),
+              background 0.2s ease,
+              border-color 0.2s ease,
+              color 0.2s ease;
+}
+
+.dl-link:hover {
+  transform: translateX(3px);
+}
+
+/* ---- Back Prev Button ---- */
+.back-prev {
+  transition: transform 0.15s var(--ease-out-quart),
+              background 0.2s ease;
+}
+
+.back-prev:active {
+  transform: scale(0.98);
+}
+
+/* ---- Fold Toggle Icon ---- */
+.fold-icon {
+  transition: transform 0.25s var(--ease-out-quart);
+}
+
+/* ---- Risk Chevron ---- */
+.risk-chevron {
+  transition: transform 0.25s var(--ease-out-quart);
+}
+
+/* ---- Toggle Indicator Fix ---- */
+.toggle-indicator {
+  transition: transform 0.35s var(--ease-out-expo), background 0.3s ease !important;
+}
+
+/* ---- Status Dot Pulse ---- */
+.status-dot {
+  animation: ca-pulse 2.5s ease-in-out infinite;
+}
+
+/* ---- Checkpoint Dot ---- */
+.checkpoint-dot {
+  transition: background 0.3s ease, transform 0.3s var(--ease-out-quart);
+}
+
+.checkpoint-dot.done {
+  transform: scale(1.15);
+}
+
+/* ===== Reduced Motion ===== */
+@media (prefers-reduced-motion: reduce) {
+  .ca-entrance,
+  .ca-entrance-scale,
+  .ca-entrance-right,
+  .ca-entrance-left {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .ca-scroll,
+  .ca-scroll-right {
+    transition: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .ca-card-hover,
+  .ca-btn,
+  .risk-item,
+  .cluster-card,
+  .ev-card,
+  .task-card,
+  .ov-card,
+  .feature-item,
+  .history-item,
+  .product-card,
+  .file-card,
+  .pack-section,
+  .reg-card,
+  .locate-btn,
+  .dl-link,
+  .back-prev {
+    transition: none !important;
+    transform: none !important;
+  }
+
+  .ca-card-hover:hover,
+  .risk-item:hover,
+  .cluster-card:hover,
+  .ev-card:hover,
+  .task-card:hover,
+  .ov-card:hover,
+  .feature-item:hover,
+  .history-item:hover,
+  .product-card:hover,
+  .file-card:hover,
+  .pack-section:hover,
+  .reg-card:hover,
+  .locate-btn:hover {
+    transform: none !important;
+  }
+
+  .ca-fold {
+    transition: none;
+  }
+
+  .preview-sidebar,
+  .sidebar,
+  .sidebar-backdrop,
+  .modal-backdrop,
+  .modal-box {
+    transition: none !important;
+  }
+
+  .status-dot {
+    animation: none;
+  }
+
+  .progress-fill {
+    animation: none;
+  }
+}

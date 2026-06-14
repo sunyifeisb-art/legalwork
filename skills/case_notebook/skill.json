@@ -1,0 +1,23 @@
+{
+  "name": "case-notebook",
+  "description": "办案手记：案件核心工作底稿的全流程生成与管理",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/notebook"
+    ],
+    "promptPatterns": [
+      "办案手记|工作底稿|案件底稿|案件笔记|办案笔记"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

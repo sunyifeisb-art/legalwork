@@ -1,0 +1,23 @@
+{
+  "name": "legal-case-analysis",
+  "description": "案情分析：对案件进行综合分析",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/analyze"
+    ],
+    "promptPatterns": [
+      "案情分析|案件分析|综合分析|诉讼分析"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

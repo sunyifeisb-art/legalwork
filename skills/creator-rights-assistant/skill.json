@@ -1,0 +1,23 @@
+{
+  "name": "creator-rights-assistant",
+  "description": "创作者权益助手：为创作者提供知识产权保护",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/creator"
+    ],
+    "promptPatterns": [
+      "创作者权益|知识产权|版权|著作权|侵权维权"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

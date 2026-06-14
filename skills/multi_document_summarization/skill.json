@@ -1,0 +1,28 @@
+{
+  "name": "multi-document-summarization",
+  "description": "多文档摘要：跨文档综合事实摘要和交叉引用",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/multisum"
+    ],
+    "promptPatterns": [
+      "多文档|综合摘要|交叉引用|文档汇总"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".md",
+      ".txt"
+    ]
+  },
+  "allowedTools": [
+    "read",
+    "write",
+    "edit",
+    "bash"
+  ],
+  "assets": [],
+  "priority": 0
+}

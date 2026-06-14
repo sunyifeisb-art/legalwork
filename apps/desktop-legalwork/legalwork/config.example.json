@@ -1,0 +1,197 @@
+{
+  "serve": {
+    "host": "127.0.0.1",
+    "port": 8899,
+    "dataDir": "~/.legalwork/legalwork",
+    "runtimeToken": "",
+    "apiKey": "",
+    "baseUrl": "https://api.deepseek.com/beta",
+    "model": "deepseek-v4-pro",
+    "approvalPolicy": "auto",
+    "sandboxMode": "workspace-write",
+    "tokenEconomyMode": false,
+    "tokenEconomy": {
+      "enabled": false,
+      "compressToolDescriptions": true,
+      "compressToolResults": true,
+      "conciseResponses": true,
+      "historyHygiene": {
+        "maxToolResultLines": 320,
+        "maxToolResultBytes": 32768,
+        "maxToolResultTokens": 8000,
+        "maxToolArgumentStringBytes": 8192,
+        "maxToolArgumentStringTokens": 2000,
+        "maxArrayItems": 80
+      }
+    },
+    "insecure": false,
+    "storage": {
+      "backend": "hybrid"
+    }
+  },
+  "contextCompaction": {
+    "defaultSoftThreshold": 16000,
+    "defaultHardThreshold": 24000,
+    "summaryMode": "heuristic",
+    "summaryTimeoutMs": 15000,
+    "summaryMaxTokens": 1200,
+    "summaryInputMaxBytes": 98304
+  },
+  "models": {
+    "profiles": {
+      "deepseek-v4-pro": {
+        "contextWindowTokens": 1000000,
+        "contextCompaction": {
+          "softThreshold": 980000,
+          "hardThreshold": 990000
+        },
+        "inputModalities": ["text"],
+        "outputModalities": ["text"],
+        "supportsToolCalling": true,
+        "messageParts": ["text"]
+      },
+      "deepseek-v4-flash": {
+        "aliases": ["deepseek-chat", "deepseek-reasoner"],
+        "contextWindowTokens": 1000000,
+        "contextCompaction": {
+          "softThreshold": 980000,
+          "hardThreshold": 990000
+        },
+        "inputModalities": ["text"],
+        "outputModalities": ["text"],
+        "supportsToolCalling": true,
+        "messageParts": ["text"]
+      }
+    }
+  },
+  "capabilities": {
+    "mcp": {
+      "enabled": true,
+      "servers": {
+        "pkulaw-law-keyword": {
+          "enabled": false,
+          "transport": "streamable-http",
+          "url": "https://apim-gw.pkulaw.com/law-keyword/mcp",
+          "headers": { "Authorization": "Bearer ${PKULAW_MCP_TOKEN}" },
+          "trustScope": "user",
+          "timeoutMs": 30000
+        },
+        "pkulaw-law-semantic": {
+          "enabled": false,
+          "transport": "streamable-http",
+          "url": "https://apim-gw.pkulaw.com/law-semantic/mcp",
+          "headers": { "Authorization": "Bearer ${PKULAW_MCP_TOKEN}" },
+          "trustScope": "user",
+          "timeoutMs": 30000
+        },
+        "pkulaw-case-keyword": {
+          "enabled": false,
+          "transport": "streamable-http",
+          "url": "https://apim-gw.pkulaw.com/case-keyword/mcp",
+          "headers": { "Authorization": "Bearer ${PKULAW_MCP_TOKEN}" },
+          "trustScope": "user",
+          "timeoutMs": 30000
+        },
+        "pkulaw-case-semantic": {
+          "enabled": false,
+          "transport": "streamable-http",
+          "url": "https://apim-gw.pkulaw.com/case-semantic/mcp",
+          "headers": { "Authorization": "Bearer ${PKULAW_MCP_TOKEN}" },
+          "trustScope": "user",
+          "timeoutMs": 30000
+        },
+        "pkulaw-fatiao": {
+          "enabled": false,
+          "transport": "streamable-http",
+          "url": "https://apim-gw.pkulaw.com/fatiao/mcp",
+          "headers": { "Authorization": "Bearer ${PKULAW_MCP_TOKEN}" },
+          "trustScope": "user",
+          "timeoutMs": 30000
+        },
+        "pkulaw-law-recognition": {
+          "enabled": false,
+          "transport": "streamable-http",
+          "url": "https://apim-gw.pkulaw.com/law-recognition/mcp",
+          "headers": { "Authorization": "Bearer ${PKULAW_MCP_TOKEN}" },
+          "trustScope": "user",
+          "timeoutMs": 30000
+        },
+        "pkulaw-case-number": {
+          "enabled": false,
+          "transport": "streamable-http",
+          "url": "https://apim-gw.pkulaw.com/case-number/mcp",
+          "headers": { "Authorization": "Bearer ${PKULAW_MCP_TOKEN}" },
+          "trustScope": "user",
+          "timeoutMs": 30000
+        },
+        "pkulaw-citation-validator": {
+          "enabled": false,
+          "transport": "streamable-http",
+          "url": "https://apim-gw.pkulaw.com/citation-validator/mcp",
+          "headers": { "Authorization": "Bearer ${PKULAW_MCP_TOKEN}" },
+          "trustScope": "user",
+          "timeoutMs": 30000
+        },
+        "pkulaw-doc-link": {
+          "enabled": false,
+          "transport": "streamable-http",
+          "url": "https://apim-gw.pkulaw.com/doc-link/mcp",
+          "headers": { "Authorization": "Bearer ${PKULAW_MCP_TOKEN}" },
+          "trustScope": "user",
+          "timeoutMs": 30000
+        },
+        "pkulaw-semantic-nlsql": {
+          "enabled": false,
+          "transport": "streamable-http",
+          "url": "https://apim-gw.pkulaw.com/semantic-nlsql/mcp",
+          "headers": { "Authorization": "Bearer ${PKULAW_MCP_TOKEN}" },
+          "trustScope": "user",
+          "timeoutMs": 30000
+        }
+      },
+      "search": {
+        "enabled": true,
+        "mode": "auto",
+        "autoThresholdToolCount": 24,
+        "topKDefault": 5,
+        "topKMax": 10,
+        "minScore": 0.15,
+        "bm25": {
+          "k1": 1.2,
+          "b": 0.75
+        }
+      }
+    },
+    "web": {
+      "enabled": false,
+      "fetchEnabled": false,
+      "searchEnabled": false,
+      "allowDomains": [],
+      "denyDomains": []
+    },
+    "skills": {
+      "enabled": false,
+      "roots": [],
+      "legacySkillMd": true
+    },
+    "subagents": {
+      "enabled": false,
+      "maxParallel": 0,
+      "maxChildRuns": 0
+    },
+    "attachments": {
+      "enabled": false,
+      "maxImageBytes": 5242880,
+      "maxImageDimension": 4096,
+      "allowedMimeTypes": ["image/png", "image/jpeg", "image/webp"],
+      "textFallbackMaxBase64Bytes": 524288,
+      "textFallbackMaxImageDimension": 1280,
+      "textFallbackPreferredMimeType": "image/webp"
+    },
+    "memory": {
+      "enabled": false,
+      "scopes": ["user", "workspace", "project"],
+      "maxInjectedRecords": 8
+    }
+  }
+}

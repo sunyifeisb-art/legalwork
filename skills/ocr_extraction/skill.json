@@ -1,0 +1,31 @@
+{
+  "name": "ocr-extraction",
+  "description": "OCR 文字提取：对扫描件、图片、无文字层的 PDF 进行 OCR，提取可编辑文本",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/ocr"
+    ],
+    "promptPatterns": [
+      "扫描件|OCR|无法提取|提取文字|识别文字|图片文字|pdf 文字|扫描 pdf|识别 pdf|文字层|不能复制"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".png",
+      ".jpg",
+      ".jpeg",
+      ".tiff",
+      ".tif",
+      ".bmp",
+      ".webp"
+    ]
+  },
+  "allowedTools": [
+    "read",
+    "bash",
+    "write"
+  ],
+  "assets": [],
+  "priority": 80
+}

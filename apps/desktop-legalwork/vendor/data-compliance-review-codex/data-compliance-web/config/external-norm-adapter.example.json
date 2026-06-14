@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "mappings": [
+    {
+      "risk_point": "数据出境相关披露可能不足",
+      "path_id": "outbound_transfer_check",
+      "legal_basis": "《个人信息保护法》第39条",
+      "reference_note": "涉及向境外接收方提供个人信息时，应履行相应告知义务。",
+      "source_id": "pipl-39"
+    }
+  ]
+}

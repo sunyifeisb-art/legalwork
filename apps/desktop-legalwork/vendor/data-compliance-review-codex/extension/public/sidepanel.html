@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>数律通</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <div class="brand-row">
+        <a href="#" class="brand-logo">
+          <img src="./assets/brand-logo.png" alt="ComplianceAI" />
+        </a>
+        <button id="openSettingsButton" class="btn-ghost">设置</button>
+      </div>
+
+      <section class="hero-panel">
+        <div class="hero-content">
+          <span class="eyebrow">AI 数据合规审查</span>
+          <h1>数律通</h1>
+          <p>上传隐私政策、协议或审查材料，AI 自动识别数据合规风险。</p>
+        </div>
+      </section>
+
+      <section class="upload-card" style="margin-top: 18px">
+        <label class="field-label" for="documentName">文档名称</label>
+        <input
+          id="documentName"
+          class="field-input"
+          placeholder="例：某 App 隐私政策 V2.1"
+        />
+
+        <div class="review-toggle" id="reviewToggle" role="tablist" aria-label="审查模式">
+          <span class="toggle-indicator" id="toggleIndicator"></span>
+          <button class="mode-btn active" type="button" role="tab" aria-selected="true" data-review-type="document">文档审查</button>
+          <button class="mode-btn" type="button" role="tab" aria-selected="false" data-review-type="code">代码审查</button>
+        </div>
+
+        <div id="uploadZone" class="upload-zone">
+          <div>
+            <div class="upload-icon"></div>
+            <h3>点击或拖拽上传文档</h3>
+            <p>支持 PDF、Word、Markdown、TXT</p>
+            <button id="pickFileButton" class="btn-primary">选择文件</button>
+          </div>
+        </div>
+        <input id="fileInput" type="file" hidden accept=".txt,.md,.doc,.docx,.pdf" />
+
+        <div id="fileCard" class="file-card" style="display: none">
+          <div class="file-card-left">
+            <div class="file-icon"></div>
+            <div>
+              <div id="fileName" class="file-name"></div>
+              <div id="fileSize" class="file-size"></div>
+            </div>
+          </div>
+          <button id="fileRemove" class="file-remove">&times;</button>
+        </div>
+
+        <div class="or-divider">或</div>
+
+        <label class="field-label" for="textInput">直接粘贴文本</label>
+        <textarea
+          id="textInput"
+          class="text-input-area"
+          placeholder="直接粘贴隐私政策、协议或审查材料正文..."
+        ></textarea>
+
+        <button id="currentPageButton" class="btn-secondary full-width" style="margin-bottom: 12px">
+          读取当前页 PDF
+        </button>
+        <button id="startReviewButton" class="btn-primary full-width">开始审查</button>
+        <div id="statusBox" class="status-box">等待输入</div>
+      </section>
+
+      <section class="history-panel">
+        <div class="history-head">
+          <span class="history-title">最近任务</span>
+        </div>
+        <div id="recentJobs" class="history-list"></div>
+      </section>
+
+      <section class="features-bar">
+        <article class="feature-item">
+          <div class="feature-icon">AI</div>
+          <div class="feature-text">
+            <h4>智能审查</h4>
+            <p>基于大模型自动识别合规风险</p>
+          </div>
+        </article>
+        <article class="feature-item">
+          <div class="feature-icon">法</div>
+          <div class="feature-text">
+            <h4>法规依据</h4>
+            <p>自动匹配相关法律法规条款</p>
+          </div>
+        </article>
+        <article class="feature-item">
+          <div class="feature-icon">改</div>
+          <div class="feature-text">
+            <h4>整改建议</h4>
+            <p>提供具体修改建议和改写方案</p>
+          </div>
+        </article>
+      </section>
+    </div>
+
+    <script type="module" src="./ui/sidepanel.js"></script>
+  </body>
+</html>

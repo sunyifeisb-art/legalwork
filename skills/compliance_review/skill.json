@@ -1,0 +1,23 @@
+{
+  "name": "compliance-review",
+  "description": "合规审查：合规审查和合规风险评估",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/complyreview"
+    ],
+    "promptPatterns": [
+      "合规审查|合规评估|合规检查|合规分析"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

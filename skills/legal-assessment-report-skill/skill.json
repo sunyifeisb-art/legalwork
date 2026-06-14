@@ -1,0 +1,23 @@
+{
+  "name": "legal-assessment-report-skill",
+  "description": "法律评估报告：生成综合性法律评估报告",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/assessment"
+    ],
+    "promptPatterns": [
+      "评估报告|法律评估|综合评估|合规评估"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

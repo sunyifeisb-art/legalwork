@@ -1,0 +1,24 @@
+{
+  "name": "data-compliance-review",
+  "provider": "github",
+  "repo": "AiYuSherry/data-compliance-review",
+  "url": "https://github.com/AiYuSherry/data-compliance-review",
+  "branch": "main",
+  "scope": "project-only",
+  "state_path": ".openclaw/data-compliance-review/default-sync-state.json",
+  "paths": [
+    ".gitignore",
+    "API_CONTRACT.md",
+    "CHANGELOG.md",
+    "TEAM_STATUS.md",
+    "data-compliance-web",
+    "projects/data-compliance-ai-project-kit",
+    "skills/data-compliance-ai-rd",
+    "output/data-compliance-auto-demo-v4",
+    "output/data-compliance-regression-demo-v2",
+    "output/data-compliance-technical-route.png",
+    "output/data-compliance-workflow-overview.png",
+    "output/data-compliance-workflow-simple.png"
+  ],
+  "notes": "This upstream is the default sync source only for the data compliance R&D project. Do not treat it as a global workspace upstream."
+}

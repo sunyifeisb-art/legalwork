@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "themes": [
+    {
+      "id": "disclosure_and_rights",
+      "name": "披露与权利告知",
+      "risk_points": [
+        "重要处理事项披露可能不充分",
+        "保存期限或删除机制表达可能不足"
+      ]
+    },
+    {
+      "id": "purpose_and_legal_basis",
+      "name": "处理目的与法律基础",
+      "risk_points": [
+        "处理目的与信息范围匹配性可能不足",
+        "合法性基础与必要性表达可能不足",
+        "字段、处理目的与法律基础之间的对应关系可能不足"
+      ]
+    },
+    {
+      "id": "consent_and_feature_boundary",
+      "name": "同意与功能边界",
+      "risk_points": [
+        "基于同意的可选功能与基础功能绑定关系可能不清",
+        "敏感个人信息处理条件与保护安排可能不足"
+      ]
+    },
+    {
+      "id": "third_party_and_sdk",
+      "name": "第三方共享与合作方治理",
+      "risk_points": [
+        "第三方共享或委托处理披露可能不足",
+        "合同中的数据处理义务或责任边界可能不清"
+      ]
+    },
+    {
+      "id": "cross_border_transfer",
+      "name": "数据出境与跨境合规",
+      "risk_points": [
+        "数据出境相关披露可能不足"
+      ]
+    },
+    {
+      "id": "consistency_and_boundary",
+      "name": "口径一致性与边界冲突",
+      "risk_points": [
+        "文本前后关于数据处理边界的表述可能存在冲突"
+      ]
+    }
+  ]
+}

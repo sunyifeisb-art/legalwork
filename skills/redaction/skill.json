@@ -1,0 +1,31 @@
+{
+  "name": "redaction",
+  "description": "脱敏处理：对文件进行敏感信息脱敏，支持同一主体多称谓统一映射和脱敏后代词反向还原",
+  "version": "0.3.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/redact",
+      "/restore"
+    ],
+    "promptPatterns": [
+      "脱敏|去敏感|隐私保护|信息脱敏|反向还原|还原脱敏"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".md",
+      ".txt",
+      ".jpg",
+      ".png"
+    ]
+  },
+  "allowedTools": [
+    "read",
+    "write",
+    "edit",
+    "bash"
+  ],
+  "assets": [],
+  "priority": 0
+}

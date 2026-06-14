@@ -1,0 +1,23 @@
+{
+  "name": "legal-article-retrieval",
+  "description": "法条检索：检索相关法律条文，支持多层级法律体系",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/findlaw"
+    ],
+    "promptPatterns": [
+      "法条检索|法律检索|法规检索|法条查询|适用法律"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

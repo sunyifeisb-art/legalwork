@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RiskReport",
+  "type": "object",
+  "required": ["document_name", "review_scope", "summary", "items"],
+  "properties": {
+    "document_name": {"type": "string"},
+    "review_scope": {"type": "string"},
+    "summary": {"type": "string"},
+    "auto_recheck_triggered": {"type": "boolean"},
+    "auto_recheck_summary": {"type": "string"},
+    "auto_recheck_stats": {
+      "type": "object",
+      "properties": {
+        "triggered": {"type": "integer"},
+        "maintained": {"type": "integer"},
+        "need_more_support": {"type": "integer"}
+      }
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["risk_point", "risk_level", "legal_basis", "reason", "suggestion", "auto_recheck"],
+        "properties": {
+          "risk_point": {"type": "string"},
+          "risk_level": {"type": "string", "enum": ["高风险", "中风险", "建议优化"]},
+          "legal_basis": {"type": "string"},
+          "reason": {"type": "string"},
+          "suggestion": {"type": "string"},
+          "auto_recheck": {"type": "boolean"},
+          "auto_recheck_status": {"type": "string"},
+          "auto_recheck_notes": {"type": "string"},
+          "auto_recheck_decision": {"type": "string"},
+          "theme_name": {"type": "string"},
+          "corroboration_count": {"type": "integer"},
+          "related_risk_points": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
+        }
+      }
+    },
+    "risk_clusters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "theme_id": {"type": "string"},
+          "theme_name": {"type": "string"},
+          "item_count": {"type": "integer"},
+          "high_risk_count": {"type": "integer"},
+          "medium_risk_count": {"type": "integer"},
+          "advisory_count": {"type": "integer"},
+          "risk_points": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
+        }
+      }
+    }
+  }
+}

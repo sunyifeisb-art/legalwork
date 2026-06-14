@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "mappings": [
+    {
+      "risk_point": "重要处理事项披露可能不充分",
+      "path_id": "disclosure_check",
+      "legal_basis": "《个人信息保护法》第17条",
+      "reference_note": "处理个人信息前，通常应告知处理目的、方式、种类、保存期限以及行使权利方式等事项。",
+      "source_id": "pipl-17"
+    },
+    {
+      "risk_point": "第三方共享或委托处理披露可能不足",
+      "path_id": "third_party_sharing_check",
+      "legal_basis": "《个人信息保护法》第23条",
+      "reference_note": "向其他个人信息处理者提供个人信息时，通常应告知接收方名称或姓名、联系方式、处理目的、处理方式和个人信息种类。",
+      "source_id": "pipl-23"
+    },
+    {
+      "risk_point": "数据出境相关披露可能不足",
+      "path_id": "outbound_transfer_check",
+      "legal_basis": "《个人信息保护法》第39条",
+      "reference_note": "向境外接收方提供个人信息时，通常应告知境外接收方名称或姓名、联系方式、处理目的、处理方式、个人信息种类以及行使权利方式等事项。",
+      "source_id": "pipl-39"
+    },
+    {
+      "risk_point": "合法性基础与必要性表达可能不足",
+      "path_id": "lawful_basis_check",
+      "legal_basis": "《个人信息保护法》第13条、第6条",
+      "reference_note": "处理个人信息需要有相应合法性基础，并应具有明确、合理目的，采取对个人权益影响最小的方式。",
+      "source_id": "pipl-13-6"
+    },
+    {
+      "risk_point": "合同中的数据处理义务或责任边界可能不清",
+      "path_id": "contract_obligation_check",
+      "legal_basis": "《个人信息保护法》第21条",
+      "reference_note": "委托处理个人信息的，通常应通过协议约定处理目的、期限、方式、种类、保护措施及双方权利义务。",
+      "source_id": "pipl-21"
+    },
+    {
+      "risk_point": "保存期限或删除机制表达可能不足",
+      "path_id": "retention_deletion_check",
+      "legal_basis": "《个人信息保护法》第19条、第47条",
+      "reference_note": "个人信息保存期限一般应为实现处理目的所必要的最短时间；在法定删除情形出现时，应及时删除或作匿名化处理。",
+      "source_id": "pipl-19-47"
+    },
+    {
+      "risk_point": "处理目的与信息范围匹配性可能不足",
+      "path_id": "purpose_scope_check",
+      "legal_basis": "《个人信息保护法》第6条、第13条",
+      "reference_note": "处理个人信息应具有明确、合理目的，并限于实现处理目的的最小范围；处理活动还应有相应合法性基础。",
+      "source_id": "pipl-6-13-purpose"
+    },
+    {
+      "risk_point": "文本前后关于数据处理边界的表述可能存在冲突",
+      "path_id": "consistency_check",
+      "legal_basis": "《个人信息保护法》第8条、第17条",
+      "reference_note": "处理规则应遵循公开、透明原则，相关告知内容应真实、准确、完整，避免前后冲突导致用户无法准确理解处理边界。",
+      "source_id": "pipl-8-17-consistency"
+    },
+    {
+      "risk_point": "敏感个人信息处理条件与保护安排可能不足",
+      "path_id": "sensitive_personal_info_check",
+      "legal_basis": "《个人信息保护法》第28条、第29条、第31条",
+      "reference_note": "处理敏感个人信息应具有特定目的和充分必要性，采取严格保护措施；通常需要取得个人的单独同意。处理不满十四周岁未成年人信息时，还应取得监护人同意。",
+      "source_id": "pipl-28-29-31"
+    },
+    {
+      "risk_point": "基于同意的可选功能与基础功能绑定关系可能不清",
+      "path_id": "consent_feature_coupling_check",
+      "legal_basis": "《个人信息保护法》第16条、第13条",
+      "reference_note": "基于个人同意处理个人信息的，个人有权撤回同意；个人信息处理者不得以个人不同意处理非提供产品或者服务所必需的个人信息为由，拒绝提供产品或者服务。",
+      "source_id": "pipl-16-13-consent"
+    },
+    {
+      "risk_point": "字段、处理目的与法律基础之间的对应关系可能不足",
+      "path_id": "field_purpose_legal_basis_check",
+      "legal_basis": "《个人信息保护法》第13条、第17条、第6条",
+      "reference_note": "处理个人信息应有明确、合理目的并限于最小必要范围；处理前通常应告知处理目的、方式、种类等事项，并说明相应的法律基础。",
+      "source_id": "pipl-13-17-6-triad"
+    }
+  ]
+}

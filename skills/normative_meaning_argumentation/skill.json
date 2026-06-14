@@ -1,0 +1,23 @@
+{
+  "name": "normative-meaning-argumentation",
+  "description": "规范性含义论证：论证法律术语的规范含义",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/normative"
+    ],
+    "promptPatterns": [
+      "规范性含义|含义论证|规范含义"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

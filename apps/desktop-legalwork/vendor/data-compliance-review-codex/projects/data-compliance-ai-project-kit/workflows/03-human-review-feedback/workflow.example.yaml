@@ -1,0 +1,23 @@
+name: auto-recheck-feedback
+stage: first-phase
+goal: 将系统自动复核结果回流到项目迭代体系
+inputs:
+  - ai_risk_report
+  - auto_recheck_notes
+outputs:
+  - rechecked_decision
+  - error_record
+  - next_iteration_actions
+steps:
+  - id: compare_findings
+    action: 对比初版结论与自动复核结果
+  - id: classify_errors
+    action: 将错误归类为检索错误、判断错误、表达错误、依据错误
+  - id: record_fix_targets
+    action: 记录应修规则、应修提示词、应修模板，以及是否存在外部规范数据库依赖问题
+  - id: close_or_escalate
+    action: 决定关闭、重跑或升级自动核验策略
+failure_modes:
+  - 自动复核结论不足以缩小不确定性
+  - 无法定位错误发生在哪一步
+  - 修改建议无法转化为下一轮动作

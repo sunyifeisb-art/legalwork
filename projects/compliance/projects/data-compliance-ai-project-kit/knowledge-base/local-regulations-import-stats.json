@@ -1,0 +1,40 @@
+{
+  "source_dir": "/Users/xiangyang/Desktop/研发测试/data-compliance-review-law-update/projects/data-compliance-ai-project-kit/knowledge-base/regulations-source",
+  "db_path": "/Users/xiangyang/Desktop/研发测试/data-compliance-review-law-update/projects/data-compliance-ai-project-kit/knowledge-base/local-regulations.sqlite3",
+  "generated_at": "2026-04-14T19:00:10",
+  "last_correction": "2026-06-10T23:00:00",
+  "correction_note": "全面审查433个文件：①3个核心法律（个保法/数安法/网安法）从web_fetch替换pypdf污染版；②10个空文件从web_fetch补充正文；③6个重复空文件删除；④2个提取失败文件从web_fetch替换；⑤更新default-norm-mappings.json的file_path和article_anchors。",
+  "corrections": [
+    "中华人民共和国个人信息保护法: 正文从最高检官网重新获取，添加74条 <!-- article-XX --> 锚点",
+    "中华人民共和国数据安全法: 正文从福建省应急管理厅重新获取，添加55条锚点",
+    "中华人民共和国网络安全法（2025修正）: 正文从国家法律法规数据库重新获取，含新增AI条款，添加81条锚点",
+    "全国人民代表大会常务委员会工作报告-2025: 从空文件替换为政府网完整正文",
+    "最高人民检察院工作报告: 从空文件替换为最高检官网完整正文",
+    "关于建立公共数据资源授权运营价格形成机制的通知: 从空文件替换为国家发改委官网正文",
+    "2025年数字经济工作要点: 从空文件替换为国家数据局公开信息",
+    "国家秘密定密管理规定: 从空文件替换为国家保密局官网正文",
+    "涉及国家安全事项的建设项目许可管理规定: 从空文件替换为国务院公报正文",
+    "中华人民共和国网络安全法-修正草案再次征求意见稿: 从空文件替换为国家网信办通知+修正草案正文",
+    "中共中央办公厅-国务院办公厅关于健全资源环境要素市场化配置体系的意见: 从空文件替换为政府网正文",
+    "国家网络身份认证公共服务管理办法 (无《》版): 删除（空文件，有《》版已含完整内容）",
+    "个人信息保护合规审计管理办法 (无《》版): 删除（空文件，有《》版已含完整内容）",
+    "《公共数据资源登记管理暂行办法》 (《》版): 删除（空文件，无《》版已含完整内容）",
+    "《公共数据资源授权运营实施规范（试行）》 (《》版): 删除（空文件，无《》版已含完整内容）",
+    "《政务数据共享条例》 (《》版): 删除（内容与无《》版完全重复）",
+    "可信数据空间标准体系建设指南: 从乱码替换为指南核心架构摘要",
+    "山东省数字经济促进条例: 从乱码替换为山东人大官网完整正文"
+  ],
+  "totals": {
+    "documents": 427,
+    "corrections": 18,
+    "with_standard_code": 57
+  },
+  "by_category": {
+    "standard_or_guideline": 172,
+    "local_policy": 167,
+    "national_policy": 90,
+    "national_law": 3,
+    "other": 1
+  },
+  "markdown_dir": "/Users/xiangyang/Desktop/研发测试/data-compliance-review-law-update/projects/data-compliance-ai-project-kit/knowledge-base/regulations-md"
+}

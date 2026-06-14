@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数律通 Logo 设计方案 V2</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            padding: 60px 40px;
+            line-height: 1.6;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 {
+            text-align: center;
+            font-size: 14px;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            color: #555;
+            margin-bottom: 60px;
+            font-weight: 400;
+        }
+
+        .logo-section {
+            margin-bottom: 80px;
+        }
+        .logo-section-title {
+            font-size: 11px;
+            letter-spacing: 4px;
+            color: #444;
+            text-transform: uppercase;
+            margin-bottom: 32px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #1a1a1a;
+        }
+
+        /* ===== 方案 A: 抽象几何 ===== */
+        .logo-a-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            padding: 80px 0;
+            background: #111;
+            border-radius: 20px;
+            margin-bottom: 24px;
+        }
+        .logo-a-icon {
+            width: 72px;
+            height: 72px;
+            flex-shrink: 0;
+        }
+        .logo-a-icon svg { width: 100%; height: 100%; }
+        .logo-a-text {
+            display: flex;
+            flex-direction: column;
+        }
+        .logo-a-text .cn {
+            font-size: 40px;
+            font-weight: 900;
+            color: #f0f0f0;
+            letter-spacing: 6px;
+            line-height: 1.1;
+        }
+        .logo-a-text .en {
+            font-size: 10px;
+            letter-spacing: 8px;
+            color: #3a9e9a;
+            margin-top: 6px;
+            font-weight: 300;
+        }
+
+        /* ===== 方案 B: 印章风格 ===== */
+        .logo-b-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 28px;
+            padding: 80px 0;
+            background: #faf8f4;
+            border-radius: 20px;
+            margin-bottom: 24px;
+        }
+        .logo-b-icon {
+            width: 72px;
+            height: 72px;
+            flex-shrink: 0;
+        }
+        .logo-b-icon svg { width: 100%; height: 100%; }
+        .logo-b-text {
+            display: flex;
+            flex-direction: column;
+        }
+        .logo-b-text .cn {
+            font-size: 40px;
+            font-weight: 900;
+            color: #1a1a1a;
+            letter-spacing: 8px;
+            line-height: 1.1;
+        }
+        .logo-b-text .slogan {
+            font-size: 12px;
+            color: #b86816;
+            margin-top: 8px;
+            letter-spacing: 4px;
+            font-weight: 400;
+        }
+
+        /* ===== 方案 C: 线条极简 ===== */
+        .logo-c-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 80px 0;
+            background: linear-gradient(135deg, #0d2928 0%, #0a1a19 100%);
+            border-radius: 20px;
+            margin-bottom: 24px;
+        }
+        .logo-c-icon {
+            width: 72px;
+            height: 72px;
+            flex-shrink: 0;
+        }
+        .logo-c-icon svg { width: 100%; height: 100%; }
+        .logo-c-text {
+            display: flex;
+            flex-direction: column;
+        }
+        .logo-c-text .cn {
+            font-size: 40px;
+            font-weight: 300;
+            color: #e8e4dc;
+            letter-spacing: 12px;
+            line-height: 1.1;
+        }
+        .logo-c-text .en {
+            font-size: 9px;
+            letter-spacing: 10px;
+            color: rgba(58,158,154,0.6);
+            margin-top: 8px;
+            font-weight: 300;
+        }
+
+        /* ===== 配色 ===== */
+        .color-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 80px;
+        }
+        .color-card {
+            flex: 1;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #141414;
+        }
+        .color-swatch {
+            height: 100px;
+        }
+        .color-meta {
+            padding: 16px 20px;
+        }
+        .color-meta .name {
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        .color-meta .hex {
+            font-size: 12px;
+            color: #555;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+        .color-meta .desc {
+            font-size: 11px;
+            color: #444;
+            margin-top: 4px;
+        }
+
+        /* ===== 应用场景 ===== */
+        .app-mockup {
+            background: #111;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 24px;
+        }
+        .app-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 28px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+        }
+        .app-nav-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .app-nav-logo {
+            width: 32px;
+            height: 32px;
+        }
+        .app-nav-logo svg { width: 100%; height: 100%; }
+        .app-nav-brand {
+            font-size: 18px;
+            font-weight: 700;
+            color: #f0f0f0;
+            letter-spacing: 2px;
+        }
+        .app-nav-links {
+            display: flex;
+            gap: 28px;
+            font-size: 13px;
+            color: #666;
+        }
+        .app-nav-links span.active { color: #3a9e9a; }
+
+        .app-mockup-light {
+            background: #faf8f4;
+            border-radius: 20px;
+            padding: 40px;
+        }
+        .app-nav-light {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 28px;
+            background: white;
+            border: 1px solid #e8e2d6;
+            border-radius: 12px;
+        }
+        .app-nav-light-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .app-nav-light-logo {
+            width: 32px;
+            height: 32px;
+        }
+        .app-nav-light-logo svg { width: 100%; height: 100%; }
+        .app-nav-light-brand {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a1a;
+            letter-spacing: 2px;
+        }
+        .app-nav-light-links {
+            display: flex;
+            gap: 28px;
+            font-size: 13px;
+            color: #999;
+        }
+        .app-nav-light-links span.active { color: #b86816; }
+
+        .label {
+            display: inline-block;
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: #444;
+            margin-bottom: 16px;
+            padding: 4px 10px;
+            border: 1px solid #222;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>数律通 · 品牌视觉方案</h1>
+
+        <!-- 方案 A -->
+        <div class="logo-section">
+            <div class="logo-section-title">方案 A · 棱镜 — 数据折射法律之光</div>
+            <div class="logo-a-wrap">
+                <div class="logo-a-icon">
+                    <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="gradA1" x1="0" y1="0" x2="72" y2="72" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#3a9e9a"/>
+                                <stop offset="100%" stop-color="#1a5c59"/>
+                            </linearGradient>
+                        </defs>
+                        <rect x="4" y="4" width="64" height="64" rx="18" fill="url(#gradA1)"/>
+                        <path d="M36 16L52 44H20L36 16Z" fill="none" stroke="white" stroke-width="2.5" stroke-linejoin="round"/>
+                        <path d="M36 28L44 44H28L36 28Z" fill="rgba(255,255,255,0.25)"/>
+                        <line x1="36" y1="44" x2="36" y2="56" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                        <line x1="28" y1="56" x2="44" y2="56" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="logo-a-text">
+                    <div class="cn">数律通</div>
+                    <div class="en">SHULVTONG</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 方案 B -->
+        <div class="logo-section">
+            <div class="logo-section-title">方案 B · 方圆 — 规矩成方圆</div>
+            <div class="logo-b-wrap">
+                <div class="logo-b-icon">
+                    <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="36" cy="36" r="32" fill="none" stroke="#1a1a1a" stroke-width="2.5"/>
+                        <circle cx="36" cy="36" r="24" fill="none" stroke="#b86816" stroke-width="1.5"/>
+                        <rect x="28" y="22" width="16" height="28" rx="2" fill="none" stroke="#1a1a1a" stroke-width="2"/>
+                        <line x1="32" y1="30" x2="40" y2="30" stroke="#b86816" stroke-width="1.5" stroke-linecap="round"/>
+                        <line x1="32" y1="35" x2="40" y2="35" stroke="#1a1a1a" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+                        <line x1="32" y1="39" x2="38" y2="39" stroke="#1a1a1a" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+                        <circle cx="36" cy="48" r="1.5" fill="#b86816"/>
+                    </svg>
+                </div>
+                <div class="logo-b-text">
+                    <div class="cn">数律通</div>
+                    <div class="slogan">数据合规 · 通达无忧</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 方案 C -->
+        <div class="logo-section">
+            <div class="logo-section-title">方案 C · 脉络 — 数据流动的秩序</div>
+            <div class="logo-c-wrap">
+                <div class="logo-c-icon">
+                    <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="24" cy="24" r="4" fill="#3a9e9a"/>
+                        <circle cx="48" cy="24" r="4" fill="#3a9e9a" opacity="0.6"/>
+                        <circle cx="36" cy="48" r="4" fill="#3a9e9a" opacity="0.3"/>
+                        <line x1="24" y1="24" x2="48" y2="24" stroke="#3a9e9a" stroke-width="1.5" opacity="0.5"/>
+                        <line x1="24" y1="24" x2="36" y2="48" stroke="#3a9e9a" stroke-width="1.5" opacity="0.5"/>
+                        <line x1="48" y1="24" x2="36" y2="48" stroke="#3a9e9a" stroke-width="1.5" opacity="0.3"/>
+                        <circle cx="16" cy="36" r="2.5" fill="#3a9e9a" opacity="0.4"/>
+                        <circle cx="56" cy="36" r="2.5" fill="#3a9e9a" opacity="0.2"/>
+                        <line x1="16" y1="36" x2="24" y2="24" stroke="#3a9e9a" stroke-width="1" opacity="0.3"/>
+                        <line x1="56" y1="36" x2="48" y2="24" stroke="#3a9e9a" stroke-width="1" opacity="0.2"/>
+                        <line x1="16" y1="36" x2="36" y2="48" stroke="#3a9e9a" stroke-width="1" opacity="0.2"/>
+                        <line x1="56" y1="36" x2="36" y2="48" stroke="#3a9e9a" stroke-width="1" opacity="0.15"/>
+                    </svg>
+                </div>
+                <div class="logo-c-text">
+                    <div class="cn">数律通</div>
+                    <div class="en">SHULVTONG</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 配色 -->
+        <div class="logo-section">
+            <div class="logo-section-title">品牌色板</div>
+            <div class="color-row">
+                <div class="color-card">
+                    <div class="color-swatch" style="background: linear-gradient(135deg, #3a9e9a, #1a5c59);"></div>
+                    <div class="color-meta">
+                        <div class="name">青碧</div>
+                        <div class="hex">#3A9E9A</div>
+                        <div class="desc">主色 · 专业信任</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: linear-gradient(135deg, #d4852a, #b86816);"></div>
+                    <div class="color-meta">
+                        <div class="name">琥珀</div>
+                        <div class="hex">#B86816</div>
+                        <div class="desc">强调 · 智慧警示</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #faf8f4;"></div>
+                    <div class="color-meta">
+                        <div class="name">宣纸</div>
+                        <div class="hex">#FAF8F4</div>
+                        <div class="desc">浅底 · 温润专业</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #1a1a1a;"></div>
+                    <div class="color-meta">
+                        <div class="name">墨</div>
+                        <div class="hex">#1A1A1A</div>
+                        <div class="desc">深色 · 权威稳重</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 应用场景 -->
+        <div class="logo-section">
+            <div class="logo-section-title">应用场景</div>
+            <div class="label">深色模式</div>
+            <div class="app-mockup">
+                <div class="app-nav">
+                    <div class="app-nav-left">
+                        <div class="app-nav-logo">
+                            <svg viewBox="0 0 72 72" fill="none">
+                                <defs><linearGradient id="navG1" x1="0" y1="0" x2="72" y2="72" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#3a9e9a"/><stop offset="100%" stop-color="#1a5c59"/></linearGradient></defs>
+                                <rect x="4" y="4" width="64" height="64" rx="18" fill="url(#navG1)"/>
+                                <path d="M36 16L52 44H20L36 16Z" fill="none" stroke="white" stroke-width="2.5" stroke-linejoin="round"/>
+                                <path d="M36 28L44 44H28L36 28Z" fill="rgba(255,255,255,0.25)"/>
+                                <line x1="36" y1="44" x2="36" y2="56" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                                <line x1="28" y1="56" x2="44" y2="56" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <div class="app-nav-brand">数律通</div>
+                    </div>
+                    <div class="app-nav-links">
+                        <span class="active">合规审查</span>
+                        <span>数据脱敏</span>
+                        <span>法规库</span>
+                        <span>历史记录</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="label" style="margin-top: 24px;">浅色模式</div>
+            <div class="app-mockup-light">
+                <div class="app-nav-light">
+                    <div class="app-nav-light-left">
+                        <div class="app-nav-light-logo">
+                            <svg viewBox="0 0 72 72" fill="none">
+                                <circle cx="36" cy="36" r="32" fill="none" stroke="#1a1a1a" stroke-width="2.5"/>
+                                <circle cx="36" cy="36" r="24" fill="none" stroke="#b86816" stroke-width="1.5"/>
+                                <rect x="28" y="22" width="16" height="28" rx="2" fill="none" stroke="#1a1a1a" stroke-width="2"/>
+                                <line x1="32" y1="30" x2="40" y2="30" stroke="#b86816" stroke-width="1.5" stroke-linecap="round"/>
+                                <line x1="32" y1="35" x2="40" y2="35" stroke="#1a1a1a" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+                                <line x1="32" y1="39" x2="38" y2="39" stroke="#1a1a1a" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+                                <circle cx="36" cy="48" r="1.5" fill="#b86816"/>
+                            </svg>
+                        </div>
+                        <div class="app-nav-light-brand">数律通</div>
+                    </div>
+                    <div class="app-nav-light-links">
+                        <span class="active">合规审查</span>
+                        <span>数据脱敏</span>
+                        <span>法规库</span>
+                        <span>历史记录</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

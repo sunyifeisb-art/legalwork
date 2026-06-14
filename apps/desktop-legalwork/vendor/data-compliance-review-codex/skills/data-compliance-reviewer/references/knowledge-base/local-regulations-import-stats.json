@@ -1,0 +1,25 @@
+{
+  "source_dir": "/Users/xiangyang/Downloads/2025年新增数据安全国家规范、标准、地方政策合集",
+  "db_path": "/Users/xiangyang/.openclaw/workspace/projects/data-compliance-ai-project-kit/knowledge-base/local-regulations.sqlite3",
+  "generated_at": "2026-04-11T20:07:31",
+  "totals": {
+    "documents": 430,
+    "ok": 430,
+    "empty_text": 0,
+    "drafts": 73,
+    "with_standard_code": 57
+  },
+  "by_category": {
+    "standard_or_guideline": 172,
+    "local_policy": 167,
+    "national_policy": 90,
+    "other": 1
+  },
+  "markdown_dir": "/Users/xiangyang/.openclaw/workspace/projects/data-compliance-ai-project-kit/knowledge-base/regulations-md",
+  "ocr_recovery": {
+    "ocr_dir": "/Users/xiangyang/Desktop/UPDF-OCR (1)",
+    "matched_failed_records": 30,
+    "recovered": 30,
+    "skipped": []
+  }
+}

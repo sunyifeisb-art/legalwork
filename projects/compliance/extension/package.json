@@ -1,0 +1,23 @@
+{
+  "name": "data-compliance-review-extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/build.mjs --watch",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "idb": "^8.0.3",
+    "mammoth": "^1.8.0",
+    "pdfjs-dist": "^4.10.38"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.292",
+    "esbuild": "^0.25.4",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.4"
+  }
+}

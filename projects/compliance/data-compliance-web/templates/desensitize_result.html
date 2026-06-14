@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>脱敏结果 — ComplianceAI</title>
+    <style>
+        :root {
+            --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            --font-reading: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            --font-mono: "SF Mono", Menlo, Monaco, Consolas, monospace;
+            --bg: #ffffff;
+            --bg-subtle: #f5f5f3;
+            --bg-elevated: #ffffff;
+            --accent: #111111;
+            --accent-light: #f0f0ed;
+            --accent-hover: #333333;
+            --text-primary: #111111;
+            --text-secondary: #52525b;
+            --text-muted: #71717a;
+            --border: #d4d4d4;
+            --shadow: 0 10px 26px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 14px 34px rgba(0, 0, 0, 0.1);
+            --red: #8d1f1f;
+            --red-bg: #f3e4df;
+            --red-border: #e0bdb4;
+            --orange: #a75b12;
+            --orange-bg: #f6ead8;
+            --orange-border: #e8c694;
+            --blue: #315f72;
+            --blue-bg: #e6eef1;
+            --blue-border: #bed2db;
+            --green: #36673a;
+            --green-bg: #edf5ec;
+            --green-border: #c8ddc5;
+            --yellow: #8a5a13;
+            --yellow-bg: #fbf2dc;
+            --yellow-border: #e8c87a;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: var(--font-ui);
+            background: #ffffff;
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.65;
+            font-size: 16px;
+            font-weight: 400;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+        }
+        body.dark {
+            --bg: #18181a;
+            --bg-subtle: #242426;
+            --bg-elevated: #1e1e20;
+            --accent: #e4e4e7;
+            --accent-light: #2a2a2d;
+            --accent-hover: #fafafa;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border: #3f3f46;
+            --shadow: 0 10px 26px rgba(0,0,0,0.4);
+            --shadow-lg: 0 14px 34px rgba(0,0,0,0.5);
+            --red: #f87171;
+            --red-bg: #3d1a1a;
+            --red-border: #5c2a2a;
+            --orange: #fbbf24;
+            --orange-bg: #3d2e0a;
+            --orange-border: #5c4a14;
+            --blue: #7dd3fc;
+            --blue-bg: #0a2e3d;
+            --blue-border: #145c5c;
+            --green: #6ee7b7;
+            --green-bg: #0a3d2e;
+            --green-border: #145c3d;
+            --yellow: #fde68a;
+            --yellow-bg: #3d2e0a;
+            --yellow-border: #5c4a14;
+        }
+        body.dark,
+        body.dark .page-wrap { background: #18181a; }
+        body.dark header,
+        body.dark .sidebar { background: #1e1e20; }
+        body.dark .ov-card,
+        body.dark .entity-chip,
+        body.dark .table-wrap,
+        body.dark .notice-block { background: var(--bg); }
+        body.dark .entity-chip strong { color: var(--text-primary); }
+        body.dark .entity-chip span { color: var(--text-secondary); }
+        body.dark table th { color: var(--text-muted); }
+        body.dark table td { color: var(--text-secondary); }
+        body.dark .side-nav-list a { color: var(--text-secondary); }
+        body.dark .side-nav-list a:hover { background: var(--accent-light); color: var(--text-primary); }
+        body.dark .dl-link { background: var(--bg); color: var(--text-secondary); border-color: var(--border); }
+        body.dark .dl-link:hover { color: var(--text-primary); border-color: var(--text-primary); }
+        body.dark .dl-link.primary { background: var(--accent); color: #18181a; border-color: var(--accent); }
+        body.dark .dl-link.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+        body.dark .section-title { color: var(--text-primary); }
+        body.dark .eyebrow { color: var(--text-secondary); }
+        body.dark .supporting { color: var(--text-secondary); }
+        body.dark .section-meta { color: var(--text-muted); }
+        body.dark .notice-block { color: var(--text-secondary); }
+        body.dark .state-page .state-icon { background: var(--bg); }
+        body.dark .state-title { color: var(--text-primary); }
+        body.dark .state-sub { color: var(--text-secondary); }
+        body.dark .download-toast { background: var(--accent); color: #18181a; }
+
+        @media (min-width: 761px) {
+            header.desktop-header { display: none; }
+        }
+
+        /* Header */
+        header {
+            background: var(--bg);
+            border-right: 1px solid var(--border);
+            position: fixed;
+            inset: 0 auto 0 0;
+            width: 264px;
+            z-index: 50;
+            overflow: auto;
+        }
+        .header-inner {
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: flex-start;
+        }
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .header-logo-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .header-left .theme-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .header-left .theme-toggle:hover {
+            color: var(--text-primary);
+            border-color: var(--text-primary);
+        }
+        .theme-icon-dark { display: none; }
+        body.dark .theme-icon-light { display: none; }
+        body.dark .theme-icon-dark { display: inline; }
+        .logo {
+            font-family: var(--font-display);
+            font-size: 26px;
+            font-weight: 760;
+            letter-spacing: 0;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+        .brand-logo {
+            display: block;
+            text-decoration: none;
+        }
+        .brand-logo img {
+            display: block;
+            width: 150px;
+            height: auto;
+        }
+        body.dark .brand-logo img {
+            filter: brightness(2) contrast(0.85);
+        }
+
+        /* Layout */
+        .page-wrap {
+            max-width: 1120px;
+            margin: 0 auto 0 264px;
+            padding: 36px 32px;
+            display: block;
+            padding-bottom: 80px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 264px;
+            z-index: 51;
+            overflow: auto;
+            padding: 6px 12px 8px;
+            background: var(--bg);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-main {
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+        .sidebar-logo-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin: 10px 0 6px;
+        }
+        .sidebar-logo-row .theme-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .sidebar-logo-row .theme-toggle:hover {
+            color: var(--text-primary);
+            border-color: var(--text-primary);
+        }
+        .sidebar-backdrop { display: none; }
+        .sidebar-btn { display: none; }
+        .back-prev {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            padding: 10px 10px;
+            border: 0;
+            border-radius: 7px;
+            background: #111;
+            color: #fff;
+            font: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 8px 0 0;
+            flex-shrink: 0;
+            transition: all 0.15s;
+        }
+        .back-prev:hover { background: #333; }
+        body.dark .back-prev {
+            background: #e4e4e7;
+            color: #18181a;
+        }
+        body.dark .back-prev:hover { background: #fafafa; }
+        .sidebar-top {
+            padding: 6px 10px 16px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 16px;
+        }
+        .side-nav-title {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0;
+            text-transform: none;
+            color: var(--text-muted);
+            margin: 10px 10px 4px;
+        }
+        .side-nav-list { list-style: none; }
+        .side-nav-list li + li { margin-top: 0; }
+        .side-nav-list a {
+            display: block;
+            min-height: 30px;
+            padding: 5px 10px;
+            font-size: 15px;
+            font-weight: 450;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .side-nav-list a:hover {
+            background: var(--accent-light);
+            color: var(--text-primary);
+        }
+        .side-nav-list a.active {
+            background: #111;
+            color: #fff;
+            font-weight: 600;
+        }
+        body.dark .side-nav-list a.active {
+            background: #e4e4e7;
+            color: #18181a;
+        }
+        .side-downloads {
+            margin: 8px 0 0;
+            padding: 10px 10px 8px;
+            border-top: 1px solid var(--border);
+        }
+        .dl-head {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0;
+            text-transform: none;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+        .dl-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 7px 10px;
+            margin-bottom: 4px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            transition: all 0.2s;
+        }
+        .dl-link:hover {
+            color: var(--text-primary);
+            border-color: var(--text-primary);
+            background: var(--bg-subtle);
+        }
+        .dl-link.primary {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+        .dl-link.primary:hover {
+            background: var(--accent-hover);
+            border-color: var(--accent-hover);
+            color: #fff;
+        }
+        .download-toast {
+            position: fixed;
+            left: 50%;
+            bottom: 28px;
+            transform: translateX(-50%);
+            max-width: min(560px, calc(100vw - 32px));
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--text-primary);
+            color: #fff;
+            font-size: 13px;
+            box-shadow: var(--shadow-lg);
+            z-index: 200;
+            display: none;
+        }
+        .download-toast.show { display: block; }
+
+        /* Content */
+        .content { min-width: 0; }
+        section { margin-bottom: 48px; }
+        .section-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 34px;
+            line-height: 1.25;
+            font-weight: 720;
+            color: var(--text-primary);
+        }
+        .section-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* Hero */
+        .ov-card {
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 28px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+        .ov-card.hero {
+            margin-bottom: 24px;
+        }
+        .eyebrow {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0;
+            text-transform: none;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .eyebrow::before {
+            content: '';
+            display: inline-block;
+            width: 3px;
+            height: 14px;
+            background: var(--accent);
+            border-radius: 1px;
+        }
+        h1 {
+            font-family: var(--font-display);
+            font-size: 34px;
+            line-height: 1.25;
+            font-weight: 720;
+            color: var(--text-primary);
+            margin-bottom: 14px;
+        }
+        .supporting {
+            color: var(--text-secondary);
+            font-size: 15px;
+            line-height: 1.7;
+            max-width: 720px;
+        }
+
+        /* Overview grid */
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        .ov-label {
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0;
+            text-transform: none;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .ov-label::before {
+            content: '';
+            display: inline-block;
+            width: 3px;
+            height: 14px;
+            background: var(--accent);
+            border-radius: 1px;
+        }
+        .metric {
+            font-family: var(--font-display);
+            font-size: 36px;
+            font-weight: 720;
+            line-height: 1;
+            color: var(--text-primary);
+        }
+        .metric-sub {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        /* Entity chips */
+        .entity-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+        }
+        .entity-chip {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+        }
+        .entity-chip strong {
+            font-family: var(--font-display);
+            display: block;
+            font-size: 28px;
+            font-weight: 720;
+            line-height: 1;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+        .entity-chip span {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* Table */
+        .table-wrap {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg);
+            box-shadow: var(--shadow);
+            overflow: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 640px;
+        }
+        th, td {
+            text-align: left;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+        th {
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0;
+            text-transform: none;
+        }
+        tbody tr:last-child td { border-bottom: none; }
+
+        /* Notice / warning */
+        .notice-block {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px 24px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .notice-block + .notice-block { margin-top: 10px; }
+        .notice-empty {
+            color: var(--text-muted);
+            padding: 32px;
+            text-align: center;
+        }
+
+        /* Risk level colors */
+        .rb-high { background: var(--red-bg); color: var(--red); }
+        .rb-medium { background: var(--orange-bg); color: var(--orange); }
+        .rb-low { background: var(--blue-bg); color: var(--blue); }
+        .rb-none { background: var(--green-bg); color: var(--green); }
+
+        /* State page (loading/error) — matching result.html */
+        .state-page {
+            max-width: 480px;
+            margin: 100px auto;
+            padding: 48px 40px;
+            text-align: center;
+            background: var(--bg);
+            border-radius: 24px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+        }
+        .state-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 24px;
+            background: var(--bg);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: var(--shadow);
+        }
+        .state-icon.err {
+            background: var(--red-bg);
+            color: var(--red);
+        }
+        .state-title {
+            font-family: var(--font-display);
+            font-size: 28px;
+            font-weight: 720;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+        .state-sub { font-size: 15px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 28px; }
+        .btn-retry {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 28px;
+            background: var(--accent);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s;
+            box-shadow: var(--shadow);
+        }
+        .btn-retry:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .animate-spin { animation: spin 1.2s linear infinite; }
+
+        /* Mobile nav — matching result.html */
+        .mobile-nav {
+            display: none;
+            overflow-x: auto;
+            scrollbar-width: none;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 40;
+        }
+        .mobile-nav::-webkit-scrollbar { display: none; }
+        .mobile-nav-inner {
+            display: flex;
+            padding: 8px 20px;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        .mobile-nav-inner a {
+            padding: 8px 14px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 999px;
+            transition: all 0.2s;
+        }
+        .mobile-nav-inner a:hover {
+            background: var(--bg-subtle);
+            color: var(--text-primary);
+        }
+
+        /* Footer — matching result.html */
+        footer {
+            border-top: 1px solid var(--border);
+            background: var(--bg);
+            padding: 24px 40px;
+            margin-left: 264px;
+        }
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .footer-note { font-size: 13px; color: var(--text-muted); }
+
+        @media (max-width: 760px) {
+            header {
+                position: sticky;
+                top: 0;
+                width: auto;
+                border-right: 0;
+                border-bottom: 1px solid var(--border);
+            }
+            .page-wrap { margin-left: 0; padding: 24px 20px 60px; }
+            .sidebar {
+                display: block;
+                position: fixed;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                z-index: 100;
+                transform: translateX(-100%);
+                transition: transform 0.25s ease;
+                width: 280px;
+                background: var(--bg);
+                border-right: 1px solid var(--border);
+                padding: 16px 12px 14px;
+                overflow-y: auto;
+            }
+            .sidebar.open { transform: translateX(0); }
+            .sidebar-backdrop {
+                display: block;
+                position: fixed;
+                inset: 0;
+                z-index: 99;
+                background: rgba(0,0,0,0.4);
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.25s ease;
+            }
+            .sidebar-backdrop.open {
+                opacity: 1;
+                pointer-events: auto;
+            }
+            .sidebar-btn {
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+                position: fixed;
+                bottom: 24px;
+                right: 24px;
+                width: 48px;
+                height: 48px;
+                border-radius: 50%;
+                background: var(--accent);
+                color: #fff;
+                border: none;
+                box-shadow: var(--shadow-lg);
+                z-index: 60;
+                cursor: pointer;
+                font-size: 20px;
+            }
+            .overview-grid { grid-template-columns: 1fr; }
+            footer { margin-left: 0; padding: 20px; }
+            .footer-inner { flex-direction: column; gap: 8px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+{% set ds_status = task.status %}
+{% set ds_report = report %}
+
+<!-- Header -->
+<header class="desktop-header">
+    <div class="header-inner">
+        <div class="header-left">
+            <div class="header-logo-row">
+                <a href="/" class="brand-logo">
+                    <img src="/static/brand-logo.png" alt="ComplianceAI">
+                </a>
+                <button class="theme-toggle" id="themeToggle" type="button" aria-label="切换主题">
+                    <span class="theme-icon-light">☀</span>
+                    <span class="theme-icon-dark">☾</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</header>
+
+{% if ds_status == 'pending' or ds_status == 'running' %}
+<!-- Loading — matching result.html -->
+<div class="state-page">
+    <div class="state-icon">
+        <svg class="animate-spin" width="28" height="28" fill="none" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" stroke="var(--border)" stroke-width="3"></circle>
+            <path fill="var(--accent)" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+    </div>
+    <h2 class="state-title">脱敏处理中</h2>
+    <p class="state-sub">{{ ds_report.progress.message or '正在处理，请稍候。' }}</p>
+</div>
+
+{% elif ds_status == 'failed' %}
+<!-- Error — matching result.html -->
+<div class="state-page">
+    <div class="state-icon err">⚠️</div>
+    <h2 class="state-title">脱敏失败</h2>
+    <p class="state-sub">{{ task.error or '发生未知错误，请重新提交' }}</p>
+    <a href="/" class="btn-retry">重新提交</a>
+</div>
+
+{% elif ds_status == 'completed' and ds_report %}
+
+<!-- Mobile nav — matching result.html pattern -->
+<nav class="mobile-nav">
+    <div class="mobile-nav-inner">
+        <a href="#overview">概览</a>
+        <a href="#entity-types">命中类型</a>
+        <a href="#details">处理明细</a>
+        {% if ds_report.warnings %}<a href="#warnings">注意事项</a>{% endif %}
+    </div>
+</nav>
+
+<div class="page-wrap">
+
+    <!-- Sidebar — matching result.html structure -->
+    <aside class="sidebar">
+        <div class="sidebar-main">
+            <div class="sidebar-logo-row">
+                <a href="/" class="brand-logo">
+                    <img src="/static/brand-logo.png" alt="ComplianceAI">
+                </a>
+                <button class="theme-toggle" id="themeToggle" type="button" aria-label="切换主题">
+                    <span class="theme-icon-light">☀</span>
+                    <span class="theme-icon-dark">☾</span>
+                </button>
+            </div>
+            <p class="side-nav-title">导航</p>
+            <ul class="side-nav-list">
+                <li><a href="#overview" data-nav="overview" class="active">概览</a></li>
+                <li><a href="#entity-types" data-nav="entity-types">命中类型</a></li>
+                <li><a href="#details" data-nav="details">处理明细</a></li>
+                {% if ds_report.warnings %}<li><a href="#warnings" data-nav="warnings">注意事项</a></li>{% endif %}
+            </ul>
+            <div class="side-downloads">
+                <p class="dl-head">导出</p>
+                <a href="/api/desensitize/download/{{ task.id }}/desensitized_output" class="dl-link" data-download-type="desensitized_output">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    脱敏结果文件
+                </a>
+                <a href="/api/desensitize/download/{{ task.id }}/desensitization_report" class="dl-link" data-download-type="desensitization_report">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                    脱敏报告 JSON
+                </a>
+                <a href="/api/desensitize/download/{{ task.id }}/desensitization_report_md" class="dl-link" data-download-type="desensitization_report_md">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                    脱敏报告 Markdown
+                </a>
+                <a href="/api/desensitize/download/{{ task.id }}/retention_note" class="dl-link" data-download-type="retention_note">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    原文件留存说明
+                </a>
+            </div>
+        </div>
+        <button class="back-prev" type="button" onclick="location.href='/'">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            返回首页
+        </button>
+    </aside>
+    <div class="sidebar-backdrop"></div>
+    <button class="sidebar-btn" type="button" aria-label="打开导航">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+
+    <!-- Content — single section display matching result.html -->
+    <div class="content">
+
+        <!-- Overview -->
+        <section id="overview">
+            <div class="ov-card hero">
+                <p class="eyebrow">数据脱敏处理完成</p>
+                <h1>{{ ds_report.document_name }}</h1>
+                <p class="supporting">已按保留格式打码策略生成脱敏结果。自动识别可能存在漏检或误检，正式外发前建议抽样复核。</p>
+            </div>
+
+            <div class="overview-grid">
+                <div class="ov-card">
+                    <p class="ov-label">命中总数</p>
+                    <p class="metric">{{ ds_report.summary.total_findings }}</p>
+                    <p class="metric-sub">处敏感信息</p>
+                </div>
+                <div class="ov-card">
+                    <p class="ov-label">输入类型</p>
+                    <p class="metric" style="font-size:26px">{{ ds_report.input_type }}</p>
+                    <p class="metric-sub">{{ ds_report.input_name }}</p>
+                </div>
+                <div class="ov-card">
+                    <p class="ov-label">处理策略</p>
+                    <p class="metric" style="font-size:26px">格式打码</p>
+                    <p class="metric-sub">例如 138****5678</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Entity types -->
+        <section id="entity-types">
+            <div class="section-head">
+                <h2 class="section-title">命中类型</h2>
+            </div>
+            <div class="entity-grid">
+                {% for key, value in ds_report.summary.entity_counts.items() %}
+                <div class="entity-chip">
+                    <strong>{{ value }}</strong>
+                    <span>{{ key }}</span>
+                </div>
+                {% else %}
+                <div class="notice-block notice-empty">未命中敏感信息，仍建议人工抽样复核。</div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Findings table -->
+        <section id="details">
+            <div class="section-head">
+                <h2 class="section-title">处理明细</h2>
+                <span class="section-meta">最多展示 500 条</span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>类型</th>
+                            <th>位置</th>
+                            <th>替换为</th>
+                            <th>预览</th>
+                            <th>置信度</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in ds_report.findings %}
+                        <tr>
+                            <td><span class="rb-medium" style="padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600">{{ item.entity_type }}</span></td>
+                            <td>{{ item.locator or item.surface }}</td>
+                            <td>{{ item.replacement }}</td>
+                            <td>{{ item.preview }}</td>
+                            <td>{{ item.score }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" class="notice-empty">暂无命中明细</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Warnings -->
+        {% if ds_report.warnings %}
+        <section id="warnings">
+            <div class="section-head">
+                <h2 class="section-title">注意事项</h2>
+            </div>
+            {% for warning in ds_report.warnings %}
+            <div class="notice-block">{{ warning }}</div>
+            {% endfor %}
+        </section>
+        {% endif %}
+
+        <!-- Mobile downloads — matching result.html -->
+        <div style="display:none;" class="mobile-dl">
+            <p style="font-size:12px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px">下载报告</p>
+            <a href="/api/desensitize/download/{{ task.id }}/desensitized_output" data-download-type="desensitized_output" style="display:block;padding:14px 0;border-bottom:1px solid var(--border);font-size:14px;color:var(--text-secondary);text-decoration:none">脱敏结果文件</a>
+            <a href="/api/desensitize/download/{{ task.id }}/desensitization_report" data-download-type="desensitization_report" style="display:block;padding:14px 0;border-bottom:1px solid var(--border);font-size:14px;color:var(--text-secondary);text-decoration:none">脱敏报告 JSON</a>
+            <a href="/api/desensitize/download/{{ task.id }}/desensitization_report_md" data-download-type="desensitization_report_md" style="display:block;padding:14px 0;border-bottom:1px solid var(--border);font-size:14px;color:var(--text-secondary);text-decoration:none">脱敏报告 Markdown</a>
+            <a href="/api/desensitize/download/{{ task.id }}/retention_note" data-download-type="retention_note" style="display:block;padding:14px 0;font-size:14px;color:var(--text-secondary);text-decoration:none">原文件留存说明</a>
+        </div>
+        <style>@media(max-width:900px){.mobile-dl{display:block!important;margin-top:32px}}</style>
+
+    </div><!-- /content -->
+</div><!-- /page-wrap -->
+
+{% endif %}
+
+<!-- Footer — matching result.html -->
+<footer>
+    <div class="footer-inner">
+        <p class="footer-note">ComplianceAI — 辅助决策，不替代专业法律判断</p>
+        <p class="footer-note">个保法 · 网安法 · 数安法 · GDPR</p>
+    </div>
+</footer>
+<div id="downloadToast" class="download-toast"></div>
+
+<script>
+(function() {
+    // Theme toggle — same as result.html
+    const themeToggle = document.getElementById('themeToggle');
+    function applyTheme(dark) {
+        document.body.classList.toggle('dark', dark);
+        localStorage.setItem('theme', dark ? 'dark' : 'light');
+    }
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') applyTheme(true);
+    else if (savedTheme === null && window.matchMedia('(prefers-color-scheme: dark)').matches) applyTheme(true);
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            applyTheme(!document.body.classList.contains('dark'));
+        });
+    }
+
+    // ===== Single Page View — same interaction as result.html =====
+    const allSections = document.querySelectorAll('.content > section[id]');
+    const navLinks = document.querySelectorAll('.side-nav-list a');
+    let currentView = 'overview';
+
+    // Sidebar toggle (mobile)
+    const sidebarBtn = document.querySelector('.sidebar-btn');
+    const sidebarEl = document.querySelector('.sidebar');
+    const sidebarBackdrop = document.querySelector('.sidebar-backdrop');
+    function toggleSidebar(open) {
+        if (!sidebarEl || !sidebarBackdrop) return;
+        sidebarEl.classList.toggle('open', open);
+        sidebarBackdrop.classList.toggle('open', open);
+        document.body.style.overflow = open ? 'hidden' : '';
+    }
+    if (sidebarBtn) {
+        sidebarBtn.addEventListener('click', () => toggleSidebar(true));
+    }
+    if (sidebarBackdrop) {
+        sidebarBackdrop.addEventListener('click', () => toggleSidebar(false));
+    }
+
+    function showSection(sectionId, skipScroll) {
+        currentView = sectionId;
+        allSections.forEach(s => {
+            s.style.display = 'none';
+        });
+        const target = document.getElementById(sectionId);
+        if (target) {
+            target.style.display = 'block';
+            if (!skipScroll) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+        navLinks.forEach(l => l.classList.remove('active'));
+        const link = document.querySelector(`.side-nav-list a[data-nav="${sectionId}"]`);
+        if (link) link.classList.add('active');
+        toggleSidebar(false);
+    }
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const navId = link.getAttribute('data-nav');
+            showSection(navId);
+        });
+    });
+
+    // Show overview by default
+    showSection('overview');
+
+    // Mobile nav links — scroll to section and show it
+    document.querySelectorAll('.mobile-nav-inner a').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const href = link.getAttribute('href');
+            const sectionId = href.substring(1);
+            showSection(sectionId);
+        });
+    });
+
+    // Download toast — same as result.html
+    const toast = document.getElementById('downloadToast');
+    function apiUrl(path) {
+        try { return new URL(path, window.location.href).toString(); }
+        catch (_) { return path; }
+    }
+    function showToast(message) {
+        if (!toast) return;
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 4200);
+    }
+    document.querySelectorAll('[data-download-type]').forEach(link => {
+        link.addEventListener('click', async event => {
+            event.preventDefault();
+            const type = link.dataset.downloadType;
+            try {
+                const res = await fetch(apiUrl(`/api/desensitize/save-download/{{ task.id }}/${encodeURIComponent(type)}`), { method: 'POST' });
+                const data = await res.json();
+                if (!res.ok || !data.ok) throw new Error(data.error || '保存失败');
+                showToast(`已保存到：${data.path}`);
+            } catch (error) {
+                showToast(error?.message || '保存失败');
+                window.location.href = link.href;
+            }
+        });
+    });
+})();
+</script>
+</body>
+</html>

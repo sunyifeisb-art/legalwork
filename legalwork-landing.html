@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LegalWork — 法律人工智能工作台</title>
+    <meta name="description" content="面向法律专业人士的 AI 全流程赋能平台。69+ 法律 AI 技能、智能 OCR、文件脱敏、案件管理，一站式法律工作解决方案。">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a1a2e;
+            --secondary: #16213e;
+            --accent: #0f3460;
+            --highlight: #e94560;
+            --gold: #c9a227;
+            --text: #f1f1f1;
+            --text-muted: #a0a0b0;
+            --text-dim: #6b6b7b;
+            --surface: #1f1f3a;
+            --surface-hover: #2a2a4a;
+            --border: #2d2d50;
+            --success: #4ade80;
+            --warning: #fbbf24;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--primary);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ===== HERO SECTION ===== */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+            background: 
+                radial-gradient(ellipse at 20% 50%, rgba(233, 69, 96, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(15, 52, 96, 0.3) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(201, 162, 39, 0.05) 0%, transparent 50%);
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.3;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 999px;
+            background: rgba(233, 69, 96, 0.1);
+            border: 1px solid rgba(233, 69, 96, 0.3);
+            color: var(--highlight);
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 2rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .hero-badge span {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background: var(--highlight);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .hero h1 {
+            font-family: 'Noto Serif SC', serif;
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #fff 0%, #c9c9d9 50%, var(--gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: fadeInUp 1s ease-out 0.2s both;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+            color: var(--text-muted);
+            max-width: 680px;
+            margin-bottom: 3rem;
+            animation: fadeInUp 1s ease-out 0.4s both;
+        }
+
+        .hero-subtitle strong {
+            color: var(--gold);
+            font-weight: 600;
+        }
+
+        /* ===== DOWNLOAD SECTION ===== */
+        .download-zone {
+            animation: fadeInUp 1s ease-out 0.6s both;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .download-primary {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-download {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 1rem 2.5rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-download::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-download:hover::before {
+            left: 100%;
+        }
+
+        .btn-main {
+            background: linear-gradient(135deg, var(--highlight), #b91c48);
+            color: white;
+            box-shadow: 0 4px 24px rgba(233, 69, 96, 0.35);
+            font-size: 1.2rem;
+            padding: 1.2rem 3rem;
+        }
+
+        .btn-main:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(233, 69, 96, 0.5);
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            font-size: 0.95rem;
+            padding: 0.85rem 1.8rem;
+        }
+
+        .btn-secondary:hover {
+            background: var(--surface-hover);
+            border-color: var(--highlight);
+        }
+
+        .btn-secondary.active {
+            border-color: var(--highlight);
+            background: rgba(233, 69, 96, 0.1);
+        }
+
+        .download-meta {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+
+        .download-meta code {
+            background: var(--surface);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'SF Mono', monospace;
+            font-size: 0.8rem;
+        }
+
+        .platform-selector {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        .platform-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .platform-btn:hover {
+            border-color: var(--highlight);
+            color: var(--text);
+        }
+
+        .platform-btn.active {
+            background: rgba(233, 69, 96, 0.1);
+            border-color: var(--highlight);
+            color: var(--highlight);
+        }
+
+        .platform-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            margin-top: 3rem;
+            animation: fadeInUp 1s ease-out 0.8s both;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gold);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-top: 0.4rem;
+        }
+
+        /* ===== SECTIONS COMMON ===== */
+        section {
+            padding: 6rem 2rem;
+            position: relative;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-label {
+            display: inline-block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--highlight);
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-family: 'Noto Serif SC', serif;
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            line-height: 1.3;
+        }
+
+        .section-desc {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* ===== FEATURES GRID ===== */
+        .features {
+            background: linear-gradient(180deg, var(--primary) 0%, var(--secondary) 100%);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .feature-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--highlight), var(--gold));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.25rem;
+            font-size: 1.5rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .feature-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-top: 1rem;
+        }
+
+        .tag {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.05);
+            color: var(--text-dim);
+            border: 1px solid var(--border);
+        }
+
+        /* ===== CAPABILITIES ===== */
+        .capabilities {
+            background: var(--secondary);
+        }
+
+        .capability-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .capability-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1.25rem;
+            background: var(--surface);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            transition: all 0.2s ease;
+        }
+
+        .capability-item:hover {
+            border-color: var(--gold);
+            background: var(--surface-hover);
+        }
+
+        .capability-check {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(74, 222, 128, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: var(--success);
+            font-size: 0.85rem;
+        }
+
+        .capability-text {
+            font-size: 0.95rem;
+            color: var(--text);
+        }
+
+        .capability-text small {
+            display: block;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            margin-top: 0.2rem;
+        }
+
+        /* ===== ARCHITECTURE DIAGRAM ===== */
+        .architecture {
+            background: var(--primary);
+        }
+
+        .arch-flow {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 3rem 0;
+        }
+
+        .arch-node {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            text-align: center;
+            min-width: 140px;
+        }
+
+        .arch-node .arch-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .arch-node .arch-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .arch-arrow {
+            color: var(--highlight);
+            font-size: 1.2rem;
+        }
+
+        .arch-detail {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .arch-card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .arch-card h4 {
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+            color: var(--gold);
+        }
+
+        .arch-card ul {
+            list-style: none;
+        }
+
+        .arch-card li {
+            padding: 0.3rem 0;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            position: relative;
+            padding-left: 1.2rem;
+        }
+
+        .arch-card li::before {
+            content: '›';
+            position: absolute;
+            left: 0;
+            color: var(--highlight);
+        }
+
+        /* ===== HOW IT WORKS ===== */
+        .how-it-works {
+            background: linear-gradient(180deg, var(--secondary) 0%, var(--primary) 100%);
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            counter-reset: step;
+        }
+
+        .step {
+            position: relative;
+            padding: 2rem;
+            background: var(--surface);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .step::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            top: -1rem;
+            left: 1.5rem;
+            width: 2rem;
+            height: 2rem;
+            background: var(--highlight);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: white;
+        }
+
+        .step h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .step p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .step code {
+            display: block;
+            background: var(--primary);
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'SF Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--gold);
+            margin-top: 1rem;
+            overflow-x: auto;
+        }
+
+        /* ===== CTA SECTION ===== */
+        .cta {
+            background: var(--secondary);
+            text-align: center;
+            padding: 5rem 2rem;
+        }
+
+        .cta h2 {
+            font-family: 'Noto Serif SC', serif;
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            margin-bottom: 1.5rem;
+        }
+
+        .cta p {
+            color: var(--text-muted);
+            max-width: 500px;
+            margin: 0 auto 2rem;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-cta-primary {
+            background: var(--highlight);
+            color: white;
+        }
+
+        .btn-cta-primary:hover {
+            background: #d63d56;
+            transform: translateY(-2px);
+        }
+
+        .btn-cta-secondary {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-cta-secondary:hover {
+            border-color: var(--highlight);
+            color: var(--highlight);
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            background: var(--primary);
+            border-top: 1px solid var(--border);
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--highlight);
+        }
+
+        .footer-copy {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+
+        .footer-license {
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--highlight);
+        }
+
+        /* ===== NAV ===== */
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            background: rgba(26, 26, 46, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-brand {
+            font-family: 'Noto Serif SC', serif;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--text);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-brand span {
+            color: var(--highlight);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text);
+        }
+
+        .nav-cta {
+            background: var(--highlight);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .nav-cta:hover {
+            background: #d63d56;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            .hero-stats {
+                gap: 1rem;
+            }
+            section {
+                padding: 4rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="#" class="nav-brand">
+            <img src="legalwork-logo-white.png" alt="LegalWork" width="28" height="28" style="border-radius:6px;">
+            LegalWork
+        </a>
+        <div class="nav-links">
+            <a href="#features">功能</a>
+            <a href="#capabilities">能力</a>
+            <a href="#architecture">架构</a>
+            <a href="#how">使用</a>
+        </div>
+        <a href="https://github.com/sunyifeisb-art/legalwork" class="nav-cta" target="_blank">GitHub</a>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-badge">
+            <span></span>
+            开源法律 AI 工作台 v0.1.0
+        </div>
+        <h1>LegalWork<br>法律人工智能工作台</h1>
+        <p class="hero-subtitle">
+            面向法律专业人士的 <strong>AI 全流程赋能平台</strong>。
+            69+ 法律 AI 技能、智能 OCR 识别、文件脱敏、案件管理，
+            让法律工作更高效、更专业、更安全。
+        </p>
+        
+        <div class="download-zone">
+            <div class="download-primary">
+                <button class="btn-download btn-main" id="mainDownloadBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    <span id="downloadText">下载 LegalWork</span>
+                </button>
+                <p class="download-meta" id="downloadMeta">检测到您的系统：<span id="detectedOS">正在检测...</span></p>
+            </div>
+            
+            <div class="platform-selector">
+                <button class="platform-btn" data-platform="mac" onclick="selectPlatform('mac')">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.21-1.98 1.07-3.11-1.05.05-2.31.72-3.06 1.55-.67.73-1.26 1.91-1.1 3.02 1.16.09 2.35-.75 3.09-1.46z"/></svg>
+                    macOS
+                </button>
+                <button class="platform-btn" data-platform="win" onclick="selectPlatform('win')">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5A2.5 2.5 0 0 1 5.5 3h13A2.5 2.5 0 0 1 21 5.5v13a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 18.5v-13zM5.5 5a.5.5 0 0 0-.5.5v13a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-13a.5.5 0 0 0-.5-.5h-13zM11 7h2v2h-2V7zm0 4h2v2h-2v-2zm-4-4h2v2H7V7zm0 4h2v2H7v-2z"/></svg>
+                    Windows
+                </button>
+                <button class="platform-btn" data-platform="linux" onclick="selectPlatform('linux')">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                    Linux
+                </button>
+                <button class="platform-btn" data-platform="source" onclick="selectPlatform('source')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                    源码安装
+                </button>
+            </div>
+        </div>
+
+        <div class="hero-stats">
+            <div class="stat-item">
+                <div class="stat-number">70+</div>
+                <div class="stat-label">法律 AI 技能</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">3</div>
+                <div class="stat-label">OCR 引擎</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">∞</div>
+                <div class="stat-label">实战知识库</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">1</div>
+                <div class="stat-label">桌面端应用</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header fade-in">
+                <div class="section-label">核心功能</div>
+                <h2 class="section-title">全栈法律 AI 能力矩阵</h2>
+                <p class="section-desc">从文档识别到案件分析，从文书起草到裁判预测，覆盖法律工作的每一个关键环节。</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card fade-in">
+                    <div class="feature-icon" style="background: rgba(233, 69, 96, 0.15);">🧠</div>
+                    <h3>法律 AI 技能引擎</h3>
+                    <p>69 项标准化法律 AI 技能，涵盖案情分析、证据评估、裁判预测、文书起草、合规审查等全流程。</p>
+                    <div class="feature-tags">
+                        <span class="tag">案情分析</span>
+                        <span class="tag">证据评估</span>
+                        <span class="tag">裁判预测</span>
+                        <span class="tag">文书起草</span>
+                    </div>
+                </div>
+                
+                <div class="feature-card fade-in">
+                    <div class="feature-icon" style="background: rgba(74, 222, 128, 0.15);">📄</div>
+                    <h3>智能 OCR 识别</h3>
+                    <p>PaddleOCR + Tesseract 双引擎，支持 PDF/图片/Word 扫描件自动识别，坐标级精确输出。</p>
+                    <div class="feature-tags">
+                        <span class="tag">PDF 识别</span>
+                        <span class="tag">图片 OCR</span>
+                        <span class="tag">批量处理</span>
+                        <span class="tag">坐标输出</span>
+                    </div>
+                </div>
+                
+                <div class="feature-card fade-in">
+                    <div class="feature-icon" style="background: rgba(251, 191, 36, 0.15);">🔒</div>
+                    <h3>文件智能脱敏</h3>
+                    <p>自动识别身份证号、手机号、银行卡号等敏感实体，三种脱敏策略，PDF 坐标级精确涂黑。</p>
+                    <div class="feature-tags">
+                        <span class="tag">实体识别</span>
+                        <span class="tag">策略引擎</span>
+                        <span class="tag">PDF 涂黑</span>
+                        <span class="tag">隐私合规</span>
+                    </div>
+                </div>
+                
+                <div class="feature-card fade-in">
+                    <div class="feature-icon" style="background: rgba(201, 162, 39, 0.15);">⚖️</div>
+                    <h3>案件管理系统</h3>
+                    <p>CaseAIOrchestrator AI 案件编排、CaseStore 数据存储、CourtAIPredictor 裁判预测，全流程管理。</p>
+                    <div class="feature-tags">
+                        <span class="tag">案件编排</span>
+                        <span class="tag">裁判预测</span>
+                        <span class="tag">证据链分析</span>
+                        <span class="tag">时间线生成</span>
+                    </div>
+                </div>
+                
+                <div class="feature-card fade-in">
+                    <div class="feature-icon" style="background: rgba(139, 92, 246, 0.15);">📚</div>
+                    <h3>实战经验知识库</h3>
+                    <p>收录资深律师的实战经验总结，按主题结构化存储，涵盖执业理念、工作方法、案件准备、团队管理等。</p>
+                    <div class="feature-tags">
+                        <span class="tag">执业理念</span>
+                        <span class="tag">工作方法</span>
+                        <span class="tag">时间管理</span>
+                        <span class="tag">团队管理</span>
+                    </div>
+                </div>
+                
+                <div class="feature-card fade-in">
+                    <div class="feature-icon" style="background: rgba(59, 130, 246, 0.15);">🖥️</div>
+                    <h3>桌面端应用</h3>
+                    <p>基于 Electron 的本地 AI Agent 运行时，支持 DeepSeek 等模型集成、MCP 协议、线程管理、记忆系统。</p>
+                    <div class="feature-tags">
+                        <span class="tag">本地运行</span>
+                        <span class="tag">模型集成</span>
+                        <span class="tag">MCP 协议</span>
+                        <span class="tag">长期记忆</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CAPABILITIES -->
+    <section class="capabilities" id="capabilities">
+        <div class="container">
+            <div class="section-header fade-in">
+                <div class="section-label">能力清单</div>
+                <h2 class="section-title">70 项法律 AI 技能一览</h2>
+                <p class="section-desc">标准化 intake → 处理 → 输出流水线，每一项技能都经过法律实务验证。</p>
+            </div>
+            
+            <div class="capability-list">
+                <div class="capability-item fade-in">
+                    <div class="capability-check">✓</div>
+                    <div class="capability-text">法律调研 <small>系统性检索、法规分析、类案研究</small></div>
+                </div>
+                <div class="capability-item fade-in">
+                    <div class="capability-check">✓</div>
+                    <div class="capability-text">案情综合分析 <small>事实抽取、要素提取、结构化分析</small></div>
+                </div>
+                <div class="capability-item fade-in">
+                    <div class="capability-check">✓</div>
+                    <div class="capability-text">证据评估 <small>三性认证、证明力评估、证据链构建</small></div>
+                </div>
+                <div class="capability-item fade-in">
+                    <div class="capability-check">✓</div>
+                    <div class="capability-text">裁判预测 <small>裁判结果预测、风险评估、争议焦点识别</small></div>
+                </div>
+                <div class="capability-item fade-in">
+                    <div class="capability-check">✓</div>
+                    <div class="capability-text">文书起草 <small>判决书、备忘录、评估报告、会议纪要</small></div>
+                </div>
+                <div class="capability-item fade-in">
+                    <div class="capability-check">✓</div>
+                    <div class="capability-text">法律检索 <small>法条检索、案例检索、来源验证</small></div>
+                </div>
+                <div class="capability-item fade-in">
+                    <div class="capability-check">✓</div>
+                    <div class="capability-text">合规审查 <small>合同风险、尽职调查、数据合规</small></div>
+                </div>
+                <div class="capability-item fade-in">
+                    <div class="capability-check">✓</div>
+                    <div class="capability-text">法律推理 <small>14 种推理方法：演绎、归纳、类比、溯因等</small></div>
+                </div>
+                <div class="capability-item fade-in">
+                    <div class="capability-check">✓</div>
+                    <div class="capability-text">文书格式化 <small>法律文档格式规范化、自动排版</small></div>
+                </div>
+                <div class="capability-item fade-in">
+                    <div class="capability-check">✓</div>
+                    <div class="capability-text">案件生命周期 <small>案件规划、时间线、进度管理</small></div>
+                </div>
+                <div class="capability-item fade-in">
+                    <div class="capability-check">✓</div>
+                    <div class="capability-text">法规知识库 <small>国家法律、行业标准、地方规范</small></div>
+                </div>
+                <div class="capability-item fade-in">
+                    <div class="capability-check">✓</div>
+                    <div class="capability-text">去 AI 痕迹 <small>法学论文润色、降低 AI 检测率</small></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ARCHITECTURE -->
+    <section class="architecture" id="architecture">
+        <div class="container">
+            <div class="section-header fade-in">
+                <div class="section-label">技术架构</div>
+                <h2 class="section-title">先进的多层架构设计</h2>
+                <p class="section-desc">本地优先、模型无关、可扩展的现代化法律 AI 架构。</p>
+            </div>
+            
+            <div class="arch-flow fade-in">
+                <div class="arch-node">
+                    <div class="arch-icon">📄</div>
+                    <div class="arch-name">文档输入</div>
+                </div>
+                <div class="arch-arrow">→</div>
+                <div class="arch-node">
+                    <div class="arch-icon">🔍</div>
+                    <div class="arch-name">OCR 识别</div>
+                </div>
+                <div class="arch-arrow">→</div>
+                <div class="arch-node">
+                    <div class="arch-icon">🔒</div>
+                    <div class="arch-name">脱敏处理</div>
+                </div>
+                <div class="arch-arrow">→</div>
+                <div class="arch-node">
+                    <div class="arch-icon">⚙️</div>
+                    <div class="arch-name">技能引擎</div>
+                </div>
+                <div class="arch-arrow">→</div>
+                <div class="arch-node">
+                    <div class="arch-icon">🧠</div>
+                    <div class="arch-name">AI 推理</div>
+                </div>
+                <div class="arch-arrow">→</div>
+                <div class="arch-node">
+                    <div class="arch-icon">📤</div>
+                    <div class="arch-name">结构化输出</div>
+                </div>
+            </div>
+            
+            <div class="arch-detail">
+                <div class="arch-card fade-in">
+                    <h4>AI 引擎层</h4>
+                    <ul>
+                        <li>DeepSeek API 兼容</li>
+                        <li>OpenAI API 兼容</li>
+                        <li>模型无关设计</li>
+                        <li>子代理任务委派</li>
+                    </ul>
+                </div>
+                <div class="arch-card fade-in">
+                    <h4>协议与集成</h4>
+                    <ul>
+                        <li>HTTP/SSE 实时事件</li>
+                        <li>MCP 工具服务器</li>
+                        <li>RESTful API</li>
+                        <li>RAG 知识库检索</li>
+                    </ul>
+                </div>
+                <div class="arch-card fade-in">
+                    <h4>数据处理</h4>
+                    <ul>
+                        <li>PaddleOCR / Tesseract</li>
+                        <li>PyMuPDF 文档解析</li>
+                        <li>语义分块与增强</li>
+                        <li>Cache-first 架构</li>
+                    </ul>
+                </div>
+                <div class="arch-card fade-in">
+                    <h4>存储与记忆</h4>
+                    <ul>
+                        <li>SQLite 结构化存储</li>
+                        <li>JSONL 日志记录</li>
+                        <li>长期记忆系统</li>
+                        <li>线程管理与 Fork</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="how-it-works" id="how">
+        <div class="container">
+            <div class="section-header fade-in">
+                <div class="section-label">快速开始</div>
+                <h2 class="section-title">三步上手 LegalWork</h2>
+                <p class="section-desc">支持命令行、桌面端两种使用方式，灵活适配你的工作流。</p>
+            </div>
+            
+            <div class="steps">
+                <div class="step fade-in">
+                    <h3>安装环境</h3>
+                    <p>克隆仓库并安装 Python 依赖，或使用桌面端安装包。</p>
+                    <code>pip install -r requirements.txt<br>pip install paddleocr pytesseract</code>
+                </div>
+                <div class="step fade-in">
+                    <h3>运行技能</h3>
+                    <p>通过命令行调用 70 项法律 AI 技能，处理文档或进行分析。</p>
+                    <code>python3 run_skill.py legal-case-analysis 案件.pdf</code>
+                </div>
+                <div class="step fade-in">
+                    <h3>桌面端体验</h3>
+                    <p>启动桌面端应用，获得完整的可视化 AI Agent 工作体验。</p>
+                    <code>cd apps/desktop-legalwork<br>npm install && npm run dev</code>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta">
+        <div class="container">
+            <h2 class="fade-in">开始你的法律 AI 之旅</h2>
+            <p class="fade-in">加入开源社区，与法律科技同行一起探索 AI 赋能的无限可能。</p>
+            <div class="cta-buttons fade-in">
+                <a href="https://github.com/sunyifeisb-art/legalwork" class="btn-cta btn-cta-primary" target="_blank">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                    </svg>
+                    访问 GitHub 仓库
+                </a>
+                <a href="https://github.com/sunyifeisb-art/legalwork/releases" class="btn-cta btn-cta-secondary" target="_blank">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    查看所有版本
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-links">
+            <a href="https://github.com/sunyifeisb-art/legalwork" target="_blank">GitHub</a>
+            <a href="https://github.com/sunyifeisb-art/legalwork/releases" target="_blank">Releases</a>
+            <a href="https://github.com/sunyifeisb-art/legalwork/blob/main/README.md" target="_blank">文档</a>
+            <a href="https://github.com/sunyifeisb-art/legalwork/issues" target="_blank">反馈</a>
+        </div>
+        <div class="footer-copy">LegalWork — 法律人工智能工作台</div>
+        <div class="footer-license">原创 Python 代码：MIT License · 桌面端：PolyForm Noncommercial License 1.0.0</div>
+    </footer>
+
+    <script>
+        // ===== OS DETECTION =====
+        const detectOS = () => {
+            const ua = navigator.userAgent;
+            if (ua.indexOf('Win') !== -1) return 'win';
+            if (ua.indexOf('Mac') !== -1) return 'mac';
+            if (ua.indexOf('Linux') !== -1) return 'linux';
+            return 'source';
+        };
+
+        const osNames = {
+            win: 'Windows',
+            mac: 'macOS',
+            linux: 'Linux',
+            source: '未知系统'
+        };
+
+        const osFiles = {
+            win: 'LegalWork-Setup-0.1.0.exe',
+            mac: 'LegalWork-0.1.0.dmg',
+            linux: 'LegalWork-0.1.0.AppImage',
+            source: '源码安装'
+        };
+
+        const osCommands = {
+            win: null,
+            mac: null,
+            linux: null,
+            source: 'git clone https://github.com/sunyifeisb-art/legalwork.git'
+        };
+
+        let currentPlatform = detectOS();
+
+        // ===== UI UPDATE =====
+        function updateDownloadUI() {
+            const btn = document.getElementById('mainDownloadBtn');
+            const text = document.getElementById('downloadText');
+            const meta = document.getElementById('downloadMeta');
+            const detected = document.getElementById('detectedOS');
+            
+            // Update platform buttons
+            document.querySelectorAll('.platform-btn').forEach(p => {
+                p.classList.toggle('active', p.dataset.platform === currentPlatform);
+            });
+            
+            detected.textContent = osNames[currentPlatform];
+            
+            if (currentPlatform === 'source') {
+                text.textContent = '源码安装';
+                meta.innerHTML = '<code>git clone https://github.com/sunyifeisb-art/legalwork.git</code>';
+                btn.onclick = () => {
+                    window.open('https://github.com/sunyifeisb-art/legalwork', '_blank');
+                };
+            } else {
+                text.textContent = `下载 ${osNames[currentPlatform]} 版本`;
+                meta.innerHTML = `检测到您的系统：${osNames[currentPlatform]} · <span style="color:var(--text-dim)">${osFiles[currentPlatform]}</span>`;
+                btn.onclick = () => {
+                    window.open('https://github.com/sunyifeisb-art/legalwork/releases/latest', '_blank');
+                };
+            }
+        }
+
+        function selectPlatform(platform) {
+            currentPlatform = platform;
+            updateDownloadUI();
+        }
+
+        // ===== SCROLL ANIMATION =====
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+        // ===== INIT =====
+        updateDownloadUI();
+
+        // Smooth scroll for nav links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

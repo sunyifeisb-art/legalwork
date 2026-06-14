@@ -1,0 +1,27 @@
+name: input-intake-preprocess
+stage: first-phase
+goal: 将用户给的文件或文本整理为可进入审查链路的标准输入
+inputs:
+  - input_file_or_text
+outputs:
+  - normalized_text
+  - document_type_guess
+  - segmented_units
+steps:
+  - id: intake
+    action: 接收文件或文本
+  - id: extract_text
+    action: 提取可处理内容
+  - id: normalize_text
+    action: 做轻量清洗、标准化和去除明显噪音
+  - id: classify_document
+    action: 判断文档更接近哪类合规材料
+  - id: segment_text
+    action: 按审查需要切分文本
+  - id: handoff
+    action: 将标准化结果交给后续审查工作流
+failure_modes:
+  - 输入内容不可处理
+  - 文本抽取失败
+  - 文档类型识别不稳定
+  - 文本切分结果不适合后续审查

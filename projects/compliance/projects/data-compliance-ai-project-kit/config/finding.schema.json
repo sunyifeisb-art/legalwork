@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ReviewFindingFile",
+  "type": "object",
+  "required": ["path_id", "summary", "items"],
+  "properties": {
+    "path_id": {"type": "string"},
+    "summary": {"type": "string"},
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["risk_point", "risk_level", "legal_basis", "reason", "suggestion", "auto_recheck"],
+        "properties": {
+          "risk_point": {"type": "string"},
+          "risk_level": {"type": "string", "enum": ["高风险", "中风险", "建议优化"]},
+          "legal_basis": {"type": "string"},
+          "reason": {"type": "string"},
+          "suggestion": {"type": "string"},
+          "auto_recheck": {"type": "boolean"},
+          "rewritten_clause": {"type": "string"}
+        }
+      }
+    }
+  }
+}

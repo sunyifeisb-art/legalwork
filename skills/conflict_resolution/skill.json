@@ -1,0 +1,23 @@
+{
+  "name": "conflict-resolution",
+  "description": "冲突解决分析：分析法律冲突并提出解决方案",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/resolve"
+    ],
+    "promptPatterns": [
+      "冲突解决|法律冲突|规范冲突|管辖权冲突|利益冲突"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

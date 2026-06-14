@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "pack": {
+    "scenario_id": "privacy_document_remediation",
+    "sections": [
+      {
+        "id": "clause_gap_inventory",
+        "title": "条款缺口盘点",
+        "required_items": [
+          "处理目的是否披露",
+          "处理方式是否披露",
+          "信息类型/字段范围是否披露",
+          "第三方/接收方是否披露",
+          "用户权利、联系方式、保存删除是否披露"
+        ]
+      },
+      {
+        "id": "rewrite_priorities",
+        "title": "整改优先级与补写条款",
+        "required_items": [
+          "高风险条款优先级",
+          "需新增的披露条款",
+          "需补充的法律基础与必要性表达",
+          "需补充的保存删除与用户权利条款"
+        ]
+      },
+      {
+        "id": "third_party_alignment",
+        "title": "第三方 / 共享口径整改",
+        "required_items": [
+          "第三方/SDK是否列明",
+          "共享字段与处理目的是否一致",
+          "披露口径与实际处理是否一致",
+          "是否需同步修改相关清单或附录"
+        ]
+      },
+      {
+        "id": "redraft_outputs",
+        "title": "整改交付输出",
+        "required_items": [
+          "条款缺口清单",
+          "建议补写条款项",
+          "整改优先级列表",
+          "需自动复核的重点条款"
+        ]
+      }
+    ]
+  }
+}

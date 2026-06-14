@@ -1,0 +1,18 @@
+{
+  "name": "trial-scheduling-and-deadline-monitoring",
+  "description": "庭审排期与期限监控：管理案件关键时间节点",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/schedule"
+    ],
+    "promptPatterns": [
+      "庭审排期|期限监控|诉讼期限|举证期限|上诉期限"
+    ],
+    "fileTypes": []
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}

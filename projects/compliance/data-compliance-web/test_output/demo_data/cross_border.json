@@ -1,0 +1,126 @@
+{
+  "enabled": true,
+  "scenario_name": "数据出境专项审查",
+  "matched_risk_points": [
+    "合法性基础与必要性表达可能不足"
+  ],
+  "sections": [
+    {
+      "id": "transfer_subjects",
+      "title": "境外接收方与出境对象清单",
+      "required_items": [
+        "境外接收方名称/主体信息",
+        "联系方式",
+        "所在国家或地区",
+        "出境数据类型/字段范围",
+        "涉及业务场景"
+      ],
+      "related_evidence": [
+        {
+          "risk_point": "合法性基础与必要性表达可能不足",
+          "risk_level": "建议优化",
+          "owner_hint": "法务/产品",
+          "evidence_items": [
+            "处理活动对应的法律基础说明表",
+            "同意弹窗/授权页截图",
+            "功能必要性论证材料"
+          ],
+          "why_needed": "用于核对每项处理活动是否有明确法律基础与必要性边界。",
+          "related_scenarios": [
+            "隐私文档整改",
+            "数据出境专项审查"
+          ]
+        },
+        {
+          "risk_point": "字段、处理目的与法律基础之间的对应关系可能不足",
+          "risk_level": "建议优化",
+          "owner_hint": "法务/产品",
+          "evidence_items": [
+            "字段-目的-法律基础三联表",
+            "高风险处理活动的单独论证材料",
+            "相关授权或合同依据截图/文本"
+          ],
+          "why_needed": "用于把具体字段、处理目的和法律基础做一一对应，避免混合表述。",
+          "related_scenarios": []
+        }
+      ]
+    },
+    {
+      "id": "transfer_basis_and_necessity",
+      "title": "出境场景、必要性与法律基础核查",
+      "required_items": [
+        "出境场景说明",
+        "业务必要性论证",
+        "处理法律基础",
+        "是否涉及单独同意或其他专项条件"
+      ],
+      "related_evidence": [
+        {
+          "risk_point": "合法性基础与必要性表达可能不足",
+          "risk_level": "建议优化",
+          "owner_hint": "法务/产品",
+          "evidence_items": [
+            "处理活动对应的法律基础说明表",
+            "同意弹窗/授权页截图",
+            "功能必要性论证材料"
+          ],
+          "why_needed": "用于核对每项处理活动是否有明确法律基础与必要性边界。",
+          "related_scenarios": [
+            "隐私文档整改",
+            "数据出境专项审查"
+          ]
+        },
+        {
+          "risk_point": "字段、处理目的与法律基础之间的对应关系可能不足",
+          "risk_level": "建议优化",
+          "owner_hint": "法务/产品",
+          "evidence_items": [
+            "字段-目的-法律基础三联表",
+            "高风险处理活动的单独论证材料",
+            "相关授权或合同依据截图/文本"
+          ],
+          "why_needed": "用于把具体字段、处理目的和法律基础做一一对应，避免混合表述。",
+          "related_scenarios": []
+        }
+      ]
+    },
+    {
+      "id": "safeguard_mechanism",
+      "title": "保障机制与证明材料核查",
+      "required_items": [
+        "标准合同/安全评估/认证等路径",
+        "采取的技术与管理措施",
+        "内部审批或评估记录",
+        "相关证明材料是否齐备"
+      ],
+      "related_evidence": []
+    },
+    {
+      "id": "rectification_actions",
+      "title": "专项整改动作",
+      "required_items": [
+        "需补接收方信息",
+        "需补出境场景或必要性说明",
+        "需补保障机制材料",
+        "需自动复核的高风险项"
+      ],
+      "related_evidence": [
+        {
+          "risk_point": "合法性基础与必要性表达可能不足",
+          "risk_level": "建议优化",
+          "owner_hint": "法务/产品",
+          "evidence_items": [
+            "处理活动对应的法律基础说明表",
+            "同意弹窗/授权页截图",
+            "功能必要性论证材料"
+          ],
+          "why_needed": "用于核对每项处理活动是否有明确法律基础与必要性边界。",
+          "related_scenarios": [
+            "隐私文档整改",
+            "数据出境专项审查"
+          ]
+        }
+      ]
+    }
+  ]
+}

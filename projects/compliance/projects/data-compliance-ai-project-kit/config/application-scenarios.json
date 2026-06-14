@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "scenarios": [
+    {
+      "id": "product_compliance_assessment",
+      "name": "产品合规测评",
+      "applies_to": ["privacy_policy", "generic_compliance", "unknown"],
+      "trigger_risk_points": [
+        "处理目的与信息范围匹配性可能不足",
+        "敏感个人信息处理条件与保护安排可能不足",
+        "基于同意的可选功能与基础功能绑定关系可能不清",
+        "文本前后关于数据处理边界的表述可能存在冲突"
+      ],
+      "deliverables": [
+        "产品合规风险报告",
+        "功能-字段-权限核对清单",
+        "高风险项自动复核清单",
+        "证据链补齐建议"
+      ],
+      "next_actions": [
+        "补齐功能、字段、权限、目的的对应关系",
+        "复核是否存在非必要权限或功能绑定",
+        "补充自动复核与证据留痕"
+      ]
+    },
+    {
+      "id": "privacy_document_remediation",
+      "name": "隐私文档整改",
+      "applies_to": ["privacy_policy"],
+      "trigger_risk_points": [
+        "重要处理事项披露可能不充分",
+        "第三方共享或委托处理披露可能不足",
+        "合法性基础与必要性表达可能不足",
+        "保存期限或删除机制表达可能不足"
+      ],
+      "deliverables": [
+        "条款缺口清单",
+        "建议补写条款项",
+        "隐私政策整改优先级列表"
+      ],
+      "next_actions": [
+        "按风险等级排序整改条款",
+        "补齐第三方、用户权利、保存删除等关键披露项",
+        "形成改版文档草稿"
+      ]
+    },
+    {
+      "id": "cross_border_transfer_review",
+      "name": "数据出境专项审查",
+      "applies_to": ["data_export", "privacy_policy"],
+      "trigger_risk_points": [
+        "数据出境相关披露可能不足",
+        "合法性基础与必要性表达可能不足"
+      ],
+      "deliverables": [
+        "数据出境问题清单",
+        "接收方与保障机制核查清单",
+        "待补法规依据与证明材料列表"
+      ],
+      "next_actions": [
+        "补充境外接收方、联系方式、场景与保障机制",
+        "核对是否需要标准合同/安全评估等路径",
+        "整理出境证明材料"
+      ]
+    },
+    {
+      "id": "sdk_and_partner_review",
+      "name": "SDK与合作方合规审查",
+      "applies_to": ["contract", "privacy_policy", "generic_compliance"],
+      "trigger_risk_points": [
+        "第三方共享或委托处理披露可能不足",
+        "合同中的数据处理义务或责任边界可能不清",
+        "文本前后关于数据处理边界的表述可能存在冲突"
+      ],
+      "deliverables": [
+        "SDK/合作方风险清单",
+        "共享与委托处理披露整改项",
+        "合同义务补充建议"
+      ],
+      "next_actions": [
+        "梳理第三方/SDK清单与共享字段",
+        "补充协议中的处理目的、边界、保护措施、终止后处理",
+        "核对对外披露与合同口径是否一致"
+      ]
+    }
+  ]
+}

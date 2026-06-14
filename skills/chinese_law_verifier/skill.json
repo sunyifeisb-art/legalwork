@@ -1,0 +1,23 @@
+{
+  "name": "chinese-law-verifier",
+  "description": "中国法律核验：核验中国法律条文的准确性",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/verifylaw"
+    ],
+    "promptPatterns": [
+      "法律核验|法条核验|法律验证|条文核对"
+    ],
+    "fileTypes": [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".md"
+    ]
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 0
+}
