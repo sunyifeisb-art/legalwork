@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import {
   appendFileSync,
@@ -12,7 +12,7 @@ import {
   writeFileSync
 } from 'node:fs'
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
-import { dirname, extname, join, relative as pathRelative, resolve } from 'node:path'
+import { dirname, extname, isAbsolute, join, relative as pathRelative, resolve } from 'node:path'
 import { Readable } from 'node:stream'
 
 export type DataComplianceTaskStatus = 'pending' | 'running' | 'completed' | 'failed'
@@ -86,6 +86,45 @@ const REQUIRED_PYTHON_PACKAGES = [
   'presidio_anonymizer'
 ]
 
+const PYTHON_COMMAND_CANDIDATES = process.platform === 'win32'
+  ? ['python', 'python3', 'py']
+  : ['python3', 'python']
+
+export function dataCompliancePythonPathEntries(platform: NodeJS.Platform = process.platform): string[] {
+  if (platform === 'darwin') {
+    return [
+      '/opt/homebrew/bin',
+      '/usr/local/bin',
+      '/Library/Frameworks/Python.framework/Versions/Current/bin',
+      '/usr/bin',
+      '/bin',
+      '/usr/sbin',
+      '/sbin'
+    ]
+  }
+  if (platform === 'win32') return []
+  return ['/usr/local/bin', '/usr/bin', '/bin']
+}
+
+export function buildDataCompliancePythonEnv(
+  env: NodeJS.ProcessEnv = process.env,
+  platform: NodeJS.Platform = process.platform
+): NodeJS.ProcessEnv {
+  const delimiter = platform === 'win32' ? ';' : ':'
+  const pathKey = platform === 'win32'
+    ? Object.keys(env).find((key) => key.toLowerCase() === 'path') ?? 'Path'
+    : 'PATH'
+  const existingPath = env[pathKey] ?? ''
+  const entries = [
+    existingPath,
+    ...dataCompliancePythonPathEntries(platform)
+  ].filter(Boolean)
+  return {
+    ...env,
+    [pathKey]: entries.join(delimiter)
+  }
+}
+
 const REVIEW_FILE_KEYS: DataComplianceFileKey[] = [
   'report',
   'report_md',
@@ -127,36 +166,67 @@ function safeFilename(name: string): string {
 
 export class DataComplianceTaskService {
   private readonly tasksDir: string
-  private readonly pythonBin: string | null = null
+  private readonly venvDir: string
+  private pythonBin: string | null = null
   private readonly webRoot: string
   private readonly logDir: string
   private readonly runningChildren = new Map<string, ReturnType<typeof spawn>>()
 
   constructor(input: { dataDir: string; webRoot: string; logDir: string }) {
     this.tasksDir = join(input.dataDir, 'data-compliance', 'tasks')
+    this.venvDir = join(input.dataDir, 'data-compliance', 'python-venv')
     this.webRoot = input.webRoot
     this.logDir = input.logDir
     this.pythonBin = this.resolvePythonExecutable()
     mkdirSync(this.tasksDir, { recursive: true })
   }
 
+  private venvPythonPath(): string {
+    return process.platform === 'win32'
+      ? join(this.venvDir, 'Scripts', 'python.exe')
+      : join(this.venvDir, 'bin', 'python')
+  }
+
   private resolvePythonExecutable(): string | null {
-    const candidates = [
+    const venvPython = this.venvPythonPath()
+    if (this.canRunPython(venvPython)) return venvPython
+
+    const explicitCandidates = [
       process.env.COMPLIANCEAI_PYTHON,
       process.env.PYTHON,
-      process.env.PYTHON3,
-      'python3',
-      'python'
-    ].filter(Boolean) as string[]
+      process.env.PYTHON3
+    ].filter((candidate): candidate is string => Boolean(candidate?.trim()))
+
+    const candidates = [
+      ...explicitCandidates,
+      ...PYTHON_COMMAND_CANDIDATES
+    ]
+
     for (const candidate of candidates) {
-      try {
-        const resolved = resolve(candidate)
-        if (existsSync(resolved)) return resolved
-      } catch {
-        // ignore
-      }
+      const resolved = this.tryResolvePython(candidate)
+      if (resolved) return resolved
     }
     return null
+  }
+
+  private tryResolvePython(candidate: string): string | null {
+    const value = candidate.trim()
+    if (!value) return null
+    if (isAbsolute(value) && !existsSync(value)) return null
+    return this.canRunPython(value) ? value : null
+  }
+
+  private canRunPython(command: string): boolean {
+    try {
+      const result = spawnSync(command, ['--version'], {
+        env: buildDataCompliancePythonEnv(),
+        shell: false,
+        stdio: 'ignore'
+      })
+      return result.status === 0
+    } catch {
+      return false
+    }
   }
 
   async checkEnvironment(): Promise<DataComplianceEnvironmentCheckResult> {
@@ -178,6 +248,17 @@ export class DataComplianceTaskService {
       return { ok: false, reason: `Python 检测失败: ${message}` }
     }
 
+    try {
+      await this.ensurePythonEnvironment()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      return {
+        ok: false,
+        reason: `Python 环境准备失败: ${message}`,
+        fix: '请确认已安装 Python 3，并检查网络是否允许安装数据合规依赖。'
+      }
+    }
+
     const missing: string[] = []
     for (const pkg of REQUIRED_PYTHON_PACKAGES) {
       try {
@@ -194,21 +275,74 @@ export class DataComplianceTaskService {
       return {
         ok: false,
         reason: `缺少 Python 依赖包: ${missing.join(', ')}`,
-        fix: `请在 Python 环境中运行: pip install ${missing.join(' ')}`
+        fix: `请在数据合规 venv 中运行: ${this.pythonBin} -m pip install -r ${join(this.webRoot, 'requirements.txt')}`
       }
     }
 
     return { ok: true, python: this.pythonBin }
   }
 
-  private runPython(args: string[]): Promise<{ exitCode: number; stdout: string; stderr: string }> {
-    return new Promise((resolve, reject) => {
-      const python = this.pythonBin
-      if (!python) {
-        reject(new Error('Python executable not found'))
-        return
+  private async ensurePythonEnvironment(): Promise<void> {
+    const venvPython = this.venvPythonPath()
+    const requirementsPath = join(this.webRoot, 'requirements.txt')
+
+    if (!this.canRunPython(venvPython)) {
+      const basePython = this.pythonBin
+      if (!basePython) {
+        throw new Error('未找到可用的 Python 解释器来创建 venv')
       }
-      const child = spawn(python, args, { env: process.env })
+      const result = await this.runCommand(basePython, ['-m', 'venv', this.venvDir])
+      if (result.exitCode !== 0) {
+        throw new Error(`创建 venv 失败: ${result.stderr || result.stdout}`)
+      }
+    }
+
+    this.pythonBin = venvPython
+
+    if (!existsSync(requirementsPath)) return
+
+    const missing = await this.findMissingPackages(REQUIRED_PYTHON_PACKAGES, venvPython)
+    if (missing.length === 0) return
+
+    const result = await this.runCommand(
+      venvPython,
+      ['-m', 'pip', 'install', '-r', requirementsPath],
+      { cwd: this.webRoot }
+    )
+    if (result.exitCode !== 0) {
+      throw new Error(`安装依赖失败: ${result.stderr || result.stdout}`)
+    }
+  }
+
+  private async findMissingPackages(packages: string[], python: string): Promise<string[]> {
+    const missing: string[] = []
+    for (const pkg of packages) {
+      const result = await this.runCommand(python, ['-c', `import ${pkg}`])
+      if (result.exitCode !== 0) {
+        missing.push(pkg)
+      }
+    }
+    return missing
+  }
+
+  private runPython(args: string[]): Promise<{ exitCode: number; stdout: string; stderr: string }> {
+    const python = this.pythonBin
+    if (!python) {
+      return Promise.reject(new Error('Python executable not found'))
+    }
+    return this.runCommand(python, args)
+  }
+
+  private runCommand(
+    command: string,
+    args: string[],
+    options: { cwd?: string } = {}
+  ): Promise<{ exitCode: number; stdout: string; stderr: string }> {
+    return new Promise((resolve, reject) => {
+      const child = spawn(command, args, {
+        cwd: options.cwd,
+        env: buildDataCompliancePythonEnv()
+      })
       let stdout = ''
       let stderr = ''
       child.stdout?.on('data', (chunk) => {
