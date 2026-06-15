@@ -117,7 +117,7 @@ export function GuiUpdateBadge(): ReactElement | null {
   } else if (hasUpdate) {
     icon = <ArrowUpCircle className="h-4 w-4" strokeWidth={2} />
     label = t('guiUpdateTopbarAvailable', { version: info?.latestVersion ?? '' })
-    badgeClass = 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800 animate-pulse'
+    badgeClass = 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 animate-pulse'
   } else {
     return null
   }
