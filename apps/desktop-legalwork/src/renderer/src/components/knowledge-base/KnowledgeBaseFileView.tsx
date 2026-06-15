@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import * as pdfjsLib from 'pdfjs-dist'
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url'
-import { LEGALWORK_KNOWLEDGE_READ_FILE_PATH } from '../../../../shared/legalwork-endpoints'
+import { LEGALWORK_KNOWLEDGE_READ_FILE_PATH, LEGALWORK_KNOWLEDGE_SEARCH_PATH } from '../../../../shared/legalwork-endpoints'
 import type { KnowledgeTreeNode } from './types'
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl
@@ -152,7 +152,7 @@ function PdfPreview({ base64Content, fileName }: { base64Content: string; fileNa
           canvas.height = viewport.height
           const context = canvas.getContext('2d')
           if (!context) throw new Error('无法创建 PDF 预览画布')
-          await page.render({ canvasContext: context, viewport }).promise
+          await page.render({ canvas, canvasContext: context, viewport }).promise
           rendered.push({
             pageNumber: i,
             width: viewport.width,
@@ -223,6 +223,19 @@ type FileContent = {
   type: PreviewType
 }
 
+// ── Knowledge search result type ──
+
+type KnowledgeHit = {
+  documentId: string
+  chunkId: string
+  title: string
+  path: string
+  relativePath: string
+  score: number
+  snippet: string
+  content?: string
+}
+
 // ── Main component ──
 
 type Props = {
@@ -248,6 +261,24 @@ export function KnowledgeBaseFileView({ node, onBack }: Props): ReactElement {
       setFileError(null)
       try {
         const type = previewType(node)
+        const ext = fileExtension(node)
+        // For unsupported binary types, try to read as base64 and extract what we can
+        if (type === 'unsupported') {
+          // Try reading as base64 to at least show file info
+          try {
+            const data = await requestJson<{ path: string; content: string; encoding: 'utf8' | 'base64' }>(
+              `${LEGALWORK_KNOWLEDGE_READ_FILE_PATH}?path=${encodeURIComponent(node.path)}&encoding=base64`
+            )
+            if (cancelled) return
+            const objectUrl = buildObjectUrl(node, data.content)
+            setFileContent({ content: data.content, encoding: 'base64', objectUrl, type: 'unsupported' })
+          } catch {
+            // If even binary read fails, just set empty content
+            if (!cancelled) setFileContent({ content: '', encoding: 'utf8', type: 'unsupported' })
+          }
+          if (!cancelled) setFileLoading(false)
+          return
+        }
         const isBinary = type === 'pdf' || type === 'image' || type === 'audio'
         const data = await requestJson<{ path: string; content: string; encoding: 'utf8' | 'base64' }>(
           `${LEGALWORK_KNOWLEDGE_READ_FILE_PATH}?path=${encodeURIComponent(node.path)}${isBinary ? '&encoding=base64' : ''}`
@@ -286,7 +317,7 @@ export function KnowledgeBaseFileView({ node, onBack }: Props): ReactElement {
     }
   }, [node.path])
 
-  // ── AI Chat: send message using thread/turn API ──
+  // ── AI Chat: RAG-based Q&A ──
   const sendMessage = useCallback(async (question: string): Promise<void> => {
     if (!question.trim() || sending) return
     const userMsg: ChatMessage = {
@@ -301,16 +332,59 @@ export function KnowledgeBaseFileView({ node, onBack }: Props): ReactElement {
     setChatError(null)
 
     try {
-      // Build a prompt with file content as context
-      const fileContext = fileContent?.encoding === 'utf8'
-        ? fileContent.content
-        : `[${fileTypeLabel(node)} 文件，不支持预览为文本]`
+      // Step 1: Retrieve relevant chunks from the knowledge base (RAG)
+      const searchResult = await requestJson<{ hits: KnowledgeHit[] }>(
+        `${LEGALWORK_KNOWLEDGE_SEARCH_PATH}?q=${encodeURIComponent(question.trim())}&top_k=8&include_content=true`
+      )
+      const hits = searchResult.hits ?? []
 
-      const prompt = `你是一个专业的法律知识助手。请根据以下文件内容回答用户的问题。\n\n## 文件名称\n${node.name}\n\n## 文件内容\n${fileContext.slice(0, 8000)}\n\n${
-        fileContext.length > 8000 ? '\n（文件内容较长，已截取前8000字符）\n\n' : '\n'
-      }## 用户问题\n${question.trim()}\n\n请基于文件内容给出准确、专业的回答。如果文件内容不足以回答问题，请明确说明。`
+      // Step 2: Prioritize chunks from the current file, then include others
+      const fileHits = hits.filter((h) => h.path === node.path || h.relativePath === node.path)
+      const otherHits = hits.filter((h) => h.path !== node.path && h.relativePath !== node.path)
+      const topHits = [...fileHits, ...otherHits].slice(0, 6)
 
-      // Step 1: Create a thread
+      // Step 3: Build context from retrieved chunks
+      let context = ''
+      if (topHits.length > 0) {
+        context = topHits
+          .map(
+            (hit, i) =>
+              `[来源 ${i + 1}] ${hit.title || hit.path}\n` +
+              (hit.content
+                ? `相关内容：\n${hit.content.slice(0, 2000)}`
+                : `摘要：${hit.snippet}`)
+          )
+          .join('\n\n---\n\n')
+      } else {
+        // Fallback: use file content directly if no search results
+        const rawContent = fileContent?.encoding === 'utf8'
+          ? fileContent.content.slice(0, 4000)
+          : ''
+        context = rawContent
+          ? `文件内容：\n${rawContent}`
+          : `文件：${node.name}（${fileTypeLabel(node)}，${formatBytes(node.sizeBytes)}）`
+      }
+
+      const prompt = `你是一个专业的法律知识助手。请基于以下检索到的相关内容回答用户的问题。
+
+## 当前文件
+${node.name}（${fileTypeLabel(node)}）
+
+## 检索到的相关内容
+${context}
+
+${
+  fileHits.length === 0 && topHits.length > 0
+    ? '\n（注：以上内容来自知识库中其他相关文件，可能与当前文件无直接关联）\n'
+    : ''
+}
+
+## 用户问题
+${question.trim()}
+
+请基于检索到的内容给出准确、专业的回答。如果内容不足以回答问题，请明确说明。引用来源时请标注 [来源编号]。`
+
+      // Step 4: Create a thread
       const threadResult = await requestJson<{ id: string }>(
         '/v1/threads',
         'POST',
@@ -323,14 +397,14 @@ export function KnowledgeBaseFileView({ node, onBack }: Props): ReactElement {
       )
       const threadId = threadResult.id
 
-      // Step 2: Start a turn
+      // Step 5: Start a turn
       await requestJson(
         `/v1/threads/${threadId}/turns`,
         'POST',
         { prompt }
       )
 
-      // Step 3: Poll for completion
+      // Step 6: Poll for completion
       const assistantMsg = await pollTurnCompletion(threadId)
 
       setMessages((prev) => [...prev, {
@@ -475,9 +549,27 @@ export function KnowledgeBaseFileView({ node, onBack }: Props): ReactElement {
                   {fileContent.content}
                 </pre>
               ) : (
-                <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center text-[13px] text-[var(--ds-muted)]">
+                <div className="flex h-full flex-col items-center justify-center gap-4 p-6 text-center">
                   <File className="h-10 w-10 text-slate-300" strokeWidth={1.4} />
-                  <div>暂不支持预览该文件</div>
+                  <div className="text-[13px] font-medium text-[var(--ds-ink)]">
+                    {fileTypeLabel(node)} 文件
+                  </div>
+                  <p className="max-w-xs text-[12px] leading-relaxed text-[var(--ds-muted)]">
+                    此文件类型暂不支持内联预览，但你可以通过右侧 AI 对话功能提问文件相关问题。
+                  </p>
+                  <div className="mt-2 flex items-center gap-2 text-[11px] text-[var(--ds-muted)]">
+                    <span>{formatBytes(node.sizeBytes)}</span>
+                    <span className="text-ds-border">·</span>
+                    <span>{fileTypeLabel(node)}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void openInSystemApp()}
+                    className="inline-flex items-center gap-1.5 rounded-[8px] border border-ds-border bg-ds-card px-4 py-2 text-[12px] font-medium text-[var(--ds-muted)] transition hover:bg-ds-hover hover:text-[var(--ds-ink)]"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" strokeWidth={1.8} />
+                    <span>系统打开</span>
+                  </button>
                 </div>
               )}
             </div>

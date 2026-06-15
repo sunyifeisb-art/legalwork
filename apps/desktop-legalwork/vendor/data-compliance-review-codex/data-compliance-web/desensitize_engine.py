@@ -148,6 +148,73 @@ class Finding:
         }
 
 
+def _clean_company_name(original: str) -> str:
+    """从 detector 识别的公司名文本中尽量提取核心名称。"""
+    name = original.strip()
+
+    # 去掉尾部常见公司后缀。
+    suffixes = [
+        '有限责任公司', '股份有限公司', '有限公司', '股份公司',
+        '集团有限公司', '集团公司', '集团', '科技有限公司',
+        '合伙企业', '有限合伙企业', '有限合伙', '事务所',
+        '研究院', '研究所', '学会', '协会', '委员会',
+        '人民政府', '管理局', '监管局', '人民法院', '人民检察院',
+        '仲裁委员会', '公证处', '公安局', '银行', '支行', '分行',
+        '公司', '企业', '中心',
+    ]
+    for suffix in sorted(suffixes, key=len, reverse=True):
+        if name.endswith(suffix):
+            name = name[:-len(suffix)]
+            break
+
+    # 按常见分隔符切分，取最后一段作为核心名称。
+    parts = re.split(r'[^一-龥]+|与|和|及|同|向|对|为|的|被|将|因|就|由|自|至|在|从|跟|是|属|于', name)
+    core = parts[-1] if parts else name
+    core = core.strip('"“”‘’「『』】）()（')
+
+    # 去掉开头常见地名前缀。
+    city_prefixes = [
+        '北京', '上海', '广州', '深圳', '天津', '重庆',
+        '杭州', '南京', '武汉', '成都', '西安', '苏州',
+        '无锡', '宁波', '青岛', '大连', '厦门', '长沙',
+        '济南市', '青岛市', '石家庄市', '太原市', '沈阳市',
+        '长春市', '哈尔滨市', '合肥市', '福州市', '南昌市',
+        '郑州市', '武汉市', '长沙市', '南宁市', '海口市',
+        '贵阳市', '昆明市', '拉萨市', '兰州市', '西宁市',
+        '银川市', '乌鲁木齐市', '呼和浩特市',
+    ]
+    for prefix in city_prefixes:
+        if core.startswith(prefix):
+            core = core[len(prefix):]
+            break
+
+    # 去掉开头常见非主体前缀（时间词、国别等）。
+    non_subject_prefixes = ['年月日', '年月', '中国', '国家']
+    for prefix in non_subject_prefixes:
+        if core.startswith(prefix):
+            core = core[len(prefix):]
+            break
+
+    return core
+
+
+def _generate_subject_token(entity_type: str, original: str) -> str:
+    """生成保留首尾特征的脱敏 token。"""
+    if not original:
+        return original
+    if entity_type == 'company_name':
+        cleaned = _clean_company_name(original)
+        if len(cleaned) <= 2:
+            return cleaned
+        return cleaned[0] + '某' * (len(cleaned) - 2) + cleaned[-1]
+    if entity_type == 'person_name':
+        # 保留姓，名替换为"某"。
+        if len(original) <= 1:
+            return original
+        return original[0] + '某' * (len(original) - 1)
+    return original
+
+
 def redact_legal_subjects(
     text: str,
     locator: str = '',
@@ -179,33 +246,19 @@ def redact_legal_subjects(
         filtered_entities.append(entity)
     entities = filtered_entities
 
-    # 按实体文本聚类，保证同一主体对应同一 token
+    # 按实体文本聚类，保证同一主体对应同一 token。
+    # token 保留首尾字，中间替换为"某"，使脱敏结果与原名称保持可感知关联。
     clusters: dict[str, dict[str, Any]] = {}
-    counters = cluster_counters if cluster_counters is not None else {'person_name': 0, 'company_name': 0}
-    token_labels = {
-        'person_name': ['当事人甲', '当事人乙', '当事人丙', '当事人丁', '当事人戊', '当事人己', '当事人庚', '当事人辛', '当事人壬', '当事人癸'],
-        'company_name': ['A公司', 'B公司', 'C公司', 'D公司', 'E公司', 'F公司', 'G公司', 'H公司', 'I公司', 'J公司'],
-    }
 
     for entity in entities:
         entity_type = getattr(entity, 'entity_type', '')
         original = getattr(entity, 'text', '')
-        if entity_type not in token_labels or not original:
+        if entity_type not in LEGAL_SUBJECT_TYPES or not original:
             continue
         if original not in clusters:
-            counters[entity_type] = counters.get(entity_type, 0) + 1
-            label_index = counters[entity_type] - 1
-            if label_index < len(token_labels[entity_type]):
-                token = token_labels[entity_type][label_index]
-            else:
-                token = f'{token_labels[entity_type][-1].replace("公司", "").replace("当事人", "")}_{counters[entity_type]}'
-                if entity_type == 'company_name':
-                    token = f'{token}公司'
-                else:
-                    token = f'当事人{token}'
             clusters[original] = {
                 'entity_type': entity_type,
-                'token': token,
+                'token': _generate_subject_token(entity_type, original),
             }
 
     if not clusters:

@@ -691,6 +691,19 @@ export function KnowledgeBaseView(): ReactElement {
     }
   }, [closePreview, openInSystemApp])
 
+  const openFileView = useCallback((node: TreeNode): void => {
+    if (node.kind === 'folder') {
+      setQuery('')
+      setCurrentPath(node.path)
+      return
+    }
+    if (preview?.objectUrl) {
+      URL.revokeObjectURL(preview.objectUrl)
+    }
+    setPreview(null)
+    setViewingFile(node)
+  }, [preview])
+
   useEffect(() => {
     return () => {
       if (preview?.objectUrl) URL.revokeObjectURL(preview.objectUrl)
@@ -843,6 +856,15 @@ export function KnowledgeBaseView(): ReactElement {
     void filesFromDrop(event.dataTransfer)
       .then((files) => uploadFiles(files))
       .catch((err) => setError(err instanceof Error ? err.message : '拖拽上传失败'))
+  }
+
+  if (viewingFile) {
+    return (
+      <KnowledgeBaseFileView
+        node={viewingFile}
+        onBack={() => setViewingFile(null)}
+      />
+    )
   }
 
   return (
@@ -1076,7 +1098,7 @@ export function KnowledgeBaseView(): ReactElement {
                         ? 'bg-[color-mix(in_srgb,var(--ds-accent)_8%,transparent)]'
                         : 'hover:bg-ds-hover'
                     }`}
-                    onDoubleClick={() => void openPreview(node)}
+                    onDoubleClick={() => void openFileView(node)}
                     onContextMenu={(event) => handleRowContextMenu(event, node)}
                   >
                     <div className="flex items-center">
@@ -1098,7 +1120,7 @@ export function KnowledgeBaseView(): ReactElement {
                         if (event.metaKey || event.ctrlKey || event.shiftKey) {
                           toggleSelectNode(node, event)
                         } else {
-                          void openPreview(node)
+                          void openFileView(node)
                         }
                       }}
                       className="flex min-w-0 items-center gap-3 text-left"
