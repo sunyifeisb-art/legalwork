@@ -497,7 +497,8 @@ export function migrateLegacyAppSettings(parsed: LegacyAppSettingsShape): Partia
       : nonEmptyStringOrFallback(explicitLegalwork.apiKey, legacySeed.apiKey),
     baseUrl: hasProviderSettings
       ? parsed.provider?.baseUrl
-      : nonEmptyStringOrFallback(explicitLegalwork.baseUrl, legacySeed.baseUrl)
+      : nonEmptyStringOrFallback(explicitLegalwork.baseUrl, legacySeed.baseUrl),
+    providers: hasProviderSettings ? parsed.provider?.providers : undefined
   })
   const legalwork = {
     ...legalworkDefaults,

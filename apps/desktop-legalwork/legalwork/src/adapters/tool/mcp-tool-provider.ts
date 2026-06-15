@@ -1,5 +1,6 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { createHash } from 'node:crypto'
+import { delimiter } from 'node:path'
 import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js'
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
@@ -77,6 +78,7 @@ export type McpToolProviderBuildResult = {
 export type McpToolProviderOptions = {
   clientFactory?: (serverId: string, server: McpServerConfig) => Promise<McpClientLike>
   nowIso?: () => string
+  startupTimeoutMs?: number
 }
 
 type McpConnectionState = {
@@ -91,6 +93,16 @@ type McpConnectionState = {
   lastError?: string
 }
 
+type McpServerBuildOutcome = {
+  directProvider?: CapabilityToolProvider
+  diagnostic: McpServerDiagnostic
+  state?: McpConnectionState
+  catalogRecords?: McpSearchCatalogRecord[]
+}
+
+const MCP_STARTUP_TIMEOUT_MS = 8_000
+const COMMON_EXEC_PATHS = ['/opt/homebrew/bin', '/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin']
+
 export async function buildMcpToolProviders(
   config: McpCapabilityConfig | undefined,
   options: McpToolProviderOptions = {}
@@ -103,6 +115,7 @@ export async function buildMcpToolProviders(
   const mcp = config
   const nowIso = options.nowIso ?? (() => new Date().toISOString())
   const clientFactory = options.clientFactory ?? createSdkMcpClient
+  const startupTimeoutMs = options.startupTimeoutMs ?? MCP_STARTUP_TIMEOUT_MS
   if (!mcp?.enabled) {
     return {
       providers,
@@ -128,36 +141,51 @@ export async function buildMcpToolProviders(
     }
   }
 
-  for (const [serverId, server] of Object.entries(mcp.servers)) {
+  const outcomes = await Promise.all(Object.entries(mcp.servers).map(async ([serverId, server]) => {
     if (!server.enabled) {
-      diagnostics.push(serverDiagnostic({ serverId, server }, 'disabled', 0))
-      continue
+      return {
+        diagnostic: serverDiagnostic({ serverId, server }, 'disabled', 0)
+      } satisfies McpServerBuildOutcome
     }
     try {
-      const client = await clientFactory(serverId, server)
+      const startupServer = serverWithStartupTimeout(server, startupTimeoutMs)
+      const client = await clientFactory(serverId, startupServer)
       const state: McpConnectionState = {
         serverId,
-        server,
+        server: startupServer,
         client,
         clientFactory,
         nowIso,
         lastConnectedAt: nowIso()
       }
-      connected.push(state)
       const listed = await refreshMcpConnectionCatalog(state)
-      catalogState.records.push(...listed.map((tool) => createMcpSearchCatalogRecord(state, tool)))
+      state.server = server
+      const catalogRecords = listed.map((tool) => createMcpSearchCatalogRecord(state, tool))
       const tools = listed.map((tool) => createMcpLocalTool(state, tool))
-      directProviders.push({
-        id: `mcp:${serverId}`,
-        kind: 'mcp',
-        enabled: true,
-        available: true,
-        tools
-      })
-      diagnostics.push(serverDiagnostic(state, 'connected', tools.length))
+      return {
+        state,
+        catalogRecords,
+        directProvider: {
+          id: `mcp:${serverId}`,
+          kind: 'mcp',
+          enabled: true,
+          available: true,
+          tools
+        },
+        diagnostic: serverDiagnostic(state, 'connected', tools.length)
+      } satisfies McpServerBuildOutcome
     } catch (error) {
-      diagnostics.push(serverDiagnostic({ serverId, server }, 'error', 0, errorMessage(error)))
+      return {
+        diagnostic: serverDiagnostic({ serverId, server }, 'error', 0, errorMessage(error))
+      } satisfies McpServerBuildOutcome
     }
+  }))
+
+  for (const outcome of outcomes) {
+    diagnostics.push(outcome.diagnostic)
+    if (outcome.state) connected.push(outcome.state)
+    if (outcome.catalogRecords) catalogState.records.push(...outcome.catalogRecords)
+    if (outcome.directProvider) directProviders.push(outcome.directProvider)
   }
 
   const connectedServers = diagnostics.filter((diagnostic) => diagnostic.status === 'connected').length
@@ -248,7 +276,7 @@ function createTransport(server: McpServerConfig): Transport {
       return new StdioClientTransport({
         command: server.command ?? '',
         args: server.args,
-        env: server.env,
+        env: stdioMcpEnv(server.env),
         stderr: 'pipe'
       })
     case 'streamable-http':
@@ -261,6 +289,35 @@ function createTransport(server: McpServerConfig): Transport {
         eventSourceInit: { fetch: fetchWithHeaders(server.headers) }
       })
   }
+}
+
+function serverWithStartupTimeout(server: McpServerConfig, startupTimeoutMs: number): McpServerConfig {
+  return {
+    ...server,
+    timeoutMs: Math.min(server.timeoutMs, startupTimeoutMs)
+  }
+}
+
+function stdioMcpEnv(env: Record<string, string>): Record<string, string> {
+  const inherited: Record<string, string> = {}
+  for (const [key, value] of Object.entries(process.env)) {
+    if (typeof value === 'string') inherited[key] = value
+  }
+  const merged = { ...inherited, ...env }
+  merged.PATH = mergeExecutablePath(env.PATH ?? process.env.PATH)
+  return merged
+}
+
+function mergeExecutablePath(pathValue: string | undefined): string {
+  const seen = new Set<string>()
+  const parts: string[] = []
+  for (const part of [...(pathValue ?? '').split(delimiter), ...COMMON_EXEC_PATHS]) {
+    const trimmed = part.trim()
+    if (!trimmed || seen.has(trimmed)) continue
+    seen.add(trimmed)
+    parts.push(trimmed)
+  }
+  return parts.join(delimiter)
 }
 
 function fetchWithHeaders(headers: Record<string, string>): typeof fetch {

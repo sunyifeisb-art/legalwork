@@ -261,8 +261,12 @@ export async function ensureDataComplianceTaskService(input: {
   appRoot: string
   isPackaged: boolean
   logDir: string
+  webRoot?: string
 }): Promise<DataComplianceTaskService> {
-  const webRoot = buildDataComplianceWebRoot({ appRoot: input.appRoot, isPackaged: input.isPackaged })
+  const webRoot =
+    input.webRoot && existsSync(join(input.webRoot, 'compliance_worker.py'))
+      ? input.webRoot
+      : buildDataComplianceWebRoot({ appRoot: input.appRoot, isPackaged: input.isPackaged })
   const tasksDir = join(input.dataDir, 'data-compliance', 'tasks')
   await mkdir(tasksDir, { recursive: true })
   return new DataComplianceTaskService({

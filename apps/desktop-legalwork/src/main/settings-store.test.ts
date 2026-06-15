@@ -2,7 +2,11 @@ import { mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from 'node:fs/
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_APPROVAL_POLICY } from '../shared/app-settings'
+import {
+  BUILTIN_MODEL_PROVIDER_PRESETS,
+  DEFAULT_APPROVAL_POLICY,
+  DEFAULT_MODEL_PROVIDER_ID
+} from '../shared/app-settings'
 import { DEFAULT_GUI_UPDATE_CHANNEL } from '../shared/gui-update'
 import { JsonSettingsStore } from './settings-store'
 
@@ -245,6 +249,41 @@ describe('JsonSettingsStore', () => {
     expect(saved.agents.legalwork.model).toBe('deepseek-reasoner')
     expect(saved.agents.legalwork.approvalPolicy).toBe('on-request')
   })
+
+  it.each(BUILTIN_MODEL_PROVIDER_PRESETS.map((preset) => [preset.id, preset.models[0], preset.baseUrl] as const))(
+    'persists the active %s provider API key across a settings reload',
+    async (providerId, model, baseUrl) => {
+    const userDataDir = await mkdtemp(join(tmpdir(), 'ds-gui-settings-'))
+    const store = new JsonSettingsStore(userDataDir)
+    const initial = await store.load()
+    const apiKey = `sk-${providerId}-test`
+    const providers = initial.provider.providers.map((provider) =>
+      provider.id === providerId
+        ? { ...provider, apiKey, baseUrl }
+        : provider
+    )
+
+    await store.patch({
+      provider: providerId === DEFAULT_MODEL_PROVIDER_ID
+        ? { apiKey, baseUrl, providers }
+        : { providers },
+      agents: {
+        legalwork: {
+          providerId,
+          model
+        }
+      }
+    })
+
+    const reloaded = await new JsonSettingsStore(userDataDir).load()
+    const activeProvider = reloaded.provider.providers.find((provider) => provider.id === providerId)
+
+    expect(activeProvider?.apiKey).toBe(apiKey)
+    expect(activeProvider?.baseUrl).toBe(baseUrl)
+    expect(reloaded.agents.legalwork.providerId).toBe(providerId)
+    expect(reloaded.agents.legalwork.apiKey).toBe(apiKey)
+    }
+  )
 
   it('merges desktop behavior patches without keeping invalid startup state', async () => {
     const userDataDir = await mkdtemp(join(tmpdir(), 'ds-gui-settings-'))

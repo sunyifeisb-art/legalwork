@@ -4,6 +4,7 @@ import { basename, dirname, join } from 'node:path'
 import { atomicWriteFile } from '../../legalwork/src/adapters/file/atomic-write.js'
 import {
   applyLegalworkRuntimePatch,
+  computeLegalworkRuntimeCredentialPatch,
   legalworkSettingsEnvelope,
   DEFAULT_GUI_UPDATE_CHANNEL,
   DEFAULT_WRITE_WORKSPACE_ROOT,
@@ -390,8 +391,12 @@ export class JsonSettingsStore {
   async patch(partial: AppSettingsPatch): Promise<AppSettingsV1> {
     const cur = await this.load()
     const { agents: agentsPatch, provider: providerPatch, ...restPatch } = partial
+    const agentsPatchWithCredentials = computeLegalworkRuntimeCredentialPatch(cur, {
+      agents: agentsPatch,
+      provider: providerPatch
+    })
     const next = normalizeStoredSettings({
-      ...applyLegalworkRuntimePatch(cur, agentsPatch?.legalwork),
+      ...applyLegalworkRuntimePatch(cur, agentsPatchWithCredentials.legalwork),
       ...restPatch,
       provider: mergeModelProviderSettings(cur.provider, providerPatch),
       log: { ...cur.log, ...(partial.log ?? {}) },

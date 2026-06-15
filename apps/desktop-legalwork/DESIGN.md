@@ -1201,10 +1201,11 @@ compaction block inline with a "show replaced" detail.
 
 ### 9.6 Updater
 
-`electron-updater` driven by `gui-updater.ts`. Channels:
-`stable`, `beta`, `nightly`. The Settings page surfaces state
-and check / download / install actions. macOS / Windows only;
-Linux users build from source.
+`electron-updater` driven by `gui-updater.ts`. The default update
+source is the app repository's GitHub Releases feed, with env-var
+overrides for custom feeds. Channels: `stable`, `frontier`. The
+Settings page surfaces state and check / download / install actions.
+macOS / Windows only; Linux users build from source.
 
 ### 9.7 Logging
 

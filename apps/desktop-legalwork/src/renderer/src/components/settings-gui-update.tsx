@@ -84,7 +84,11 @@ export function GuiUpdateControl({
   }
 
   const releaseUrl: string | null =
-    info?.ok && info.hasUpdate ? info.releaseUrl : !info?.ok && info?.releaseUrl ? info.releaseUrl : null
+    info?.ok && info.hasUpdate && info.manualOnly
+      ? info.releaseUrl
+      : !info?.ok && info?.releaseUrl
+        ? info.releaseUrl
+        : null
   const canDownload = Boolean(info?.ok && info.hasUpdate && !info.manualOnly && !downloaded)
   const canInstall = Boolean(info?.ok && downloaded)
 

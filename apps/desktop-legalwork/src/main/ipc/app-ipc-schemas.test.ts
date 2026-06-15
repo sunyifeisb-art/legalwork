@@ -94,6 +94,37 @@ describe('app-ipc-schemas', () => {
       path: '/v1/knowledge/diagnostics',
       method: 'GET'
     }).path).toBe('/v1/knowledge/diagnostics')
+    expect(runtimeRequestPayloadSchema.parse({
+      path: '/v1/knowledge/tree',
+      method: 'GET'
+    }).path).toBe('/v1/knowledge/tree')
+    expect(runtimeRequestPayloadSchema.parse({
+      path: '/v1/knowledge/file?path=%E8%AE%BA%E6%96%87%2Fa.pdf&encoding=base64',
+      method: 'GET'
+    }).path).toBe('/v1/knowledge/file?path=%E8%AE%BA%E6%96%87%2Fa.pdf&encoding=base64')
+    expect(runtimeRequestPayloadSchema.parse({
+      path: '/v1/knowledge/file/absolute-path?path=%E8%AE%BA%E6%96%87%2Fa.pdf',
+      method: 'GET'
+    }).path).toBe('/v1/knowledge/file/absolute-path?path=%E8%AE%BA%E6%96%87%2Fa.pdf')
+    expect(runtimeRequestPayloadSchema.parse({
+      path: '/v1/knowledge/folder',
+      method: 'POST',
+      body: '{"path":"论文"}'
+    }).path).toBe('/v1/knowledge/folder')
+    expect(runtimeRequestPayloadSchema.parse({
+      path: '/v1/knowledge/file',
+      method: 'POST',
+      body: '{"path":"论文/a.pdf","content":"","encoding":"base64"}'
+    }).path).toBe('/v1/knowledge/file')
+    expect(runtimeRequestPayloadSchema.parse({
+      path: '/v1/knowledge/move',
+      method: 'POST',
+      body: '{"from":"a.pdf","to":"论文/a.pdf"}'
+    }).path).toBe('/v1/knowledge/move')
+    expect(runtimeRequestPayloadSchema.parse({
+      path: '/v1/knowledge/file?path=%E8%AE%BA%E6%96%87%2Fa.pdf',
+      method: 'DELETE'
+    }).path).toBe('/v1/knowledge/file?path=%E8%AE%BA%E6%96%87%2Fa.pdf')
   })
 
   it('accepts skill list payloads with an optional workspace root', () => {

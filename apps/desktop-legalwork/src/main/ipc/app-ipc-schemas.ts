@@ -152,7 +152,7 @@ function isAllowedRuntimeRequest(value: { path: string; method?: string }): bool
     const method = value.method ?? 'GET'
     for (const endpoint of ENDPOINTS) {
       if (endpoint.match(path)) {
-        return endpoint.allowedMethods.includes(method)
+        if (endpoint.allowedMethods.includes(method)) return true
       }
     }
     return false
@@ -192,6 +192,7 @@ export const dataComplianceRequestPayloadSchema = z
       if (path === '/data-compliance/environment') return method === 'GET'
       if (/^\/data-compliance\/tasks\/[A-Za-z0-9_-]+$/.test(path)) return method === 'GET' || method === 'DELETE'
       if (/^\/data-compliance\/tasks\/[A-Za-z0-9_-]+\/files\/[A-Za-z0-9_-]+$/.test(path)) return method === 'GET'
+      if (/^\/data-compliance\/tasks\/[A-Za-z0-9_-]+\/progress$/.test(path)) return method === 'GET'
       // 旧 Flask 路径兼容映射
       if (path === '/api/history') return method === 'GET'
       if (/^\/api\/history\/[A-Za-z0-9_-]+$/.test(path)) return method === 'DELETE'

@@ -109,6 +109,7 @@ collect() {
 
 collect "Windows exe" "dist/legalwork-*-win-*.exe"
 collect "Windows blockmap" "dist/legalwork-*-win-*.exe.blockmap"
+collect "Windows update metadata" "dist/latest.yml"
 
 cyan "Uploading ${#ASSETS[@]} Windows asset(s) to ${TAG_NAME}..."
 for asset in "${ASSETS[@]}"; do

@@ -177,7 +177,8 @@ if ($LASTEXITCODE -ne 0) {
 $DistDir = Join-Path $Root 'dist'
 $AssetSpecs = @(
   @{ Label = 'Windows exe'; Filter = '*-win-*.exe' },
-  @{ Label = 'Windows blockmap'; Filter = '*-win-*.exe.blockmap' }
+  @{ Label = 'Windows blockmap'; Filter = '*-win-*.exe.blockmap' },
+  @{ Label = 'Windows update metadata'; Filter = 'latest.yml' }
 )
 
 $Assets = @()

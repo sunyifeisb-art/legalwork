@@ -2,6 +2,7 @@ import {
   DEFAULT_GUI_UPDATE_CHANNEL,
   defaultLegalworkRuntimeSettings,
   applyLegalworkRuntimePatch,
+  computeLegalworkRuntimeCredentialPatch,
   getLegalworkRuntimeSettings,
   legalworkSettingsEnvelope,
   mergeLegalworkRuntimeSettings,
@@ -45,8 +46,12 @@ export function hasValidPort(settings: AppSettingsV1): boolean {
 export function mergeSettings(current: AppSettingsV1, patch: SettingsPatch): AppSettingsV1 {
   const safeCurrent = coerceRendererSettings(current)
   const { agents: agentsPatch, provider: providerPatch, ...restPatch } = patch
+  const agentsPatchWithCredentials = computeLegalworkRuntimeCredentialPatch(safeCurrent, {
+    agents: agentsPatch,
+    provider: providerPatch
+  })
   return {
-    ...applyLegalworkRuntimePatch(safeCurrent, agentsPatch?.legalwork),
+    ...applyLegalworkRuntimePatch(safeCurrent, agentsPatchWithCredentials.legalwork),
     ...restPatch,
     provider: mergeModelProviderSettings(safeCurrent.provider, providerPatch),
     log: {

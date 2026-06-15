@@ -74,7 +74,6 @@ import {
 import type { JsonSettingsStore } from '../settings-store'
 import type { ClawRuntime } from '../claw-runtime'
 import type { ScheduleRuntime } from '../schedule-runtime'
-import type { DataComplianceRuntime } from '../data-compliance-runtime'
 import {
   getRuntimeBaseUrlForSettings,
   runtimeAuthHeaders
@@ -146,7 +145,6 @@ type RegisterAppIpcHandlersOptions = {
   fetchUpstreamModels: () => Promise<UpstreamModelsResult>
   getClawRuntime: () => ClawRuntime | null
   getScheduleRuntime: () => ScheduleRuntime | null
-  getDataComplianceRuntime?: () => DataComplianceRuntime | null
   startFeishuInstallQrcode: (isLark: boolean) => Promise<ClawImInstallQrResult>
   pollFeishuInstall: (deviceCode: string) => Promise<ClawImInstallPollResult>
   startWeixinInstallQrcode: (weixinBridgeUrl?: string) => Promise<ClawImInstallQrResult>
@@ -257,7 +255,6 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     fetchUpstreamModels,
     getClawRuntime,
     getScheduleRuntime,
-    getDataComplianceRuntime = () => null,
     startFeishuInstallQrcode,
     pollFeishuInstall,
     startWeixinInstallQrcode,

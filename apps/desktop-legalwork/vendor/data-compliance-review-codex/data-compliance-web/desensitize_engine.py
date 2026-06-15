@@ -666,6 +666,16 @@ def copy_outputs_to_directory(
     shutil.copy2(subject_mapping_md, output_dir / subject_mapping_md.name)
     shutil.copy2(subject_mapping_json, output_dir / subject_mapping_json.name)
 
+    # For scanned PDF redaction, also copy the per-page PNGs and manifest so the
+    # user has access to both the merged PDF and the individual page images.
+    page_images = sorted(output_file.parent.glob(f'{output_file.stem}_page_*.png'))
+    if output_file.suffix.lower() == '.pdf' and page_images:
+        for sibling in page_images:
+            shutil.copy2(sibling, output_dir / sibling.name)
+        manifest = output_file.parent / f'{output_file.stem}_pages.json'
+        if manifest.exists():
+            shutil.copy2(manifest, output_dir / manifest.name)
+
 
 def process_desensitization(
     *,
@@ -691,7 +701,9 @@ def process_desensitization(
         )
         findings.extend(text_findings)
         subject_mappings.extend(text_subjects)
-        output_file = work_dir / f'desensitized_output{text_output_suffix(input_path)}'
+        base_name = (document_name or Path(input_name).stem).rstrip('_').strip()
+        output_stem = _safe_output_stem(f'{base_name}_脱敏')
+        output_file = work_dir / f'{output_stem}{text_output_suffix(input_path)}'
         output_file.write_text(redacted, encoding='utf-8')
         input_type = 'text'
     elif suffix in DOC_EXTENSIONS:
@@ -700,7 +712,9 @@ def process_desensitization(
         subject_mappings.extend(doc_subjects)
         input_type = 'document'
     elif suffix in PDF_EXTENSIONS:
-        output_file, pdf_findings, pdf_subjects = process_pdf(input_path, work_dir, engine, warnings)
+        base_name = (document_name or Path(input_name).stem).rstrip('_').strip()
+        output_stem = _safe_output_stem(f'{base_name}_脱敏')
+        output_file, pdf_findings, pdf_subjects = process_pdf(input_path, work_dir, engine, warnings, output_stem=output_stem)
         findings.extend(pdf_findings)
         subject_mappings.extend(pdf_subjects)
         input_type = 'pdf'
@@ -832,6 +846,7 @@ def process_pdf(
     work_dir: Path,
     engine: Desensitizer,
     warnings: list[str],
+    output_stem: str = 'desensitized_output',
 ) -> tuple[Path, list[Finding], list[SubjectMapping]]:
     text_parts: list[str] = []
     all_findings: list[Finding] = []
@@ -867,20 +882,86 @@ def process_pdf(
 
     pdf = fitz.open(str(input_path))
     page_outputs: list[str] = []
+    page_images: list[Path] = []
+    page_text_layers: list[list[dict[str, Any]]] = []
     for page_index, page in enumerate(pdf, start=1):
         pix = page.get_pixmap(matrix=fitz.Matrix(2, 2), alpha=False)
         page_image = work_dir / f'_pdf_page_{page_index}.png'
         pix.save(str(page_image))
-        redacted, page_findings, page_subjects = redact_image(
-            page_image, work_dir / f'desensitized_output_page_{page_index}.png', engine, f'第 {page_index} 页'
+        redacted_path = work_dir / f'{output_stem}_page_{page_index}.png'
+        _redacted, page_findings, page_subjects, visible_words = redact_image(
+            page_image, redacted_path, engine, f'第 {page_index} 页'
         )
-        page_outputs.append(redacted.name)
+        page_outputs.append(redacted_path.name)
+        page_images.append(redacted_path)
+        page_text_layers.append(visible_words)
         all_findings.extend(page_findings)
         all_subjects.extend(page_subjects)
     pdf.close()
-    manifest = work_dir / 'desensitized_output_pages.json'
+    manifest = work_dir / f'{output_stem}_pages.json'
     manifest.write_text(json.dumps({'pages': page_outputs}, ensure_ascii=False, indent=2), encoding='utf-8')
-    return manifest, all_findings, all_subjects
+
+    # Merge redacted page images into a single PDF so users get a usable document.
+    merged_pdf = _merge_png_pages_to_pdf(page_images, work_dir / f'{output_stem}.pdf', page_text_layers)
+    return merged_pdf, all_findings, all_subjects
+
+
+def _safe_output_stem(name: str) -> str:
+    """从材料名称生成安全的文件 stem。"""
+    stem = re.sub(r'[\\/:*?"<>|]', '_', name or 'desensitized_output').strip()
+    return stem or 'desensitized_output'
+
+
+def _merge_png_pages_to_pdf(
+    page_images: list[Path],
+    output_path: Path,
+    page_text_layers: list[list[dict[str, Any]]] | None = None,
+) -> Path:
+    """将脱敏后的页面 PNG 合并成一个多页 PDF（使用 JPEG 压缩以控制体积）。"""
+    if fitz is None:
+        raise RuntimeError('合并 PDF 页面需要 PyMuPDF。')
+    if not page_images:
+        raise RuntimeError('没有可合并的页面。')
+    text_layers = page_text_layers or []
+    doc = fitz.open()
+    for page_index, image_path in enumerate(page_images):
+        if not image_path.exists():
+            continue
+        with Image.open(image_path).convert('RGB') as img:
+            from io import BytesIO
+            buffer = BytesIO()
+            img.save(buffer, format='JPEG', quality=85, optimize=True)
+            buffer.seek(0)
+            rect = fitz.Rect(0, 0, img.width, img.height)
+            page = doc.new_page(width=rect.width, height=rect.height)
+            page.insert_image(rect, stream=buffer.read())
+            # Insert OCR text layer for words that were not redacted.
+            words = text_layers[page_index] if page_index < len(text_layers) else []
+            for word in words:
+                text = word.get('text', '')
+                if not text:
+                    continue
+                left = float(word.get('left', 0))
+                top = float(word.get('top', 0))
+                width = float(word.get('width', 0))
+                height = float(word.get('height', 0))
+                if width <= 0 or height <= 0:
+                    continue
+                try:
+                    font_size = max(height * 0.8, 1)
+                    page.insert_text(
+                        (left, top + height * 0.85),
+                        text,
+                        fontsize=font_size,
+                        color=(0, 0, 0),
+                        render_mode=3,
+                    )
+                except Exception:
+                    pass
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    doc.save(str(output_path))
+    doc.close()
+    return output_path
 
 
 def process_table(
@@ -1079,10 +1160,11 @@ def process_image(
     except OcrUnavailable as exc:
         raise RuntimeError(str(exc)) from exc
     output_file = work_dir / f'desensitized_output{input_path.suffix.lower()}'
-    return redact_image(input_path, output_file, engine, '图片')
+    output_file, image_findings, image_subjects, _visible_words = redact_image(input_path, output_file, engine, '图片')
+    return output_file, image_findings, image_subjects
 
 
-def redact_image(input_path: Path, output_file: Path, engine: Desensitizer, locator_prefix: str) -> tuple[Path, list[Finding], list[SubjectMapping]]:
+def redact_image(input_path: Path, output_file: Path, engine: Desensitizer, locator_prefix: str) -> tuple[Path, list[Finding], list[SubjectMapping], list[dict[str, Any]]]:
     image = Image.open(input_path).convert('RGB')
     data = ocr_image_to_data(image)
     draw = ImageDraw.Draw(image)
@@ -1111,6 +1193,8 @@ def redact_image(input_path: Path, output_file: Path, engine: Desensitizer, loca
         key = (w['block'], w['par'], w['line'])
         lines.setdefault(key, []).append(w)
 
+    blacked_out_word_keys: set[tuple[int, int, int, int]] = set()
+
     def _blackout_word_indices(indices: set[int], word_spans: list[tuple[int, int, dict[str, Any]]]) -> None:
         if not indices:
             return
@@ -1119,6 +1203,9 @@ def redact_image(input_path: Path, output_file: Path, engine: Desensitizer, loca
         right = max(word_spans[i][2]['left'] + word_spans[i][2]['width'] for i in indices)
         bottom = max(word_spans[i][2]['top'] + word_spans[i][2]['height'] for i in indices)
         draw.rectangle([left, top, right, bottom], fill='black')
+        for i in indices:
+            w = word_spans[i][2]
+            blacked_out_word_keys.add((w['block'], w['par'], w['line'], w['word']))
 
     # Share subject token counters across all lines so the same company/person gets
     # the same replacement label everywhere in the document.
@@ -1196,4 +1283,15 @@ def redact_image(input_path: Path, output_file: Path, engine: Desensitizer, loca
         _blackout_word_indices(covered_word_indices, word_spans)
 
     image.save(output_file)
-    return output_file, all_findings, all_subjects
+    visible_words = [
+        {
+            'text': w['text'],
+            'left': w['left'],
+            'top': w['top'],
+            'width': w['width'],
+            'height': w['height'],
+        }
+        for w in words
+        if (w['block'], w['par'], w['line'], w['word']) not in blacked_out_word_keys
+    ]
+    return output_file, all_findings, all_subjects, visible_words

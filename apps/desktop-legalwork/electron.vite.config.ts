@@ -1,6 +1,25 @@
+import { cpSync, mkdirSync } from 'fs'
 import { resolve } from 'path'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 import react from '@vitejs/plugin-react'
+
+function copyPdfJsAssetsPlugin() {
+  return {
+    name: 'copy-pdfjs-assets',
+    closeBundle(): void {
+      const targetRoot = resolve('out/renderer/pdfjs')
+      mkdirSync(targetRoot, { recursive: true })
+      cpSync(resolve('node_modules/pdfjs-dist/cmaps'), resolve(targetRoot, 'cmaps'), {
+        recursive: true,
+        force: true
+      })
+      cpSync(resolve('node_modules/pdfjs-dist/standard_fonts'), resolve(targetRoot, 'standard_fonts'), {
+        recursive: true,
+        force: true
+      })
+    }
+  }
+}
 
 export default defineConfig({
   main: {
@@ -42,6 +61,6 @@ export default defineConfig({
         '@shared': resolve('src/shared')
       }
     },
-    plugins: [react()]
+    plugins: [react(), copyPdfJsAssetsPlugin()]
   }
 })

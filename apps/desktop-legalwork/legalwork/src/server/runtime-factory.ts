@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs'
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { buildRouter } from './routes/index.js'
@@ -322,11 +323,17 @@ export async function createLegalworkServeRuntime(
     }
   })
   const startedAt = options.startedAt ?? nowIso()
+  const explicitWebRoot = process.env.LEGALWORK_COMPLIANCE_WEB_ROOT
+  const webRootOverride =
+    explicitWebRoot && existsSync(join(explicitWebRoot, 'compliance_worker.py'))
+      ? explicitWebRoot
+      : undefined
   const dataComplianceTaskService = await ensureDataComplianceTaskService({
     dataDir: options.dataDir,
-    appRoot: process.env.LEGALWORK_COMPLIANCE_WEB_ROOT ?? options.dataDir,
-    isPackaged: Boolean(process.env.LEGALWORK_COMPLIANCE_WEB_ROOT),
-    logDir: join(options.dataDir, 'logs')
+    appRoot: options.dataDir,
+    isPackaged: false,
+    logDir: join(options.dataDir, 'logs'),
+    webRoot: webRootOverride
   })
   return {
     threadService,

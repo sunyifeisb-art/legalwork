@@ -241,7 +241,7 @@ describe('syncGuiManagedLegalworkConfig', () => {
       transport: 'stdio',
       command: '/tmp/electron',
       args: [
-        '/tmp/legalwork-test-app/out/main/claw-schedule-mcp-node-entry.js',
+        '/tmp/legalwork-test-app/out/main/claw-schedule-mcp-node-entry.cjs',
         '--gui-schedule-mcp-server',
         '--base-url',
         'http://127.0.0.1:9788',
@@ -559,7 +559,7 @@ describe('syncGuiManagedLegalworkConfig', () => {
       transport: 'stdio',
       command: '/tmp/electron',
       args: [
-        '/tmp/legalwork-test-app/out/main/claw-schedule-mcp-node-entry.js',
+        '/tmp/legalwork-test-app/out/main/claw-schedule-mcp-node-entry.cjs',
         '--gui-schedule-mcp-server',
         '--base-url',
         'http://127.0.0.1:8788'

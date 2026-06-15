@@ -110,11 +110,12 @@ def main() -> int:
     review_type = payload.get('review_type') or 'document'
     output_dir_raw = payload.get('output_dir') or ''
 
-    # 配置 worker_core 路径
+    # worker_core stores task_state.json under OUTPUT_FOLDER / task_id.
+    # The CLI receives the per-task directory, so pass its parent as the root.
     core.set_worker_paths(
         base_dir=WEB_DIR,
         upload_folder=WEB_DIR / 'uploads',
-        output_folder=output_dir,
+        output_folder=output_dir.parent,
         scripts_dir=WEB_DIR / 'scripts',
         project_root=WEB_DIR.parent / 'projects' / 'data-compliance-ai-project-kit',
         local_regulation_db=WEB_DIR.parent / 'projects' / 'data-compliance-ai-project-kit' / 'knowledge-base' / 'local-regulations.sqlite3',

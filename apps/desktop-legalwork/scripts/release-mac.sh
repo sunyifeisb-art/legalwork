@@ -250,12 +250,13 @@ collect_optional() {
   done
 }
 
-# artifactName: ${productName}-${version}-mac-${arch}.dmg|zip
-collect "macOS arm64 dmg" "dist/LegalWork-*-mac-arm64.dmg"
-collect "macOS x64 dmg" "dist/LegalWork-*-mac-x64.dmg"
-collect "macOS arm64 zip" "dist/LegalWork-*-mac-arm64.zip"
-collect "macOS x64 zip" "dist/LegalWork-*-mac-x64.zip"
-collect_optional "macOS blockmap" "dist/LegalWork-*-mac-*.zip.blockmap"
+# artifactName: legalwork-${version}-mac-${arch}.dmg|zip
+collect "macOS arm64 dmg" "dist/legalwork-*-mac-arm64.dmg"
+collect "macOS x64 dmg" "dist/legalwork-*-mac-x64.dmg"
+collect "macOS arm64 zip" "dist/legalwork-*-mac-arm64.zip"
+collect "macOS x64 zip" "dist/legalwork-*-mac-x64.zip"
+collect_optional "macOS blockmap" "dist/legalwork-*-mac-*.zip.blockmap"
+collect "macOS update metadata" "dist/latest-mac.yml"
 
 upload_github_assets() {
   local tag="$1"

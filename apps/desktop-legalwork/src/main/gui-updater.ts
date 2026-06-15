@@ -61,6 +61,10 @@ function updateFeedUrl(channel: GuiUpdateChannel): string {
   const direct = envUpdateUrl(channel)
   if (direct) return direct
 
+  return fallbackGenericUpdateUrl(channel)
+}
+
+function fallbackGenericUpdateUrl(channel: GuiUpdateChannel): string {
   const base = process.env.R2_PUBLIC_BASE_URL?.trim() || DEFAULT_R2_PUBLIC_BASE_URL
   const prefix = process.env.R2_RELEASE_PREFIX?.trim() || DEFAULT_R2_RELEASE_PREFIX
   return `${joinUrl(base, prefix, 'channels', channel, 'latest')}/`
@@ -144,15 +148,18 @@ function downloadPageUrl(): string {
   const direct = process.env.LEGALWORK_DOWNLOAD_URL?.trim()
   if (direct) return direct
 
+  const githubReleaseUrl = resolveGithubReleaseUrl()
+  if (githubReleaseUrl) return githubReleaseUrl
+
   const pkg = readPackageJson()
   const homepage = typeof pkg?.homepage === 'string' ? pkg.homepage.trim() : ''
   if (homepage) return homepage
 
-  return resolveGithubReleaseUrl() ?? updateFeedUrl(configuredChannel)
+  return updateFeedUrl(configuredChannel)
 }
 
 function releaseUrlForVersion(version: string): string {
-  const page = downloadPageUrl()
+  const page = resolveGithubReleaseUrl() ?? downloadPageUrl()
   if (/github\.com\/.+\/releases\/?$/i.test(page)) {
     return `${page.replace(/\/+$/, '')}/tag/v${version.replace(/^v/i, '')}`
   }
@@ -189,21 +196,7 @@ function parseYamlScalar(source: string, key: string): string {
   return match?.[1]?.trim() ?? ''
 }
 
-function macAutoUpdateAllowed(): boolean {
-  if (process.platform !== 'darwin') return true
-  if (process.env.LEGALWORK_ALLOW_UNSIGNED_UPDATES === '1') return true
-
-  const pkg = readPackageJson()
-  const hints = pkg?.buildHints
-  if (!hints || typeof hints !== 'object') return false
-  const values = hints as { macSigningEnabled?: unknown; notarizationEnabled?: unknown }
-  return values.macSigningEnabled === true && values.notarizationEnabled === true
-}
-
 function unsupportedMessage(): string {
-  if (process.platform === 'darwin') {
-    return 'Automatic updates require a signed and notarized macOS build. Use the download page for this build.'
-  }
   return 'Automatic updates are not supported for this build. Use the download page instead.'
 }
 
@@ -333,8 +326,9 @@ async function resolveUpdateChannel(requested?: GuiUpdateChannel): Promise<GuiUp
 
 function configureUpdaterChannel(channel: GuiUpdateChannel): void {
   const normalized = normalizeGuiUpdateChannel(channel)
-  const repo = resolveGithubOwnerRepo()
-  const feedUrl = repo ? `github:${repo}` : updateFeedUrl(normalized)
+  const directFeedUrl = envUpdateUrl(normalized)
+  const repo = directFeedUrl ? null : resolveGithubOwnerRepo()
+  const feedUrl = directFeedUrl || (repo ? `github:${repo}` : fallbackGenericUpdateUrl(normalized))
   const changed = normalized !== configuredChannel || feedUrl !== configuredFeedUrl
   configuredChannel = normalized
   configuredFeedUrl = feedUrl
@@ -524,10 +518,6 @@ export async function checkGuiUpdate(channel?: GuiUpdateChannel): Promise<GuiUpd
   const selectedChannel = await resolveUpdateChannel(channel)
   configureUpdaterChannel(selectedChannel)
 
-  if (!macAutoUpdateAllowed()) {
-    return checkManualUpdate(selectedChannel, 'unsupported')
-  }
-
   emitGuiUpdateState({ status: 'checking', info: lastInfo ?? undefined })
   try {
     const result = await autoUpdater.checkForUpdates()
@@ -556,15 +546,6 @@ export async function checkGuiUpdate(channel?: GuiUpdateChannel): Promise<GuiUpd
 export async function downloadGuiUpdate(channel?: GuiUpdateChannel): Promise<GuiUpdateDownloadResult> {
   const selectedChannel = await resolveUpdateChannel(channel)
   configureUpdaterChannel(selectedChannel)
-
-  if (!macAutoUpdateAllowed()) {
-    return {
-      ok: false,
-      currentVersion: app.getVersion(),
-      code: 'unsupported',
-      message: unsupportedMessage()
-    }
-  }
 
   try {
     if (!lastInfo?.hasUpdate || lastInfo.channel !== selectedChannel) {

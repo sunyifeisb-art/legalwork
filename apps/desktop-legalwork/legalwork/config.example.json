@@ -45,22 +45,37 @@
           "softThreshold": 980000,
           "hardThreshold": 990000
         },
-        "inputModalities": ["text"],
-        "outputModalities": ["text"],
+        "inputModalities": [
+          "text"
+        ],
+        "outputModalities": [
+          "text"
+        ],
         "supportsToolCalling": true,
-        "messageParts": ["text"]
+        "messageParts": [
+          "text"
+        ]
       },
       "deepseek-v4-flash": {
-        "aliases": ["deepseek-chat", "deepseek-reasoner"],
+        "aliases": [
+          "deepseek-chat",
+          "deepseek-reasoner"
+        ],
         "contextWindowTokens": 1000000,
         "contextCompaction": {
           "softThreshold": 980000,
           "hardThreshold": 990000
         },
-        "inputModalities": ["text"],
-        "outputModalities": ["text"],
+        "inputModalities": [
+          "text"
+        ],
+        "outputModalities": [
+          "text"
+        ],
         "supportsToolCalling": true,
-        "messageParts": ["text"]
+        "messageParts": [
+          "text"
+        ]
       }
     }
   },
@@ -68,83 +83,93 @@
     "mcp": {
       "enabled": true,
       "servers": {
-        "pkulaw-law-keyword": {
+        "pkulaw-law-search": {
           "enabled": false,
           "transport": "streamable-http",
-          "url": "https://apim-gw.pkulaw.com/law-keyword/mcp",
-          "headers": { "Authorization": "Bearer ${PKULAW_MCP_TOKEN}" },
+          "url": "https://apim-gateway.pkulaw.com/mcp-law-search-service",
+          "headers": {
+            "Authorization": "Bearer ${PKULAW_MCP_TOKEN}"
+          },
           "trustScope": "user",
           "timeoutMs": 30000
         },
-        "pkulaw-law-semantic": {
+        "pkulaw-law-keyword": {
+          "enabled": true,
+          "transport": "streamable-http",
+          "url": "https://apim-gateway.pkulaw.com/mcp-law",
+          "headers": {
+            "Authorization": "Bearer ${PKULAW_MCP_TOKEN}"
+          },
+          "trustScope": "user",
+          "timeoutMs": 30000
+        },
+        "pkulaw-case-semantic-search": {
           "enabled": false,
           "transport": "streamable-http",
-          "url": "https://apim-gw.pkulaw.com/law-semantic/mcp",
-          "headers": { "Authorization": "Bearer ${PKULAW_MCP_TOKEN}" },
+          "url": "https://apim-gateway.pkulaw.com/mcp-case-search-service",
+          "headers": {
+            "Authorization": "Bearer ${PKULAW_MCP_TOKEN}"
+          },
           "trustScope": "user",
           "timeoutMs": 30000
         },
         "pkulaw-case-keyword": {
-          "enabled": false,
+          "enabled": true,
           "transport": "streamable-http",
-          "url": "https://apim-gw.pkulaw.com/case-keyword/mcp",
-          "headers": { "Authorization": "Bearer ${PKULAW_MCP_TOKEN}" },
+          "url": "https://apim-gateway.pkulaw.com/mcp-case",
+          "headers": {
+            "Authorization": "Bearer ${PKULAW_MCP_TOKEN}"
+          },
           "trustScope": "user",
           "timeoutMs": 30000
         },
-        "pkulaw-case-semantic": {
+        "pkulaw-law-item-keyword": {
           "enabled": false,
           "transport": "streamable-http",
-          "url": "https://apim-gw.pkulaw.com/case-semantic/mcp",
-          "headers": { "Authorization": "Bearer ${PKULAW_MCP_TOKEN}" },
-          "trustScope": "user",
-          "timeoutMs": 30000
-        },
-        "pkulaw-fatiao": {
-          "enabled": false,
-          "transport": "streamable-http",
-          "url": "https://apim-gw.pkulaw.com/fatiao/mcp",
-          "headers": { "Authorization": "Bearer ${PKULAW_MCP_TOKEN}" },
+          "url": "https://apim-gateway.pkulaw.com/mcp-fatiao",
+          "headers": {
+            "Authorization": "Bearer ${PKULAW_MCP_TOKEN}"
+          },
           "trustScope": "user",
           "timeoutMs": 30000
         },
         "pkulaw-law-recognition": {
           "enabled": false,
           "transport": "streamable-http",
-          "url": "https://apim-gw.pkulaw.com/law-recognition/mcp",
-          "headers": { "Authorization": "Bearer ${PKULAW_MCP_TOKEN}" },
+          "url": "https://apim-gateway.pkulaw.com/law_recognition",
+          "headers": {
+            "Authorization": "Bearer ${PKULAW_MCP_TOKEN}"
+          },
           "trustScope": "user",
           "timeoutMs": 30000
         },
-        "pkulaw-case-number": {
+        "pkulaw-case-number-recognition": {
           "enabled": false,
           "transport": "streamable-http",
-          "url": "https://apim-gw.pkulaw.com/case-number/mcp",
-          "headers": { "Authorization": "Bearer ${PKULAW_MCP_TOKEN}" },
+          "url": "https://apim-gateway.pkulaw.com/case_number_recognition",
+          "headers": {
+            "Authorization": "Bearer ${PKULAW_MCP_TOKEN}"
+          },
           "trustScope": "user",
           "timeoutMs": 30000
         },
         "pkulaw-citation-validator": {
           "enabled": false,
           "transport": "streamable-http",
-          "url": "https://apim-gw.pkulaw.com/citation-validator/mcp",
-          "headers": { "Authorization": "Bearer ${PKULAW_MCP_TOKEN}" },
+          "url": "https://apim-gateway.pkulaw.com/pku_citation_validator",
+          "headers": {
+            "Authorization": "Bearer ${PKULAW_MCP_TOKEN}"
+          },
           "trustScope": "user",
           "timeoutMs": 30000
         },
         "pkulaw-doc-link": {
           "enabled": false,
           "transport": "streamable-http",
-          "url": "https://apim-gw.pkulaw.com/doc-link/mcp",
-          "headers": { "Authorization": "Bearer ${PKULAW_MCP_TOKEN}" },
-          "trustScope": "user",
-          "timeoutMs": 30000
-        },
-        "pkulaw-semantic-nlsql": {
-          "enabled": false,
-          "transport": "streamable-http",
-          "url": "https://apim-gw.pkulaw.com/semantic-nlsql/mcp",
-          "headers": { "Authorization": "Bearer ${PKULAW_MCP_TOKEN}" },
+          "url": "https://apim-gateway.pkulaw.com/add-doc-link",
+          "headers": {
+            "Authorization": "Bearer ${PKULAW_MCP_TOKEN}"
+          },
           "trustScope": "user",
           "timeoutMs": 30000
         }
@@ -183,14 +208,22 @@
       "enabled": false,
       "maxImageBytes": 5242880,
       "maxImageDimension": 4096,
-      "allowedMimeTypes": ["image/png", "image/jpeg", "image/webp"],
+      "allowedMimeTypes": [
+        "image/png",
+        "image/jpeg",
+        "image/webp"
+      ],
       "textFallbackMaxBase64Bytes": 524288,
       "textFallbackMaxImageDimension": 1280,
       "textFallbackPreferredMimeType": "image/webp"
     },
     "memory": {
       "enabled": false,
-      "scopes": ["user", "workspace", "project"],
+      "scopes": [
+        "user",
+        "workspace",
+        "project"
+      ],
       "maxInjectedRecords": 8
     }
   }

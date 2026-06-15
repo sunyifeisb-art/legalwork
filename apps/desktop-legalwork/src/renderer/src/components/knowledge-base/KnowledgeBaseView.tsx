@@ -27,6 +27,8 @@ import {
   Upload,
   X
 } from 'lucide-react'
+import * as pdfjsLib from 'pdfjs-dist'
+import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url'
 import {
   LEGALWORK_KNOWLEDGE_CREATE_FOLDER_PATH,
   LEGALWORK_KNOWLEDGE_DELETE_FILE_PATH,
@@ -36,6 +38,8 @@ import {
   LEGALWORK_KNOWLEDGE_TREE_PATH,
   LEGALWORK_KNOWLEDGE_WRITE_FILE_PATH
 } from '../../../../shared/legalwork-endpoints'
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl
 
 type TreeNode = {
   name: string
@@ -251,6 +255,32 @@ type PreviewFile = {
 
 type PreviewType = 'text' | 'pdf' | 'image' | 'audio' | 'unsupported'
 
+type PdfRenderedPage = {
+  pageNumber: number
+  width: number
+  height: number
+  dataUrl: string
+}
+
+const PDF_RENDER_TIMEOUT_MS = 20000
+const PDFJS_ASSET_BASE_URL = new URL('pdfjs/', window.location.href).toString()
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timeout = window.setTimeout(() => reject(new Error(message)), timeoutMs)
+    promise.then(
+      (value) => {
+        window.clearTimeout(timeout)
+        resolve(value)
+      },
+      (error: unknown) => {
+        window.clearTimeout(timeout)
+        reject(error)
+      }
+    )
+  })
+}
+
 function fileExtension(node: TreeNode): string {
   return (node.extension || node.name.split('.').pop() || '').replace(/^\./, '').toLowerCase()
 }
@@ -291,6 +321,156 @@ function buildObjectUrl(node: TreeNode, base64Content: string): string {
   }
   const blob = new Blob([bytes], { type: mimeTypeForFile(node) })
   return URL.createObjectURL(blob)
+}
+
+function base64ToBytes(base64Content: string): Uint8Array {
+  const byteString = atob(base64Content)
+  const bytes = new Uint8Array(byteString.length)
+  for (let i = 0; i < byteString.length; i += 1) {
+    bytes[i] = byteString.charCodeAt(i)
+  }
+  return bytes
+}
+
+function PdfPreview({ base64Content, fileName }: { base64Content: string; fileName: string }): ReactElement {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const renderKeyRef = useRef<string>('')
+  const [pages, setPages] = useState<PdfRenderedPage[]>([])
+  const [loading, setLoading] = useState(false)
+  const [renderingMore, setRenderingMore] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [renderWidth, setRenderWidth] = useState(480)
+
+  useEffect(() => {
+    const element = containerRef.current
+    if (!element) return
+    let measured = false
+    const updateWidth = (): void => {
+      if (measured) return
+      const width = Math.floor(element.clientWidth)
+      if (width <= 0) return
+      measured = true
+      setRenderWidth(Math.min(Math.max(width - 32, 280), 960))
+    }
+    updateWidth()
+    const observer = new ResizeObserver(updateWidth)
+    observer.observe(element)
+    return () => {
+      measured = true
+      observer.disconnect()
+    }
+  }, [base64Content])
+
+  useEffect(() => {
+    let cancelled = false
+    const renderPdf = async (): Promise<void> => {
+      if (!base64Content || renderWidth <= 0) return
+      const renderKey = `${base64Content.length}:${renderWidth}`
+      if (renderKeyRef.current === renderKey) return
+      renderKeyRef.current = renderKey
+      setLoading(true)
+      setRenderingMore(false)
+      setError(null)
+      setPages([])
+      let pdf: pdfjsLib.PDFDocumentProxy | null = null
+      try {
+        pdf = await withTimeout(
+          pdfjsLib.getDocument({
+            data: base64ToBytes(base64Content),
+            cMapUrl: `${PDFJS_ASSET_BASE_URL}cmaps/`,
+            cMapPacked: true,
+            standardFontDataUrl: `${PDFJS_ASSET_BASE_URL}standard_fonts/`
+          }).promise,
+          PDF_RENDER_TIMEOUT_MS,
+          'PDF 加载超时'
+        )
+        const renderedPages: PdfRenderedPage[] = []
+        for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+          if (cancelled) break
+          if (pageNumber > 1) {
+            setLoading(false)
+            setRenderingMore(true)
+          }
+          const page = await withTimeout(pdf.getPage(pageNumber), PDF_RENDER_TIMEOUT_MS, `第 ${pageNumber} 页读取超时`)
+          const baseViewport = page.getViewport({ scale: 1 })
+          const scale = renderWidth / baseViewport.width
+          const viewport = page.getViewport({ scale })
+          const canvas = document.createElement('canvas')
+          const context = canvas.getContext('2d')
+          if (!context) throw new Error('无法创建 PDF 预览画布')
+          const ratio = window.devicePixelRatio || 1
+          canvas.width = Math.floor(viewport.width * ratio)
+          canvas.height = Math.floor(viewport.height * ratio)
+          canvas.style.width = `${viewport.width}px`
+          canvas.style.height = `${viewport.height}px`
+          context.setTransform(ratio, 0, 0, ratio, 0, 0)
+          await withTimeout(
+            page.render({ canvas, canvasContext: context, viewport }).promise,
+            PDF_RENDER_TIMEOUT_MS,
+            `第 ${pageNumber} 页渲染超时`
+          )
+          if (cancelled) break
+          renderedPages.push({
+            pageNumber,
+            width: viewport.width,
+            height: viewport.height,
+            dataUrl: canvas.toDataURL('image/png')
+          })
+          setPages([...renderedPages])
+        }
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'PDF 预览渲染失败')
+      } finally {
+        if (pdf) void pdf.destroy()
+        if (!cancelled) setLoading(false)
+        if (!cancelled) setRenderingMore(false)
+      }
+    }
+    void renderPdf()
+    return () => {
+      cancelled = true
+    }
+  }, [base64Content, renderWidth])
+
+  return (
+    <div ref={containerRef} className="min-h-full bg-[var(--ds-main)]">
+      {loading && pages.length === 0 ? (
+        <div className="flex h-full min-h-[320px] items-center justify-center gap-2 text-[13px] text-[var(--ds-muted)]">
+          <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.8} />
+          正在渲染 PDF...
+        </div>
+      ) : null}
+      {error ? (
+        <div className="flex min-h-[320px] flex-col items-center justify-center gap-3 p-6 text-center text-[13px] text-[var(--ds-muted)]">
+          <FileText className="h-10 w-10 text-slate-300" strokeWidth={1.4} />
+          <div className="font-medium text-[var(--ds-ink)]">PDF 预览失败</div>
+          <div className="max-w-sm break-words">{error}</div>
+        </div>
+      ) : pages.length > 0 ? (
+        <div className="flex flex-col items-center gap-4 p-4">
+          {pages.map((page) => (
+            <figure key={page.pageNumber} className="w-full">
+              <img
+                src={page.dataUrl}
+                alt={`${fileName} 第 ${page.pageNumber} 页`}
+                className="mx-auto max-w-full rounded-[4px] bg-white shadow-sm"
+                style={{ width: page.width, minHeight: page.height }}
+              />
+              <figcaption className="mt-2 text-center text-[11px] text-[var(--ds-muted)]">
+                第 {page.pageNumber} 页
+              </figcaption>
+            </figure>
+          ))}
+          {renderingMore ? (
+            <div className="flex items-center gap-2 pb-4 text-[12px] text-[var(--ds-muted)]">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={1.8} />
+              继续渲染...
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  )
 }
 
 type ContextMenuState = {
@@ -1001,11 +1181,7 @@ export function KnowledgeBaseView(): ReactElement {
                   正在读取...
                 </div>
               ) : previewType(preview.node) === 'pdf' && preview.objectUrl ? (
-                <iframe
-                  src={preview.objectUrl}
-                  title={preview.node.name}
-                  className="h-full w-full border-0"
-                />
+                <PdfPreview base64Content={preview.content} fileName={preview.node.name} />
               ) : previewType(preview.node) === 'image' && preview.objectUrl ? (
                 <img
                   src={preview.objectUrl}

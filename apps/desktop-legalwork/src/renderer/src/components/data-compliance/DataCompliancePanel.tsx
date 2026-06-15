@@ -694,9 +694,23 @@ function DesensitizeReport({ result }: { result: ComplianceResult }): ReactEleme
   if (!report || result.product_type !== 'desensitize') return null
   const findings = recordArray(report.findings)
   const summary = asRecord(report.summary)
+  const warnings = stringArray(report.warnings)
   return (
     <div className="space-y-4">
       <StatCards stats={asRecord(summary?.entity_counts)} />
+      {warnings.length > 0 ? (
+        <section className="rounded-[14px] border border-amber-500/20 bg-amber-500/8 p-4">
+          <h3 className="text-[15px] font-semibold text-amber-700 dark:text-amber-200">处理说明</h3>
+          <div className="mt-2 space-y-1.5">
+            {warnings.map((warning, index) => (
+              <div key={index} className="flex items-start gap-2 text-[12.5px] leading-5 text-amber-700 dark:text-amber-200">
+                <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-current" />
+                <span>{warning}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
       <section className="rounded-[14px] border border-ds-border-muted bg-ds-subtle p-4">
         <h3 className="text-[15px] font-semibold text-ds-ink">脱敏命中</h3>
         {findings.length === 0 ? (

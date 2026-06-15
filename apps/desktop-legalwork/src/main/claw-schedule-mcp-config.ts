@@ -7,7 +7,7 @@ const CLAW_SCHEDULE_MCP_MARKER_START = '# legalwork plugin:mcp:claw-schedule STA
 const CLAW_SCHEDULE_MCP_MARKER_END = '# legalwork plugin:mcp:claw-schedule END'
 export const LEGALWORK_SCHEDULE_MCP_SERVER_NAME = 'legalwork_schedule'
 const LEGACY_CLAW_SCHEDULE_MCP_SERVER_NAME = 'claw_schedule'
-const LEGALWORK_SCHEDULE_MCP_NODE_ENTRY = 'out/main/claw-schedule-mcp-node-entry.js'
+const LEGALWORK_SCHEDULE_MCP_NODE_ENTRY = 'out/main/claw-schedule-mcp-node-entry.cjs'
 const ELECTRON_RUN_AS_NODE_ENV = { ELECTRON_RUN_AS_NODE: '1' }
 
 type JsonRecord = Record<string, unknown>

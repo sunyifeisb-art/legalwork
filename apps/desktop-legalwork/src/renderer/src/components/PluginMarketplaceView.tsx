@@ -67,6 +67,35 @@ type SkillRootOption = {
 
 const INSTALLED_STORAGE_KEY = 'legalwork.installedPlugins'
 const LEGALWORK_SCHEDULE_MCP_SERVER_ID = 'legalwork_schedule'
+const PKULAW_MCP_GROUP_ID = 'pkulaw'
+const PKULAW_MCP_ENDPOINTS = [
+  { id: 'pkulaw-law-keyword', url: 'https://apim-gateway.pkulaw.com/mcp-law', enabledByDefault: true },
+  { id: 'pkulaw-case-keyword', url: 'https://apim-gateway.pkulaw.com/mcp-case', enabledByDefault: true },
+  { id: 'pkulaw-law-search', url: 'https://apim-gateway.pkulaw.com/mcp-law-search-service', enabledByDefault: false },
+  { id: 'pkulaw-case-semantic-search', url: 'https://apim-gateway.pkulaw.com/mcp-case-search-service', enabledByDefault: false },
+  { id: 'pkulaw-law-item-keyword', url: 'https://apim-gateway.pkulaw.com/mcp-fatiao', enabledByDefault: false },
+  { id: 'pkulaw-law-recognition', url: 'https://apim-gateway.pkulaw.com/law_recognition', enabledByDefault: false },
+  { id: 'pkulaw-case-number-recognition', url: 'https://apim-gateway.pkulaw.com/case_number_recognition', enabledByDefault: false },
+  { id: 'pkulaw-citation-validator', url: 'https://apim-gateway.pkulaw.com/pku_citation_validator', enabledByDefault: false },
+  { id: 'pkulaw-doc-link', url: 'https://apim-gateway.pkulaw.com/add-doc-link', enabledByDefault: false }
+] as const
+const PKULAW_MCP_ENDPOINT_IDS = new Set(PKULAW_MCP_ENDPOINTS.map((endpoint) => endpoint.id))
+
+type McpMarketplaceLabels = {
+  configured: string
+  connected: string
+  error: string
+  disabled: string
+  pkulawTitle: string
+  pkulawSummary: (values: {
+    total: number
+    connected: number
+    tools: number
+    errors: number
+    disabled: number
+    lastError: string
+  }) => string
+}
 
 function loadInstalledPlugins(): string[] {
   try {
@@ -97,6 +126,10 @@ function normalizePluginId(raw: string): string {
 
 function isJsonRecord(value: unknown): value is JsonRecord {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function isPkulawMcpEndpointId(id: string): boolean {
+  return PKULAW_MCP_ENDPOINT_IDS.has(id as typeof PKULAW_MCP_ENDPOINTS[number]['id'])
 }
 
 function parseMcpJsonConfig(content: string): JsonRecord {
@@ -159,21 +192,9 @@ export function buildMcpConfig(
 function buildPkulawMcpConfig(token: string): JsonRecord {
   const authorization = `Bearer ${token.trim()}`
   const servers: JsonRecord = {}
-  const endpoints = [
-    { id: 'pkulaw-law-keyword', url: 'https://apim-gw.pkulaw.com/law-keyword/mcp' },
-    { id: 'pkulaw-law-semantic', url: 'https://apim-gw.pkulaw.com/law-semantic/mcp' },
-    { id: 'pkulaw-case-keyword', url: 'https://apim-gw.pkulaw.com/case-keyword/mcp' },
-    { id: 'pkulaw-case-semantic', url: 'https://apim-gw.pkulaw.com/case-semantic/mcp' },
-    { id: 'pkulaw-fatiao', url: 'https://apim-gw.pkulaw.com/fatiao/mcp' },
-    { id: 'pkulaw-law-recognition', url: 'https://apim-gw.pkulaw.com/law-recognition/mcp' },
-    { id: 'pkulaw-case-number', url: 'https://apim-gw.pkulaw.com/case-number/mcp' },
-    { id: 'pkulaw-citation-validator', url: 'https://apim-gw.pkulaw.com/citation-validator/mcp' },
-    { id: 'pkulaw-doc-link', url: 'https://apim-gw.pkulaw.com/doc-link/mcp' },
-    { id: 'pkulaw-semantic-nlsql', url: 'https://apim-gw.pkulaw.com/semantic-nlsql/mcp' }
-  ]
-  for (const { id, url } of endpoints) {
+  for (const { id, url, enabledByDefault } of PKULAW_MCP_ENDPOINTS) {
     servers[id] = {
-      enabled: true,
+      enabled: enabledByDefault,
       transport: 'streamable-http',
       url,
       headers: { Authorization: authorization },
@@ -227,7 +248,11 @@ function mcpStatusTone(status: string): MarketplaceItem['statusTone'] {
 
 export function mcpConfigHasServer(content: string, id: string): boolean {
   try {
-    return Object.prototype.hasOwnProperty.call(mcpServersFromConfig(parseMcpJsonConfig(content)), id)
+    const servers = mcpServersFromConfig(parseMcpJsonConfig(content))
+    if (id === PKULAW_MCP_GROUP_ID) {
+      return Object.keys(servers).some((serverId) => isPkulawMcpEndpointId(serverId))
+    }
+    return Object.prototype.hasOwnProperty.call(servers, id)
   } catch {
     return false
   }
@@ -317,12 +342,7 @@ export function skillMarketplaceItemsFromDiscoveredSkills(
 export function mcpMarketplaceItemsFromConfigAndDiagnostics(
   configText: string,
   diagnostics: CoreRuntimeToolDiagnosticsJson | null,
-  labels: {
-    configured: string
-    connected: string
-    error: string
-    disabled: string
-  }
+  labels: McpMarketplaceLabels
 ): MarketplaceItem[] {
   const servers = new Map<string, {
     id: string
@@ -351,7 +371,11 @@ export function mcpMarketplaceItemsFromConfigAndDiagnostics(
       diagnostic
     })
   }
-  return [...servers.values()].map(({ id, config, diagnostic }) => {
+
+  const entries = [...servers.values()]
+  const pkulawEntries = entries.filter((entry) => isPkulawMcpEndpointId(entry.id))
+  const normalEntries = entries.filter((entry) => !isPkulawMcpEndpointId(entry.id))
+  const items: MarketplaceItem[] = normalEntries.map(({ id, config, diagnostic }) => {
     const status = mcpServerStatus(diagnostic, config)
     const details = { ...(config ?? {}), ...(diagnostic ?? {}) }
     const sourceLabel =
@@ -368,7 +392,69 @@ export function mcpMarketplaceItemsFromConfigAndDiagnostics(
       sourceLabel,
       statusTone: mcpStatusTone(status)
     }
-  }).sort((left, right) => left.title.localeCompare(right.title))
+  })
+  if (pkulawEntries.length > 0) {
+    items.push(pkulawMarketplaceItem(pkulawEntries, labels))
+  }
+  return items.sort((left, right) => (left.title ?? left.id).localeCompare(right.title ?? right.id))
+}
+
+function pkulawMarketplaceItem(
+  entries: Array<{
+    id: string
+    config?: JsonRecord
+    diagnostic?: JsonRecord
+  }>,
+  labels: McpMarketplaceLabels
+): MarketplaceItem {
+  const statuses = entries.map((entry) => mcpServerStatus(entry.diagnostic, entry.config))
+  const errorEntries = entries.filter((entry) => {
+    const details = { ...(entry.config ?? {}), ...(entry.diagnostic ?? {}) }
+    return mcpServerStatus(entry.diagnostic, entry.config) === 'error' ||
+      typeof details.lastError === 'string'
+  })
+  const connected = statuses.filter((status) => status === 'connected' || status === 'available').length
+  const disabled = statuses.filter((status) => status === 'disabled').length
+  const tools = entries.reduce((sum, entry) => {
+    const count = typeof entry.diagnostic?.toolCount === 'number'
+      ? entry.diagnostic.toolCount
+      : typeof entry.config?.toolCount === 'number'
+        ? entry.config.toolCount
+        : 0
+    return Number.isFinite(count) ? sum + count : sum
+  }, 0)
+  const lastError = errorEntries
+    .map((entry) => {
+      const details = { ...(entry.config ?? {}), ...(entry.diagnostic ?? {}) }
+      return typeof details.lastError === 'string' ? details.lastError : ''
+    })
+    .find(Boolean) ?? ''
+  const status =
+    errorEntries.length > 0 ? 'error' :
+    connected > 0 ? 'connected' :
+    disabled === entries.length ? 'disabled' :
+    'configured'
+  const sourceLabel =
+    status === 'connected' ? labels.connected :
+    status === 'error' ? labels.error :
+    status === 'disabled' ? labels.disabled :
+    labels.configured
+  return {
+    id: PKULAW_MCP_GROUP_ID,
+    kind: 'mcp',
+    title: labels.pkulawTitle,
+    description: labels.pkulawSummary({
+      total: entries.length,
+      connected,
+      tools,
+      errors: errorEntries.length,
+      disabled,
+      lastError
+    }),
+    group: 'personal',
+    sourceLabel,
+    statusTone: mcpStatusTone(status)
+  }
 }
 
 function skillNameLooksValid(raw: string): boolean {
@@ -680,7 +766,9 @@ export function PluginMarketplaceView(): ReactElement {
       configured: t('pluginMcpSourceConfigured'),
       connected: t('pluginMcpSourceConnected'),
       error: t('pluginMcpSourceError'),
-      disabled: t('pluginMcpSourceDisabled')
+      disabled: t('pluginMcpSourceDisabled'),
+      pkulawTitle: t('pluginMcpPkulawTitle'),
+      pkulawSummary: (values) => t('pluginMcpPkulawSummary', values)
     }).filter((item) => item.id !== LEGALWORK_SCHEDULE_MCP_SERVER_ID),
     [mcpConfigText, t, toolDiagnostics]
   )
@@ -1103,6 +1191,7 @@ function McpRuntimeOverlayPanel({
   t: (key: string, values?: Record<string, unknown>) => string
 }): ReactElement {
   const status = mcpRuntimeStatusLabel(overlay.status, t)
+  const displayServerIds = groupedMcpServerIds(overlay.serverIds)
   return (
     <section className="mt-4 rounded-lg border border-ds-border bg-ds-card px-4 py-3 shadow-sm">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -1129,9 +1218,9 @@ function McpRuntimeOverlayPanel({
               })}</span>
               {overlay.driftCount > 0 ? <span>{t('pluginMcpRuntimeDrift', { count: overlay.driftCount })}</span> : null}
             </div>
-            {overlay.serverIds.length > 0 ? (
+            {displayServerIds.length > 0 ? (
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {overlay.serverIds.map((id) => (
+                {displayServerIds.map((id) => (
                   <span
                     key={id}
                     className="rounded-md border border-ds-border-muted bg-ds-subtle px-2 py-0.5 font-mono text-[11px] text-ds-muted"
@@ -1160,6 +1249,19 @@ function McpRuntimeOverlayPanel({
       </div>
     </section>
   )
+}
+
+function groupedMcpServerIds(serverIds: string[]): string[] {
+  let hasPkulaw = false
+  const grouped: string[] = []
+  for (const id of serverIds) {
+    if (isPkulawMcpEndpointId(id)) {
+      hasPkulaw = true
+      continue
+    }
+    grouped.push(id)
+  }
+  return hasPkulaw ? [...grouped, PKULAW_MCP_GROUP_ID].sort((left, right) => left.localeCompare(right)) : grouped
 }
 
 function mcpRuntimeStatusLabel(

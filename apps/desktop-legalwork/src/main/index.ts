@@ -39,7 +39,6 @@ import {
 import { configureLogger, logError, logWarn, pruneOnStartup } from './logger'
 import { createClawRuntime, type ClawRuntime } from './claw-runtime'
 import { createScheduleRuntime, type ScheduleRuntime } from './schedule-runtime'
-import { DataComplianceRuntime } from './data-compliance-runtime'
 import { runClawScheduleMcpServerFromArgv } from './claw-schedule-mcp-server'
 import {
   clawScheduleMcpSettingsChanged,
@@ -158,7 +157,6 @@ let store: JsonSettingsStore
 let logDir = ''
 let clawRuntime: ClawRuntime | null = null
 let scheduleRuntime: ScheduleRuntime | null = null
-let dataComplianceRuntime: DataComplianceRuntime | null = null
 let managedRuntimesStoppedForQuit = false
 let managedRuntimesStopPromise: Promise<void> | null = null
 let appBehavior: AppBehaviorConfigV1 = normalizeAppBehaviorSettings()
@@ -186,7 +184,6 @@ async function stopManagedRuntimes(): Promise<void> {
     managedRuntimesStopPromise = (async () => {
       scheduleRuntime?.stop()
       clawRuntime?.stop()
-      await dataComplianceRuntime?.stop()
       stopWeixinBridgeRuntime()
       await legalworkRuntimeAdapter.stopAndWait()
     })().finally(() => {
@@ -975,6 +972,14 @@ app.whenReady().then(async () => {
 
   createWindow({ suppressInitialShow: shouldStartHidden(initial) })
   traceStartup('createWindow:returned')
+
+  if (resolveConfiguredApiKey(initial) && getLegalworkRuntimeSettings(initial).autoStart) {
+    setTimeout(() => {
+      void ensureRuntime(initial).catch((err) => {
+        console.warn('[legalwork] startup runtime warmup failed:', err)
+      })
+    }, 250)
+  }
 
   void pruneOnStartup().catch((err) => {
     console.warn('[legalwork] prune logs:', err)
