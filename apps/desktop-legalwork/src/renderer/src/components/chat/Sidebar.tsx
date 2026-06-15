@@ -13,6 +13,7 @@ import {
   Settings,
   Smartphone
 } from 'lucide-react'
+import { GuiUpdateBadge } from '../sidebar/GuiUpdateBadge'
 import type { NormalizedThread } from '../../agent/types'
 import { useChatStore, type SettingsRouteSection } from '../../store/chat-store'
 import type {
@@ -153,6 +154,7 @@ export function Sidebar({
       onCollapse={onToggleSidebar}
       footer={
         <div className="space-y-1">
+          <GuiUpdateBadge />
           <SidebarCommandRow
             icon={<Smartphone className="h-4 w-4" strokeWidth={1.75} />}
             label={t('claw')}
