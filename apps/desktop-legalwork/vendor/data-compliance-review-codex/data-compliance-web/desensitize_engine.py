@@ -16,9 +16,19 @@ from typing import Any
 from docx import Document
 
 try:
-    from scripts.ocr_text import OcrUnavailable, ensure_ocr_available, ocr_image_to_data
+    from scripts.ocr_text import (
+        OcrUnavailable,
+        ensure_ocr_available,
+        extract_pdf_ocr_text,
+        ocr_image_to_data,
+    )
 except ModuleNotFoundError:  # Allows importing as web.desensitize_engine in checks.
-    from web.scripts.ocr_text import OcrUnavailable, ensure_ocr_available, ocr_image_to_data
+    from web.scripts.ocr_text import (
+        OcrUnavailable,
+        ensure_ocr_available,
+        extract_pdf_ocr_text,
+        ocr_image_to_data,
+    )
 
 try:
     from pptx import Presentation
@@ -660,21 +670,10 @@ def copy_outputs_to_directory(
     subject_mapping_json: Path,
     document_name: str,
 ) -> None:
-    """将脱敏产物复制到用户指定的输出目录。"""
+    """将脱敏产物复制到用户指定的输出目录，仅保留最终 Markdown 和主体映射 Markdown。"""
     output_dir.mkdir(parents=True, exist_ok=True)
     shutil.copy2(output_file, output_dir / output_file.name)
     shutil.copy2(subject_mapping_md, output_dir / subject_mapping_md.name)
-    shutil.copy2(subject_mapping_json, output_dir / subject_mapping_json.name)
-
-    # For scanned PDF redaction, also copy the per-page PNGs and manifest so the
-    # user has access to both the merged PDF and the individual page images.
-    page_images = sorted(output_file.parent.glob(f'{output_file.stem}_page_*.png'))
-    if output_file.suffix.lower() == '.pdf' and page_images:
-        for sibling in page_images:
-            shutil.copy2(sibling, output_dir / sibling.name)
-        manifest = output_file.parent / f'{output_file.stem}_pages.json'
-        if manifest.exists():
-            shutil.copy2(manifest, output_dir / manifest.name)
 
 
 def process_desensitization(
@@ -703,7 +702,7 @@ def process_desensitization(
         subject_mappings.extend(text_subjects)
         base_name = (document_name or Path(input_name).stem).rstrip('_').strip()
         output_stem = _safe_output_stem(f'{base_name}_脱敏')
-        output_file = work_dir / f'{output_stem}{text_output_suffix(input_path)}'
+        output_file = work_dir / f'{output_stem}.md'
         output_file.write_text(redacted, encoding='utf-8')
         input_type = 'text'
     elif suffix in DOC_EXTENSIONS:
@@ -713,8 +712,14 @@ def process_desensitization(
         input_type = 'document'
     elif suffix in PDF_EXTENSIONS:
         base_name = (document_name or Path(input_name).stem).rstrip('_').strip()
-        output_stem = _safe_output_stem(f'{base_name}_脱敏')
-        output_file, pdf_findings, pdf_subjects = process_pdf(input_path, work_dir, engine, warnings, output_stem=output_stem)
+        output_stem = _safe_output_stem(base_name)
+        output_file, pdf_findings, pdf_subjects, used_ocr = process_pdf(input_path, work_dir, engine, warnings, output_stem=output_stem)
+        if used_ocr:
+            # Rename to _OCR脱敏.md to indicate OCR source.
+            ocr_stem = _safe_output_stem(f'{base_name}_OCR脱敏')
+            ocr_output_file = work_dir / f'{ocr_stem}.md'
+            output_file.rename(ocr_output_file)
+            output_file = ocr_output_file
         findings.extend(pdf_findings)
         subject_mappings.extend(pdf_subjects)
         input_type = 'pdf'
@@ -847,121 +852,61 @@ def process_pdf(
     engine: Desensitizer,
     warnings: list[str],
     output_stem: str = 'desensitized_output',
-) -> tuple[Path, list[Finding], list[SubjectMapping]]:
-    text_parts: list[str] = []
+) -> tuple[Path, list[Finding], list[SubjectMapping], bool]:
+    """对 PDF 执行脱敏：优先提取文本层，否则 OCR 提取，最终输出 Markdown。"""
     all_findings: list[Finding] = []
     all_subjects: list[SubjectMapping] = []
+    text_parts: list[str] = []
+    used_ocr = False
+
     if fitz is not None:
         pdf = fitz.open(str(input_path))
         for page_index, page in enumerate(pdf, start=1):
             page_text = page.get_text('text') or ''
             if page_text.strip():
-                redacted, findings, subjects = sanitize_text_and_subjects(
-                    page_text, engine, surface='pdf', locator=f'第 {page_index} 页'
-                )
-                all_findings.extend(findings)
-                all_subjects.extend(subjects)
-                text_parts.append(f'--- 第 {page_index} 页 ---\n{redacted}')
+                text_parts.append(f'--- 第 {page_index} 页 ---\n{page_text.strip()}')
         pdf.close()
 
-    if text_parts:
-        output_file = work_dir / 'desensitized_output.txt'
-        output_file.write_text('\n\n'.join(text_parts), encoding='utf-8')
-        warnings.append('PDF 当前输出为脱敏文本副本；版式级 PDF 涂黑可在图片化处理链路继续增强。')
-        return output_file, all_findings, all_subjects
+    if not text_parts:
+        warnings.append('PDF 未提取到可复制文本，使用 OCR 提取为 Markdown 后脱敏。')
+        if fitz is None:
+            raise RuntimeError('OCR 需要 PyMuPDF 才能渲染页面。')
+        try:
+            ensure_ocr_available(require_pdf=True)
+        except OcrUnavailable as exc:
+            raise RuntimeError(str(exc)) from exc
+        ocr_text = extract_pdf_ocr_text(input_path)
+        used_ocr = True
+        # extract_pdf_ocr_text returns pages joined by form feed.
+        for page_index, page_text in enumerate(ocr_text.split('\f'), start=1):
+            body = '\n'.join(
+                line for line in page_text.splitlines()
+                if not line.strip().startswith('--- OCR 第')
+            ).strip()
+            if body:
+                text_parts.append(f'--- 第 {page_index} 页 ---\n{body}')
 
-    warnings.append('PDF 未提取到可复制文本，尝试按扫描件图片进行 OCR 脱敏。')
-    if fitz is None:
-        raise RuntimeError('扫描型 PDF 需要 PyMuPDF 才能渲染页面，请先安装 PyMuPDF。')
-    if Image is None or ImageDraw is None:
-        raise RuntimeError('扫描型 PDF 或图片脱敏需要安装 Pillow。')
-    try:
-        ensure_ocr_available(require_pdf=True)
-    except OcrUnavailable as exc:
-        raise RuntimeError(str(exc)) from exc
+    if not text_parts:
+        raise RuntimeError('未能从 PDF 中提取到可脱敏文本。')
 
-    pdf = fitz.open(str(input_path))
-    page_outputs: list[str] = []
-    page_images: list[Path] = []
-    page_text_layers: list[list[dict[str, Any]]] = []
-    for page_index, page in enumerate(pdf, start=1):
-        pix = page.get_pixmap(matrix=fitz.Matrix(2, 2), alpha=False)
-        page_image = work_dir / f'_pdf_page_{page_index}.png'
-        pix.save(str(page_image))
-        redacted_path = work_dir / f'{output_stem}_page_{page_index}.png'
-        _redacted, page_findings, page_subjects, visible_words = redact_image(
-            page_image, redacted_path, engine, f'第 {page_index} 页'
-        )
-        page_outputs.append(redacted_path.name)
-        page_images.append(redacted_path)
-        page_text_layers.append(visible_words)
-        all_findings.extend(page_findings)
-        all_subjects.extend(page_subjects)
-    pdf.close()
-    manifest = work_dir / f'{output_stem}_pages.json'
-    manifest.write_text(json.dumps({'pages': page_outputs}, ensure_ascii=False, indent=2), encoding='utf-8')
+    full_text = '\n\n'.join(text_parts)
+    redacted, findings, subjects = sanitize_text_and_subjects(
+        full_text, engine, surface='pdf', locator='全文'
+    )
+    all_findings.extend(findings)
+    all_subjects.extend(subjects)
 
-    # Merge redacted page images into a single PDF so users get a usable document.
-    merged_pdf = _merge_png_pages_to_pdf(page_images, work_dir / f'{output_stem}.pdf', page_text_layers)
-    return merged_pdf, all_findings, all_subjects
+    output_file = work_dir / f'{output_stem}.md'
+    output_file.write_text(redacted, encoding='utf-8')
+    if used_ocr:
+        warnings.append('OCR 脱敏结果已保存为 Markdown，可复制编辑，但 OCR 识别可能存在误差。')
+    return output_file, all_findings, all_subjects, used_ocr
 
 
 def _safe_output_stem(name: str) -> str:
     """从材料名称生成安全的文件 stem。"""
     stem = re.sub(r'[\\/:*?"<>|]', '_', name or 'desensitized_output').strip()
     return stem or 'desensitized_output'
-
-
-def _merge_png_pages_to_pdf(
-    page_images: list[Path],
-    output_path: Path,
-    page_text_layers: list[list[dict[str, Any]]] | None = None,
-) -> Path:
-    """将脱敏后的页面 PNG 合并成一个多页 PDF（使用 JPEG 压缩以控制体积）。"""
-    if fitz is None:
-        raise RuntimeError('合并 PDF 页面需要 PyMuPDF。')
-    if not page_images:
-        raise RuntimeError('没有可合并的页面。')
-    text_layers = page_text_layers or []
-    doc = fitz.open()
-    for page_index, image_path in enumerate(page_images):
-        if not image_path.exists():
-            continue
-        with Image.open(image_path).convert('RGB') as img:
-            from io import BytesIO
-            buffer = BytesIO()
-            img.save(buffer, format='JPEG', quality=85, optimize=True)
-            buffer.seek(0)
-            rect = fitz.Rect(0, 0, img.width, img.height)
-            page = doc.new_page(width=rect.width, height=rect.height)
-            page.insert_image(rect, stream=buffer.read())
-            # Insert OCR text layer for words that were not redacted.
-            words = text_layers[page_index] if page_index < len(text_layers) else []
-            for word in words:
-                text = word.get('text', '')
-                if not text:
-                    continue
-                left = float(word.get('left', 0))
-                top = float(word.get('top', 0))
-                width = float(word.get('width', 0))
-                height = float(word.get('height', 0))
-                if width <= 0 or height <= 0:
-                    continue
-                try:
-                    font_size = max(height * 0.8, 1)
-                    page.insert_text(
-                        (left, top + height * 0.85),
-                        text,
-                        fontsize=font_size,
-                        color=(0, 0, 0),
-                        render_mode=3,
-                    )
-                except Exception:
-                    pass
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    doc.save(str(output_path))
-    doc.close()
-    return output_path
 
 
 def process_table(
