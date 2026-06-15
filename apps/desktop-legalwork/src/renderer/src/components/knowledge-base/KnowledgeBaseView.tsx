@@ -41,15 +41,9 @@ import {
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl
 
-type TreeNode = {
-  name: string
-  path: string
-  kind: 'file' | 'folder'
-  extension?: string
-  sizeBytes?: number
-  updatedAt?: string
-  children?: TreeNode[]
-}
+import type { KnowledgeTreeNode } from './types'
+import { KnowledgeBaseFileView } from './KnowledgeBaseFileView'
+type TreeNode = KnowledgeTreeNode
 
 type UploadSummary = {
   done: number
@@ -516,6 +510,7 @@ export function KnowledgeBaseView(): ReactElement {
   const [newFolderName, setNewFolderName] = useState('')
   const [preview, setPreview] = useState<PreviewFile | null>(null)
   const [previewLoading, setPreviewLoading] = useState(false)
+  const [viewingFile, setViewingFile] = useState<TreeNode | null>(null)
   const [selectedPaths, setSelectedPaths] = useState<Set<string>>(new Set())
   const [lastSelectedPath, setLastSelectedPath] = useState<string | null>(null)
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
