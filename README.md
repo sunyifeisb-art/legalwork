@@ -1,5 +1,9 @@
 # LegalWork — 法律人工智能工作台
 
+<p align="center">
+  <img src="docs/images/legalwork-main-interface.png" alt="LegalWork 主界面截图" width="100%">
+</p>
+
 > 🏛️ 面向法律专业人士的 AI 赋能平台<br>
 > 集成 OCR 文档识别、敏感信息脱敏、智能案情分析、法律检索、文书生成、合规审查等完整法律 AI 能力
 
