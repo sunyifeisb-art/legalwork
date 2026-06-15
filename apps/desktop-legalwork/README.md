@@ -411,7 +411,7 @@ Legalwork 的设计站在先行项目的肩膀上：
 
 ## 许可证
 
-[MIT](./LICENSE)
+[PolyForm Noncommercial License 1.0.0](./LICENSE)
 
 ## Star 历史
 

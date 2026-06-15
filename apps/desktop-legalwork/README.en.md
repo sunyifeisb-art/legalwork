@@ -428,7 +428,7 @@ We are also grateful to:
 
 ## License
 
-[MIT](./LICENSE)
+[PolyForm Noncommercial License 1.0.0](./LICENSE)
 
 ## Star History
 

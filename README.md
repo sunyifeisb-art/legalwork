@@ -7,17 +7,6 @@
 > 🏛️ 面向法律专业人士的 AI 赋能平台<br>
 > 集成 OCR 文档识别、敏感信息脱敏、智能案情分析、法律检索、文书生成、合规审查等完整法律 AI 能力
 
----
-
-## 📋 许可证声明
-
-本仓库包含两部分代码，适用不同的许可证：
-
-- **`apps/desktop-legalwork/`** — 桌面端 agent runtime，基于 [Kun](https://github.com/KunAgent/Kun)（© 2026 xingyu），遵循 **PolyForm Noncommercial License 1.0.0**（详见 `apps/desktop-legalwork/LICENSE`）。**仅限非商业用途。**
-- **根目录下其他文件**（OCR、脱敏、skill engine、知识库等 Python 代码）— 原创内容，遵循 **MIT License**（详见根目录 `LICENSE`）。
-
----
-
 ## ✨ 功能全景
 
 ### 🧠 69 项法律 AI 技能（Skills）
@@ -343,8 +332,9 @@ legalwork/
 
 ## 📄 许可证
 
-- **原创 Python 代码**（OCR、脱敏、技能引擎、知识库等）：**MIT License**
-- **桌面端应用**（`apps/desktop-legalwork/`）：基于 Kun (KunAgent/Kun)，**PolyForm Noncommercial License 1.0.0**
+本仓库所有代码统一采用 **PolyForm Noncommercial License 1.0.0**，仅限非商业用途。详见根目录 [`LICENSE`](./LICENSE)。
+
+桌面端 agent runtime 基于 [Kun](https://github.com/KunAgent/Kun)（© 2026 xingyu），相关声明同步保留在 [`apps/desktop-legalwork/LICENSE`](./apps/desktop-legalwork/LICENSE)。
 
 ---
 
