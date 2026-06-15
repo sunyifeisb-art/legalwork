@@ -1,5 +1,5 @@
 import { app, autoUpdater as nativeAutoUpdater, BrowserWindow } from 'electron'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import electronUpdater from 'electron-updater'
@@ -443,6 +443,30 @@ async function checkManualUpdate(
   }
 }
 
+/** Clean up any leftover update temp files from previous aborted updates */
+function cleanupStaleUpdateFiles(): void {
+  try {
+    const userDataPath = app.getPath('userData')
+    // electron-updater caches downloads in a __update__ subdirectory
+    const updateCacheDir = join(userDataPath, '__update__')
+    if (!existsSync(updateCacheDir)) return
+
+    const entries = readdirSync(updateCacheDir)
+    for (const entry of entries) {
+      const fullPath = join(updateCacheDir, entry)
+      const stat = statSync(fullPath)
+      if (stat.isFile() && (entry.endsWith('.dmg') || entry.endsWith('.zip') || entry.endsWith('.exe') || entry.endsWith('.AppImage'))) {
+        // Only clean files older than 1 hour to avoid deleting an in-progress download
+        if (Date.now() - stat.mtimeMs > 3_600_000) {
+          rmSync(fullPath, { force: true })
+        }
+      }
+    }
+  } catch {
+    // best-effort cleanup, ignore errors
+  }
+}
+
 export function initializeGuiUpdater(
   windowGetter: () => BrowserWindow | null,
   channelGetter?: () => GuiUpdateChannel | Promise<GuiUpdateChannel>,
@@ -453,6 +477,9 @@ export function initializeGuiUpdater(
   beforeInstallUpdate = beforeInstall ?? null
   if (initialized) return
   initialized = true
+
+  // Remove leftover update temp files from previous aborted updates
+  cleanupStaleUpdateFiles()
 
   autoUpdater.autoDownload = false
   autoUpdater.autoInstallOnAppQuit = false
