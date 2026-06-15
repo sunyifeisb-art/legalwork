@@ -123,6 +123,22 @@ describe('electron-builder Legalwork packaging', () => {
     )
   })
 
+  it('does not fail packaging when optional data compliance databases are absent', () => {
+    const root = tempRoot()
+    const context = createMacPackContext(root)
+    const unpackedRoot = afterPack._internals.unpackedAppRoot(context)
+
+    for (const relativePath of afterPack.DATA_COMPLIANCE_REQUIRED_PATHS) {
+      touch(join(unpackedRoot, relativePath))
+    }
+
+    for (const relativePath of afterPack.DATA_COMPLIANCE_OPTIONAL_PATHS) {
+      rmSync(join(unpackedRoot, relativePath), { force: true })
+    }
+
+    expect(() => afterPack._internals.validateBundledDataComplianceRuntime(context)).not.toThrow()
+  })
+
   it('runs npm through cmd.exe during Windows afterPack hooks', () => {
     expect(afterPack._internals.npmCommand(['prune'], 'win32')).toEqual({
       command: 'cmd.exe',

@@ -18,7 +18,10 @@ const DATA_COMPLIANCE_REQUIRED_PATHS = [
   'vendor/data-compliance-review-codex/data-compliance-web/requirements.txt',
   'vendor/data-compliance-review-codex/data-compliance-web/templates/index.html',
   'vendor/data-compliance-review-codex/data-compliance-web/templates/result.html',
-  'vendor/data-compliance-review-codex/data-compliance-web/config/review-paths.json',
+  'vendor/data-compliance-review-codex/data-compliance-web/config/review-paths.json'
+]
+
+const DATA_COMPLIANCE_OPTIONAL_PATHS = [
   'vendor/data-compliance-review-codex/projects/data-compliance-ai-project-kit/knowledge-base/local-regulations.sqlite3'
 ]
 
@@ -101,6 +104,12 @@ function validateBundledDataComplianceRuntime(context) {
   for (const relativePath of DATA_COMPLIANCE_REQUIRED_PATHS) {
     assertExists(join(root, relativePath), relativePath)
   }
+  for (const relativePath of DATA_COMPLIANCE_OPTIONAL_PATHS) {
+    const absolutePath = join(root, relativePath)
+    if (!existsSync(absolutePath)) {
+      console.warn(`[after-pack] Optional data compliance resource missing: ${relativePath}`)
+    }
+  }
 }
 
 function maybeAdhocSignMacApp(context) {
@@ -139,6 +148,7 @@ async function afterPack(context) {
 
 exports.LEGALWORK_RUNTIME_REQUIRED_PATHS = LEGALWORK_RUNTIME_REQUIRED_PATHS
 exports.DATA_COMPLIANCE_REQUIRED_PATHS = DATA_COMPLIANCE_REQUIRED_PATHS
+exports.DATA_COMPLIANCE_OPTIONAL_PATHS = DATA_COMPLIANCE_OPTIONAL_PATHS
 exports._internals = {
   appBundlePath,
   packedResourcesDir,
