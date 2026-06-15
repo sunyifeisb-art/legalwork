@@ -37,7 +37,7 @@ async function main() {
   const artifacts = []
 
   for (const fileName of entries) {
-    const match = fileName.match(/^legalwork-(.+)-mac-(arm64|x64)\.(zip|dmg)$/)
+    const match = fileName.match(/^[Ll]egal[Ww]ork-(.+)-mac-(arm64|x64)\.(zip|dmg)$/)
     if (!match) continue
     artifacts.push({
       fileName,
