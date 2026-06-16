@@ -15,6 +15,18 @@ import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { dirname, extname, isAbsolute, join, relative as pathRelative, resolve } from 'node:path'
 import { Readable } from 'node:stream'
 
+const DATA_COMPLIANCE_VENV_DIR_NAME = 'python-venv'
+
+function resolveDataComplianceVenvDir(dataDir: string): string {
+  return join(dataDir, 'data-compliance', DATA_COMPLIANCE_VENV_DIR_NAME)
+}
+
+function resolveDataComplianceVenvPython(venvDir: string, platform?: NodeJS.Platform): string {
+  return (platform ?? process.platform) === 'win32'
+    ? join(venvDir, 'Scripts', 'python.exe')
+    : join(venvDir, 'bin', 'python')
+}
+
 export type DataComplianceTaskStatus = 'pending' | 'running' | 'completed' | 'failed'
 
 export type DataComplianceTask = {
@@ -27,6 +39,7 @@ export type DataComplianceTask = {
   original_filename?: string
   stored_filename?: string
   output_dir?: string
+  output_format?: 'md' | 'docx' | 'txt'
   status: DataComplianceTaskStatus
   created_at: string
   completed_at?: string
@@ -50,6 +63,7 @@ export type DataComplianceCreateTaskInput = {
   inputText?: string
   reviewType?: 'document' | 'code'
   outputDir?: string
+  outputFormat?: 'md' | 'docx' | 'txt'
   file?: {
     name: string
     type?: string
@@ -174,7 +188,7 @@ export class DataComplianceTaskService {
 
   constructor(input: { dataDir: string; webRoot: string; logDir: string }) {
     this.tasksDir = join(input.dataDir, 'data-compliance', 'tasks')
-    this.venvDir = join(input.dataDir, 'data-compliance', 'python-venv')
+    this.venvDir = resolveDataComplianceVenvDir(input.dataDir)
     this.webRoot = input.webRoot
     this.logDir = input.logDir
     this.pythonBin = this.resolvePythonExecutable()
@@ -182,9 +196,7 @@ export class DataComplianceTaskService {
   }
 
   private venvPythonPath(): string {
-    return process.platform === 'win32'
-      ? join(this.venvDir, 'Scripts', 'python.exe')
-      : join(this.venvDir, 'bin', 'python')
+    return resolveDataComplianceVenvPython(this.venvDir, process.platform)
   }
 
   private resolvePythonExecutable(): string | null {
@@ -438,6 +450,7 @@ export class DataComplianceTaskService {
       original_filename: originalFilename,
       stored_filename: storedFilename,
       output_dir: input.outputDir?.trim() || undefined,
+      output_format: input.outputFormat,
       status: 'pending',
       created_at: nowIso(),
       progress: {
@@ -466,7 +479,8 @@ export class DataComplianceTaskService {
       input_path: task.input_path,
       input_type: task.input_type,
       review_type: task.review_type ?? 'document',
-      output_dir: task.output_dir
+      output_dir: task.output_dir,
+      output_format: task.output_format
     }
     const payloadPath = join(taskDir, 'worker_input.json')
     await writeFile(payloadPath, JSON.stringify(payload, null, 2), 'utf-8')

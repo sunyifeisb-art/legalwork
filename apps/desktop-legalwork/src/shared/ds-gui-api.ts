@@ -85,6 +85,12 @@ export type DataComplianceStatus =
       baseUrl: string
       message: string
     }
+
+export type DataComplianceInstallProgress = {
+  step: 'detecting' | 'venv' | 'installing' | 'done' | 'error'
+  percent: number
+  message: string
+}
 export type DataComplianceRequestResult = {
   ok: boolean
   status: number
@@ -97,6 +103,7 @@ export type DataComplianceSubmitPayload = {
   inputText?: string
   reviewType?: 'document' | 'code'
   outputDir?: string
+  outputFormat?: 'md' | 'docx' | 'txt'
   file?: {
     name: string
     type?: string
@@ -192,6 +199,7 @@ export type DsGuiApi = {
   runtimeRequest: (path: string, method?: string, body?: string) => Promise<RuntimeRequestResult>
   reconnectRuntime: () => Promise<AppSettingsV1>
   getDataComplianceStatus: () => Promise<DataComplianceStatus>
+  installDataCompliance: () => Promise<boolean>
   dataComplianceRequest: (
     path: string,
     method?: 'GET' | 'POST' | 'DELETE',
@@ -326,6 +334,7 @@ export type DsGuiApi = {
   downloadGuiUpdate: (channel?: GuiUpdateChannel) => Promise<GuiUpdateDownloadResult>
   installGuiUpdate: () => Promise<GuiUpdateInstallResult>
   onGuiUpdateState: (handler: (payload: GuiUpdateState) => void) => () => void
+  onDataComplianceInstallProgress: (handler: (payload: DataComplianceInstallProgress) => void) => () => void
   logError: (category: string, message: string, detail?: unknown) => Promise<void>
   getLogPath: () => Promise<string>
   openLogDir: () => Promise<{ ok: boolean; message?: string }>

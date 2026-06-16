@@ -56,6 +56,7 @@ type JsonCreateTaskBody = {
   inputText?: string
   reviewType?: 'document' | 'code'
   outputDir?: string
+  outputFormat?: 'md' | 'docx' | 'txt'
   file?: { name: string; type?: string; dataBase64: string }
 }
 
@@ -63,12 +64,16 @@ function normalizeCreateTaskInput(
   mode: 'review' | 'desensitize',
   body: JsonCreateTaskBody
 ): Parameters<DataComplianceTaskService['createTask']>[0] {
+  const format = body.outputFormat
+  const normalizedFormat: 'md' | 'docx' | 'txt' | undefined =
+    format === 'md' || format === 'docx' || format === 'txt' ? format : undefined
   return {
     mode,
     documentName: body.documentName,
     inputText: body.inputText,
     reviewType: body.reviewType === 'code' ? 'code' : 'document',
     outputDir: body.outputDir,
+    outputFormat: normalizedFormat,
     file: body.file
       ? {
           name: body.file.name,
@@ -95,12 +100,16 @@ export async function createDataComplianceTask(
     } else {
       const { fields, file } = await readMultipartBody(request)
       mode = fields.mode === 'desensitize' ? 'desensitize' : 'review'
+      const rawFormat = fields.output_format
+      const normalizedFormat: 'md' | 'docx' | 'txt' | undefined =
+        rawFormat === 'md' || rawFormat === 'docx' || rawFormat === 'txt' ? rawFormat : undefined
       input = {
         mode,
         documentName: fields.document_name,
         inputText: fields.input_text,
         reviewType: fields.review_type === 'code' ? 'code' : 'document',
         outputDir: fields.output_dir,
+        outputFormat: normalizedFormat,
         file: file
           ? {
               name: file.name,
@@ -237,16 +246,12 @@ export async function getDataComplianceInputFile(
 }
 
 export function buildDataComplianceWebRoot(options: { appRoot: string; isPackaged: boolean; cwd?: string }): string {
+  const bundleRoot = 'vendor/data-compliance-review-codex/data-compliance-web'
   const candidates = [
-    ...(existsSync(join(options.appRoot, 'compliance_worker.py'))
-      ? [options.appRoot]
-      : []),
-    ...(options.isPackaged
-      ? [join(options.appRoot, 'app.asar.unpacked', 'vendor', 'data-compliance-review-codex', 'data-compliance-web')]
-      : []),
-    join(options.appRoot, 'vendor', 'data-compliance-review-codex', 'data-compliance-web'),
-    join(options.appRoot, '..', 'vendor', 'data-compliance-review-codex', 'data-compliance-web'),
-    join(options.cwd ?? process.cwd(), 'vendor', 'data-compliance-review-codex', 'data-compliance-web')
+    join(options.appRoot, bundleRoot),
+    join(options.appRoot, 'app.asar.unpacked', bundleRoot),
+    join(options.appRoot, '..', bundleRoot),
+    join(options.cwd ?? process.cwd(), bundleRoot)
   ]
   for (const candidate of candidates) {
     if (existsSync(join(candidate, 'compliance_worker.py'))) {

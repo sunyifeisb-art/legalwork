@@ -14,10 +14,8 @@ import {
   isLegalworkRuntimeInsecure,
   legalworkSettingsPatch
 } from '@shared/app-settings'
-import type { GuiUpdateChannel } from '@shared/gui-update'
 import type { SkillRootId } from '../lib/skill-root-preference'
 import { FolderOpen, Loader2, PencilLine, RefreshCw, Settings } from 'lucide-react'
-import { GuiUpdateControl } from './settings-gui-update'
 import {
   InlineNoticeView,
   SecretInput,
@@ -50,16 +48,16 @@ export function GeneralSettingsSection({ ctx }: { ctx: Record<string, any> }): R
     pickWorkspace,
     resetWorkspaceToDefault,
     workspacePickerError,
-    guiUpdateInfo,
-    checkingGuiUpdate,
-    downloadingGuiUpdate,
-    installingGuiUpdate,
-    guiUpdateDownloaded,
-    guiUpdateProgress,
-    guiUpdateError,
-    checkGuiUpdate,
-    downloadGuiUpdate,
-    installGuiUpdate,
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     logPath,
     logDirOpenError,
     setLogDirOpenError,
@@ -389,46 +387,6 @@ export function GeneralSettingsSection({ ctx }: { ctx: Record<string, any> }): R
                     <Toggle
                       checked={desktopBehavior.closeToTray}
                       onChange={(v) => update({ appBehavior: { closeToTray: v } })}
-                    />
-                  }
-                />
-              </SettingsCard>
-
-              <SettingsCard title={t('guiUpdate')} className="mt-6">
-                <SettingRow
-                  title={t('guiUpdateChannel')}
-                  description={t('guiUpdateChannelDesc')}
-                  control={
-                    <select
-                      className={selectControlClass}
-                      value={form.guiUpdate.channel}
-                      onChange={(e) =>
-                        update({
-                          guiUpdate: { channel: e.target.value as GuiUpdateChannel }
-                        })
-                      }
-                    >
-                      <option value="frontier">{t('guiUpdateChannelFrontier')}</option>
-                      <option value="stable">{t('guiUpdateChannelStable')}</option>
-                    </select>
-                  }
-                />
-                <SettingRow
-                  title={t('guiUpdate')}
-                  description={t('guiUpdateDesc')}
-                  control={
-                    <GuiUpdateControl
-                      info={guiUpdateInfo}
-                      checking={checkingGuiUpdate}
-                      downloading={downloadingGuiUpdate}
-                      installing={installingGuiUpdate}
-                      downloaded={guiUpdateDownloaded}
-                      progress={guiUpdateProgress}
-                      error={guiUpdateError}
-                      onCheck={checkGuiUpdate}
-                      onDownload={downloadGuiUpdate}
-                      onInstall={installGuiUpdate}
-                      t={t}
                     />
                   }
                 />

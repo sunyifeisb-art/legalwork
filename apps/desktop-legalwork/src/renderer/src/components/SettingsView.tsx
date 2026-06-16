@@ -43,10 +43,11 @@ import {
   AgentsSettingsSection,
   ClawSettingsSection,
   GeneralSettingsSection,
+  GuiUpdateSettingsSection,
   KeyboardShortcutsSettingsSection
 } from './settings-sections'
 
-type SettingsCategory = 'general' | 'agents' | 'claw' | 'shortcuts'
+type SettingsCategory = 'general' | 'agents' | 'claw' | 'shortcuts' | 'guiUpdate'
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 type SettingsPatch = AppSettingsPatch
 type SkillRootOption = {
@@ -713,6 +714,7 @@ export function SettingsView(): ReactElement {
           {category === 'agents' ? <AgentsSettingsSection ctx={settingsSectionContext} /> : null}
           {category === 'shortcuts' ? <KeyboardShortcutsSettingsSection ctx={settingsSectionContext} /> : null}
           {category === 'claw' ? <ClawSettingsSection ctx={settingsSectionContext} /> : null}
+          {category === 'guiUpdate' ? <GuiUpdateSettingsSection ctx={settingsSectionContext} /> : null}
         </div>
       </div>
     </div>

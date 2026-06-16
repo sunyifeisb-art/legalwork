@@ -109,6 +109,7 @@ def main() -> int:
     input_type = payload.get('input_type') or 'file'
     review_type = payload.get('review_type') or 'document'
     output_dir_raw = payload.get('output_dir') or ''
+    output_format = payload.get('output_format') or None
 
     # worker_core stores task_state.json under OUTPUT_FOLDER / task_id.
     # The CLI receives the per-task directory, so pass its parent as the root.
@@ -139,6 +140,7 @@ def main() -> int:
                 document_name,
                 is_text,
                 validated_output_dir,
+                output_format=output_format,
             )
         log(f'compliance_worker completed: task={task_id} command={args.command}')
         return 0

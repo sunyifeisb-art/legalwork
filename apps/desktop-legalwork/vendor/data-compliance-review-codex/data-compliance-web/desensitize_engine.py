@@ -737,6 +737,7 @@ def process_desensitization(
     work_dir: Path,
     is_text: bool = False,
     output_dir: Path | None = None,
+    output_format: str | None = None,
 ) -> dict[str, Path | dict[str, Any]]:
     work_dir.mkdir(parents=True, exist_ok=True)
     engine = Desensitizer()
@@ -759,18 +760,21 @@ def process_desensitization(
         output_file.write_text(redacted, encoding='utf-8')
         input_type = 'text'
     elif suffix in DOC_EXTENSIONS:
-        output_file, doc_findings, doc_subjects = process_docx(input_path, work_dir, engine, warnings)
+        output_file, doc_findings, doc_subjects = process_docx(input_path, work_dir, engine, warnings, output_format=output_format)
         findings.extend(doc_findings)
         subject_mappings.extend(doc_subjects)
         input_type = 'document'
     elif suffix in PDF_EXTENSIONS:
         base_name = (document_name or Path(input_name).stem).rstrip('_').strip()
         output_stem = _safe_output_stem(base_name)
-        output_file, pdf_findings, pdf_subjects, used_ocr = process_pdf(input_path, work_dir, engine, warnings, output_stem=output_stem)
+        output_file, pdf_findings, pdf_subjects, used_ocr = process_pdf(
+            input_path, work_dir, engine, warnings, output_stem=output_stem, output_format=output_format
+        )
         if used_ocr:
-            # Rename to _OCR脱敏.md to indicate OCR source.
+            # Rename to _OCR脱敏.{ext} to indicate OCR source.
+            ext = output_format if output_format in {'md', 'txt', 'docx'} else 'md'
             ocr_stem = _safe_output_stem(f'{base_name}_OCR脱敏')
-            ocr_output_file = work_dir / f'{ocr_stem}.md'
+            ocr_output_file = work_dir / f'{ocr_stem}.{ext}'
             output_file.rename(ocr_output_file)
             output_file = ocr_output_file
         findings.extend(pdf_findings)
@@ -852,6 +856,7 @@ def process_docx(
     work_dir: Path,
     engine: Desensitizer,
     warnings: list[str],
+    output_format: str | None = None,
 ) -> tuple[Path, list[Finding], list[SubjectMapping]]:
     all_findings: list[Finding] = []
     all_subjects: list[SubjectMapping] = []
@@ -863,12 +868,56 @@ def process_docx(
         )
         all_findings.extend(findings)
         all_subjects.extend(subjects)
-        output_file = work_dir / 'desensitized_output.txt'
+        suffix = '.md' if output_format == 'md' else '.txt'
+        output_file = work_dir / f'desensitized_output{suffix}'
         output_file.write_text(redacted, encoding='utf-8')
         warnings.append('.doc 文件按纯文本兜底解析，复杂格式可能无法保留。')
         return output_file, all_findings, all_subjects
 
     document = Document(str(input_path))
+
+    if output_format == 'md':
+        md_lines: list[str] = []
+        for index, paragraph in enumerate(document.paragraphs, start=1):
+            if not paragraph.text:
+                md_lines.append('')
+                continue
+            redacted, findings, subjects = sanitize_text_and_subjects(
+                paragraph.text, engine, surface='docx', locator=f'段落 {index}'
+            )
+            all_findings.extend(findings)
+            all_subjects.extend(subjects)
+            md_lines.append(redacted)
+
+        for table_index, table in enumerate(document.tables, start=1):
+            md_lines.append('')
+            headers: list[str] = []
+            rows: list[list[str]] = []
+            for row_index, row in enumerate(table.rows, start=1):
+                cells: list[str] = []
+                for col_index, cell in enumerate(row.cells, start=1):
+                    locator = f'表格 {table_index} 行 {row_index} 列 {col_index}'
+                    redacted, findings, subjects = sanitize_text_and_subjects(
+                        cell.text, engine, surface='docx_table', locator=locator
+                    )
+                    all_findings.extend(findings)
+                    all_subjects.extend(subjects)
+                    cells.append(redacted.replace('|', '\\|'))
+                if row_index == 1:
+                    headers = cells
+                else:
+                    rows.append(cells)
+            if headers:
+                md_lines.append('| ' + ' | '.join(headers) + ' |')
+                md_lines.append('| ' + ' | '.join(['---'] * len(headers)) + ' |')
+            for cells in rows:
+                md_lines.append('| ' + ' | '.join(cells) + ' |')
+            md_lines.append('')
+
+        output_file = work_dir / 'desensitized_output.md'
+        output_file.write_text('\n'.join(md_lines).rstrip() + '\n', encoding='utf-8')
+        return output_file, all_findings, all_subjects
+
     for index, paragraph in enumerate(document.paragraphs, start=1):
         if not paragraph.text:
             continue
@@ -905,8 +954,9 @@ def process_pdf(
     engine: Desensitizer,
     warnings: list[str],
     output_stem: str = 'desensitized_output',
+    output_format: str | None = None,
 ) -> tuple[Path, list[Finding], list[SubjectMapping], bool]:
-    """对 PDF 执行脱敏：优先提取文本层，否则 OCR 提取，最终输出 Markdown。"""
+    """对 PDF 执行脱敏：优先提取文本层，否则 OCR 提取，最终按 output_format 输出。"""
     all_findings: list[Finding] = []
     all_subjects: list[SubjectMapping] = []
     text_parts: list[str] = []
@@ -921,7 +971,7 @@ def process_pdf(
         pdf.close()
 
     if not text_parts:
-        warnings.append('PDF 未提取到可复制文本，使用 OCR 提取为 Markdown 后脱敏。')
+        warnings.append('PDF 未提取到可复制文本，使用 OCR 提取后脱敏。')
         if fitz is None:
             raise RuntimeError('OCR 需要 PyMuPDF 才能渲染页面。')
         try:
@@ -949,11 +999,28 @@ def process_pdf(
     all_findings.extend(findings)
     all_subjects.extend(subjects)
 
-    output_file = work_dir / f'{output_stem}.md'
-    output_file.write_text(redacted, encoding='utf-8')
+    effective_format = output_format if output_format in {'md', 'txt', 'docx'} else 'md'
+    output_file = work_dir / f'{output_stem}.{effective_format}'
+    if effective_format == 'docx':
+        _write_docx_from_text(redacted, output_file)
+    else:
+        output_file.write_text(redacted, encoding='utf-8')
+
     if used_ocr:
-        warnings.append('OCR 脱敏结果已保存为 Markdown，可复制编辑，但 OCR 识别可能存在误差。')
+        warnings.append('OCR 脱敏结果已保存，可复制编辑，但 OCR 识别可能存在误差。')
     return output_file, all_findings, all_subjects, used_ocr
+
+
+def _write_docx_from_text(text: str, output_path: Path) -> None:
+    """将纯文本按段落写入新的 DOCX 文档。"""
+    doc = Document()
+    for line in text.splitlines():
+        if line.strip():
+            doc.add_paragraph(line)
+        else:
+            # 空行不添加额外段落，保留自然分段
+            pass
+    doc.save(str(output_path))
 
 
 def _safe_output_stem(name: str) -> str:

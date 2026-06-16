@@ -1,5 +1,7 @@
 import { app, dialog, ipcMain, shell, type BrowserWindow, type WebContents } from 'electron'
 import { watch, type FSWatcher } from 'node:fs'
+import { existsSync, mkdirSync } from 'node:fs'
+import { spawn } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import { dirname, join } from 'node:path'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
@@ -12,12 +14,14 @@ import {
   type ClawRuntimeStatus,
   type ScheduleRunResult,
   type ScheduleRuntimeStatus,
-  type ScheduleTaskFromTextResult
+  type ScheduleTaskFromTextResult,
+  resolveLegalworkRuntimeSettings
 } from '../../shared/app-settings'
 import type {
   ClawImInstallPollResult,
   ClawImInstallQrResult,
   DesktopCommand,
+  DataComplianceInstallProgress,
   DataComplianceRequestResult,
   DataComplianceStatus,
   DataComplianceSubmitPayload,
@@ -78,6 +82,7 @@ import {
   getRuntimeBaseUrlForSettings,
   runtimeAuthHeaders
 } from '../runtime/legalwork-adapter'
+import { resolveLegalworkDataDir } from '../legalwork-process'
 import { createAndSwitchGitBranch, getGitBranches, switchGitBranch } from '../services/git-service'
 import {
   createWorkspaceDirectory,
@@ -392,15 +397,265 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     return path
   }
 
-  ipcMain.handle('data-compliance:status', async (): Promise<DataComplianceStatus> => {
+  // Inline data-compliance path helpers so the main process installs the venv
+  // and requirements into the exact same locations the runtime service uses.
+  function resolveDataComplianceVenvDir(dataDir: string): string {
+    return join(dataDir, 'data-compliance', 'python-venv')
+  }
+
+  function resolveDataComplianceVenvPython(venvDir: string): string {
+    return process.platform === 'win32'
+      ? join(venvDir, 'Scripts', 'python.exe')
+      : join(venvDir, 'bin', 'python')
+  }
+
+  function resolveDataComplianceWebRootCandidates(): string[] {
+    const appRoot = app.isPackaged
+      ? app.getAppPath().replace(/app\.asar$/, 'app.asar.unpacked')
+      : app.getAppPath()
+    const bundleRoot = 'vendor/data-compliance-review-codex/data-compliance-web'
+    return [
+      join(appRoot, 'app.asar.unpacked', bundleRoot),
+      join(appRoot, bundleRoot),
+      join(appRoot, '..', bundleRoot),
+      join(process.cwd(), bundleRoot)
+    ]
+  }
+
+  let dataComplianceInstalling = false
+
+  async function installDataComplianceEnvironment(
+    event: Electron.IpcMainInvokeEvent,
+    getInstallingFlag: () => boolean
+  ): Promise<boolean> {
+    const setInstalling = (value: boolean): void => {
+      dataComplianceInstalling = value
+    }
+
+    const sendProgress = (progress: DataComplianceInstallProgress): void => {
+      const win = getMainWindow()
+      const contents = win && !win.isDestroyed() ? win.webContents : event.sender
+      if (!contents.isDestroyed()) {
+        contents.send('data-compliance:install-progress', progress)
+      }
+    }
+
+    if (getInstallingFlag()) return true
+    setInstalling(true)
+
+    try {
+      // Resolve paths using the same logic as the runtime service.
+      const settings = await store.load()
+      const runtime = resolveLegalworkRuntimeSettings(settings)
+      const dataDir = resolveLegalworkDataDir(runtime)
+      const venvDir = resolveDataComplianceVenvDir(dataDir)
+      const venvPython = resolveDataComplianceVenvPython(venvDir)
+      const webRoot = resolveDataComplianceWebRootCandidates()
+        .find((candidate) => existsSync(join(candidate, 'requirements.txt'))) ??
+        resolveDataComplianceWebRootCandidates()[0]
+      const requirementsPath = join(webRoot, 'requirements.txt')
+
+      // 1. Detect Python
+      sendProgress({ step: 'detecting', percent: 5, message: '正在检测 Python 环境…' })
+      let pythonCmd = await resolvePythonForCompliance()
+
+      // Windows: auto-download and install Python if not found.
+      if (!pythonCmd && process.platform === 'win32') {
+        pythonCmd = await downloadAndInstallPythonWindows(sendProgress)
+      }
+
+      if (!pythonCmd) {
+        sendProgress({
+          step: 'error',
+          percent: 0,
+          message: process.platform === 'win32'
+            ? '未找到 Python 3，自动安装失败。请手动安装 Python 3 并确保其在 PATH 中。'
+            : '未找到 Python 3，请先安装 Python 3 并确保其在 PATH 中。'
+        })
+        return false
+      }
+
+      // 2. Create venv if needed
+      if (!existsSync(venvPython)) {
+        sendProgress({ step: 'venv', percent: 35, message: '正在创建 Python 虚拟环境…' })
+        mkdirSync(venvDir, { recursive: true })
+        const venvResult = await runCommand(pythonCmd, ['-m', 'venv', venvDir])
+        if (venvResult.exitCode !== 0) {
+          sendProgress({
+            step: 'error',
+            percent: 0,
+            message: `创建 venv 失败: ${venvResult.stderr || venvResult.stdout || '未知错误'}`
+          })
+          return false
+        }
+      }
+
+      // 3. Install dependencies via pip
+      if (existsSync(requirementsPath)) {
+        sendProgress({ step: 'installing', percent: 60, message: '正在安装 Python 依赖包（这可能需要几分钟）…' })
+        const installResult = await runCommand(
+          venvPython,
+          ['-m', 'pip', 'install', '-r', requirementsPath],
+          { cwd: webRoot, timeout: 600_000 }
+        )
+        if (installResult.exitCode !== 0) {
+          sendProgress({
+            step: 'error',
+            percent: 0,
+            message: `安装 Python 依赖失败: ${installResult.stderr || installResult.stdout || '未知错误'}`
+          })
+          return false
+        }
+      }
+
+      // 4. Done
+      sendProgress({ step: 'done', percent: 100, message: 'Python 环境安装完成' })
+
+      // Recheck backend environment.
+      try {
+        await runtimeRequest('/data-compliance/environment', 'GET')
+      } catch {
+        // ignore
+      }
+
+      return true
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      sendProgress({ step: 'error', percent: 0, message: `环境安装异常: ${message}` })
+      return false
+    } finally {
+      setInstalling(false)
+    }
+  }
+
+  async function downloadAndInstallPythonWindows(
+    sendProgress: (progress: DataComplianceInstallProgress) => void
+  ): Promise<string | null> {
+    const { https } = await import('node:https')
+    const { createWriteStream } = await import('node:fs')
+    const { pipeline } = await import('node:stream/promises')
+    const tmpDir = join(app.getPath('userData'), 'data-compliance', 'tmp')
+    mkdirSync(tmpDir, { recursive: true })
+
+    const pythonVersion = '3.11.9'
+    const installerName = 'python-3.11.9-amd64.exe'
+    const installerPath = join(tmpDir, installerName)
+    const url = `https://www.python.org/ftp/python/${pythonVersion}/${installerName}`
+
+    // Download installer if not cached.
+    if (!existsSync(installerPath)) {
+      sendProgress({ step: 'detecting', percent: 10, message: '未找到 Python，正在下载安装器…' })
+      await new Promise<void>((resolve, reject) => {
+        const file = createWriteStream(installerPath)
+        https
+          .get(url, (response) => {
+            if (response.statusCode !== 200) {
+              reject(new Error(`下载失败: HTTP ${response.statusCode}`))
+              return
+            }
+            const total = parseInt(response.headers['content-length'] || '0', 10)
+            let downloaded = 0
+            response.on('data', (chunk: Buffer) => {
+              downloaded += chunk.length
+              if (total > 0) {
+                const percent = Math.round((downloaded / total) * 20) // 10-30%
+                sendProgress({
+                  step: 'detecting',
+                  percent,
+                  message: `正在下载 Python 安装器 (${Math.round(downloaded / 1024 / 1024)}MB / ${Math.round(total / 1024 / 1024)}MB)…`
+                })
+              }
+            })
+            response.pipe(file)
+            file.on('finish', () => {
+              file.close()
+              resolve()
+            })
+            file.on('error', reject)
+          })
+          .on('error', reject)
+      })
+    }
+
+    // Silent install.
+    sendProgress({ step: 'detecting', percent: 32, message: '正在安装 Python（可能需要管理员权限）…' })
+    const installResult = await runCommand(installerPath, [
+      '/quiet',
+      'InstallAllUsers=0',
+      'PrependPath=1',
+      'Include_pip=1',
+      'Include_test=0'
+    ], { timeout: 300_000 })
+    if (installResult.exitCode !== 0) {
+      throw new Error(`Python 安装失败: ${installResult.stderr || installResult.stdout || `exit code ${installResult.exitCode}`}`)
+    }
+
+    // Verify installation by looking in common locations and refreshed PATH.
+    sendProgress({ step: 'detecting', percent: 33, message: '正在验证 Python 安装…' })
+
+    const userProfile = process.env.USERPROFILE
+    const localAppData = process.env.LOCALAPPDATA
+    const programFiles = process.env.PROGRAMFILES
+    const programFilesX86 = process.env['PROGRAMFILES(X86)']
+
+    const possiblePaths = [
+      join(localAppData || '', 'Programs', 'Python', 'Python311', 'python.exe'),
+      join(programFiles || '', 'Python311', 'python.exe'),
+      join(programFilesX86 || '', 'Python311', 'python.exe'),
+      join(userProfile || '', 'AppData', 'Local', 'Programs', 'Python', 'Python311', 'python.exe')
+    ]
+
+    for (const p of possiblePaths) {
+      if (existsSync(p)) return p
+    }
+
+    // Try refreshed PATH via cmd.exe.
+    const pathResult = await runCommand('cmd.exe', ['/c', 'echo %PATH%'])
+    if (pathResult.exitCode === 0) {
+      const updatedPath = pathResult.stdout.trim()
+      const env = { ...process.env, Path: updatedPath, PATH: updatedPath }
+      for (const cmd of ['python', 'python3', 'py']) {
+        try {
+          const r = await runCommand(cmd, ['--version'], { env })
+          if (r.exitCode === 0 && r.stdout.includes('Python 3')) return cmd
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    throw new Error('Python 安装后未能找到 python.exe，请重启应用后重试。')
+  }
+
+  ipcMain.handle('data-compliance:status', async (event): Promise<DataComplianceStatus> => {
     try {
       const result = await runtimeRequest('/data-compliance/environment', 'GET')
       if (!result.ok) {
         const parsed = JSON.parse(result.body || '{}') as { error?: string; fix?: string }
+        // Auto-trigger silent install on Windows whenever the environment is not ready.
+        // The install function itself will skip already-completed steps (Python, venv, deps).
+        if (process.platform === 'win32' && !dataComplianceInstalling) {
+          void installDataComplianceEnvironment(event, () => dataComplianceInstalling)
+            .then((ok) => {
+              if (!ok) {
+                console.error('[data-compliance:status] auto-install failed')
+              }
+            })
+            .catch((error) => {
+              console.error('[data-compliance:status] auto-install error:', error)
+            })
+          return {
+            ok: false,
+            running: false,
+            installing: true,
+            baseUrl: '',
+            message: parsed.error || '正在自动安装 Python 环境，请稍候…'
+          }
+        }
         return {
           ok: false,
           running: false,
-          installing: false,
+          installing: dataComplianceInstalling,
           baseUrl: '',
           message: parsed.error || '数据合规服务不可用'
         }
@@ -417,11 +672,16 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
       return {
         ok: false,
         running: false,
-        installing: false,
+        installing: dataComplianceInstalling,
         baseUrl: '',
         message: error instanceof Error ? error.message : String(error)
       }
     }
+  })
+
+  ipcMain.handle('data-compliance:install', async (event): Promise<boolean> => {
+    if (dataComplianceInstalling) return true
+    return installDataComplianceEnvironment(event, () => dataComplianceInstalling)
   })
 
   ipcMain.handle('data-compliance:request', async (_, payload: unknown): Promise<DataComplianceRequestResult> => {
@@ -977,6 +1237,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
       payload
     )
     return generateFromTemplate(await store.load(), request)
+  })
 
   // ── Document History ──────────────────────────────────────────────
   setHistoryBaseDir(app.getPath('userData'))
@@ -1002,7 +1263,6 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
 
   ipcMain.handle('history:clear', async () => {
     return clearHistory()
-  })
   })
   ipcMain.handle('desktop:command', async (event, command: unknown) => {
     runDesktopCommand(
@@ -1085,5 +1345,58 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     const error = await shell.openPath(dir)
     if (error) return { ok: false, message: error }
     return { ok: true }
+  })
+}
+
+/** Resolve a Python 3 executable available on the system for data compliance */
+async function resolvePythonForCompliance(env?: NodeJS.ProcessEnv): Promise<string | null> {
+  const candidates = process.platform === 'win32'
+    ? ['python', 'python3', 'py']
+    : ['python3', 'python']
+
+  for (const candidate of candidates) {
+    try {
+      const result = await runCommand(candidate, ['--version'], { env })
+      if (result.exitCode === 0 && result.stdout?.includes('Python 3')) {
+        return candidate
+      }
+    } catch {
+      continue
+    }
+  }
+  return null
+}
+
+/** Run a command and return exit code + stdout + stderr */
+function runCommand(
+  command: string,
+  args: string[],
+  options?: { cwd?: string; timeout?: number; env?: NodeJS.ProcessEnv }
+): Promise<{ exitCode: number | null; stdout: string; stderr: string }> {
+  return new Promise((resolvePromise) => {
+    const child = spawn(command, args, {
+      stdio: ['ignore', 'pipe', 'pipe'],
+      cwd: options?.cwd,
+      env: options?.env,
+      timeout: options?.timeout ?? 120_000 // 2 min default
+    })
+    const stdout: Buffer[] = []
+    const stderr: Buffer[] = []
+    child.stdout?.on('data', (chunk: Buffer) => stdout.push(chunk))
+    child.stderr?.on('data', (chunk: Buffer) => stderr.push(chunk))
+    child.on('close', (exitCode) => {
+      resolvePromise({
+        exitCode,
+        stdout: Buffer.concat(stdout).toString('utf8').trim(),
+        stderr: Buffer.concat(stderr).toString('utf8').trim()
+      })
+    })
+    child.on('error', (error) => {
+      resolvePromise({
+        exitCode: -1,
+        stdout: '',
+        stderr: error.message
+      })
+    })
   })
 }

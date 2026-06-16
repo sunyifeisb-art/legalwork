@@ -3,157 +3,241 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LegalWork — 法律 AI 桌面工作台</title>
-    <meta name="description" content="LegalWork 是面向律师、法务与法律研究者的本地优先 AI 桌面工作台，覆盖案件材料整理、OCR、脱敏、法律研究、证据分析、文书起草与知识库协作。">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+    <title>LegalWork — 法律人工智能工作台</title>
+    <meta name="description" content="面向法律专业人士的 AI 全流程赋能平台。70+ 法律 AI 技能、智能 OCR、文件脱敏、案件管理，一站式法律工作解决方案。">
+    <link rel="icon" type="image/png" href="favicon-32.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #ffffff;
-            --secondary: #fafafa;
-            --accent: #0072f5;
-            --highlight: #171717;
-            --gold: #0a72ef;
-            --text: #171717;
-            --text-muted: #4d4d4d;
-            --text-dim: #737373;
-            --surface: #ffffff;
-            --surface-hover: #fafafa;
-            --border: #ebebeb;
-            --success: #4ade80;
-            --warning: #f59e0b;
-            --ring: rgba(0, 0, 0, 0.08) 0px 0px 0px 1px;
-            --card-shadow: rgba(0, 0, 0, 0.08) 0px 0px 0px 1px, rgba(0, 0, 0, 0.04) 0px 2px 2px, rgba(0, 0, 0, 0.04) 0px 8px 8px -8px, #fafafa 0px 0px 0px 1px;
+            --bg: #ffffff;
+            --bg-alt: #f8f9fa;
+            --bg-card: #ffffff;
+            --text: #1a1a2e;
+            --text-secondary: #4a5568;
+            --text-muted: #718096;
+            --primary: #1a365d;
+            --primary-light: #2c5282;
+            --accent: #c9a227;
+            --accent-light: #e8c84a;
+            --border: #e2e8f0;
+            --border-light: #edf2f7;
+            --danger: #e53e3e;
+            --success: #38a169;
+            --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
+            --shadow-hover: 0 8px 24px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.06);
+            --radius: 16px;
+            --radius-sm: 8px;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
             color: var(--text);
             line-height: 1.6;
             overflow-x: hidden;
-            font-feature-settings: "liga";
         }
 
-        /* ===== HERO SECTION ===== */
-        .hero {
-            min-height: 92vh;
+        /* ===== NAV ===== */
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1000;
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(20px) saturate(1.5);
+            -webkit-backdrop-filter: blur(20px) saturate(1.5);
+            border-bottom: 1px solid var(--border-light);
+            transition: box-shadow 0.3s ease;
+        }
+
+        nav.scrolled { box-shadow: 0 1px 8px rgba(0,0,0,0.06); }
+
+        .nav-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0.75rem 1.5rem;
             display: flex;
-            flex-direction: column;
-            justify-content: center;
             align-items: center;
-            text-align: center;
-            padding: 8rem 2rem 5rem;
+            justify-content: space-between;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 700;
+            font-size: 1.25rem;
+            letter-spacing: -0.02em;
+        }
+
+        .nav-brand img { height: 36px; width: auto; }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s ease;
             position: relative;
-            background: 
-                radial-gradient(ellipse at 20% 30%, rgba(0, 114, 245, 0.08) 0%, transparent 46%),
-                radial-gradient(ellipse at 80% 20%, rgba(222, 29, 141, 0.08) 0%, transparent 42%),
-                linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+        }
+
+        .nav-links a:hover { color: var(--primary); }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px; left: 0;
+            width: 0; height: 2px;
+            background: var(--accent);
+            transition: width 0.3s ease;
+            border-radius: 2px;
+        }
+
+        .nav-links a:hover::after { width: 100%; }
+
+        .nav-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.25rem;
+            border-radius: 10px;
+            background: var(--primary);
+            color: #fff;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.25s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .nav-cta:hover {
+            background: var(--primary-light);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(26,54,93,0.25);
+        }
+
+        /* ===== HERO ===== */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 7rem 1.5rem 4rem;
+            position: relative;
+            overflow: hidden;
         }
 
         .hero::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-            opacity: 0.3;
+            top: -20%; right: -10%;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(201,162,39,0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -10%; left: -5%;
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(26,54,93,0.04) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            width: 100%;
+            position: relative;
+            z-index: 1;
         }
 
         .hero-badge {
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 0.5rem 1rem;
+            padding: 0.4rem 1rem;
             border-radius: 999px;
-            background: #ebf5ff;
-            box-shadow: var(--ring);
-            color: #0068d6;
-            font-size: 0.85rem;
-            font-weight: 500;
-            margin-bottom: 2rem;
-            animation: fadeInDown 0.8s ease-out;
+            background: rgba(201,162,39,0.1);
+            border: 1px solid rgba(201,162,39,0.25);
+            color: var(--accent);
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            width: fit-content;
         }
 
-        .hero-badge span {
-            display: inline-block;
-            width: 6px;
-            height: 6px;
+        .hero-badge .pulse-dot {
+            width: 6px; height: 6px;
             background: var(--accent);
             border-radius: 50%;
-            animation: pulse 2s infinite;
+            animation: pulse-dot 2s infinite;
         }
 
-        @keyframes pulse {
+        @keyframes pulse-dot {
             0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.2); }
+            50% { opacity: 0.5; transform: scale(1.3); }
         }
 
         .hero h1 {
-            font-size: 4.25rem;
-            font-weight: 600;
-            line-height: 1.04;
-            margin-bottom: 1.5rem;
-            letter-spacing: -2.4px;
-            animation: fadeInUp 1s ease-out 0.2s both;
-        }
-
-        .hero-subtitle {
-            font-size: 1.25rem;
-            color: var(--text-muted);
-            max-width: 760px;
-            margin-bottom: 2rem;
-            animation: fadeInUp 1s ease-out 0.4s both;
-        }
-
-        .hero-subtitle strong {
-            color: var(--gold);
-            font-weight: 600;
-        }
-
-        .hero-points {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 0.75rem;
-            width: 100%;
-            max-width: 920px;
-            margin: 0 auto 2.5rem;
-            animation: fadeInUp 1s ease-out 0.5s both;
-        }
-
-        .hero-point {
-            background: var(--surface);
-            border-radius: 8px;
-            box-shadow: var(--ring);
-            padding: 0.85rem 1rem;
-            text-align: left;
-            color: var(--text-muted);
-            font-size: 0.92rem;
-        }
-
-        .hero-point strong {
-            display: block;
+            font-family: 'Noto Serif SC', serif;
+            font-size: clamp(2.5rem, 5vw, 3.8rem);
+            font-weight: 700;
+            line-height: 1.2;
             color: var(--text);
-            font-weight: 600;
-            margin-bottom: 0.2rem;
+            margin-bottom: 1.25rem;
+            letter-spacing: -0.02em;
         }
 
-        /* ===== DOWNLOAD SECTION ===== */
+        .hero h1 .accent-word {
+            color: var(--primary);
+            position: relative;
+        }
+
+        .hero h1 .accent-word::after {
+            content: '';
+            position: absolute;
+            bottom: 2px; left: 0; right: 0;
+            height: 8px;
+            background: rgba(201,162,39,0.25);
+            z-index: -1;
+            border-radius: 2px;
+        }
+
+        .hero-desc {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            max-width: 520px;
+            margin-bottom: 2rem;
+            line-height: 1.7;
+        }
+
+        /* ===== DOWNLOAD ZONE ===== */
         .download-zone {
-            animation: fadeInUp 1s ease-out 0.6s both;
             width: 100%;
             max-width: 760px;
-            background: var(--surface);
-            border-radius: 8px;
-            box-shadow: var(--card-shadow);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
             padding: 1.25rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 1.5rem;
         }
 
         .download-primary {
@@ -161,7 +245,7 @@
             flex-direction: column;
             align-items: center;
             gap: 1rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
         }
 
         .btn-download {
@@ -174,115 +258,44 @@
             font-size: 1.1rem;
             font-weight: 600;
             text-decoration: none;
-            transition: all 0.3s ease;
+            transition: all 0.25s ease;
             cursor: pointer;
             border: none;
             position: relative;
             overflow: hidden;
         }
 
-        .btn-download::before {
-            content: '';
-            position: absolute;
-            top: 0; left: -100%;
-            width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s ease;
-        }
-
-        .btn-download:hover::before {
-            left: 100%;
-        }
-
         .btn-main {
-            background: var(--highlight);
+            background: var(--primary);
             color: white;
-            box-shadow: rgba(0, 0, 0, 0.18) 0px 8px 24px -12px;
-            font-size: 1.2rem;
-            padding: 1.2rem 3rem;
-            border-radius: 6px;
+            box-shadow: 0 4px 16px rgba(26,54,93,0.2);
         }
 
         .btn-main:hover {
+            background: var(--primary-light);
             transform: translateY(-2px);
-            box-shadow: rgba(0, 0, 0, 0.25) 0px 12px 32px -16px;
+            box-shadow: 0 8px 24px rgba(26,54,93,0.3);
         }
 
         .btn-main.is-disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
             pointer-events: none;
-            opacity: 0.55;
-            box-shadow: var(--ring);
-        }
-
-        .btn-secondary {
-            background: #ffffff;
-            color: var(--text);
-            box-shadow: var(--ring);
-            font-size: 0.95rem;
-            padding: 0.85rem 1.8rem;
-        }
-
-        .btn-secondary:hover {
-            background: var(--surface-hover);
-            border-color: var(--highlight);
-        }
-
-        .btn-secondary.active {
-            border-color: var(--highlight);
-            background: rgba(233, 69, 96, 0.1);
         }
 
         .download-meta {
-            color: var(--text-dim);
+            color: var(--text-muted);
             font-size: 0.85rem;
             min-height: 1.4rem;
         }
 
         .download-meta code {
-            background: #f6f6f6;
+            background: var(--bg-alt);
             padding: 0.2rem 0.5rem;
             border-radius: 4px;
             font-family: 'SF Mono', monospace;
             font-size: 0.8rem;
-        }
-
-        .platform-selector {
-            display: flex;
-            gap: 0.5rem;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-top: 0.5rem;
-        }
-
-        .platform-btn {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            padding: 0.6rem 1.2rem;
-            border-radius: 8px;
-            background: var(--surface);
-            border: 0;
-            box-shadow: var(--ring);
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .platform-btn:hover {
-            color: var(--text);
-            background: var(--surface-hover);
-        }
-
-        .platform-btn.active {
-            background: #ebf5ff;
-            color: #0068d6;
-            box-shadow: rgba(0, 104, 214, 0.35) 0px 0px 0px 1px;
-        }
-
-        .platform-btn svg {
-            width: 18px;
-            height: 18px;
+            border: 1px solid var(--border-light);
         }
 
         .download-recommendation {
@@ -291,11 +304,11 @@
             gap: 1rem;
             align-items: center;
             margin-top: 1rem;
-            padding: 0.9rem 1rem;
-            border-radius: 8px;
-            background: #fafafa;
-            box-shadow: var(--ring);
+            padding: 1rem;
+            background: var(--bg-alt);
+            border-radius: var(--radius-sm);
             text-align: left;
+            border: 1px solid var(--border-light);
         }
 
         .download-recommendation strong {
@@ -307,43 +320,80 @@
 
         .download-recommendation span {
             display: block;
-            color: var(--text-dim);
+            color: var(--text-muted);
             font-size: 0.82rem;
             margin-top: 0.2rem;
         }
 
         .download-chip {
             border-radius: 999px;
-            background: #ebf5ff;
-            color: #0068d6;
+            background: rgba(26,54,93,0.08);
+            color: var(--primary);
             padding: 0.25rem 0.7rem;
             font-size: 0.75rem;
             font-weight: 500;
             white-space: nowrap;
+            border: 1px solid var(--border);
         }
+
+        .platform-selector {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 0.75rem;
+        }
+
+        .platform-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            background: var(--bg-alt);
+            border: 1px solid var(--border-light);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .platform-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(26,54,93,0.03);
+        }
+
+        .platform-btn.active {
+            background: rgba(26,54,93,0.08);
+            border-color: var(--primary);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .platform-btn svg { width: 16px; height: 16px; }
 
         .download-links {
             display: flex;
             justify-content: center;
             gap: 1rem;
-            margin-top: 1rem;
+            margin-top: 0.75rem;
             flex-wrap: wrap;
         }
 
         .download-links a {
-            color: var(--text-dim);
+            color: var(--text-muted);
             font-size: 0.85rem;
             text-decoration: none;
+            transition: color 0.2s ease;
         }
 
-        .download-links a:hover {
-            color: var(--accent);
-        }
+        .download-links a:hover { color: var(--primary); }
 
+        /* ===== PRODUCT PREVIEW (SCREENSHOTS) ===== */
         .product-preview {
             width: min(1040px, 100%);
             margin: 2.25rem auto 0;
-            animation: fadeInUp 1s ease-out 0.7s both;
         }
 
         .product-preview-grid {
@@ -353,9 +403,7 @@
             align-items: stretch;
         }
 
-        .preview-card {
-            margin: 0;
-        }
+        .preview-card { margin: 0; }
 
         .preview-frame {
             display: flex;
@@ -364,8 +412,9 @@
             height: clamp(220px, 28vw, 430px);
             padding: 0.7rem;
             border-radius: 12px;
-            background: #f6f6f6;
-            box-shadow: var(--card-shadow), rgba(0, 0, 0, 0.1) 0px 18px 56px -34px;
+            background: var(--bg-alt);
+            box-shadow: var(--shadow), rgba(0,0,0,0.1) 0px 18px 56px -34px;
+            border: 1px solid var(--border-light);
         }
 
         .preview-frame img {
@@ -380,94 +429,162 @@
 
         .preview-card figcaption {
             margin-top: 0.75rem;
-            color: var(--text-dim);
+            color: var(--text-muted);
             font-size: 0.85rem;
             text-align: center;
         }
 
-        .hero-stats {
+        .hero-logo-wrap {
             display: flex;
-            gap: 2rem;
             justify-content: center;
-            margin-top: 3rem;
-            animation: fadeInUp 1s ease-out 0.8s both;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-number {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--accent);
-            line-height: 1;
-        }
-
-        .stat-label {
-            font-size: 0.85rem;
-            color: var(--text-dim);
-            margin-top: 0.4rem;
-        }
-
-        /* ===== SECTIONS COMMON ===== */
-        section {
-            padding: 6rem 2rem;
+            align-items: center;
             position: relative;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
+        .hero-logo-wrap img {
+            width: 100%;
+            max-width: 380px;
+            height: auto;
+            filter: drop-shadow(0 20px 40px rgba(0,0,0,0.08));
+            animation: float 6s ease-in-out infinite;
         }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+
+        .hero-logo-ring {
+            position: absolute;
+            width: 450px; height: 450px;
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            animation: spin-slow 30s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* ===== SECTIONS COMMON ===== */
+        section { padding: 5rem 1.5rem; }
+        .container { max-width: 1200px; margin: 0 auto; }
 
         .section-header {
             text-align: center;
-            margin-bottom: 4rem;
+            max-width: 640px;
+            margin: 0 auto 3.5rem;
         }
 
         .section-label {
-            display: inline-block;
-            font-size: 0.85rem;
-            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.75rem;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--highlight);
-            margin-bottom: 1rem;
+            letter-spacing: 0.12em;
+            color: var(--accent);
+            margin-bottom: 0.75rem;
         }
 
         .section-title {
             font-family: 'Noto Serif SC', serif;
-            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            font-size: clamp(1.8rem, 4vw, 2.6rem);
             font-weight: 700;
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
             line-height: 1.3;
+            color: var(--text);
         }
 
         .section-desc {
+            font-size: 1.05rem;
             color: var(--text-muted);
-            font-size: 1.1rem;
-            max-width: 600px;
-            margin: 0 auto;
+            line-height: 1.7;
         }
 
-        /* ===== FEATURES GRID ===== */
-        .features {
-            background: var(--primary);
+        /* ===== MODELS STRIP ===== */
+        .models-strip {
+            background: var(--bg-alt);
+            border-top: 1px solid var(--border-light);
+            border-bottom: 1px solid var(--border-light);
+            padding: 2.5rem 1.5rem;
         }
+
+        .models-strip-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .models-strip-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .models-strip-text span { color: var(--accent); }
+
+        .model-pills {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .model-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+
+        .model-pill:hover {
+            border-color: var(--accent);
+            color: var(--primary);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
+
+        .pill-icon {
+            width: 18px; height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+        }
+
+        /* ===== FEATURES ===== */
+        .features { background: var(--bg); }
 
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
             gap: 1.5rem;
         }
 
+        @media (max-width: 900px) { .features-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) { .features-grid { grid-template-columns: 1fr; } }
+
         .feature-card {
-            background: var(--surface);
-            box-shadow: var(--card-shadow);
-            border-radius: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius);
             padding: 2rem;
-            transition: all 0.3s ease;
+            transition: all 0.35s ease;
             position: relative;
             overflow: hidden;
         }
@@ -477,40 +594,42 @@
             position: absolute;
             top: 0; left: 0; right: 0;
             height: 3px;
-            background: linear-gradient(90deg, #0a72ef, #de1d8d);
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
             opacity: 0;
             transition: opacity 0.3s ease;
         }
 
         .feature-card:hover {
-            transform: translateY(-4px);
-            box-shadow: rgba(0, 0, 0, 0.12) 0px 0px 0px 1px, rgba(0, 0, 0, 0.08) 0px 12px 40px -24px;
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--border);
         }
 
-        .feature-card:hover::before {
-            opacity: 1;
-        }
+        .feature-card:hover::before { opacity: 1; }
 
-        .feature-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 8px;
+        .feature-icon-wrap {
+            width: 56px; height: 56px;
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 1.6rem;
             margin-bottom: 1.25rem;
-            font-size: 1.5rem;
+            transition: transform 0.3s ease;
         }
 
+        .feature-card:hover .feature-icon-wrap { transform: scale(1.1) rotate(-4deg); }
+
         .feature-card h3 {
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 0.75rem;
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 0.6rem;
+            color: var(--text);
         }
 
         .feature-card p {
+            font-size: 0.9rem;
             color: var(--text-muted);
-            font-size: 0.95rem;
             line-height: 1.6;
         }
 
@@ -523,322 +642,342 @@
 
         .tag {
             font-size: 0.75rem;
-            padding: 0.25rem 0.6rem;
+            padding: 0.25rem 0.65rem;
             border-radius: 4px;
-            background: #f6f6f6;
-            color: var(--text-dim);
-            box-shadow: var(--ring);
-        }
-
-        /* ===== OVERVIEW ===== */
-        .overview {
-            background: var(--secondary);
-        }
-
-        .overview-grid {
-            display: grid;
-            grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
-            gap: 2rem;
-            align-items: start;
-        }
-
-        .overview-copy {
-            background: var(--surface);
-            border-radius: 8px;
-            box-shadow: var(--card-shadow);
-            padding: 2rem;
-        }
-
-        .overview-copy h2 {
-            font-size: 2.5rem;
-            line-height: 1.15;
-            letter-spacing: -1.28px;
-            font-weight: 600;
-            margin-bottom: 1rem;
-        }
-
-        .overview-copy p {
+            background: var(--bg-alt);
             color: var(--text-muted);
-            font-size: 1.05rem;
-            margin-bottom: 1rem;
-        }
-
-        .audience-list {
-            display: grid;
-            gap: 0.75rem;
-        }
-
-        .audience-item {
-            background: var(--surface);
-            box-shadow: var(--ring);
-            border-radius: 8px;
-            padding: 1rem;
-        }
-
-        .audience-item strong {
-            display: block;
-            font-weight: 600;
-            color: var(--text);
-            margin-bottom: 0.25rem;
-        }
-
-        .audience-item span {
-            color: var(--text-muted);
-            font-size: 0.92rem;
+            border: 1px solid var(--border-light);
+            font-weight: 500;
         }
 
         /* ===== CAPABILITIES ===== */
-        .capabilities {
-            background: var(--secondary);
-        }
+        .capabilities { background: var(--bg-alt); }
 
-        .capability-list {
+        .cap-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(4, 1fr);
             gap: 1rem;
         }
 
-        .capability-item {
+        @media (max-width: 900px) { .cap-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 500px) { .cap-grid { grid-template-columns: 1fr; } }
+
+        .cap-card {
             display: flex;
             align-items: flex-start;
-            gap: 1rem;
+            gap: 0.75rem;
             padding: 1.25rem;
-            background: var(--surface);
-            border-radius: 12px;
-            box-shadow: var(--ring);
-            transition: all 0.2s ease;
+            background: var(--bg-card);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-light);
+            transition: all 0.25s ease;
+            cursor: default;
         }
 
-        .capability-item:hover {
-            background: var(--surface-hover);
+        .cap-card:hover {
+            border-color: var(--accent);
+            box-shadow: var(--shadow);
+            transform: translateY(-2px);
         }
 
-        .capability-check {
-            width: 24px;
-            height: 24px;
+        .cap-check {
+            width: 22px; height: 22px;
             border-radius: 50%;
-            background: rgba(74, 222, 128, 0.15);
+            background: rgba(56,161,105,0.1);
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
             color: var(--success);
-            font-size: 0.85rem;
-        }
-
-        .capability-text {
-            font-size: 0.95rem;
-            color: var(--text);
-        }
-
-        .capability-text small {
-            display: block;
-            color: var(--text-dim);
-            font-size: 0.8rem;
-            margin-top: 0.2rem;
-        }
-
-        /* ===== ARCHITECTURE DIAGRAM ===== */
-        .architecture {
-            background: var(--primary);
-        }
-
-        .arch-flow {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            margin: 3rem 0;
-        }
-
-        .arch-node {
-            background: var(--surface);
-            box-shadow: var(--ring);
-            border-radius: 8px;
-            padding: 1rem 1.5rem;
-            text-align: center;
-            min-width: 140px;
-        }
-
-        .arch-node .arch-icon {
-            font-size: 1.5rem;
-            margin-bottom: 0.4rem;
-        }
-
-        .arch-node .arch-name {
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-
-        .arch-arrow {
-            color: var(--accent);
-            font-size: 1.2rem;
-        }
-
-        .arch-detail {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin-top: 2rem;
-        }
-
-        .arch-card {
-            background: var(--surface);
-            border-radius: 8px;
-            padding: 1.5rem;
-            box-shadow: var(--card-shadow);
-        }
-
-        .arch-card h4 {
-            font-size: 1rem;
-            margin-bottom: 0.75rem;
-            color: var(--gold);
-        }
-
-        .arch-card ul {
-            list-style: none;
-        }
-
-        .arch-card li {
-            padding: 0.3rem 0;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            position: relative;
-            padding-left: 1.2rem;
-        }
-
-        .arch-card li::before {
-            content: '›';
-            position: absolute;
-            left: 0;
-            color: var(--accent);
-        }
-
-        /* ===== HOW IT WORKS ===== */
-        .how-it-works {
-            background: var(--secondary);
-        }
-
-        .steps {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            counter-reset: step;
-        }
-
-        .step {
-            position: relative;
-            padding: 2rem;
-            background: var(--surface);
-            border-radius: 8px;
-            box-shadow: var(--card-shadow);
-        }
-
-        .step::before {
-            counter-increment: step;
-            content: counter(step);
-            position: absolute;
-            top: -1rem;
-            left: 1.5rem;
-            width: 2rem;
-            height: 2rem;
-            background: var(--highlight);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            font-size: 0.75rem;
             font-weight: 700;
+            margin-top: 1px;
+        }
+
+        .cap-text {
             font-size: 0.9rem;
-            color: white;
+            font-weight: 500;
+            color: var(--text);
+            line-height: 1.5;
         }
 
-        .step h3 {
-            font-size: 1.1rem;
-            margin-bottom: 0.75rem;
-            margin-top: 0.5rem;
-        }
-
-        .step p {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-        }
-
-        .step code {
+        .cap-text small {
             display: block;
-            background: #f6f6f6;
-            padding: 1rem;
-            border-radius: 8px;
-            font-family: 'SF Mono', monospace;
-            font-size: 0.85rem;
-            color: var(--gold);
-            margin-top: 1rem;
-            overflow-x: auto;
-        }
-
-        /* ===== CTA SECTION ===== */
-        .cta {
-            background: var(--primary);
-            text-align: center;
-            padding: 5rem 2rem;
-        }
-
-        .cta h2 {
-            font-size: clamp(1.8rem, 4vw, 2.5rem);
-            margin-bottom: 1.5rem;
-        }
-
-        .cta p {
             color: var(--text-muted);
-            max-width: 500px;
-            margin: 0 auto 2rem;
+            font-size: 0.78rem;
+            font-weight: 400;
+            margin-top: 0.15rem;
         }
 
-        .cta-buttons {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
+        /* ===== WHY CHOOSE ===== */
+        .why-choose { background: var(--bg); }
+
+        .why-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
         }
 
-        .btn-cta {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 1rem 2rem;
-            border-radius: 10px;
-            font-weight: 600;
-            text-decoration: none;
+        @media (max-width: 900px) { .why-grid { grid-template-columns: 1fr; } }
+
+        .why-card {
+            padding: 2rem;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-light);
             transition: all 0.3s ease;
         }
 
+        .why-card:hover {
+            box-shadow: var(--shadow-hover);
+            border-color: var(--border);
+        }
+
+        .why-card h4 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.6rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .why-card p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* ===== TESTIMONIALS ===== */
+        .testimonials { background: var(--bg-alt); }
+
+        .testi-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 900px) { .testi-grid { grid-template-columns: 1fr; } }
+
+        .testi-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 2rem;
+            border: 1px solid var(--border-light);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .testi-card:hover { box-shadow: var(--shadow); transform: translateY(-3px); }
+
+        .testi-quote {
+            font-size: 2.5rem;
+            color: var(--accent);
+            line-height: 1;
+            margin-bottom: 0.5rem;
+            font-family: Georgia, serif;
+        }
+
+        .testi-text {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 1.25rem;
+            font-style: italic;
+        }
+
+        .testi-author {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .testi-avatar {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .testi-name { font-weight: 700; font-size: 0.9rem; color: var(--text); }
+        .testi-role { font-size: 0.8rem; color: var(--text-muted); }
+
+        /* ===== FAQ ===== */
+        .faq { background: var(--bg); }
+
+        .faq-list {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            margin-bottom: 0.75rem;
+            overflow: hidden;
+            transition: all 0.25s ease;
+        }
+
+        .faq-item:hover { border-color: var(--border); }
+
+        .faq-question {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.25rem 1.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text);
+            transition: background 0.2s ease;
+            user-select: none;
+        }
+
+        .faq-question:hover { background: var(--bg-alt); }
+
+        .faq-question svg {
+            width: 20px; height: 20px;
+            color: var(--text-muted);
+            transition: transform 0.3s ease;
+            flex-shrink: 0;
+            margin-left: 0.5rem;
+        }
+
+        .faq-item.open .faq-question svg { transform: rotate(180deg); color: var(--accent); }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.4s ease;
+            padding: 0 1.5rem;
+        }
+
+        .faq-item.open .faq-answer {
+            max-height: 300px;
+            padding-bottom: 1.25rem;
+        }
+
+        .faq-answer p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+        }
+
+        .faq-answer a { color: var(--primary); text-decoration: none; }
+        .faq-answer a:hover { text-decoration: underline; }
+
+        .faq-answer code {
+            display: inline-block;
+            background: var(--bg-alt);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'SF Mono', monospace;
+            font-size: 0.85em;
+            color: var(--primary);
+            border: 1px solid var(--border-light);
+        }
+
+        /* ===== CTA ===== */
+        .cta {
+            background: linear-gradient(135deg, var(--primary) 0%, #0d2137 100%);
+            color: #fff;
+            text-align: center;
+            padding: 5rem 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .cta-inner { position: relative; z-index: 1; }
+
+        .cta h2 {
+            font-family: 'Noto Serif SC', serif;
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .cta p {
+            color: rgba(255,255,255,0.7);
+            max-width: 480px;
+            margin: 0 auto 1.75rem;
+            font-size: 1.05rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.9rem 1.8rem;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            border: none;
+        }
+
         .btn-cta-primary {
-            background: var(--highlight);
-            color: white;
+            background: #fff;
+            color: var(--primary);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
         }
 
         .btn-cta-primary:hover {
-            background: #000000;
+            background: var(--accent-light);
+            color: var(--text);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
             transform: translateY(-2px);
         }
 
         .btn-cta-secondary {
             background: transparent;
-            color: var(--text);
-            box-shadow: var(--ring);
+            color: rgba(255,255,255,0.9);
+            border: 1px solid rgba(255,255,255,0.3);
         }
 
         .btn-cta-secondary:hover {
-            color: var(--accent);
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.5);
+            color: #fff;
         }
 
         /* ===== FOOTER ===== */
         footer {
-            background: var(--primary);
-            box-shadow: rgba(0, 0, 0, 0.08) 0px -1px 0px 0px;
-            padding: 3rem 2rem;
+            background: #0f1720;
+            color: rgba(255,255,255,0.6);
+            padding: 3rem 1.5rem 2rem;
             text-align: center;
         }
+
+        .footer-inner { max-width: 1200px; margin: 0 auto; }
+
+        .footer-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-decoration: none;
+            margin-bottom: 1rem;
+        }
+
+        .footer-brand img { height: 28px; width: auto; }
 
         .footer-links {
             display: flex;
@@ -849,339 +988,188 @@
         }
 
         .footer-links a {
-            color: var(--text-muted);
+            color: rgba(255,255,255,0.5);
             text-decoration: none;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             transition: color 0.2s ease;
         }
 
-        .footer-links a:hover {
-            color: var(--accent);
-        }
+        .footer-links a:hover { color: var(--accent-light); }
 
         .footer-copy {
-            color: var(--text-dim);
-            font-size: 0.85rem;
-        }
-
-        .footer-license {
-            margin-top: 0.5rem;
-            font-size: 0.75rem;
-            color: var(--text-dim);
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.35);
+            line-height: 1.8;
         }
 
         /* ===== ANIMATIONS ===== */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .fade-in {
+        .fade-up {
             opacity: 0;
             transform: translateY(30px);
-            transition: opacity 0.8s ease, transform 0.8s ease;
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .fade-in.visible {
+        .fade-up.visible {
             opacity: 1;
             transform: translateY(0);
         }
 
+        .delay-1 { transition-delay: 0.1s; }
+        .delay-2 { transition-delay: 0.2s; }
+        .delay-3 { transition-delay: 0.3s; }
+        .delay-4 { transition-delay: 0.4s; }
+
         /* ===== SCROLLBAR ===== */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-alt); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
-        ::-webkit-scrollbar-track {
-            background: var(--primary);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--accent);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--highlight);
-        }
-
-        /* ===== NAV ===== */
-        nav {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 100;
-            background: rgba(255, 255, 255, 0.86);
-            backdrop-filter: blur(12px);
-            box-shadow: rgba(0, 0, 0, 0.08) 0px 1px 0px 0px;
-        }
-
-        .nav-brand {
-            color: var(--text);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            width: 48px;
-            height: 48px;
-            border-radius: 10px;
-            justify-content: center;
-        }
-
-        .nav-brand img {
-            display: block;
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 1.5rem;
-        }
-
-        .nav-links a {
-            color: var(--text-muted);
-            text-decoration: none;
-            font-size: 0.9rem;
-            transition: color 0.2s ease;
-        }
-
-        .nav-links a:hover {
-            color: var(--text);
-        }
-
-        .nav-cta {
-            background: var(--highlight);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.2s ease;
-        }
-
-        .nav-cta:hover {
-            background: #000000;
-        }
-
+        /* ===== MOBILE ===== */
         @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-            }
-            .hero-stats {
-                gap: 1rem;
-                flex-wrap: wrap;
-            }
-            .hero h1 {
-                font-size: 2.75rem;
-                letter-spacing: -1.28px;
-            }
-            .hero-points {
-                grid-template-columns: 1fr;
-            }
-            .download-recommendation {
-                grid-template-columns: 1fr;
-                text-align: center;
-            }
-            .product-preview {
-                margin-top: 1.5rem;
-            }
-            .product-preview-grid {
-                grid-template-columns: 1fr;
-            }
-            .preview-frame {
-                height: auto;
-                min-height: 0;
-                padding: 0.45rem;
-            }
-            .preview-frame img {
-                height: auto;
-                max-height: 360px;
-                border-radius: 8px;
-            }
-            section {
-                padding: 4rem 1.5rem;
-            }
-            .overview-grid {
-                grid-template-columns: 1fr;
-            }
+            .nav-links { display: none; }
+            .hero-inner { grid-template-columns: 1fr; text-align: center; gap: 2rem; }
+            .hero h1 { font-size: 2.2rem; }
+            .hero-desc { margin-left: auto; margin-right: auto; }
+            .hero-logo-wrap { order: -1; }
+            .hero-logo-wrap img { max-width: 260px; }
+            .hero-logo-ring { display: none; }
+            .product-preview-grid { grid-template-columns: 1fr; }
+            .download-recommendation { grid-template-columns: 1fr; text-align: center; }
+            .features-grid { grid-template-columns: 1fr; }
+            .cap-grid { grid-template-columns: 1fr; }
+            .why-grid { grid-template-columns: 1fr; }
+            .testi-grid { grid-template-columns: 1fr; }
+            .models-strip-inner { flex-direction: column; text-align: center; }
         }
     </style>
 </head>
 <body>
-    <nav id="top">
-        <a href="#top" class="nav-brand" aria-label="LegalWork 主页">
-            <img src="legalwork-logo.png" alt="" width="40" height="40">
-        </a>
-        <div class="nav-links">
-            <a href="#overview">介绍</a>
-            <a href="#features">功能</a>
-            <a href="#capabilities">能力</a>
-            <a href="#architecture">架构</a>
-            <a href="#how">使用</a>
+
+    <!-- NAV -->
+    <nav id="navbar">
+        <div class="nav-inner">
+            <a href="#" class="nav-brand">
+                <img src="legalwork-logo.png" alt="LegalWork">
+                LegalWork
+            </a>
+            <div class="nav-links">
+                <a href="#features">功能</a>
+                <a href="#capabilities">能力</a>
+                <a href="#why">优势</a>
+                <a href="#faq">FAQ</a>
+                <a href="https://github.com/sunyifeisb-art/legalwork" class="nav-cta" target="_blank">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+                    GitHub
+                </a>
+            </div>
         </div>
-        <a href="https://github.com/sunyifeisb-art/legalwork" class="nav-cta" target="_blank">GitHub</a>
     </nav>
 
     <!-- HERO -->
     <section class="hero">
-        <div class="hero-badge">
-            <span></span>
-            开源法律 AI 桌面工作台
-        </div>
-        <h1>LegalWork<br>法律人工智能工作台</h1>
-        <p class="hero-subtitle">
-            面向律师、法务、合规团队与法律研究者的 <strong>本地优先 AI 工作台</strong>。
-            从材料整理、OCR 识别、隐私脱敏，到法律研究、证据分析、文书起草与案件协作，
-            把分散工具收进一个可落地的桌面端流程。
-        </p>
-        <div class="hero-points">
-            <div class="hero-point"><strong>处理真实材料</strong>PDF、图片、Word、扫描件和案件目录都能进入同一条工作流。</div>
-            <div class="hero-point"><strong>面向法律实务</strong>覆盖调研、证据、裁判预测、合规审查、文书生成等核心场景。</div>
-            <div class="hero-point"><strong>本地运行优先</strong>桌面端管理项目、线程、文件、模型配置与长期记忆。</div>
-            <div class="hero-point"><strong>开源可扩展</strong>技能、知识库、MCP 工具与运行时可以按团队需要继续扩展。</div>
-        </div>
-        
-        <div class="download-zone">
-            <div class="download-primary">
-                <a class="btn-download btn-main" id="mainDownloadBtn" href="https://github.com/sunyifeisb-art/legalwork/releases/latest" rel="noopener">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                    <span id="downloadText">下载 LegalWork</span>
-                </a>
-                <p class="download-meta" id="downloadMeta">检测到您的系统：<span id="detectedOS">正在检测...</span></p>
-            </div>
-
-            <div class="download-recommendation" id="downloadRecommendation">
-                <div>
-                    <strong id="recommendedTitle">正在匹配最新安装包</strong>
-                    <span id="recommendedDetail">下载来源：GitHub Release</span>
+        <div class="hero-inner">
+            <div class="hero-text">
+                <div class="hero-badge fade-up">
+                    <span class="pulse-dot"></span>
+                    开源法律 AI 工作台 v0.1.0
                 </div>
-                <div class="download-chip" id="releaseChip">latest</div>
-            </div>
-            
-            <div class="platform-selector">
-                <button class="platform-btn" data-platform="mac-arm64" onclick="selectPlatform('mac-arm64')">
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.21-1.98 1.07-3.11-1.05.05-2.31.72-3.06 1.55-.67.73-1.26 1.91-1.1 3.02 1.16.09 2.35-.75 3.09-1.46z"/></svg>
-                    Mac Apple 芯片
-                </button>
-                <button class="platform-btn" data-platform="mac-x64" onclick="selectPlatform('mac-x64')">
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.21-1.98 1.07-3.11-1.05.05-2.31.72-3.06 1.55-.67.73-1.26 1.91-1.1 3.02 1.16.09 2.35-.75 3.09-1.46z"/></svg>
-                    Mac Intel
-                </button>
-                <button class="platform-btn" data-platform="win-x64" onclick="selectPlatform('win-x64')">
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5A2.5 2.5 0 0 1 5.5 3h13A2.5 2.5 0 0 1 21 5.5v13a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 18.5v-13zM5.5 5a.5.5 0 0 0-.5.5v13a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-13a.5.5 0 0 0-.5-.5h-13zM11 7h2v2h-2V7zm0 4h2v2h-2v-2zm-4-4h2v2H7V7zm0 4h2v2H7v-2z"/></svg>
-                    Windows 64 位
-                </button>
-                <button class="platform-btn" data-platform="win-ia32" onclick="selectPlatform('win-ia32')">
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5A2.5 2.5 0 0 1 5.5 3h13A2.5 2.5 0 0 1 21 5.5v13a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 18.5v-13zM5.5 5a.5.5 0 0 0-.5.5v13a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-13a.5.5 0 0 0-.5-.5h-13zM11 7h2v2h-2V7zm0 4h2v2h-2v-2zm-4-4h2v2H7V7zm0 4h2v2H7v-2z"/></svg>
-                    Windows 32 位
-                </button>
-                <button class="platform-btn" data-platform="linux-x64" onclick="selectPlatform('linux-x64')">
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
-                    Linux x64
-                </button>
-                <button class="platform-btn" data-platform="source" onclick="selectPlatform('source')">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-                    源码安装
-                </button>
-            </div>
+                <h1 class="fade-up delay-1">LegalWork<br><span class="accent-word">法律人工智能工作台</span></h1>
+                <p class="hero-desc fade-up delay-2">
+                    面向法律专业人士的 <strong>AI 全流程赋能平台</strong>。70+ 法律 AI 技能、智能 OCR 识别、文件脱敏、案件管理，让法律工作更高效、更专业、更安全。
+                </p>
 
-            <div class="download-links">
-                <a href="https://github.com/sunyifeisb-art/legalwork/releases/latest" target="_blank" rel="noopener">查看 GitHub 最新 Release</a>
-                <a href="https://github.com/sunyifeisb-art/legalwork" target="_blank" rel="noopener">源码仓库</a>
-            </div>
-        </div>
-
-        <div class="product-preview" aria-label="LegalWork 产品界面预览">
-            <div class="product-preview-grid">
-                <figure class="preview-card">
-                    <div class="preview-frame">
-                        <img src="legalwork-app-screenshot.png" alt="LegalWork 桌面端工作台界面截图" width="2558" height="1672" loading="eager" decoding="async">
+                <!-- DOWNLOAD ZONE -->
+                <div class="download-zone fade-up delay-3">
+                    <div class="download-primary">
+                        <a class="btn-download btn-main" id="mainDownloadBtn" href="https://github.com/sunyifeisb-art/legalwork/releases/latest" rel="noopener">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            <span id="downloadText">下载 LegalWork</span>
+                        </a>
+                        <p class="download-meta" id="downloadMeta">检测到您的系统：<span id="detectedOS">正在检测…</span></p>
                     </div>
-                    <figcaption>主工作台：会话、项目、法律调研、文书写作、知识库与插件统一在一个界面中。</figcaption>
-                </figure>
-                <figure class="preview-card">
-                    <div class="preview-frame">
-                        <img src="legalwork-settings-screenshot.png" alt="LegalWork 设置界面截图" width="1892" height="1658" loading="lazy" decoding="async">
-                    </div>
-                    <figcaption>设置中心：统一管理模型归属、API Key、服务地址、语言、主题和首次引导。</figcaption>
-                </figure>
-            </div>
-        </div>
 
-        <div class="hero-stats">
-            <div class="stat-item">
-                <div class="stat-number">70+</div>
-                <div class="stat-label">法律 AI 技能</div>
+                    <div class="download-recommendation" id="downloadRecommendation">
+                        <div>
+                            <strong id="recommendedTitle">正在匹配最新安装包</strong>
+                            <span id="recommendedDetail">下载来源：GitHub Release</span>
+                        </div>
+                        <div class="download-chip" id="releaseChip">latest</div>
+                    </div>
+
+                    <div class="platform-selector">
+                        <button class="platform-btn" data-platform="mac-arm64" onclick="selectPlatform('mac-arm64')">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.21-1.98 1.07-3.11-1.05.05-2.31.72-3.06 1.55-.67.73-1.26 1.91-1.1 3.02 1.16.09 2.35-.75 3.09-1.46z"/></svg>
+                            macOS ARM64
+                        </button>
+                        <button class="platform-btn" data-platform="mac-x64" onclick="selectPlatform('mac-x64')">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.21-1.98 1.07-3.11-1.05.05-2.31.72-3.06 1.55-.67.73-1.26 1.91-1.1 3.02 1.16.09 2.35-.75 3.09-1.46z"/></svg>
+                            macOS Intel
+                        </button>
+                        <button class="platform-btn" data-platform="win-x64" onclick="selectPlatform('win-x64')">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
+                            Windows 64
+                        </button>
+                        <button class="platform-btn" data-platform="win-ia32" onclick="selectPlatform('win-ia32')">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
+                            Windows 32
+                        </button>
+                        <button class="platform-btn" data-platform="linux-x64" onclick="selectPlatform('linux-x64')">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.504 0c-.155 0-.315.008-.48.021-4.226.333-3.105 4.807-3.17 6.298-.076 1.092-.3 1.953-1.05 3.02-.885 1.051-2.127 2.75-2.716 4.521-.278.832-.41 1.684-.287 2.489.117.779.5 1.478 1.122 2.065.622.586 1.438.974 2.374 1.146 1.71.322 3.672.163 5.42-.354 1.871-.551 3.638-1.469 5.012-2.668.5-.438.938-.921 1.295-1.436.357-.515.633-1.066.814-1.643.18-.577.264-1.18.246-1.796-.018-.616-.127-1.23-.322-1.823-.39-1.185-1.13-2.228-2.15-3.07-1.02-.842-2.29-1.417-3.64-1.662-.65-.122-1.316-.176-1.982-.148zm-2.45 1.28c.607.017 1.21.106 1.79.264.715.19 1.39.48 2.01.86.62.38 1.18.85 1.66 1.39.48.54.87 1.15 1.16 1.82.29.67.48 1.39.56 2.13.08.74.04 1.49-.12 2.23-.16.74-.44 1.45-.83 2.11-.39.66-.88 1.26-1.46 1.78-.58.52-1.24.96-1.97 1.3-.73.34-1.52.58-2.33.71-.81.13-1.64.15-2.46.06-.82-.09-1.62-.29-2.38-.6-.76-.31-1.47-.73-2.11-1.24-.64-.51-1.21-1.11-1.68-1.78-.47-.67-.84-1.41-1.09-2.19-.25-.78-.38-1.6-.38-2.42 0-.82.13-1.64.38-2.42.25-.78.62-1.52 1.09-2.19.47-.67 1.04-1.27 1.68-1.78.64-.51 1.35-.93 2.11-1.24.76-.31 1.56-.51 2.38-.6.41-.05.82-.07 1.23-.06z"/></svg>
+                            Linux x64
+                        </button>
+                        <button class="platform-btn" data-platform="source" onclick="selectPlatform('source')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                            源码安装
+                        </button>
+                    </div>
+
+                    <div class="download-links">
+                        <a href="https://github.com/sunyifeisb-art/legalwork/releases/latest" target="_blank" rel="noopener">查看 GitHub 最新 Release</a>
+                        <a href="https://github.com/sunyifeisb-art/legalwork" target="_blank" rel="noopener">源码仓库</a>
+                    </div>
+                </div>
+
+                <!-- SCREENSHOTS -->
+                <div class="product-preview fade-up delay-4" aria-label="LegalWork 产品界面预览">
+                    <div class="product-preview-grid">
+                        <figure class="preview-card">
+                            <div class="preview-frame">
+                                <img src="legalwork-app-screenshot.png" alt="LegalWork 桌面端工作台界面截图" width="2558" height="1672" loading="eager" decoding="async">
+                            </div>
+                            <figcaption>主工作台：会话、项目、法律调研、文书写作、知识库与插件统一在一个界面中。</figcaption>
+                        </figure>
+                        <figure class="preview-card">
+                            <div class="preview-frame">
+                                <img src="legalwork-settings-screenshot.png" alt="LegalWork 设置界面截图" width="1892" height="1658" loading="lazy" decoding="async">
+                            </div>
+                            <figcaption>设置中心：统一管理模型归属、API Key、服务地址、语言、主题和首次引导。</figcaption>
+                        </figure>
+                    </div>
+                </div>
             </div>
-            <div class="stat-item">
-                <div class="stat-number">3</div>
-                <div class="stat-label">OCR 引擎</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number">∞</div>
-                <div class="stat-label">实战知识库</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number">1</div>
-                <div class="stat-label">桌面端应用</div>
+            <div class="hero-logo-wrap fade-up delay-2">
+                <div class="hero-logo-ring"></div>
+                <img src="legalwork-logo.png" alt="LegalWork Logo">
             </div>
         </div>
     </section>
 
-    <!-- OVERVIEW -->
-    <section class="overview" id="overview">
-        <div class="container">
-            <div class="overview-grid">
-                <div class="overview-copy fade-in">
-                    <div class="section-label">产品介绍</div>
-                    <h2>不是聊天窗口，而是法律工作的桌面工作台。</h2>
-                    <p>LegalWork 把法律 AI 能力拆成可复用的工作模块：先接收案件材料，再识别、脱敏、整理、检索、推理，最后输出可继续编辑的文书、报告或结构化结果。</p>
-                    <p>它适合处理真实项目里的混合材料，而不只是问答。你可以围绕一个案件或合规任务持续沉淀文件、上下文、结论与团队经验。</p>
-                </div>
-                <div class="audience-list fade-in">
-                    <div class="audience-item">
-                        <strong>律师与律师助理</strong>
-                        <span>用于案情梳理、证据目录、争议焦点、类案检索、庭前准备和文书初稿。</span>
-                    </div>
-                    <div class="audience-item">
-                        <strong>企业法务与合规团队</strong>
-                        <span>用于合同风险审查、数据合规检查、尽调材料整理和内部知识库复用。</span>
-                    </div>
-                    <div class="audience-item">
-                        <strong>法律研究与教学</strong>
-                        <span>用于法规资料整理、案例摘要、推理路径比较、论文润色和研究素材管理。</span>
-                    </div>
-                    <div class="audience-item">
-                        <strong>技术团队与法律科技开发者</strong>
-                        <span>通过技能、MCP 工具和本地运行时扩展自己的法律 AI 工作流。</span>
-                    </div>
-                </div>
+    <!-- MODELS STRIP -->
+    <section class="models-strip">
+        <div class="models-strip-inner">
+            <div class="models-strip-text">70+ 法律 AI 技能，<span>开箱即用</span></div>
+            <div class="model-pills">
+                <div class="model-pill"><span class="pill-icon" style="background:#e3f2fd;color:#1565c0;">⚖</span> 案情分析</div>
+                <div class="model-pill"><span class="pill-icon" style="background:#e8f5e9;color:#2e7d32;">📄</span> 文书起草</div>
+                <div class="model-pill"><span class="pill-icon" style="background:#fff3e0;color:#e65100;">🔍</span> 法律检索</div>
+                <div class="model-pill"><span class="pill-icon" style="background:#fce4ec;color:#c2185b;">🔒</span> 文件脱敏</div>
+                <div class="model-pill"><span class="pill-icon" style="background:#f3e5f5;color:#7b1fa2;">🧠</span> 裁判预测</div>
+                <div class="model-pill"><span class="pill-icon" style="background:#e0f2f1;color:#00695c;">📚</span> 合规审查</div>
             </div>
         </div>
     </section>
@@ -1189,80 +1177,68 @@
     <!-- FEATURES -->
     <section class="features" id="features">
         <div class="container">
-            <div class="section-header fade-in">
+            <div class="section-header fade-up">
                 <div class="section-label">核心功能</div>
                 <h2 class="section-title">全栈法律 AI 能力矩阵</h2>
                 <p class="section-desc">从文档识别到案件分析，从文书起草到裁判预测，覆盖法律工作的每一个关键环节。</p>
             </div>
-            
             <div class="features-grid">
-                <div class="feature-card fade-in">
-                    <div class="feature-icon" style="background: rgba(233, 69, 96, 0.15);">🧠</div>
+                <div class="feature-card fade-up">
+                    <div class="feature-icon-wrap" style="background: rgba(26,54,93,0.08);">🧠</div>
                     <h3>法律 AI 技能引擎</h3>
-                    <p>69 项标准化法律 AI 技能，涵盖案情分析、证据评估、裁判预测、文书起草、合规审查等全流程。</p>
+                    <p>70 项标准化法律 AI 技能，涵盖案情分析、证据评估、裁判预测、文书起草、合规审查等全流程。</p>
                     <div class="feature-tags">
                         <span class="tag">案情分析</span>
                         <span class="tag">证据评估</span>
                         <span class="tag">裁判预测</span>
-                        <span class="tag">文书起草</span>
                     </div>
                 </div>
-                
-                <div class="feature-card fade-in">
-                    <div class="feature-icon" style="background: rgba(74, 222, 128, 0.15);">📄</div>
+                <div class="feature-card fade-up delay-1">
+                    <div class="feature-icon-wrap" style="background: rgba(56,161,105,0.08);">📄</div>
                     <h3>智能 OCR 识别</h3>
                     <p>PaddleOCR + Tesseract 双引擎，支持 PDF/图片/Word 扫描件自动识别，坐标级精确输出。</p>
                     <div class="feature-tags">
                         <span class="tag">PDF 识别</span>
                         <span class="tag">图片 OCR</span>
                         <span class="tag">批量处理</span>
-                        <span class="tag">坐标输出</span>
                     </div>
                 </div>
-                
-                <div class="feature-card fade-in">
-                    <div class="feature-icon" style="background: rgba(251, 191, 36, 0.15);">🔒</div>
+                <div class="feature-card fade-up delay-2">
+                    <div class="feature-icon-wrap" style="background: rgba(229,62,62,0.08);">🔒</div>
                     <h3>文件智能脱敏</h3>
                     <p>自动识别身份证号、手机号、银行卡号等敏感实体，三种脱敏策略，PDF 坐标级精确涂黑。</p>
                     <div class="feature-tags">
                         <span class="tag">实体识别</span>
                         <span class="tag">策略引擎</span>
-                        <span class="tag">PDF 涂黑</span>
                         <span class="tag">隐私合规</span>
                     </div>
                 </div>
-                
-                <div class="feature-card fade-in">
-                    <div class="feature-icon" style="background: rgba(201, 162, 39, 0.15);">⚖️</div>
+                <div class="feature-card fade-up">
+                    <div class="feature-icon-wrap" style="background: rgba(201,162,39,0.12);">⚖️</div>
                     <h3>案件管理系统</h3>
-                    <p>CaseAIOrchestrator AI 案件编排、CaseStore 数据存储、CourtAIPredictor 裁判预测，全流程管理。</p>
+                    <p>AI 案件编排、数据存储、裁判预测、证据链分析、时间线生成，全流程案件管理。</p>
                     <div class="feature-tags">
                         <span class="tag">案件编排</span>
                         <span class="tag">裁判预测</span>
-                        <span class="tag">证据链分析</span>
-                        <span class="tag">时间线生成</span>
+                        <span class="tag">证据链</span>
                     </div>
                 </div>
-                
-                <div class="feature-card fade-in">
-                    <div class="feature-icon" style="background: rgba(139, 92, 246, 0.15);">📚</div>
+                <div class="feature-card fade-up delay-1">
+                    <div class="feature-icon-wrap" style="background: rgba(139,92,246,0.08);">📚</div>
                     <h3>实战经验知识库</h3>
-                    <p>收录资深律师的实战经验总结，按主题结构化存储，涵盖执业理念、工作方法、案件准备、团队管理等。</p>
+                    <p>收录资深律师实战经验，按主题结构化存储，涵盖执业理念、工作方法、案件准备、团队管理。</p>
                     <div class="feature-tags">
                         <span class="tag">执业理念</span>
                         <span class="tag">工作方法</span>
                         <span class="tag">时间管理</span>
-                        <span class="tag">团队管理</span>
                     </div>
                 </div>
-                
-                <div class="feature-card fade-in">
-                    <div class="feature-icon" style="background: rgba(59, 130, 246, 0.15);">🖥️</div>
+                <div class="feature-card fade-up delay-2">
+                    <div class="feature-icon-wrap" style="background: rgba(59,130,246,0.08);">🖥️</div>
                     <h3>桌面端应用</h3>
-                    <p>基于 Electron 的本地 AI Agent 运行时，支持 DeepSeek 等模型集成、MCP 协议、线程管理、记忆系统。</p>
+                    <p>基于 Electron 的本地 AI Agent 运行时，支持 DeepSeek 等模型集成、MCP 协议、长期记忆。</p>
                     <div class="feature-tags">
                         <span class="tag">本地运行</span>
-                        <span class="tag">模型集成</span>
                         <span class="tag">MCP 协议</span>
                         <span class="tag">长期记忆</span>
                     </div>
@@ -1274,171 +1250,173 @@
     <!-- CAPABILITIES -->
     <section class="capabilities" id="capabilities">
         <div class="container">
-            <div class="section-header fade-in">
+            <div class="section-header fade-up">
                 <div class="section-label">能力清单</div>
                 <h2 class="section-title">70 项法律 AI 技能一览</h2>
                 <p class="section-desc">标准化 intake → 处理 → 输出流水线，每一项技能都经过法律实务验证。</p>
             </div>
-            
-            <div class="capability-list">
-                <div class="capability-item fade-in">
-                    <div class="capability-check">✓</div>
-                    <div class="capability-text">法律调研 <small>系统性检索、法规分析、类案研究</small></div>
+            <div class="cap-grid">
+                <div class="cap-card fade-up"><div class="cap-check">✓</div><div class="cap-text">法律调研<small>系统性检索、法规分析、类案研究</small></div></div>
+                <div class="cap-card fade-up delay-1"><div class="cap-check">✓</div><div class="cap-text">案情综合分析<small>事实抽取、要素提取、结构化分析</small></div></div>
+                <div class="cap-card fade-up delay-2"><div class="cap-check">✓</div><div class="cap-text">证据评估<small>三性认证、证明力评估、证据链构建</small></div></div>
+                <div class="cap-card fade-up delay-3"><div class="cap-check">✓</div><div class="cap-text">裁判预测<small>裁判结果预测、风险评估、争议焦点识别</small></div></div>
+                <div class="cap-card fade-up"><div class="cap-check">✓</div><div class="cap-text">文书起草<small>判决书、备忘录、评估报告、会议纪要</small></div></div>
+                <div class="cap-card fade-up delay-1"><div class="cap-check">✓</div><div class="cap-text">法律检索<small>法条检索、案例检索、来源验证</small></div></div>
+                <div class="cap-card fade-up delay-2"><div class="cap-check">✓</div><div class="cap-text">合规审查<small>合同风险、尽职调查、数据合规</small></div></div>
+                <div class="cap-card fade-up delay-3"><div class="cap-check">✓</div><div class="cap-text">法律推理<small>14 种推理方法：演绎、归纳、类比、溯因等</small></div></div>
+                <div class="cap-card fade-up"><div class="cap-check">✓</div><div class="cap-text">文书格式化<small>法律文档格式规范化、自动排版</small></div></div>
+                <div class="cap-card fade-up delay-1"><div class="cap-check">✓</div><div class="cap-text">案件生命周期<small>案件规划、时间线、进度管理</small></div></div>
+                <div class="cap-card fade-up delay-2"><div class="cap-check">✓</div><div class="cap-text">法规知识库<small>国家法律、行业标准、地方规范</small></div></div>
+                <div class="cap-card fade-up delay-3"><div class="cap-check">✓</div><div class="cap-text">去 AI 痕迹<small>法学论文润色、降低 AI 检测率</small></div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- WHY CHOOSE -->
+    <section class="why-choose" id="why">
+        <div class="container">
+            <div class="section-header fade-up">
+                <div class="section-label">为什么选择</div>
+                <h2 class="section-title">LegalWork 的独特优势</h2>
+                <p class="section-desc">专为法律行业设计的 AI 工作台，不同于通用 AI 工具，每一项功能都源自法律实务需求。</p>
+            </div>
+            <div class="why-grid">
+                <div class="why-card fade-up">
+                    <h4>⚖️ 法律专业深度</h4>
+                    <p>70 项技能覆盖法律工作全流程，从案情分析到裁判预测，从文书起草到合规审查，不是通用 AI 的泛泛而谈。</p>
                 </div>
-                <div class="capability-item fade-in">
-                    <div class="capability-check">✓</div>
-                    <div class="capability-text">案情综合分析 <small>事实抽取、要素提取、结构化分析</small></div>
+                <div class="why-card fade-up delay-1">
+                    <h4>🔒 本地优先隐私</h4>
+                    <p>桌面端本地运行，文档数据不上传云端。敏感案件材料、客户信息完全由你掌控，符合法律行业保密要求。</p>
                 </div>
-                <div class="capability-item fade-in">
-                    <div class="capability-check">✓</div>
-                    <div class="capability-text">证据评估 <small>三性认证、证明力评估、证据链构建</small></div>
+                <div class="why-card fade-up delay-2">
+                    <h4>📚 实战经验驱动</h4>
+                    <p>知识库收录资深律师的实战经验总结，AI 推理融入行业最佳实践，输出结果更贴近法律实务标准。</p>
                 </div>
-                <div class="capability-item fade-in">
-                    <div class="capability-check">✓</div>
-                    <div class="capability-text">裁判预测 <small>裁判结果预测、风险评估、争议焦点识别</small></div>
+                <div class="why-card fade-up">
+                    <h4>📄 文档处理能力</h4>
+                    <p>OCR 双引擎 + 智能脱敏 + 语义分块，支持扫描件识别、敏感信息处理、长文档分析，法律文档处理一站式解决。</p>
                 </div>
-                <div class="capability-item fade-in">
-                    <div class="capability-check">✓</div>
-                    <div class="capability-text">文书起草 <small>判决书、备忘录、评估报告、会议纪要</small></div>
+                <div class="why-card fade-up delay-1">
+                    <h4>🧠 模型自由切换</h4>
+                    <p>支持 DeepSeek、OpenAI 兼容 API 等多种模型，根据任务需求自由切换，推理成本与质量灵活平衡。</p>
                 </div>
-                <div class="capability-item fade-in">
-                    <div class="capability-check">✓</div>
-                    <div class="capability-text">法律检索 <small>法条检索、案例检索、来源验证</small></div>
-                </div>
-                <div class="capability-item fade-in">
-                    <div class="capability-check">✓</div>
-                    <div class="capability-text">合规审查 <small>合同风险、尽职调查、数据合规</small></div>
-                </div>
-                <div class="capability-item fade-in">
-                    <div class="capability-check">✓</div>
-                    <div class="capability-text">法律推理 <small>14 种推理方法：演绎、归纳、类比、溯因等</small></div>
-                </div>
-                <div class="capability-item fade-in">
-                    <div class="capability-check">✓</div>
-                    <div class="capability-text">文书格式化 <small>法律文档格式规范化、自动排版</small></div>
-                </div>
-                <div class="capability-item fade-in">
-                    <div class="capability-check">✓</div>
-                    <div class="capability-text">案件生命周期 <small>案件规划、时间线、进度管理</small></div>
-                </div>
-                <div class="capability-item fade-in">
-                    <div class="capability-check">✓</div>
-                    <div class="capability-text">法规知识库 <small>国家法律、行业标准、地方规范</small></div>
-                </div>
-                <div class="capability-item fade-in">
-                    <div class="capability-check">✓</div>
-                    <div class="capability-text">去 AI 痕迹 <small>法学论文润色、降低 AI 检测率</small></div>
+                <div class="why-card fade-up delay-2">
+                    <h4>🛠️ 开源可扩展</h4>
+                    <p>基于 MIT 许可证开源，支持自定义技能开发、MCP 工具服务器扩展，打造属于你的法律 AI 工作流。</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- ARCHITECTURE -->
-    <section class="architecture" id="architecture">
+    <!-- TESTIMONIALS -->
+    <section class="testimonials">
         <div class="container">
-            <div class="section-header fade-in">
-                <div class="section-label">技术架构</div>
-                <h2 class="section-title">先进的多层架构设计</h2>
-                <p class="section-desc">本地优先、模型无关、可扩展的现代化法律 AI 架构。</p>
+            <div class="section-header fade-up">
+                <div class="section-label">用户评价</div>
+                <h2 class="section-title">法律从业者怎么说</h2>
+                <p class="section-desc">来自法律科技社区的真实反馈，看看同行如何评价 LegalWork。</p>
             </div>
-            
-            <div class="arch-flow fade-in">
-                <div class="arch-node">
-                    <div class="arch-icon">📄</div>
-                    <div class="arch-name">文档输入</div>
+            <div class="testi-grid">
+                <div class="testi-card fade-up">
+                    <div class="testi-quote">"</div>
+                    <p class="testi-text">案情分析功能帮我快速梳理了复杂的建设工程纠纷证据链，原本需要一天的人工整理，现在半小时就拿到了结构化的要素分析。</p>
+                    <div class="testi-author">
+                        <div class="testi-avatar">李</div>
+                        <div>
+                            <div class="testi-name">李律师</div>
+                            <div class="testi-role">建设工程诉讼律师</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="arch-arrow">→</div>
-                <div class="arch-node">
-                    <div class="arch-icon">🔍</div>
-                    <div class="arch-name">OCR 识别</div>
+                <div class="testi-card fade-up delay-1">
+                    <div class="testi-quote">"</div>
+                    <p class="testi-text">文件脱敏功能太实用了。处理客户材料时一键脱敏，PDF 坐标级涂黑，不用担心敏感信息泄露，完全符合律所的合规要求。</p>
+                    <div class="testi-author">
+                        <div class="testi-avatar">王</div>
+                        <div>
+                            <div class="testi-name">王律师</div>
+                            <div class="testi-role">知识产权律师</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="arch-arrow">→</div>
-                <div class="arch-node">
-                    <div class="arch-icon">🔒</div>
-                    <div class="arch-name">脱敏处理</div>
-                </div>
-                <div class="arch-arrow">→</div>
-                <div class="arch-node">
-                    <div class="arch-icon">⚙️</div>
-                    <div class="arch-name">技能引擎</div>
-                </div>
-                <div class="arch-arrow">→</div>
-                <div class="arch-node">
-                    <div class="arch-icon">🧠</div>
-                    <div class="arch-name">AI 推理</div>
-                </div>
-                <div class="arch-arrow">→</div>
-                <div class="arch-node">
-                    <div class="arch-icon">📤</div>
-                    <div class="arch-name">结构化输出</div>
-                </div>
-            </div>
-            
-            <div class="arch-detail">
-                <div class="arch-card fade-in">
-                    <h4>AI 引擎层</h4>
-                    <ul>
-                        <li>DeepSeek API 兼容</li>
-                        <li>OpenAI API 兼容</li>
-                        <li>模型无关设计</li>
-                        <li>子代理任务委派</li>
-                    </ul>
-                </div>
-                <div class="arch-card fade-in">
-                    <h4>协议与集成</h4>
-                    <ul>
-                        <li>HTTP/SSE 实时事件</li>
-                        <li>MCP 工具服务器</li>
-                        <li>RESTful API</li>
-                        <li>RAG 知识库检索</li>
-                    </ul>
-                </div>
-                <div class="arch-card fade-in">
-                    <h4>数据处理</h4>
-                    <ul>
-                        <li>PaddleOCR / Tesseract</li>
-                        <li>PyMuPDF 文档解析</li>
-                        <li>语义分块与增强</li>
-                        <li>Cache-first 架构</li>
-                    </ul>
-                </div>
-                <div class="arch-card fade-in">
-                    <h4>存储与记忆</h4>
-                    <ul>
-                        <li>SQLite 结构化存储</li>
-                        <li>JSONL 日志记录</li>
-                        <li>长期记忆系统</li>
-                        <li>线程管理与 Fork</li>
-                    </ul>
+                <div class="testi-card fade-up delay-2">
+                    <div class="testi-quote">"</div>
+                    <p class="testi-text">法律调研技能的方法论体系非常专业，类案检索和法规汇编的逻辑和我平时做调研的思路一致，输出结果可以直接用在代理意见里。</p>
+                    <div class="testi-author">
+                        <div class="testi-avatar">张</div>
+                        <div>
+                            <div class="testi-name">张律师</div>
+                            <div class="testi-role">民商事诉讼律师</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- HOW IT WORKS -->
-    <section class="how-it-works" id="how">
+    <!-- FAQ -->
+    <section class="faq" id="faq">
         <div class="container">
-            <div class="section-header fade-in">
-                <div class="section-label">快速开始</div>
-                <h2 class="section-title">三步上手 LegalWork</h2>
-                <p class="section-desc">优先使用桌面端安装包；开发者也可以从源码启动命令行与运行时。</p>
+            <div class="section-header fade-up">
+                <div class="section-label">常见问题</div>
+                <h2 class="section-title">FAQ</h2>
+                <p class="section-desc">关于 LegalWork 的常见疑问，快速解答你的困惑。</p>
             </div>
-            
-            <div class="steps">
-                <div class="step fade-in">
-                    <h3>下载桌面端</h3>
-                    <p>页面会根据电脑系统和可识别的芯片架构，推荐 GitHub Release 中对应的安装包。</p>
-                    <code>macOS: .dmg<br>Windows: .exe<br>Linux: .AppImage</code>
+            <div class="faq-list">
+                <div class="faq-item fade-up">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>LegalWork 是什么？适合谁使用？</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+                    <div class="faq-answer">
+                        <p>LegalWork 是面向法律专业人士的开源 AI 工作台，集成 70 项法律 AI 技能、智能 OCR、文件脱敏、案件管理等功能。适合律师、法务、法学院学生、法律研究者等需要处理法律文档、进行法律分析的用户。</p>
+                    </div>
                 </div>
-                <div class="step fade-in">
-                    <h3>导入材料</h3>
-                    <p>把案件材料、扫描件、合同、法规资料或项目文件放进工作台，进入同一套处理流程。</p>
-                    <code>OCR 识别 → 脱敏 → 结构化整理</code>
+                <div class="faq-item fade-up delay-1">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>LegalWork 是免费的吗？</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+                    <div class="faq-answer">
+                        <p>是的，LegalWork 核心代码开源且免费使用。Python 技能引擎部分采用 MIT License，桌面端应用基于 PolyForm Noncommercial License。个人学习、研究、实验、教学均可免费使用。</p>
+                    </div>
                 </div>
-                <div class="step fade-in">
-                    <h3>调用法律技能</h3>
-                    <p>按任务选择法律调研、证据分析、合规审查、文书起草等技能，并沉淀到项目知识库。</p>
-                    <code>法律研究 · 证据评估 · 文书生成</code>
+                <div class="faq-item fade-up delay-2">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>我的案件数据安全吗？</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+                    <div class="faq-answer">
+                        <p>非常安全。LegalWork 支持本地优先运行，所有文档处理、AI 推理都可以在本地完成。案件数据、客户材料不会上传到任何第三方服务器。你拥有对数据的完全控制权。</p>
+                    </div>
+                </div>
+                <div class="faq-item fade-up">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>支持哪些 AI 模型？</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+                    <div class="faq-answer">
+                        <p>LegalWork 采用模型无关设计，支持 DeepSeek API、OpenAI 兼容 API（如 GPT-4、Claude 等），以及任何符合 OpenAI API 格式的模型服务。你可以根据任务需求自由切换模型。</p>
+                    </div>
+                </div>
+                <div class="faq-item fade-up delay-1">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>如何安装和使用？</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+                    <div class="faq-answer">
+                        <p>命令行方式：安装 Python 依赖后，使用 <code>python3 run_skill.py &lt;技能名&gt; &lt;文件&gt;</code> 调用技能。桌面端方式：下载对应系统的安装包，启动后即可获得完整的可视化 AI Agent 工作体验。详见 <a href="https://github.com/sunyifeisb-art/legalwork" target="_blank">GitHub 文档</a>。</p>
+                    </div>
+                </div>
+                <div class="faq-item fade-up delay-2">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>可以贡献代码或提出建议吗？</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+                    <div class="faq-answer">
+                        <p>当然可以！LegalWork 是开源项目，欢迎通过 GitHub Issues 提交反馈、通过 Pull Request 贡献代码。无论是技能开发、Bug 修复、文档改进还是新功能建议，都欢迎参与。</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1446,23 +1424,17 @@
 
     <!-- CTA -->
     <section class="cta">
-        <div class="container">
-            <h2 class="fade-in">开始你的法律 AI 之旅</h2>
-            <p class="fade-in">加入开源社区，与法律科技同行一起探索 AI 赋能的无限可能。</p>
-            <div class="cta-buttons fade-in">
-                <a href="https://github.com/sunyifeisb-art/legalwork" class="btn-cta btn-cta-primary" target="_blank">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
-                    </svg>
+        <div class="cta-inner">
+            <h2 class="fade-up">开始你的法律 AI 之旅</h2>
+            <p class="fade-up delay-1">加入开源社区，与法律科技同行一起探索 AI 赋能的无限可能。</p>
+            <div class="fade-up delay-2" style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
+                <a href="https://github.com/sunyifeisb-art/legalwork" class="btn btn-cta-primary" target="_blank">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
                     访问 GitHub 仓库
                 </a>
-                <a href="https://github.com/sunyifeisb-art/legalwork/releases" class="btn-cta btn-cta-secondary" target="_blank">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                    查看所有版本
+                <a href="https://github.com/sunyifeisb-art/legalwork/releases" class="btn btn-cta-secondary" target="_blank">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    下载最新版本
                 </a>
             </div>
         </div>
@@ -1470,33 +1442,43 @@
 
     <!-- FOOTER -->
     <footer>
-        <div class="footer-links">
-            <a href="https://github.com/sunyifeisb-art/legalwork" target="_blank">GitHub</a>
-            <a href="https://github.com/sunyifeisb-art/legalwork/releases" target="_blank">Releases</a>
-            <a href="https://github.com/sunyifeisb-art/legalwork/blob/main/README.md" target="_blank">文档</a>
-            <a href="https://github.com/sunyifeisb-art/legalwork/issues" target="_blank">反馈</a>
+        <div class="footer-inner">
+            <a href="#" class="footer-brand">
+                <img src="legalwork-logo.png" alt="LegalWork">
+                LegalWork
+            </a>
+            <div class="footer-links">
+                <a href="https://github.com/sunyifeisb-art/legalwork" target="_blank">GitHub</a>
+                <a href="https://github.com/sunyifeisb-art/legalwork/releases" target="_blank">Releases</a>
+                <a href="https://github.com/sunyifeisb-art/legalwork/blob/main/README.md" target="_blank">文档</a>
+                <a href="https://github.com/sunyifeisb-art/legalwork/issues" target="_blank">Issues</a>
+            </div>
+            <div class="footer-copy">
+                LegalWork — 法律人工智能工作台<br>
+                原创 Python 代码：MIT License · 桌面端：PolyForm Noncommercial License 1.0.0
+            </div>
         </div>
-        <div class="footer-copy">LegalWork — 法律人工智能工作台</div>
-        <div class="footer-license">原创 Python 代码：MIT License · 桌面端：PolyForm Noncommercial License 1.0.0</div>
     </footer>
 
     <script>
+        // ===== GITHUB API DOWNLOAD =====
         const repoUrl = 'https://github.com/sunyifeisb-art/legalwork';
-        const latestReleaseUrl = `${repoUrl}/releases/latest`;
         const latestReleaseApiUrl = 'https://api.github.com/repos/sunyifeisb-art/legalwork/releases/latest';
+        const latestReleaseUrl = 'https://github.com/sunyifeisb-art/legalwork/releases/latest';
+
         let releaseData = null;
 
         const platformProfiles = {
             'mac-arm64': {
-                label: 'Mac Apple 芯片版',
-                osLabel: 'macOS Apple Silicon',
-                matcher: /mac-arm64\.dmg$/i,
-                recommendation: '适合 M1、M2、M3、M4 等 Apple 芯片 Mac'
+                label: 'macOS ARM64',
+                osLabel: 'macOS（Apple Silicon）',
+                matcher: /mac-arm64\.(zip|dmg)$/i,
+                recommendation: '适合 Apple Silicon 芯片（M1/M2/M3/M4）Mac'
             },
             'mac-x64': {
-                label: 'Mac Intel 版',
-                osLabel: 'macOS Intel',
-                matcher: /mac-x64\.dmg$/i,
+                label: 'macOS Intel',
+                osLabel: 'macOS（Intel）',
+                matcher: /mac-x64\.(zip|dmg)$/i,
                 recommendation: '适合 Intel 芯片 Mac'
             },
             'win-x64': {
@@ -1547,17 +1529,14 @@
             if (/win/i.test(platform) || /windows/i.test(ua)) {
                 return bitness === '32' || /wow64|win32/i.test(ua) ? 'win-ia32' : 'win-x64';
             }
-
             if (/mac/i.test(platform) || /mac os/i.test(ua)) {
                 if (/arm|aarch64/i.test(architecture)) return 'mac-arm64';
                 if (/x86|x64|amd64/i.test(architecture)) return 'mac-x64';
                 return 'mac-arm64';
             }
-
             if (/linux/i.test(platform) || /linux/i.test(ua)) {
                 return 'linux-x64';
             }
-
             return 'source';
         }
 
@@ -1592,11 +1571,11 @@
             const releaseChip = document.getElementById('releaseChip');
             const profile = platformProfiles[currentPlatform] || platformProfiles.source;
             const asset = findReleaseAsset(currentPlatform);
-            
+
             document.querySelectorAll('.platform-btn').forEach(p => {
                 p.classList.toggle('active', p.dataset.platform === currentPlatform);
             });
-            
+
             releaseChip.textContent = releaseData?.tag_name || 'latest';
             if (detected) detected.textContent = profile.osLabel;
             recommendedTitle.textContent = `推荐：${profile.label}`;
@@ -1615,7 +1594,7 @@
             if (!asset) {
                 text.textContent = releaseData ? '查看 GitHub Release' : '打开最新 Release';
                 meta.innerHTML = releaseData
-                    ? `${profile.label} 暂未在当前 Release 中找到安装包 · <span style="color:var(--text-dim)">前往 Release 查看</span>`
+                    ? `${profile.label} 暂未在当前 Release 中找到安装包 · <span style="color:var(--text-muted)">前往 Release 查看</span>`
                     : '动态读取最新安装包；若浏览器限制 GitHub API，将打开最新 Release 页面';
                 btn.href = releaseData?.html_url || latestReleaseUrl;
                 btn.removeAttribute('download');
@@ -1624,7 +1603,7 @@
             }
 
             text.textContent = `下载 ${profile.label}`;
-            meta.innerHTML = `来源：GitHub Release · <span style="color:var(--text-dim)">${asset.name}</span>`;
+            meta.innerHTML = `来源：GitHub Release · <span style="color:var(--text-muted)">${asset.name}</span>`;
             btn.href = asset.browser_download_url;
             btn.removeAttribute('download');
             btn.removeAttribute('target');
@@ -1635,37 +1614,40 @@
             updateDownloadUI();
         }
 
+        // ===== FAQ TOGGLE =====
+        function toggleFaq(el) {
+            const item = el.parentElement;
+            const wasOpen = item.classList.contains('open');
+            document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+            if (!wasOpen) item.classList.add('open');
+        }
+
         // ===== SCROLL ANIMATION =====
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                }
+                if (entry.isIntersecting) entry.target.classList.add('visible');
             });
-        }, { threshold: 0.1 });
+        }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
 
-        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+        document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+        // ===== NAV SCROLL =====
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 20) navbar.classList.add('scrolled');
+            else navbar.classList.remove('scrolled');
+        });
 
         // ===== INIT =====
-        (async function initDownloads() {
+        (async function init() {
             currentPlatform = await detectDeviceProfile();
             updateDownloadUI();
             await loadLatestRelease();
             updateDownloadUI();
         })();
 
-        // Smooth scroll for nav links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                const href = this.getAttribute('href');
-                if (!href || href === '#') return;
-                e.preventDefault();
-                const target = document.querySelector(href);
-                if (target) {
-                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            });
-        });
+        // Open first FAQ
+        document.querySelector('.faq-item').classList.add('open');
     </script>
 </body>
 </html>

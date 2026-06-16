@@ -980,6 +980,7 @@ def run_desensitize_pipeline(
     document_name: str,
     is_text: bool = False,
     output_dir: Path | None = None,
+    output_format: str | None = None,
 ) -> None:
     task = tasks.setdefault(task_id, {
         'id': task_id,
@@ -1011,6 +1012,7 @@ def run_desensitize_pipeline(
             work_dir=work_dir,
             is_text=is_text,
             output_dir=output_dir,
+            output_format=output_format,
         )
 
         update_progress(3, '正在生成脱敏报告与主体映射表...')

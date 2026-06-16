@@ -35,6 +35,7 @@ export type DataComplianceSubmitPayload = {
   inputText?: string
   reviewType?: 'document' | 'code'
   outputDir?: string
+  outputFormat?: 'md' | 'docx' | 'txt'
   file?: {
     name: string
     type?: string
@@ -257,6 +258,9 @@ export class DataComplianceRuntime {
     if (payload.mode === 'review') form.set('review_type', payload.reviewType ?? 'document')
     if (payload.mode === 'desensitize' && payload.outputDir?.trim()) {
       form.set('output_dir', payload.outputDir.trim())
+    }
+    if (payload.mode === 'desensitize' && payload.outputFormat?.trim()) {
+      form.set('output_format', payload.outputFormat.trim())
     }
     if (payload.file) {
       const bytes = Buffer.from(payload.file.dataBase64, 'base64')

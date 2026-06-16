@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowLeft,
   AudioLines,
+  Bot,
   Check,
   CheckSquare,
   ChevronRight,
@@ -22,6 +23,8 @@ import {
   PanelRightClose,
   RefreshCw,
   Search,
+  Send,
+  Sparkles,
   Square,
   Trash2,
   Upload,
@@ -34,6 +37,7 @@ import {
   LEGALWORK_KNOWLEDGE_DELETE_FILE_PATH,
   LEGALWORK_KNOWLEDGE_MOVE_PATH,
   LEGALWORK_KNOWLEDGE_READ_FILE_PATH,
+  LEGALWORK_KNOWLEDGE_SEARCH_PATH,
   LEGALWORK_KNOWLEDGE_SYNC_PATH,
   LEGALWORK_KNOWLEDGE_TREE_PATH,
   LEGALWORK_KNOWLEDGE_WRITE_FILE_PATH
@@ -73,6 +77,17 @@ async function requestJson<T>(path: string, method = 'GET', body?: unknown): Pro
   )
   if (!result.ok) throw new Error(result.body || `请求失败：${result.status}`)
   return JSON.parse(result.body) as T
+}
+
+/** Get the active workspace root from Electron app settings. */
+async function getWorkspaceRoot(): Promise<string> {
+  try {
+    const settings = await window.dsGui.getSettings()
+    if (settings?.workspaceRoot) return settings.workspaceRoot
+  } catch {
+    // fall through
+  }
+  return ''
 }
 
 function joinKnowledgePath(base: string, child: string): string {
@@ -248,6 +263,26 @@ type PreviewFile = {
 }
 
 type PreviewType = 'text' | 'pdf' | 'image' | 'audio' | 'unsupported'
+
+// ── AI Chat types ──
+
+type ChatMessage = {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: number
+}
+
+type KnowledgeHit = {
+  documentId: string
+  chunkId: string
+  title: string
+  path: string
+  relativePath: string
+  score: number
+  snippet: string
+  content?: string
+}
 
 type PdfRenderedPage = {
   pageNumber: number
@@ -524,6 +559,15 @@ export function KnowledgeBaseView(): ReactElement {
     targetPath: '',
     targetFolders: []
   })
+
+  // ── AI Chat state ──
+  const [chatOpen, setChatOpen] = useState(false)
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
+  const [chatInput, setChatInput] = useState('')
+  const [chatSending, setChatSending] = useState(false)
+  const [chatError, setChatError] = useState<string | null>(null)
+  const chatMessagesEndRef = useRef<HTMLDivElement>(null)
+
   const fileInputRef = useRef<HTMLInputElement>(null)
   const folderInputRef = useRef<HTMLInputElement>(null)
   const newFolderInputRef = useRef<HTMLInputElement>(null)
@@ -682,7 +726,15 @@ export function KnowledgeBaseView(): ReactElement {
       const data = await requestJson<{ path: string; content: string; encoding: 'utf8' | 'base64' }>(
         `${LEGALWORK_KNOWLEDGE_READ_FILE_PATH}?path=${encodeURIComponent(node.path)}${isBinary ? '&encoding=base64' : ''}`
       )
-      const objectUrl = isBinary && data.content ? buildObjectUrl(node, data.content) : undefined
+      let objectUrl: string | undefined
+      if (isBinary && data.content) {
+        try {
+          objectUrl = buildObjectUrl(node, data.content)
+        } catch {
+          // buildObjectUrl can fail on invalid base64; for PDF the
+          // PdfPreview component uses raw base64Content directly anyway
+        }
+      }
       setPreview({ node, content: data.content, encoding: data.encoding, objectUrl })
     } catch (err) {
       setError(err instanceof Error ? err.message : '读取文件失败')
@@ -756,6 +808,128 @@ export function KnowledgeBaseView(): ReactElement {
   useEffect(() => {
     clearSelection()
   }, [currentPath, query, clearSelection])
+
+  // ── AI Chat handlers ──
+
+  const pollKnowledgeChat = useCallback(async (threadId: string, maxPolls = 120): Promise<string> => {
+    for (let i = 0; i < maxPolls; i += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const threadData = await requestJson<{
+        turns: Array<{
+          id: string
+          status: string
+          items?: Array<{
+            type: string
+            content?: string
+            toolName?: string
+            status?: string
+          }>
+          error?: string
+        }>
+      }>(`/v1/threads/${threadId}`)
+      const lastTurn = threadData.turns?.at(-1)
+      if (lastTurn?.status === 'completed') {
+        const textItems = lastTurn.items
+          ?.filter((item) => item.type === 'text' && item.content)
+          .map((item) => item.content ?? '')
+          .join('\n\n') || '（AI 未返回任何内容）'
+        return textItems
+      }
+      if (lastTurn?.status === 'failed') {
+        throw new Error(lastTurn.error || 'AI 响应失败')
+      }
+      if (lastTurn?.status === 'aborted') {
+        throw new Error('对话被中断')
+      }
+    }
+    throw new Error('AI 响应超时')
+  }, [])
+
+  const sendKnowledgeChatMessage = useCallback(async (question: string): Promise<void> => {
+    if (!question.trim() || chatSending) return
+    const userMsg: ChatMessage = {
+      id: `user_${Date.now()}`,
+      role: 'user',
+      content: question.trim(),
+      timestamp: Date.now()
+    }
+    setChatMessages((prev) => [...prev, userMsg])
+    setChatInput('')
+    setChatSending(true)
+    setChatError(null)
+
+    try {
+      // Search all knowledge base files
+      const searchResult = await requestJson<{ hits: KnowledgeHit[] }>(
+        `${LEGALWORK_KNOWLEDGE_SEARCH_PATH}?q=${encodeURIComponent(question.trim())}&top_k=8&include_content=true`
+      )
+      const hits = searchResult.hits ?? []
+
+      // Build context from retrieved chunks
+      const context = hits.length > 0
+        ? hits.slice(0, 6).map(
+            (hit, i) =>
+              `[来源 ${i + 1}] ${hit.title || hit.path}\n` +
+              (hit.content
+                ? `相关内容：\n${hit.content.slice(0, 2000)}`
+                : `摘要：${hit.snippet}`)
+          ).join('\n\n---\n\n')
+        : '（未检索到相关知识库内容）'
+
+      const prompt = `你是一个专业的法律知识助手。请基于以下从知识库中检索到的相关内容回答用户的问题。
+
+## 知识库检索结果
+${context}
+
+## 用户问题
+${question.trim()}
+
+请基于检索到的内容给出准确、专业的回答。如果内容不足以回答问题，请明确说明。引用来源时请标注 [来源编号]。`
+
+      // Create thread with workspace
+      const workspace = await getWorkspaceRoot()
+      const threadResult = await requestJson<{ id: string }>(
+        '/v1/threads',
+        'POST',
+        { workspace, title: '知识库全局对话', model: 'deepseek-chat', mode: 'agent' }
+      )
+      const threadId = threadResult.id
+
+      // Start a turn
+      await requestJson(`/v1/threads/${threadId}/turns`, 'POST', { prompt })
+
+      // Poll for completion
+      const assistantMsg = await pollKnowledgeChat(threadId)
+
+      setChatMessages((prev) => [...prev, {
+        id: `ai_${Date.now()}`,
+        role: 'assistant',
+        content: assistantMsg,
+        timestamp: Date.now()
+      }])
+    } catch (err) {
+      setChatError(err instanceof Error ? err.message : 'AI 响应失败')
+    } finally {
+      setChatSending(false)
+    }
+  }, [chatSending])
+
+  const clearChat = useCallback((): void => {
+    setChatMessages([])
+    setChatError(null)
+  }, [])
+
+  const handleChatKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>): void => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      void sendKnowledgeChatMessage(chatInput)
+    }
+  }, [chatInput, sendKnowledgeChatMessage])
+
+  // Auto-scroll chat to bottom
+  useEffect(() => {
+    chatMessagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [chatMessages])
 
   const handleRowContextMenu = useCallback((event: React.MouseEvent, node: TreeNode) => {
     event.preventDefault()
@@ -922,6 +1096,19 @@ export function KnowledgeBaseView(): ReactElement {
             >
               <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} strokeWidth={1.8} />
               <span>同步索引</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setChatOpen((prev) => !prev)}
+              className={`inline-flex h-10 items-center gap-2 rounded-[8px] border px-4 text-[13px] font-medium shadow-sm transition disabled:opacity-50 ${
+                chatOpen
+                  ? 'border-[var(--ds-accent)] bg-[var(--ds-accent)] text-white'
+                  : 'border-ds-border bg-ds-card text-[var(--ds-muted)] hover:bg-ds-hover hover:text-[var(--ds-ink)]'
+              }`}
+              title="AI 知识库对话"
+            >
+              <Sparkles className="h-4 w-4" strokeWidth={1.8} />
+              <span>AI 对话</span>
             </button>
           </div>
         </div>
@@ -1197,7 +1384,7 @@ export function KnowledgeBaseView(): ReactElement {
                   <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.8} />
                   正在读取...
                 </div>
-              ) : previewType(preview.node) === 'pdf' && preview.objectUrl ? (
+              ) : previewType(preview.node) === 'pdf' && preview.content ? (
                 <PdfPreview base64Content={preview.content} fileName={preview.node.name} />
               ) : previewType(preview.node) === 'image' && preview.objectUrl ? (
                 <img
@@ -1241,6 +1428,107 @@ export function KnowledgeBaseView(): ReactElement {
                   className="rounded-[6px] px-2 py-1 hover:bg-ds-hover hover:text-[var(--ds-ink)]"
                 >
                   关闭
+                </button>
+              </div>
+            </div>
+          </aside>
+        ) : null}
+
+        {/* AI Chat sidebar */}
+        {chatOpen ? (
+          <aside className="ds-no-drag flex h-full w-[420px] min-w-[360px] flex-col border-l border-ds-border bg-ds-card">
+            <div className="flex h-12 shrink-0 items-center justify-between border-b border-ds-border px-4">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-[var(--ds-accent)]" strokeWidth={1.8} />
+                <span className="text-[13px] font-medium text-[var(--ds-ink)]">知识库 AI 对话</span>
+              </div>
+              {chatMessages.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={clearChat}
+                  className="flex h-7 w-7 items-center justify-center rounded-[6px] text-[var(--ds-muted)] transition hover:bg-ds-hover hover:text-[var(--ds-ink)]"
+                  title="清空对话"
+                >
+                  <Trash2 className="h-3.5 w-3.5" strokeWidth={1.8} />
+                </button>
+              ) : null}
+            </div>
+
+            {chatMessages.length === 0 && !chatSending ? (
+              <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
+                <Bot className="h-10 w-10 text-[var(--ds-accent)] opacity-40" strokeWidth={1.4} />
+                <div className="text-[13px] font-medium text-[var(--ds-ink)]">知识库全局对话</div>
+                <p className="text-[12px] leading-relaxed text-[var(--ds-muted)]">
+                  基于整个知识库的内容进行 AI 对话。你可以询问法律条款、案例分析、文件总结等任何问题。
+                </p>
+              </div>
+            ) : (
+              <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
+                {chatMessages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`mb-4 flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[85%] rounded-[12px] px-4 py-2.5 text-[13px] leading-relaxed ${
+                        msg.role === 'user'
+                          ? 'bg-[var(--ds-accent)] text-white'
+                          : 'border border-ds-border bg-[var(--ds-main)] text-[var(--ds-ink)]'
+                      }`}
+                    >
+                      <div className="whitespace-pre-wrap">{msg.content}</div>
+                      <div
+                        className={`mt-1 text-[10px] ${
+                          msg.role === 'user' ? 'text-white/60' : 'text-[var(--ds-muted)]'
+                        }`}
+                      >
+                        {new Date(msg.timestamp).toLocaleTimeString('zh-CN', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {chatSending ? (
+                  <div className="mb-4 flex justify-start">
+                    <div className="max-w-[85%] rounded-[12px] border border-ds-border bg-[var(--ds-main)] px-4 py-3">
+                      <div className="flex items-center gap-2 text-[13px] text-[var(--ds-muted)]">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={1.8} />
+                        <span>AI 思考中...</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
+                {chatError ? (
+                  <div className="mb-4 rounded-[8px] border border-red-200 bg-red-50 px-3 py-2 text-[12px] text-red-600 dark:border-red-900/50 dark:bg-red-950/20">
+                    {chatError}
+                  </div>
+                ) : null}
+
+                <div ref={chatMessagesEndRef} />
+              </div>
+            )}
+
+            <div className="shrink-0 border-t border-ds-border p-3">
+              <div className="flex items-center gap-2">
+                <input
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={handleChatKeyDown}
+                  placeholder="输入关于知识库的问题..."
+                  disabled={chatSending}
+                  className="h-10 flex-1 rounded-[8px] border border-ds-border bg-[var(--ds-main)] px-3 text-[13px] text-[var(--ds-ink)] outline-none transition focus:border-[var(--ds-accent)] disabled:opacity-50"
+                />
+                <button
+                  type="button"
+                  onClick={() => void sendKnowledgeChatMessage(chatInput)}
+                  disabled={chatSending || !chatInput.trim()}
+                  className="flex h-10 w-10 items-center justify-center rounded-[8px] bg-[var(--ds-accent)] text-white transition hover:opacity-90 disabled:opacity-50"
+                >
+                  <Send className="h-4 w-4" strokeWidth={1.8} />
                 </button>
               </div>
             </div>

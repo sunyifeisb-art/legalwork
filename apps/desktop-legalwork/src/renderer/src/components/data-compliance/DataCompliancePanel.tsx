@@ -197,6 +197,25 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
   return btoa(chunks.join(''))
 }
 
+function inferOutputFormats(file: File | null): Array<{ value: 'md' | 'docx' | 'txt'; label: string }> {
+  if (!file) return []
+  const ext = file.name.split('.').pop()?.toLowerCase() || ''
+  if (ext === 'docx' || ext === 'doc') {
+    return [
+      { value: 'docx', label: 'Word 文档 (.docx)' },
+      { value: 'md', label: 'Markdown (.md)' }
+    ]
+  }
+  if (ext === 'pdf') {
+    return [
+      { value: 'txt', label: '纯文本 (.txt)' },
+      { value: 'md', label: 'Markdown (.md)' },
+      { value: 'docx', label: 'Word 文档 (.docx)' }
+    ]
+  }
+  return []
+}
+
 async function fileToPayload(file: File): Promise<DataComplianceSubmitPayload['file']> {
   return {
     name: file.name,
@@ -247,6 +266,9 @@ async function submitViaFallback(payload: DataComplianceSubmitPayload): Promise<
   if (payload.mode === 'desensitize' && payload.outputDir?.trim()) {
     form.set('output_dir', payload.outputDir.trim())
   }
+  if (payload.mode === 'desensitize' && payload.outputFormat?.trim()) {
+    form.set('output_format', payload.outputFormat.trim())
+  }
   const endpoint = payload.mode === 'review' ? '/api/upload' : '/api/desensitize'
   const response = await fetch(`${FALLBACK_API_BASE}${endpoint}`, { method: 'POST', body: form })
   return {
@@ -271,6 +293,12 @@ type ProgressState =
   | { kind: 'running'; step: number; message: string; percent: number }
   | { kind: 'completed' }
   | { kind: 'failed'; message: string }
+
+type InstallProgressState =
+  | { kind: 'idle' }
+  | { kind: 'installing'; step: string; percent: number; message: string }
+  | { kind: 'done' }
+  | { kind: 'error'; message: string }
 
 function useComplianceProgress(taskId: string | null): ProgressState {
   const [state, setState] = useState<ProgressState>({ kind: 'idle' })
@@ -377,6 +405,67 @@ function ProgressModal({ state, onDismiss, modeScope = 'review' }: { state: Prog
           <span className="truncate pr-4">{running ? state.message : '处理中…'}</span>
           <span className="shrink-0">{running ? `${state.percent}%` : ''}</span>
         </div>
+      </div>
+    </div>
+  )
+}
+
+function InstallProgressBanner({
+  state,
+  onRetry
+}: {
+  state: InstallProgressState
+  onRetry?: () => void
+}): ReactElement | null {
+  if (state.kind === 'idle' || state.kind === 'done') return null
+
+  if (state.kind === 'error') {
+    return (
+      <div className="flex items-start gap-2 rounded-[14px] border border-red-500/25 bg-red-500/10 px-4 py-3 text-[13px] text-red-700 dark:text-red-200">
+        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+        <div className="min-w-0 flex-1">
+          <div className="font-medium">环境安装失败</div>
+          <div className="mt-0.5 text-red-700/85 dark:text-red-200/85">{state.message}</div>
+          {onRetry ? (
+            <button
+              type="button"
+              onClick={onRetry}
+              className="mt-2 inline-flex items-center gap-1 rounded-lg border border-red-500/30 bg-white/60 px-2.5 py-1 text-[12px] font-medium transition hover:bg-white dark:bg-red-950/30 dark:hover:bg-red-950/50"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              重试
+            </button>
+          ) : null}
+        </div>
+      </div>
+    )
+  }
+
+  const stepLabels: Record<string, string> = {
+    detecting: '检测 / 下载 Python',
+    venv: '创建虚拟环境',
+    installing: '安装依赖包'
+  }
+
+  return (
+    <div className="rounded-[14px] border border-ds-border-muted bg-ds-card p-4 shadow-sm">
+      <div className="flex items-center gap-3">
+        <Loader2 className="h-5 w-5 animate-spin text-[var(--ds-accent)]" />
+        <div className="min-w-0 flex-1">
+          <div className="text-[14px] font-medium text-ds-ink">正在准备数据合规环境</div>
+          <div className="text-[12px] text-ds-muted">{state.message}</div>
+        </div>
+        <span className="text-[13px] font-medium text-[var(--ds-accent)]">{state.percent}%</span>
+      </div>
+      <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-ds-subtle">
+        <div
+          className="h-full rounded-full bg-[var(--ds-accent)] transition-all duration-500 ease-out"
+          style={{ width: `${state.percent}%` }}
+        />
+      </div>
+      <div className="mt-2 flex justify-between text-[11px] text-ds-faint">
+        <span>{stepLabels[state.step] || state.step}</span>
+        <span>首次使用会自动完成，可继续使用其他功能</span>
       </div>
     </div>
   )
@@ -1044,12 +1133,74 @@ export function DataCompliancePanel({
   })
   const [statusBusy, setStatusBusy] = useState(false)
   const [outputDir, setOutputDir] = useState(workspaceRoot || '')
+  const [outputFormat, setOutputFormat] = useState<'md' | 'docx' | 'txt' | ''>('')
+  const [installProgress, setInstallProgress] = useState<InstallProgressState>({ kind: 'idle' })
+
+  const ensureServer = useCallback(async (): Promise<DataComplianceStatus | null> => {
+    if (typeof window.dsGui?.getDataComplianceStatus !== 'function') {
+      return null
+    }
+    setStatusBusy(true)
+    try {
+      const status = await window.dsGui.getDataComplianceStatus()
+      setServerStatus(status)
+      if (!status.ok) {
+        if (status.installing) {
+          setNotice(null)
+          setInstallProgress((prev) =>
+            prev.kind === 'idle' || prev.kind === 'error'
+              ? { kind: 'installing', step: 'detecting', percent: 5, message: status.message || '正在准备环境…' }
+              : prev
+          )
+          if (typeof window.dsGui?.installDataCompliance === 'function') {
+            void window.dsGui.installDataCompliance()
+          }
+        } else {
+          setNotice({ tone: 'error', text: status.message })
+        }
+      }
+      return status
+    } catch (error) {
+      const text = error instanceof Error ? error.message : '数据合规服务启动失败。'
+      setServerStatus({
+        ok: false,
+        running: false,
+        installing: false,
+        baseUrl: '',
+        message: text
+      })
+      setNotice({ tone: 'error', text })
+      return null
+    } finally {
+      setStatusBusy(false)
+    }
+  }, [])
 
   useEffect(() => {
     if (workspaceRoot && !outputDir.trim()) {
       setOutputDir(workspaceRoot)
     }
   }, [workspaceRoot, outputDir])
+
+  useEffect(() => {
+    if (typeof window.dsGui?.onDataComplianceInstallProgress !== 'function') return
+    const unsubscribe = window.dsGui.onDataComplianceInstallProgress((payload) => {
+      if (payload.step === 'done') {
+        setInstallProgress({ kind: 'done' })
+        void ensureServer()
+      } else if (payload.step === 'error') {
+        setInstallProgress({ kind: 'error', message: payload.message })
+      } else {
+        setInstallProgress({
+          kind: 'installing',
+          step: payload.step,
+          percent: payload.percent,
+          message: payload.message
+        })
+      }
+    })
+    return unsubscribe
+  }, [ensureServer])
 
   const resolvedActiveSection: DataComplianceSection = Object.prototype.hasOwnProperty.call(sectionMeta, activeSection)
     ? activeSection
@@ -1074,32 +1225,6 @@ export function DataCompliancePanel({
     if (serverStatus.installing) return '服务状态：正在准备依赖'
     return serverStatus.running ? '服务状态：运行中' : '服务状态：可启动'
   }, [serverStatus])
-
-  const ensureServer = useCallback(async (): Promise<DataComplianceStatus | null> => {
-    if (typeof window.dsGui?.getDataComplianceStatus !== 'function') {
-      return null
-    }
-    setStatusBusy(true)
-    try {
-      const status = await window.dsGui.getDataComplianceStatus()
-      setServerStatus(status)
-      if (!status.ok) setNotice({ tone: 'error', text: status.message })
-      return status
-    } catch (error) {
-      const text = error instanceof Error ? error.message : '数据合规服务启动失败。'
-      setServerStatus({
-        ok: false,
-        running: false,
-        installing: false,
-        baseUrl: '',
-        message: text
-      })
-      setNotice({ tone: 'error', text })
-      return null
-    } finally {
-      setStatusBusy(false)
-    }
-  }, [])
 
   const refreshHistory = useCallback(async (): Promise<void> => {
     setHistoryBusy(true)
@@ -1175,6 +1300,8 @@ export function DataCompliancePanel({
     if (nextFile && !documentName.trim()) {
       setDocumentName(nextFile.name.replace(/\.[^.]+$/, ''))
     }
+    const formats = inferOutputFormats(nextFile)
+    setOutputFormat(formats[0]?.value ?? '')
   }
 
   const pickOutputDir = async (): Promise<void> => {
@@ -1210,6 +1337,9 @@ export function DataCompliancePanel({
       }
       if (mode === 'desensitize' && desensitizeKind === 'material') {
         payload.outputDir = outputDir.trim() || workspaceRoot
+        if (outputFormat.trim()) {
+          payload.outputFormat = outputFormat.trim() as 'md' | 'docx' | 'txt'
+        }
       }
       const submitted = await submitComplianceTask(payload)
       const nextTaskId = submitted.task_id ?? ''
@@ -1362,28 +1492,50 @@ export function DataCompliancePanel({
           />
         </label>
         {mode === 'desensitize' && desensitizeKind === 'material' ? (
-          <label className="block">
-            <span className="text-[12px] font-medium text-ds-muted">输出目录</span>
-            <div className="mt-1.5 flex items-center gap-2">
-              <div className="flex min-w-0 flex-1 items-center gap-2 rounded-[12px] border border-ds-border bg-ds-card px-3 py-2">
-                <Folder className="h-4 w-4 shrink-0 text-ds-muted" strokeWidth={1.8} />
-                <span className="min-w-0 truncate text-[13.5px] text-ds-ink" title={outputDir}>
-                  {outputDir || '未选择输出目录'}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => void pickOutputDir()}
-                disabled={busy || statusBusy}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-[10px] border border-ds-border bg-ds-subtle px-3 py-2 text-[12.5px] font-medium text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink disabled:opacity-55"
+          <>
+            <label className="block">
+              <span className="text-[12px] font-medium text-ds-muted">输出格式</span>
+              <select
+                value={outputFormat}
+                onChange={(event) => setOutputFormat(event.target.value as 'md' | 'docx' | 'txt' | '')}
+                disabled={busy || statusBusy || installProgress.kind === 'installing' || inferOutputFormats(file).length === 0}
+                className="mt-1.5 w-full rounded-[12px] border border-ds-border bg-ds-card px-3 py-2 text-[13.5px] text-ds-ink outline-none transition focus:border-accent/40 focus:ring-2 focus:ring-accent/15 disabled:opacity-55"
               >
-                浏览
-              </button>
-            </div>
-            <p className="mt-1.5 text-[11.5px] text-ds-faint">
-              脱敏后的文件和主体映射表将保存到该目录。
-            </p>
-          </label>
+                {inferOutputFormats(file).length === 0 ? (
+                  <option value="">按原格式输出</option>
+                ) : (
+                  inferOutputFormats(file).map((fmt) => (
+                    <option key={fmt.value} value={fmt.value}>{fmt.label}</option>
+                  ))
+                )}
+              </select>
+              <p className="mt-1.5 text-[11.5px] text-ds-faint">
+                Word 与 PDF 材料可选择输出为 Markdown、Word 或 Text。
+              </p>
+            </label>
+            <label className="block">
+              <span className="text-[12px] font-medium text-ds-muted">输出目录</span>
+              <div className="mt-1.5 flex items-center gap-2">
+                <div className="flex min-w-0 flex-1 items-center gap-2 rounded-[12px] border border-ds-border bg-ds-card px-3 py-2">
+                  <Folder className="h-4 w-4 shrink-0 text-ds-muted" strokeWidth={1.8} />
+                  <span className="min-w-0 truncate text-[13.5px] text-ds-ink" title={outputDir}>
+                    {outputDir || '未选择输出目录'}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void pickOutputDir()}
+                  disabled={busy || statusBusy || installProgress.kind === 'installing'}
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-[10px] border border-ds-border bg-ds-subtle px-3 py-2 text-[12.5px] font-medium text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink disabled:opacity-55"
+                >
+                  浏览
+                </button>
+              </div>
+              <p className="mt-1.5 text-[11.5px] text-ds-faint">
+                脱敏后的文件和主体映射表将保存到该目录。
+              </p>
+            </label>
+          </>
         ) : null}
       </div>
 
@@ -1394,7 +1546,7 @@ export function DataCompliancePanel({
         </div>
         <button
           type="button"
-          disabled={busy || statusBusy}
+          disabled={busy || statusBusy || installProgress.kind === 'installing'}
           onClick={() => void submitTask(mode)}
           className="inline-flex items-center gap-2 rounded-full bg-[var(--ds-accent)] px-4 py-2 text-[13px] font-semibold text-white shadow-sm transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-55"
         >
@@ -1448,6 +1600,16 @@ export function DataCompliancePanel({
               <span>{notice.text}</span>
             </div>
           ) : null}
+
+          <InstallProgressBanner
+            state={installProgress}
+            onRetry={() => {
+              setInstallProgress({ kind: 'idle' })
+              if (typeof window.dsGui?.installDataCompliance === 'function') {
+                void window.dsGui.installDataCompliance()
+              }
+            }}
+          />
 
           {resolvedActiveSection === 'review' ? renderSubmitForm(modeScope) : null}
 

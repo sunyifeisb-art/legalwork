@@ -150,16 +150,25 @@ function serializeSettingsForDisk(settings: AppSettingsV1): string {
   return JSON.stringify(normalizeStoredSettings(settings), null, 2)
 }
 
+/** Tracks directories already confirmed to exist, avoiding redundant mkdir calls. */
+const knownDirs = new Set<string>()
+
+async function ensureDirExists(dir: string): Promise<void> {
+  if (knownDirs.has(dir)) return
+  await mkdir(dir, { recursive: true })
+  knownDirs.add(dir)
+}
+
 export async function ensureWorkspaceRootExists(workspaceRoot: string): Promise<string> {
   const normalized = normalizeWorkspaceRoot(workspaceRoot)
-  await mkdir(normalized, { recursive: true })
+  await ensureDirExists(normalized)
   return normalized
 }
 
 async function ensureWriteWorkspaceRootsExist(settings: AppSettingsV1): Promise<void> {
   for (const workspaceRoot of settings.write.workspaces) {
     if (!workspaceRoot) continue
-    await mkdir(workspaceRoot, { recursive: true })
+    await ensureDirExists(workspaceRoot)
   }
 
   const welcomePath = join(settings.write.defaultWorkspaceRoot, 'welcome.md')
@@ -174,11 +183,11 @@ async function ensureClawChannelWorkspaceRootsExist(settings: AppSettingsV1): Pr
   for (const channel of settings.claw.channels) {
     const workspaceRoot = normalizeClawChannelWorkspaceRoot(channel)
     if (!workspaceRoot) continue
-    await mkdir(workspaceRoot, { recursive: true })
+    await ensureDirExists(workspaceRoot)
     for (const conversation of channel.conversations) {
       const conversationWorkspaceRoot = normalizeClawConversationWorkspaceRoot(channel, conversation)
       if (!conversationWorkspaceRoot) continue
-      await mkdir(conversationWorkspaceRoot, { recursive: true })
+      await ensureDirExists(conversationWorkspaceRoot)
     }
   }
 }
@@ -381,10 +390,12 @@ export class JsonSettingsStore {
   async save(data: AppSettingsV1): Promise<void> {
     const normalized = normalizeStoredSettings(data)
     await ensureWorkspaceRootExists(normalized.workspaceRoot)
-    await ensureWriteWorkspaceRootsExist(normalized)
-    await ensureClawChannelWorkspaceRootsExist(normalized)
+    if (normalized.write.workspaces.length > 0 || normalized.claw.channels.length > 0) {
+      await ensureWriteWorkspaceRootsExist(normalized)
+      await ensureClawChannelWorkspaceRootsExist(normalized)
+    }
     this.cache = normalized
-    await mkdir(dirname(this.path), { recursive: true })
+    await ensureDirExists(dirname(this.path))
     await atomicWriteFile(this.path, serializeSettingsForDisk(normalized))
   }
 

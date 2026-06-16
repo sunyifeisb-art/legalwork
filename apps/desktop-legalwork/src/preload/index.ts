@@ -11,6 +11,8 @@ const api = {
   reconnectRuntime: () => ipcRenderer.invoke('runtime:reconnect'),
   getDataComplianceStatus: () =>
     ipcRenderer.invoke('data-compliance:status'),
+  installDataCompliance: () =>
+    ipcRenderer.invoke('data-compliance:install'),
   dataComplianceRequest: (path, method, body) =>
     ipcRenderer.invoke('data-compliance:request', { path, method, body }),
   submitDataComplianceTask: (payload) =>
@@ -191,6 +193,14 @@ const api = {
     ) => handler(payload)
     ipcRenderer.on('gui:update-state', wrapped)
     return () => ipcRenderer.removeListener('gui:update-state', wrapped)
+  },
+  onDataComplianceInstallProgress: (handler) => {
+    const wrapped = (
+      _: Electron.IpcRendererEvent,
+      payload: Parameters<typeof handler>[0]
+    ) => handler(payload)
+    ipcRenderer.on('data-compliance:install-progress', wrapped)
+    return () => ipcRenderer.removeListener('data-compliance:install-progress', wrapped)
   },
   logError: (category, message, detail) =>
     ipcRenderer.invoke('log:error', { category, message, detail }),

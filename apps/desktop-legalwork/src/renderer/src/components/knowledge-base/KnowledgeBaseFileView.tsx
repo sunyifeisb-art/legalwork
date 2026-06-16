@@ -32,6 +32,17 @@ async function requestJson<T>(path: string, method = 'GET', body?: unknown): Pro
   return JSON.parse(result.body) as T
 }
 
+/** Get the active workspace root from Electron app settings. */
+async function getWorkspaceRoot(): Promise<string> {
+  try {
+    const settings = await window.dsGui.getSettings()
+    if (settings?.workspaceRoot) return settings.workspaceRoot
+  } catch {
+    // fall through
+  }
+  return ''
+}
+
 function fileExtension(node: KnowledgeTreeNode): string {
   return (node.extension || node.name.split('.').pop() || '').replace(/^\\./, '').toLowerCase()
 }
@@ -284,7 +295,15 @@ export function KnowledgeBaseFileView({ node, onBack }: Props): ReactElement {
           `${LEGALWORK_KNOWLEDGE_READ_FILE_PATH}?path=${encodeURIComponent(node.path)}${isBinary ? '&encoding=base64' : ''}`
         )
         if (cancelled) return
-        const objectUrl = isBinary && data.content ? buildObjectUrl(node, data.content) : undefined
+        let objectUrl: string | undefined
+        if (isBinary && data.content) {
+          try {
+            objectUrl = buildObjectUrl(node, data.content)
+          } catch {
+            // buildObjectUrl can fail on invalid base64; for PDF the
+            // PdfPreview component uses raw base64Content directly anyway
+          }
+        }
         setFileContent({ content: data.content, encoding: data.encoding, objectUrl, type })
       } catch (err) {
         if (!cancelled) setFileError(err instanceof Error ? err.message : '读取文件失败')
@@ -384,12 +403,13 @@ ${question.trim()}
 
 请基于检索到的内容给出准确、专业的回答。如果内容不足以回答问题，请明确说明。引用来源时请标注 [来源编号]。`
 
-      // Step 4: Create a thread
+      // Step 4: Create a thread with the current workspace
+      const workspace = await getWorkspaceRoot()
       const threadResult = await requestJson<{ id: string }>(
         '/v1/threads',
         'POST',
         {
-          workspace: '',
+          workspace,
           title: `知识库：${node.name}`,
           model: 'deepseek-chat',
           mode: 'agent'
@@ -397,15 +417,16 @@ ${question.trim()}
       )
       const threadId = threadResult.id
 
-      // Step 5: Start a turn
-      await requestJson(
+      // Step 5: Start a turn and capture the turnId for precise polling
+      const turnResponse = await requestJson<{ turnId: string }>(
         `/v1/threads/${threadId}/turns`,
         'POST',
         { prompt }
       )
+      const turnId = turnResponse.turnId
 
-      // Step 6: Poll for completion
-      const assistantMsg = await pollTurnCompletion(threadId)
+      // Step 6: Poll for completion (poll the specific turn, not the whole thread)
+      const assistantMsg = await pollTurnCompletion(threadId, turnId)
 
       setMessages((prev) => [...prev, {
         id: `ai_${Date.now()}`,
@@ -421,40 +442,36 @@ ${question.trim()}
   }, [fileContent, node, sending])
 
   // Poll for turn completion
-  const pollTurnCompletion = useCallback(async (threadId: string, maxPolls = 120): Promise<string> => {
+  const pollTurnCompletion = useCallback(async (threadId: string, turnId: string, maxPolls = 120): Promise<string> => {
     for (let i = 0; i < maxPolls; i += 1) {
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
-      const threadData = await requestJson<{
-        turns: Array<{
-          id: string
-          status: string
-          items?: Array<{
-            type: string
-            content?: string
-            toolName?: string
-            status?: string
-          }>
-          error?: string
+      const turnData = await requestJson<{
+        id: string
+        status: string
+        items?: Array<{
+          type: string
+          content?: string
+          toolName?: string
+          status?: string
         }>
-      }>(`/v1/threads/${threadId}`)
+        error?: string
+      }>(`/v1/threads/${threadId}/turns/${turnId}`)
 
-      const lastTurn = threadData.turns?.at(-1)
-
-      if (lastTurn?.status === 'completed') {
+      if (turnData.status === 'completed') {
         // Extract the assistant's text response from items
-        const textItems = lastTurn.items
+        const textItems = turnData.items
           ?.filter((item) => item.type === 'text' && item.content)
           .map((item) => item.content ?? '')
           .join('\n\n') || '（AI 未返回任何内容）'
         return textItems
       }
 
-      if (lastTurn?.status === 'failed') {
-        throw new Error(lastTurn.error || 'AI 响应失败')
+      if (turnData.status === 'failed') {
+        throw new Error(turnData.error || 'AI 响应失败')
       }
 
-      if (lastTurn?.status === 'aborted') {
+      if (turnData.status === 'aborted') {
         throw new Error('对话被中断')
       }
 
@@ -528,7 +545,7 @@ ${question.trim()}
             </div>
           ) : (
             <div className="min-h-0 flex-1 overflow-auto">
-              {fileContent.type === 'pdf' && fileContent.objectUrl ? (
+              {fileContent.type === 'pdf' && fileContent.content ? (
                 <PdfPreview base64Content={fileContent.content} fileName={node.name} />
               ) : fileContent.type === 'image' && fileContent.objectUrl ? (
                 <div className="flex h-full items-center justify-center p-4">

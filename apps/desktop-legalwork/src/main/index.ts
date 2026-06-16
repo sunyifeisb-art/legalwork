@@ -173,9 +173,14 @@ function emitClawChannelActivity(payload: { channelId: string; threadId: string 
   mainWindow.webContents.send('claw:channel-activity', payload)
 }
 
+const MANAGED_STOP_TIMEOUT_MS = 1200
+
 async function stopManagedRuntimesForQuit(): Promise<void> {
   if (managedRuntimesStoppedForQuit) return
-  await stopManagedRuntimes()
+  await Promise.race([
+    stopManagedRuntimes(),
+    new Promise<void>((resolve) => setTimeout(resolve, MANAGED_STOP_TIMEOUT_MS))
+  ])
   managedRuntimesStoppedForQuit = true
 }
 
@@ -1022,12 +1027,22 @@ app.on('before-quit', (event) => {
   isQuitting = true
   if (managedRuntimesStoppedForQuit) return
   event.preventDefault()
-  void stopManagedRuntimesForQuit()
-    .catch((error) => {
-      console.warn('[legalwork] failed to stop Legalwork runtime:', error)
+
+  // Force-quit guard: if backend doesn't exit within 1500ms, force quit
+  const forceQuitTimer = setTimeout(() => {
+    if (!managedRuntimesStoppedForQuit) {
       managedRuntimesStoppedForQuit = true
-    })
-    .finally(() => {
       app.quit()
+    }
+  }, 1500)
+
+  void stopManagedRuntimesForQuit()
+    .catch(() => {})
+    .finally(() => {
+      clearTimeout(forceQuitTimer)
+      if (!managedRuntimesStoppedForQuit) {
+        managedRuntimesStoppedForQuit = true
+        app.quit()
+      }
     })
 })

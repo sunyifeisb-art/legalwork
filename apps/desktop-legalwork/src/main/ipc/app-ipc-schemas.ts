@@ -220,6 +220,7 @@ export const dataComplianceSubmitPayloadSchema = z.object({
   inputText: z.string().max(MAX_BODY_BYTES).optional(),
   reviewType: z.enum(['document', 'code']).optional(),
   outputDir: z.string().trim().max(2000).optional(),
+  outputFormat: z.enum(['md', 'docx', 'txt']).optional(),
   file: z.object({
     name: z.string().trim().min(1).max(500),
     type: z.string().trim().max(200).optional(),
