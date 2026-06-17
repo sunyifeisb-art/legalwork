@@ -1,6 +1,6 @@
 {
   "name": "legalwork",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "legalwork local HTTP/SSE agent runtime",
   "type": "module",
   "private": true,
