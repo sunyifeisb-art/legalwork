@@ -1,4 +1,5 @@
 import { stat } from 'node:fs/promises'
+import type { DataComplianceTaskService } from '../../services/data-compliance-task-service.js'
 import type { LocalTool } from './local-tool-host.js'
 
 export type FsStats = NonNullable<Awaited<ReturnType<typeof stat>>>
@@ -89,7 +90,7 @@ export type ReadClassification = {
 
 export const COMPACT_RESOURCE_FILE_NAMES = new Set(['AGENTS.md', 'AGENTS.MD', 'CLAUDE.md', 'CLAUDE.MD'])
 
-export type BuiltinToolName = 'read' | 'bash' | 'edit' | 'write' | 'grep' | 'find' | 'ls'
+export type BuiltinToolName = 'read' | 'bash' | 'edit' | 'write' | 'grep' | 'find' | 'ls' | 'data_compliance'
 export const allBuiltinToolNames: Set<BuiltinToolName> = new Set([
   'read',
   'bash',
@@ -97,7 +98,8 @@ export const allBuiltinToolNames: Set<BuiltinToolName> = new Set([
   'write',
   'grep',
   'find',
-  'ls'
+  'ls',
+  'data_compliance'
 ])
 export type ToolName = BuiltinToolName
 export const allToolNames: Set<ToolName> = allBuiltinToolNames
@@ -139,6 +141,10 @@ export type LsLocalToolOptions = {
   operations?: LsLocalToolOperations
 }
 
+export type DataComplianceLocalToolOptions = {
+  service?: DataComplianceTaskService
+}
+
 export type BuiltinLocalToolsOptions = {
   read?: ReadLocalToolOptions
   bash?: BashLocalToolOptions
@@ -147,6 +153,7 @@ export type BuiltinLocalToolsOptions = {
   grep?: GrepLocalToolOptions
   find?: FindLocalToolOptions
   ls?: LsLocalToolOptions
+  dataCompliance?: DataComplianceLocalToolOptions
 }
 export type ToolsOptions = BuiltinLocalToolsOptions
 

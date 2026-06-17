@@ -1,6 +1,6 @@
 import { app, dialog, ipcMain, shell, type BrowserWindow, type WebContents } from 'electron'
 import { watch, type FSWatcher } from 'node:fs'
-import { existsSync, mkdirSync } from 'node:fs'
+import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { spawn } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import { dirname, join } from 'node:path'
@@ -464,13 +464,19 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
         pythonCmd = await downloadAndInstallPythonWindows(sendProgress)
       }
 
+      // macOS / Linux: auto-download a portable Python build if not found.
+      if (!pythonCmd && process.platform === 'darwin') {
+        pythonCmd = await downloadAndInstallPythonMacOS(sendProgress)
+      }
+      if (!pythonCmd && process.platform === 'linux') {
+        pythonCmd = await downloadAndInstallPythonLinux(sendProgress)
+      }
+
       if (!pythonCmd) {
         sendProgress({
           step: 'error',
           percent: 0,
-          message: process.platform === 'win32'
-            ? '未找到 Python 3，自动安装失败。请手动安装 Python 3 并确保其在 PATH 中。'
-            : '未找到 Python 3，请先安装 Python 3 并确保其在 PATH 中。'
+          message: '未找到 Python 3，自动安装失败。请检查网络连接后重试，或手动安装 Python 3 并确保其在 PATH 中。'
         })
         return false
       }
@@ -627,14 +633,186 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     throw new Error('Python 安装后未能找到 python.exe，请重启应用后重试。')
   }
 
+  function getPythonBuildStandaloneUrl(): string | null {
+    const releaseTag = '20240415'
+    const pythonVersion = '3.11.9'
+    const baseUrl = `https://github.com/astral-sh/python-build-standalone/releases/download/${releaseTag}`
+    const mapping: Record<string, Record<string, string>> = {
+      darwin: {
+        arm64: `${baseUrl}/cpython-${pythonVersion}+${releaseTag}-aarch64-apple-darwin-install_only.tar.gz`,
+        x64: `${baseUrl}/cpython-${pythonVersion}+${releaseTag}-x86_64-apple-darwin-install_only.tar.gz`
+      },
+      linux: {
+        arm64: `${baseUrl}/cpython-${pythonVersion}+${releaseTag}-aarch64-unknown-linux-gnu-install_only.tar.gz`,
+        x64: `${baseUrl}/cpython-${pythonVersion}+${releaseTag}-x86_64-unknown-linux-gnu-install_only.tar.gz`
+      }
+    }
+    const arch = process.arch === 'arm64' ? 'arm64' : 'x64'
+    return mapping[process.platform]?.[arch] ?? null
+  }
+
+  async function downloadFileWithProgress(
+    url: string,
+    destPath: string,
+    onProgress: (downloaded: number, total: number) => void,
+    redirectCount = 0
+  ): Promise<void> {
+    const https = await import('node:https')
+    const http = await import('node:http')
+    const { createWriteStream } = await import('node:fs')
+    const { mkdirSync } = await import('node:fs')
+    const { dirname } = await import('node:path')
+    mkdirSync(dirname(destPath), { recursive: true })
+
+    if (redirectCount > 5) {
+      throw new Error('下载重定向次数过多')
+    }
+
+    const client = url.startsWith('https:') ? https : http
+
+    await new Promise<void>((resolve, reject) => {
+      const file = createWriteStream(destPath)
+      const request = client
+        .get(url, { timeout: 120_000 }, (response) => {
+          const statusCode = response.statusCode ?? 0
+          if (statusCode >= 300 && statusCode < 400 && response.headers.location) {
+            file.destroy()
+            const redirectUrl = new URL(response.headers.location, url).toString()
+            downloadFileWithProgress(redirectUrl, destPath, onProgress, redirectCount + 1)
+              .then(resolve)
+              .catch(reject)
+            return
+          }
+          if (response.statusCode !== 200) {
+            file.destroy()
+            reject(new Error(`下载失败: HTTP ${response.statusCode}`))
+            return
+          }
+          const total = parseInt(response.headers['content-length'] || '0', 10)
+          let downloaded = 0
+          response.on('data', (chunk: Buffer) => {
+            downloaded += chunk.length
+            if (total > 0) {
+              onProgress(downloaded, total)
+            }
+          })
+          response.pipe(file)
+          file.on('finish', () => {
+            file.close()
+            resolve()
+          })
+          file.on('error', reject)
+        })
+        .on('error', (error) => {
+          file.destroy()
+          reject(error)
+        })
+        .on('timeout', () => {
+          request.destroy()
+          reject(new Error('下载超时，请检查网络连接。'))
+        })
+    })
+  }
+
+  async function extractTarGz(tarPath: string, destDir: string): Promise<void> {
+    mkdirSync(destDir, { recursive: true })
+    const result = await runCommand('tar', ['-xzf', tarPath, '-C', destDir, '--strip-components=1'])
+    if (result.exitCode !== 0) {
+      throw new Error(`解压 Python 失败: ${result.stderr || result.stdout || '未知错误'}`)
+    }
+  }
+
+  async function downloadAndInstallPythonBuildStandalone(
+    sendProgress: (progress: DataComplianceInstallProgress) => void,
+    platformLabel: string
+  ): Promise<string | null> {
+    const tmpDir = join(app.getPath('userData'), 'data-compliance', 'tmp')
+    const installDir = join(app.getPath('userData'), 'data-compliance', 'python-standalone')
+    mkdirSync(tmpDir, { recursive: true })
+
+    const url = getPythonBuildStandaloneUrl()
+    if (!url) {
+      throw new Error(`当前平台 ${process.platform} (${process.arch}) 不支持自动安装 Python。`)
+    }
+
+    const fileName = `python-standalone-${process.platform}-${process.arch}.tar.gz`
+    const tarPath = join(tmpDir, fileName)
+
+    // Download if not cached.
+    if (!existsSync(tarPath)) {
+      sendProgress({ step: 'detecting', percent: 10, message: `未找到 Python，正在下载 ${platformLabel} 版 Python…` })
+      try {
+        await downloadFileWithProgress(url, tarPath, (downloaded, total) => {
+          const percent = Math.round((downloaded / total) * 20) // 10-30%
+          sendProgress({
+            step: 'detecting',
+            percent,
+            message: `正在下载 Python (${Math.round(downloaded / 1024 / 1024)}MB / ${Math.round(total / 1024 / 1024)}MB)…`
+          })
+        })
+      } catch (error) {
+        // Clean up partial download so retry can start fresh.
+        try {
+          rmSync(tarPath, { force: true })
+        } catch {
+          // ignore
+        }
+        throw error
+      }
+    }
+
+    // Clean any previous extraction and extract.
+    sendProgress({ step: 'detecting', percent: 32, message: '正在解压 Python…' })
+    if (existsSync(installDir)) {
+      rmSync(installDir, { recursive: true, force: true })
+    }
+    try {
+      await extractTarGz(tarPath, installDir)
+    } catch (error) {
+      // Clean up broken extraction so retry can start fresh.
+      try {
+        rmSync(installDir, { recursive: true, force: true })
+      } catch {
+        // ignore
+      }
+      throw error
+    }
+
+    // Verify.
+    sendProgress({ step: 'detecting', percent: 33, message: '正在验证 Python 安装…' })
+    const pythonPath = join(installDir, 'bin', 'python3')
+    if (!existsSync(pythonPath)) {
+      throw new Error('Python 解压后未找到 python3 可执行文件')
+    }
+    const verify = await runCommand(pythonPath, ['--version'])
+    if (verify.exitCode !== 0) {
+      throw new Error(`Python 验证失败: ${verify.stderr || verify.stdout}`)
+    }
+
+    sendProgress({ step: 'detecting', percent: 34, message: 'Python 已就绪' })
+    return pythonPath
+  }
+
+  async function downloadAndInstallPythonMacOS(
+    sendProgress: (progress: DataComplianceInstallProgress) => void
+  ): Promise<string | null> {
+    return downloadAndInstallPythonBuildStandalone(sendProgress, 'macOS')
+  }
+
+  async function downloadAndInstallPythonLinux(
+    sendProgress: (progress: DataComplianceInstallProgress) => void
+  ): Promise<string | null> {
+    return downloadAndInstallPythonBuildStandalone(sendProgress, 'Linux')
+  }
+
   ipcMain.handle('data-compliance:status', async (event): Promise<DataComplianceStatus> => {
     try {
       const result = await runtimeRequest('/data-compliance/environment', 'GET')
       if (!result.ok) {
         const parsed = JSON.parse(result.body || '{}') as { error?: string; fix?: string }
-        // Auto-trigger silent install on Windows whenever the environment is not ready.
+        // Auto-trigger silent install whenever the environment is not ready.
         // The install function itself will skip already-completed steps (Python, venv, deps).
-        if (process.platform === 'win32' && !dataComplianceInstalling) {
+        if (!dataComplianceInstalling) {
           void installDataComplianceEnvironment(event, () => dataComplianceInstalling)
             .then((ok) => {
               if (!ok) {

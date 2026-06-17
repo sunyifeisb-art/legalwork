@@ -193,13 +193,25 @@ export async function createLegalworkServeRuntime(
     sourceRoots: defaultKnowledgeSourceRoots(options.dataDir),
     nowIso
   })
+  const explicitWebRoot = process.env.LEGALWORK_COMPLIANCE_WEB_ROOT
+  const webRootOverride =
+    explicitWebRoot && existsSync(join(explicitWebRoot, 'compliance_worker.py'))
+      ? explicitWebRoot
+      : undefined
+  const dataComplianceTaskService = await ensureDataComplianceTaskService({
+    dataDir: options.dataDir,
+    appRoot: options.dataDir,
+    isPackaged: false,
+    logDir: join(options.dataDir, 'logs'),
+    webRoot: webRootOverride
+  })
   const baseToolProviders = [
     {
       id: 'builtin',
       kind: 'built-in' as const,
       enabled: true,
       available: true,
-      tools: buildDefaultLocalTools()
+      tools: buildDefaultLocalTools({}, { dataCompliance: { service: dataComplianceTaskService } })
     },
     ...mcpProviders.providers,
     ...webProviders.providers,
@@ -323,18 +335,6 @@ export async function createLegalworkServeRuntime(
     }
   })
   const startedAt = options.startedAt ?? nowIso()
-  const explicitWebRoot = process.env.LEGALWORK_COMPLIANCE_WEB_ROOT
-  const webRootOverride =
-    explicitWebRoot && existsSync(join(explicitWebRoot, 'compliance_worker.py'))
-      ? explicitWebRoot
-      : undefined
-  const dataComplianceTaskService = await ensureDataComplianceTaskService({
-    dataDir: options.dataDir,
-    appRoot: options.dataDir,
-    isPackaged: false,
-    logDir: join(options.dataDir, 'logs'),
-    webRoot: webRootOverride
-  })
   return {
     threadService,
     turnService,

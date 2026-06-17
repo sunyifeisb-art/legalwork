@@ -8,6 +8,7 @@ import type {
 import { createBashLocalTool } from './builtin-bash-tool.js'
 import { createEditLocalTool, createWriteLocalTool } from './builtin-file-tools.js'
 import { createReadLocalTool } from './builtin-read-tool.js'
+import { createDataComplianceLocalTool } from './builtin-data-compliance-tool.js'
 import { createFindLocalTool, createGrepLocalTool, createLsLocalTool } from './builtin-search-tools.js'
 
 export * from './builtin-tool-types.js'
@@ -36,6 +37,8 @@ export function createBuiltinLocalTool(
       return createFindLocalTool(options.find)
     case 'ls':
       return createLsLocalTool(options.ls)
+    case 'data_compliance':
+      return createDataComplianceLocalTool(options.dataCompliance ?? {})
   }
 }
 
@@ -48,7 +51,7 @@ export function createToolDefinition(toolName: ToolName, options: ToolsOptions =
 }
 
 export function buildBuiltinLocalTools(options: BuiltinLocalToolsOptions = {}): LocalTool[] {
-  return [
+  const tools: LocalTool[] = [
     createReadLocalTool(options.read),
     createBashLocalTool(options.bash),
     createEditLocalTool(options.edit),
@@ -57,6 +60,10 @@ export function buildBuiltinLocalTools(options: BuiltinLocalToolsOptions = {}): 
     createFindLocalTool(options.find),
     createLsLocalTool(options.ls)
   ]
+  if (options.dataCompliance?.service) {
+    tools.push(createDataComplianceLocalTool(options.dataCompliance))
+  }
+  return tools
 }
 
 export function createAllTools(options: ToolsOptions = {}): Record<ToolName, LocalTool> {
@@ -99,7 +106,8 @@ export function buildBuiltinLocalToolRecord(
     write: createWriteLocalTool(options.write),
     grep: createGrepLocalTool(options.grep),
     find: createFindLocalTool(options.find),
-    ls: createLsLocalTool(options.ls)
+    ls: createLsLocalTool(options.ls),
+    data_compliance: createDataComplianceLocalTool(options.dataCompliance ?? {})
   }
 }
 

@@ -9,7 +9,7 @@ import type { ApprovalRequest } from '../../domain/approval.js'
 import { createApprovalRequest } from '../../domain/approval.js'
 import type { TurnItem } from '../../contracts/items.js'
 import { makeToolResultItem, makeApprovalItem } from '../../domain/item.js'
-import { buildBuiltinLocalTools } from './builtin-tools.js'
+import { buildBuiltinLocalTools, type BuiltinLocalToolsOptions } from './builtin-tools.js'
 import { CapabilityRegistry } from './capability-registry.js'
 import {
   applyPostToolHookResults,
@@ -472,6 +472,15 @@ import { createCreatePlanTool, type CreatePlanAdapterOptions } from './create-pl
  * `shouldAdvertise` predicate, so it is safe to ship with the
  * default set: non-plan turns never see it in the model tool list.
  */
-export function buildDefaultLocalTools(planOptions: CreatePlanAdapterOptions = {}): LocalTool[] {
-  return [...defaultLocalTools, createCreatePlanTool(planOptions)]
+export function buildDefaultLocalTools(
+  planOptions: CreatePlanAdapterOptions = {},
+  builtinOptions: BuiltinLocalToolsOptions = {}
+): LocalTool[] {
+  return [
+    ...buildBuiltinLocalTools(builtinOptions),
+    echoTool,
+    userInputTool,
+    requestUserInputTool,
+    createCreatePlanTool(planOptions)
+  ]
 }
