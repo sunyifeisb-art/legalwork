@@ -107,6 +107,15 @@ export async function knowledgeReadFile(store: KnowledgeStore | undefined, reque
   return jsonResponse(await store.readFile(path, encoding))
 }
 
+/** GET /v1/knowledge/file/extract-text — extract plain text from pdf/docx/xlsx */
+export async function knowledgeExtractText(store: KnowledgeStore | undefined, request: Request): Promise<JsonResponse> {
+  if (!store) return ERRORS.unavailable('knowledge store is unavailable')
+  const url = new URL(request.url)
+  const path = url.searchParams.get('path')
+  if (!path) return ERRORS.validation('path query parameter is required')
+  return jsonResponse(await store.extractText(path))
+}
+
 /** POST /v1/knowledge/move — move / rename a file or folder */
 export async function knowledgeMove(store: KnowledgeStore | undefined, request: Request): Promise<JsonResponse> {
   if (!store) return ERRORS.unavailable('knowledge store is unavailable')

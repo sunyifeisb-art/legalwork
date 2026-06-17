@@ -49,6 +49,7 @@ import {
   knowledgeCreateFolder,
   knowledgeDelete,
   knowledgeDiagnostics,
+  knowledgeExtractText,
   knowledgeMove,
   knowledgeReadFile,
   knowledgeTree,
@@ -181,6 +182,10 @@ export function buildRouter(runtime: ServerRuntime): Router {
   router.add('GET', '/v1/knowledge/file', async (request) => {
     if (!authorize(request, runtime)) return ERRORS.unauthorized()
     return knowledgeReadFile(runtime.knowledgeStore, request)
+  })
+  router.add('GET', '/v1/knowledge/file/extract-text', async (request) => {
+    if (!authorize(request, runtime)) return ERRORS.unauthorized()
+    return knowledgeExtractText(runtime.knowledgeStore, request)
   })
   router.add('GET', '/v1/knowledge/file/absolute-path', async (request) => {
     if (!authorize(request, runtime)) return ERRORS.unauthorized()

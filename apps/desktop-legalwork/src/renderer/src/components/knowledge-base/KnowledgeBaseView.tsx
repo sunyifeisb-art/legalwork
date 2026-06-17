@@ -749,12 +749,17 @@ export function KnowledgeBaseView(): ReactElement {
       setCurrentPath(node.path)
       return
     }
+    // Unsupported formats cannot be rendered inline; open with the system app.
+    if (previewType(node) === 'unsupported') {
+      void openInSystemApp(node)
+      return
+    }
     if (preview?.objectUrl) {
       URL.revokeObjectURL(preview.objectUrl)
     }
     setPreview(null)
     setViewingFile(node)
-  }, [preview])
+  }, [preview, openInSystemApp])
 
   useEffect(() => {
     return () => {

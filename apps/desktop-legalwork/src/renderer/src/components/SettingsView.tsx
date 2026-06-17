@@ -192,11 +192,12 @@ export function SettingsView(): ReactElement {
       settingsSection === 'general' ||
       settingsSection === 'claw' ||
       settingsSection === 'shortcuts' ||
+      settingsSection === 'guiUpdate' ||
       category !== 'agents'
     ) {
       return
     }
-    const refs: Record<Exclude<SettingsRouteSection, 'general' | 'claw' | 'shortcuts'>, HTMLDivElement | null> = {
+    const refs: Record<Exclude<SettingsRouteSection, 'general' | 'claw' | 'shortcuts' | 'guiUpdate'>, HTMLDivElement | null> = {
       agents: agentsSectionRef.current,
       skill: skillSectionRef.current,
       mcp: mcpSectionRef.current

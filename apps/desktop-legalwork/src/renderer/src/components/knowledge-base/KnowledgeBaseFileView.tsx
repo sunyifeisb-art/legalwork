@@ -3,19 +3,27 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   ArrowLeft,
   AudioLines,
-  Bot,
   ExternalLink,
   File,
   FileCode2,
   Loader2,
   Send,
-  Sparkles,
   Trash2,
   X
 } from 'lucide-react'
 import * as pdfjsLib from 'pdfjs-dist'
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url'
-import { LEGALWORK_KNOWLEDGE_READ_FILE_PATH, LEGALWORK_KNOWLEDGE_SEARCH_PATH } from '../../../../shared/legalwork-endpoints'
+import {
+  LEGALWORK_KNOWLEDGE_EXTRACT_TEXT_PATH,
+  LEGALWORK_KNOWLEDGE_READ_FILE_PATH,
+  LEGALWORK_KNOWLEDGE_SEARCH_PATH,
+  legalworkThreadTurnsPath,
+  legalworkThreadTurnPath
+} from '../../../../shared/legalwork-endpoints'
+import { useChatStore } from '../../store/chat-store'
+import { AnimatedWorkLogo } from '../chat/AnimatedWorkLogo'
+import { ModelBrandIcon } from '../chat/ModelBrandIcon'
+import { brandForModel } from '../../lib/model-brand'
 import type { KnowledgeTreeNode } from './types'
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl
@@ -44,17 +52,19 @@ async function getWorkspaceRoot(): Promise<string> {
 }
 
 function fileExtension(node: KnowledgeTreeNode): string {
-  return (node.extension || node.name.split('.').pop() || '').replace(/^\\./, '').toLowerCase()
+  const raw = (node.extension ?? node.name.split('.').pop() ?? '').trim().toLowerCase()
+  return raw.replace(/^\./, '').replace(/[^a-z0-9]/g, '')
 }
 
-type PreviewType = 'text' | 'pdf' | 'image' | 'audio' | 'unsupported'
+type PreviewType = 'text' | 'pdf' | 'image' | 'audio' | 'document' | 'unsupported'
 
 function previewType(node: KnowledgeTreeNode): PreviewType {
   const ext = fileExtension(node)
-  if (['pdf'].includes(ext)) return 'pdf'
+  if (ext === 'pdf') return 'pdf'
   if (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext)) return 'image'
   if (['mp3', 'm4a', 'wav', 'aac', 'flac', 'ogg'].includes(ext)) return 'audio'
   if (['txt', 'md', 'markdown', 'json', 'jsonl', 'csv', 'tsv', 'yaml', 'yml', 'html', 'xml'].includes(ext)) return 'text'
+  if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext)) return 'document'
   return 'unsupported'
 }
 
@@ -97,7 +107,7 @@ function formatBytes(bytes?: number): string {
 
 function fileTypeLabel(node: KnowledgeTreeNode): string {
   if (node.kind === 'folder') return '文件夹'
-  const ext = (node.extension || node.name.split('.').pop() || '').replace(/^\\./, '').toLowerCase()
+  const ext = fileExtension(node)
   if (!ext) return '文件'
   if (ext === 'doc' || ext === 'docx') return 'WORD'
   if (ext === 'ppt' || ext === 'pptx') return 'PPT'
@@ -234,6 +244,31 @@ type FileContent = {
   type: PreviewType
 }
 
+// ── Document text extraction preview component ──
+
+function DocumentPreview({ text, fileName }: { text: string; fileName: string }): ReactElement {
+  return (
+    <div className="flex h-full flex-col">
+      <div className="border-b border-ds-border bg-ds-card px-4 py-2 text-[12px] text-[var(--ds-muted)]">
+        文档文本预览 · {fileName}
+      </div>
+      <div className="min-h-0 flex-1 overflow-auto p-6">
+        {text ? (
+          <pre className="whitespace-pre-wrap font-mono text-[13px] leading-[22px] text-[var(--ds-ink)]">
+            {text}
+          </pre>
+        ) : (
+          <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-[13px] text-[var(--ds-muted)]">
+            <File className="h-10 w-10 text-slate-300" strokeWidth={1.4} />
+            <div>未能提取到可预览文本</div>
+            <div className="text-[12px]">你可以通过右侧 AI 对话功能提问文件相关问题。</div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── Knowledge search result type ──
 
 type KnowledgeHit = {
@@ -272,7 +307,6 @@ export function KnowledgeBaseFileView({ node, onBack }: Props): ReactElement {
       setFileError(null)
       try {
         const type = previewType(node)
-        const ext = fileExtension(node)
         // For unsupported binary types, try to read as base64 and extract what we can
         if (type === 'unsupported') {
           // Try reading as base64 to at least show file info
@@ -286,6 +320,20 @@ export function KnowledgeBaseFileView({ node, onBack }: Props): ReactElement {
           } catch {
             // If even binary read fails, just set empty content
             if (!cancelled) setFileContent({ content: '', encoding: 'utf8', type: 'unsupported' })
+          }
+          if (!cancelled) setFileLoading(false)
+          return
+        }
+        if (type === 'document') {
+          // Extract plain text from pdf/docx/xlsx via the runtime
+          try {
+            const data = await requestJson<{ path: string; text: string; extension: string }>(
+              `${LEGALWORK_KNOWLEDGE_EXTRACT_TEXT_PATH}?path=${encodeURIComponent(node.path)}`
+            )
+            if (cancelled) return
+            setFileContent({ content: data.text, encoding: 'utf8', type: 'document' })
+          } catch {
+            if (!cancelled) setFileContent({ content: '', encoding: 'utf8', type: 'document' })
           }
           if (!cancelled) setFileLoading(false)
           return
@@ -337,6 +385,49 @@ export function KnowledgeBaseFileView({ node, onBack }: Props): ReactElement {
   }, [node.path])
 
   // ── AI Chat: RAG-based Q&A ──
+  const composerModel = useChatStore((s) => s.composerModel)
+  const composerModelGroups = useChatStore((s) => s.composerModelGroups)
+  const modelBrand = brandForModel(composerModel, composerModelGroups)
+
+  // Poll for turn completion
+  const pollTurnCompletion = useCallback(async (threadId: string, turnId: string, maxPolls = 120): Promise<string> => {
+    for (let i = 0; i < maxPolls; i += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+
+      const turnData = await requestJson<{
+        id: string
+        status: string
+        items?: Array<{
+          type: string
+          content?: string
+          toolName?: string
+          status?: string
+        }>
+        error?: string
+      }>(legalworkThreadTurnPath(threadId, turnId))
+
+      if (turnData.status === 'completed') {
+        // Extract the assistant's text response from items
+        const textItems = turnData.items
+          ?.filter((item) => item.type === 'text' && item.content)
+          .map((item) => item.content ?? '')
+          .join('\n\n') || '（AI 未返回任何内容）'
+        return textItems
+      }
+
+      if (turnData.status === 'failed') {
+        throw new Error(turnData.error || 'AI 响应失败')
+      }
+
+      if (turnData.status === 'aborted') {
+        throw new Error('对话被中断')
+      }
+
+      // For 'queued' or 'running', continue polling
+    }
+    throw new Error('AI 响应超时')
+  }, [])
+
   const sendMessage = useCallback(async (question: string): Promise<void> => {
     if (!question.trim() || sending) return
     const userMsg: ChatMessage = {
@@ -411,7 +502,7 @@ ${question.trim()}
         {
           workspace,
           title: `知识库：${node.name}`,
-          model: 'deepseek-chat',
+          model: composerModel || 'deepseek-chat',
           mode: 'agent'
         }
       )
@@ -419,7 +510,7 @@ ${question.trim()}
 
       // Step 5: Start a turn and capture the turnId for precise polling
       const turnResponse = await requestJson<{ turnId: string }>(
-        `/v1/threads/${threadId}/turns`,
+        legalworkThreadTurnsPath(threadId),
         'POST',
         { prompt }
       )
@@ -439,46 +530,7 @@ ${question.trim()}
     } finally {
       setSending(false)
     }
-  }, [fileContent, node, sending])
-
-  // Poll for turn completion
-  const pollTurnCompletion = useCallback(async (threadId: string, turnId: string, maxPolls = 120): Promise<string> => {
-    for (let i = 0; i < maxPolls; i += 1) {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      const turnData = await requestJson<{
-        id: string
-        status: string
-        items?: Array<{
-          type: string
-          content?: string
-          toolName?: string
-          status?: string
-        }>
-        error?: string
-      }>(`/v1/threads/${threadId}/turns/${turnId}`)
-
-      if (turnData.status === 'completed') {
-        // Extract the assistant's text response from items
-        const textItems = turnData.items
-          ?.filter((item) => item.type === 'text' && item.content)
-          .map((item) => item.content ?? '')
-          .join('\n\n') || '（AI 未返回任何内容）'
-        return textItems
-      }
-
-      if (turnData.status === 'failed') {
-        throw new Error(turnData.error || 'AI 响应失败')
-      }
-
-      if (turnData.status === 'aborted') {
-        throw new Error('对话被中断')
-      }
-
-      // For 'queued' or 'running', continue polling
-    }
-    throw new Error('AI 响应超时')
-  }, [])
+  }, [fileContent, node, sending, composerModel, pollTurnCompletion])
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>): void => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -537,7 +589,17 @@ ${question.trim()}
               正在读取...
             </div>
           ) : fileError ? (
-            <div className="flex h-full items-center justify-center p-6 text-[13px] text-red-500">{fileError}</div>
+            <div className="flex h-full flex-col items-center justify-center gap-4 p-6 text-center">
+              <div className="text-[13px] text-red-500">{fileError}</div>
+              <button
+                type="button"
+                onClick={() => void openInSystemApp()}
+                className="inline-flex items-center gap-1.5 rounded-[8px] border border-ds-border bg-ds-card px-4 py-2 text-[12px] font-medium text-[var(--ds-muted)] transition hover:bg-ds-hover hover:text-[var(--ds-ink)]"
+              >
+                <ExternalLink className="h-3.5 w-3.5" strokeWidth={1.8} />
+                <span>系统打开</span>
+              </button>
+            </div>
           ) : !fileContent ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center text-[13px] text-[var(--ds-muted)]">
               <File className="h-10 w-10 text-slate-300" strokeWidth={1.4} />
@@ -561,6 +623,8 @@ ${question.trim()}
                   <audio src={fileContent.objectUrl} controls className="w-full max-w-md" />
                   <div className="text-[12px] text-[var(--ds-muted)]">{node.name}</div>
                 </div>
+              ) : fileContent.type === 'document' ? (
+                <DocumentPreview text={fileContent.content} fileName={node.name} />
               ) : fileContent.type === 'text' ? (
                 <pre className="whitespace-pre-wrap p-6 font-mono text-[13px] leading-[22px] text-[var(--ds-ink)]">
                   {fileContent.content}
@@ -594,10 +658,10 @@ ${question.trim()}
         </div>
 
         {/* AI Chat Panel */}
-        <aside className="flex h-full w-[420px] min-w-[360px] flex-col bg-ds-card">
+        <aside className="flex h-full w-[340px] min-w-[300px] flex-col border-l border-ds-border bg-ds-card">
           <div className="flex h-12 shrink-0 items-center justify-between border-b border-ds-border px-4">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-[var(--ds-accent)]" strokeWidth={1.8} />
+              <ModelBrandIcon brand={modelBrand} className="h-5 w-5" />
               <span className="text-[13px] font-medium text-[var(--ds-ink)]">AI 对话</span>
             </div>
             {messages.length > 0 ? (
@@ -613,8 +677,8 @@ ${question.trim()}
           </div>
 
           {messages.length === 0 && !sending ? (
-            <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
-              <Bot className="h-10 w-10 text-[var(--ds-accent)] opacity-40" strokeWidth={1.4} />
+            <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
+              <AnimatedWorkLogo active brand={modelBrand} phase="lead" size="md" />
               <div className="text-[13px] font-medium text-[var(--ds-ink)]">关于此文件提问</div>
               <p className="text-[12px] leading-relaxed text-[var(--ds-muted)]">
                 基于当前文件内容进行 AI 对话。你可以询问文件中的关键信息、法律条款分析或内容总结。
@@ -627,6 +691,11 @@ ${question.trim()}
                   key={msg.id}
                   className={`mb-4 flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
+                  {msg.role === 'assistant' ? (
+                    <div className="mr-2 mt-1 shrink-0">
+                      <ModelBrandIcon brand={modelBrand} className="h-5 w-5" />
+                    </div>
+                  ) : null}
                   <div
                     className={`max-w-[85%] rounded-[12px] px-4 py-2.5 text-[13px] leading-relaxed ${
                       msg.role === 'user'
@@ -651,6 +720,9 @@ ${question.trim()}
 
               {sending ? (
                 <div className="mb-4 flex justify-start">
+                  <div className="mr-2 mt-1 shrink-0">
+                    <AnimatedWorkLogo active brand={modelBrand} phase="trail" size="sm" />
+                  </div>
                   <div className="max-w-[85%] rounded-[12px] border border-ds-border bg-[var(--ds-main)] px-4 py-3">
                     <div className="flex items-center gap-2 text-[13px] text-[var(--ds-muted)]">
                       <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={1.8} />

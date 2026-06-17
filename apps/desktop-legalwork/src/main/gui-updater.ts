@@ -382,6 +382,68 @@ async function resolveGithubManifestUrl(channel: GuiUpdateChannel): Promise<stri
   }
 }
 
+/**
+ * Fallback update check that uses the GitHub Releases API directly.
+ * This lets the UI report "up to date" / "update available" even when the
+ * updater manifest YAML files (latest-*.yml) are missing from the release.
+ * Downloads still require the manifest, so results are marked manualOnly.
+ */
+async function checkGithubApiUpdate(channel: GuiUpdateChannel): Promise<GuiUpdateInfo | null> {
+  const repo = resolveGithubOwnerRepo()
+  if (!repo) return null
+
+  const currentVersion = app.getVersion()
+  try {
+    let tagName: string | undefined
+    let releaseDate: string | undefined
+
+    if (channel === 'stable') {
+      const res = await fetch(`https://api.github.com/repos/${repo}/releases/latest`, {
+        headers: {
+          Accept: 'application/vnd.github+json',
+          'User-Agent': `legalwork/${currentVersion}`
+        }
+      })
+      if (!res.ok) return null
+      const release = (await res.json()) as { tag_name?: string; published_at?: string }
+      tagName = release.tag_name
+      releaseDate = release.published_at
+    } else {
+      const res = await fetch(`https://api.github.com/repos/${repo}/releases`, {
+        headers: {
+          Accept: 'application/vnd.github+json',
+          'User-Agent': `legalwork/${currentVersion}`
+        }
+      })
+      if (!res.ok) return null
+      const releases = (await res.json()) as Array<{ prerelease: boolean; tag_name: string; published_at?: string }>
+      const pre = releases.find((r) => r.prerelease)
+      if (!pre) return null
+      tagName = pre.tag_name
+      releaseDate = pre.published_at
+    }
+
+    if (!tagName) return null
+    const latestVersion = tagName.trim().replace(/^v/i, '')
+    const info: Extract<GuiUpdateInfo, { ok: true }> = {
+      ok: true,
+      currentVersion,
+      latestVersion,
+      hasUpdate: isVersionGreater(latestVersion, currentVersion),
+      releaseUrl: releaseUrlForVersion(latestVersion),
+      releaseDate,
+      channel,
+      manualOnly: true,
+      downloaded: false
+    }
+    lastInfo = info
+    emitGuiUpdateState(info.hasUpdate ? { status: 'available', info } : { status: 'not_available', info })
+    return info
+  } catch {
+    return null
+  }
+}
+
 async function checkManualUpdate(
   channel: GuiUpdateChannel,
   code: GuiUpdateFailureCode = 'unsupported'
@@ -525,6 +587,17 @@ export function initializeGuiUpdater(
 
   autoUpdater.on('error', (error) => {
     const message = error instanceof Error ? error.message : String(error)
+    // When the release is missing the files electron-updater expects (e.g. no
+    // mac zip, only dmgs), fall back to the GitHub API so the UI can at least
+    // show "up to date" or "update available (manual)" instead of an error.
+    if (resolveGithubOwnerRepo() && /ZIP file not provided|Cannot download|sha512 checksum mismatch/i.test(message)) {
+      void checkGithubApiUpdate(configuredChannel).then((info) => {
+        if (!info) {
+          emitGuiUpdateState({ status: 'error', info: lastInfo ?? undefined, message, code: 'unknown' })
+        }
+      })
+      return
+    }
     emitGuiUpdateState({ status: 'error', info: lastInfo ?? undefined, message, code: 'unknown' })
   })
 
@@ -556,7 +629,11 @@ export async function checkGuiUpdate(channel?: GuiUpdateChannel): Promise<GuiUpd
     emitGuiUpdateState(info.hasUpdate ? { status: 'available', info } : { status: 'not_available', info })
     return info
   } catch (e) {
-    const message = sanitizeUpdaterError(e instanceof Error ? e.message : String(e), selectedChannel)
+    const rawMessage = e instanceof Error ? e.message : String(e)
+    const githubApiInfo = await checkGithubApiUpdate(selectedChannel)
+    if (githubApiInfo) return githubApiInfo
+
+    const message = sanitizeUpdaterError(rawMessage, selectedChannel)
     const info: GuiUpdateInfo = {
       ok: false,
       currentVersion: app.getVersion(),

@@ -29,6 +29,8 @@ export interface KnowledgeStore {
   writeFile(input: KnowledgeFileContent): Promise<{ path: string; sizeBytes: number }>
   /** Read a file under managed root. */
   readFile(path: string, encoding?: 'utf8' | 'base64'): Promise<KnowledgeFileContent>
+  /** Extract plain text from a managed document (pdf/docx/xlsx etc.). */
+  extractText(path: string): Promise<{ path: string; text: string; extension: string }>
   /** Resolve the absolute path of a managed file/folder. */
   absolutePath(path: string): Promise<{ path: string; absolute: string }>
   /** Move / rename a file or folder under managed root. */
@@ -192,6 +194,16 @@ export class FileKnowledgeStore implements KnowledgeStore {
     }
     const content = await readFile(absolute, 'utf8')
     return { path: filePath, content, encoding: 'utf8' }
+  }
+
+  async extractText(filePath: string): Promise<{ path: string; text: string; extension: string }> {
+    await this.ensureManagedRoot()
+    const absolute = this.resolveManaged(filePath)
+    const extension = extname(absolute).toLowerCase()
+    const text = EXTRACTABLE_EXTENSIONS.has(extension)
+      ? await extractDocumentText(absolute)
+      : ''
+    return { path: filePath, text, extension }
   }
 
   async absolutePath(filePath: string): Promise<{ path: string; absolute: string }> {

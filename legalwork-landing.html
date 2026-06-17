@@ -7,27 +7,31 @@
     <meta name="description" content="面向法律专业人士的 AI 全流程赋能平台。70+ 法律 AI 技能、智能 OCR、文件脱敏、案件管理，一站式法律工作解决方案。">
     <link rel="icon" type="image/png" href="favicon-32.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #ffffff;
-            --bg-alt: #f8f9fa;
+            --bg-alt: #f7f8fc;
             --bg-card: #ffffff;
-            --text: #1a1a2e;
-            --text-secondary: #4a5568;
-            --text-muted: #718096;
-            --primary: #1a365d;
-            --primary-light: #2c5282;
-            --accent: #c9a227;
-            --accent-light: #e8c84a;
+            --text: #0f172a;
+            --text-secondary: #334155;
+            --text-muted: #64748b;
+            --primary: #0f172a;
+            --primary-light: #1e293b;
+            --accent: #3b82f6;
+            --accent-light: #60a5fa;
+            --accent-glow: rgba(59,130,246,0.15);
             --border: #e2e8f0;
-            --border-light: #edf2f7;
-            --danger: #e53e3e;
-            --success: #38a169;
+            --border-light: #f1f5f9;
+            --danger: #ef4444;
+            --success: #22c55e;
             --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
             --shadow-hover: 0 8px 24px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.06);
+            --shadow-float: 0 20px 60px rgba(0,0,0,0.12), 0 8px 20px rgba(0,0,0,0.08);
             --radius: 16px;
             --radius-sm: 8px;
+            --radius-lg: 20px;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -52,9 +56,7 @@
             border-bottom: 1px solid var(--border-light);
             transition: box-shadow 0.3s ease;
         }
-
         nav.scrolled { box-shadow: 0 1px 8px rgba(0,0,0,0.06); }
-
         .nav-inner {
             max-width: 1200px;
             margin: 0 auto;
@@ -63,7 +65,6 @@
             align-items: center;
             justify-content: space-between;
         }
-
         .nav-brand {
             display: flex;
             align-items: center;
@@ -74,15 +75,12 @@
             font-size: 1.25rem;
             letter-spacing: -0.02em;
         }
-
-        .nav-brand img { height: 36px; width: auto; }
-
+        .nav-brand img { height: 48px; width: auto; }
         .nav-links {
             display: flex;
             align-items: center;
             gap: 2rem;
         }
-
         .nav-links a {
             color: var(--text-secondary);
             text-decoration: none;
@@ -91,9 +89,7 @@
             transition: color 0.2s ease;
             position: relative;
         }
-
         .nav-links a:hover { color: var(--primary); }
-
         .nav-links a::after {
             content: '';
             position: absolute;
@@ -103,29 +99,28 @@
             transition: width 0.3s ease;
             border-radius: 2px;
         }
-
         .nav-links a:hover::after { width: 100%; }
-
         .nav-cta {
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 0.6rem 1.25rem;
+            padding: 0.55rem 1.1rem;
             border-radius: 10px;
-            background: var(--primary);
-            color: #fff;
+            background: #fff;
+            color: var(--text);
             font-size: 0.85rem;
             font-weight: 600;
             text-decoration: none;
             transition: all 0.25s ease;
-            border: none;
+            border: 1.5px solid var(--border);
             cursor: pointer;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
         }
-
         .nav-cta:hover {
-            background: var(--primary-light);
+            border-color: var(--accent);
+            color: var(--accent);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(26,54,93,0.25);
+            box-shadow: 0 4px 12px rgba(59,130,246,0.12);
         }
 
         /* ===== HERO ===== */
@@ -136,26 +131,36 @@
             padding: 7rem 1.5rem 4rem;
             position: relative;
             overflow: hidden;
+            background: var(--bg);
         }
-
+        .hero-glow {
+            position: absolute;
+            width: 700px;
+            height: 700px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(201,162,39,0.10) 0%, rgba(26,54,93,0.04) 40%, transparent 70%);
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            transition: left 0.4s ease-out, top 0.4s ease-out;
+            z-index: 0;
+            mix-blend-mode: multiply;
+        }
         .hero::before {
             content: '';
             position: absolute;
             top: -20%; right: -10%;
             width: 600px; height: 600px;
-            background: radial-gradient(circle, rgba(201,162,39,0.08) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(201,162,39,0.06) 0%, transparent 70%);
             pointer-events: none;
         }
-
         .hero::after {
             content: '';
             position: absolute;
             bottom: -10%; left: -5%;
             width: 400px; height: 400px;
-            background: radial-gradient(circle, rgba(26,54,93,0.04) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(26,54,93,0.03) 0%, transparent 70%);
             pointer-events: none;
         }
-
         .hero-inner {
             max-width: 1200px;
             margin: 0 auto;
@@ -167,7 +172,6 @@
             position: relative;
             z-index: 1;
         }
-
         .hero-badge {
             display: inline-flex;
             align-items: center;
@@ -182,19 +186,16 @@
             margin-bottom: 1.5rem;
             width: fit-content;
         }
-
         .hero-badge .pulse-dot {
             width: 6px; height: 6px;
             background: var(--accent);
             border-radius: 50%;
             animation: pulse-dot 2s infinite;
         }
-
         @keyframes pulse-dot {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.5; transform: scale(1.3); }
         }
-
         .hero h1 {
             font-family: 'Noto Serif SC', serif;
             font-size: clamp(2.5rem, 5vw, 3.8rem);
@@ -204,12 +205,10 @@
             margin-bottom: 1.25rem;
             letter-spacing: -0.02em;
         }
-
         .hero h1 .accent-word {
             color: var(--primary);
             position: relative;
         }
-
         .hero h1 .accent-word::after {
             content: '';
             position: absolute;
@@ -219,13 +218,95 @@
             z-index: -1;
             border-radius: 2px;
         }
-
+        .hero-typing {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            min-height: 2rem;
+            font-weight: 500;
+        }
+        .hero-typing .cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1.2em;
+            background: var(--accent);
+            animation: blink 1s step-end infinite;
+            vertical-align: text-bottom;
+            margin-left: 2px;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
         .hero-desc {
-            font-size: 1.15rem;
+            font-size: 1.1rem;
             color: var(--text-secondary);
             max-width: 520px;
             margin-bottom: 2rem;
             line-height: 1.7;
+        }
+        .hero-logo-wrap {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .hero-logo-wrap img {
+            width: 100%;
+            max-width: 520px;
+            height: auto;
+            filter: drop-shadow(0 20px 40px rgba(0,0,0,0.08));
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+        .hero-logo-ring {
+            position: absolute;
+            width: 600px; height: 600px;
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            animation: spin-slow 30s linear infinite;
+            pointer-events: none;
+        }
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* ===== STATS STRIP ===== */
+        .stats-strip {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: var(--bg-alt);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-light);
+        }
+        .stat-item {
+            text-align: center;
+            padding: 0.5rem;
+        }
+        .stat-number {
+            font-family: 'Inter', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--primary);
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+        }
+        .stat-number .suffix {
+            color: var(--accent);
+            font-weight: 700;
+        }
+        .stat-label {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+            font-weight: 500;
+        }
+        @media (max-width: 600px) {
+            .stats-strip { grid-template-columns: repeat(2, 1fr); }
         }
 
         /* ===== DOWNLOAD ZONE ===== */
@@ -239,7 +320,6 @@
             box-shadow: var(--shadow);
             margin-bottom: 1.5rem;
         }
-
         .download-primary {
             display: flex;
             flex-direction: column;
@@ -247,7 +327,6 @@
             gap: 1rem;
             margin-bottom: 1rem;
         }
-
         .btn-download {
             display: inline-flex;
             align-items: center;
@@ -264,31 +343,26 @@
             position: relative;
             overflow: hidden;
         }
-
         .btn-main {
             background: var(--primary);
             color: white;
             box-shadow: 0 4px 16px rgba(26,54,93,0.2);
         }
-
         .btn-main:hover {
             background: var(--primary-light);
             transform: translateY(-2px);
             box-shadow: 0 8px 24px rgba(26,54,93,0.3);
         }
-
         .btn-main.is-disabled {
             opacity: 0.6;
             cursor: not-allowed;
             pointer-events: none;
         }
-
         .download-meta {
             color: var(--text-muted);
             font-size: 0.85rem;
             min-height: 1.4rem;
         }
-
         .download-meta code {
             background: var(--bg-alt);
             padding: 0.2rem 0.5rem;
@@ -297,7 +371,6 @@
             font-size: 0.8rem;
             border: 1px solid var(--border-light);
         }
-
         .download-recommendation {
             display: grid;
             grid-template-columns: 1fr auto;
@@ -310,21 +383,18 @@
             text-align: left;
             border: 1px solid var(--border-light);
         }
-
         .download-recommendation strong {
             display: block;
             font-size: 0.95rem;
             font-weight: 600;
             color: var(--text);
         }
-
         .download-recommendation span {
             display: block;
             color: var(--text-muted);
             font-size: 0.82rem;
             margin-top: 0.2rem;
         }
-
         .download-chip {
             border-radius: 999px;
             background: rgba(26,54,93,0.08);
@@ -335,7 +405,6 @@
             white-space: nowrap;
             border: 1px solid var(--border);
         }
-
         .platform-selector {
             display: flex;
             gap: 0.5rem;
@@ -343,7 +412,6 @@
             flex-wrap: wrap;
             margin-top: 0.75rem;
         }
-
         .platform-btn {
             display: flex;
             align-items: center;
@@ -357,22 +425,18 @@
             cursor: pointer;
             transition: all 0.2s ease;
         }
-
         .platform-btn:hover {
             border-color: var(--primary);
             color: var(--primary);
             background: rgba(26,54,93,0.03);
         }
-
         .platform-btn.active {
             background: rgba(26,54,93,0.08);
             border-color: var(--primary);
             color: var(--primary);
             font-weight: 600;
         }
-
         .platform-btn svg { width: 16px; height: 16px; }
-
         .download-links {
             display: flex;
             justify-content: center;
@@ -380,104 +444,186 @@
             margin-top: 0.75rem;
             flex-wrap: wrap;
         }
-
         .download-links a {
             color: var(--text-muted);
             font-size: 0.85rem;
             text-decoration: none;
             transition: color 0.2s ease;
         }
-
         .download-links a:hover { color: var(--primary); }
 
-        /* ===== PRODUCT PREVIEW (SCREENSHOTS) ===== */
-        .product-preview {
-            width: min(1040px, 100%);
-            margin: 2.25rem auto 0;
+        /* ===== SCREENSHOT SHOWCASE ===== */
+        .screenshot-showcase {
+            padding: 2rem 1.5rem 5rem;
+            position: relative;
+            overflow: hidden;
         }
-
-        .product-preview-grid {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(280px, 0.78fr);
-            gap: 1rem;
-            align-items: stretch;
+        .screenshot-showcase::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 50%;
+            background: linear-gradient(180deg, var(--bg-alt) 0%, transparent 100%);
+            pointer-events: none;
+            z-index: 0;
         }
-
-        .preview-card { margin: 0; }
-
-        .preview-frame {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: clamp(220px, 28vw, 430px);
-            padding: 0.7rem;
-            border-radius: 12px;
-            background: var(--bg-alt);
-            box-shadow: var(--shadow), rgba(0,0,0,0.1) 0px 18px 56px -34px;
-            border: 1px solid var(--border-light);
+        .screenshot-showcase .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
         }
-
-        .preview-frame img {
-            display: block;
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            object-position: center;
-            border-radius: 8px;
-            background: #ffffff;
-        }
-
-        .preview-card figcaption {
-            margin-top: 0.75rem;
-            color: var(--text-muted);
-            font-size: 0.85rem;
+        .screenshot-showcase .section-header {
             text-align: center;
+            max-width: 640px;
+            margin: 0 auto 3rem;
         }
-
-        .hero-logo-wrap {
-            display: flex;
-            justify-content: center;
+        .screenshot-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.35fr 1fr;
+            gap: 1.5rem;
             align-items: center;
+            perspective: 1200px;
+        }
+        .screenshot-card {
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease-out;
+            will-change: transform;
+        }
+        .screenshot-card.hero-shot {
+            transform: scale(1.05);
+            z-index: 2;
+        }
+        .screenshot-card:hover {
+            z-index: 3;
+        }
+        .screenshot-inner {
+            transition: transform 0.15s ease-out, box-shadow 0.3s ease;
+            transform: rotateX(var(--rotateX, 0deg)) rotateY(var(--rotateY, 0deg));
+            border-radius: 14px;
+        }
+        .screenshot-card:hover .screenshot-inner {
+            box-shadow: var(--shadow-float);
+        }
+        .mac-window {
+            background: linear-gradient(180deg, #f0f0f0 0%, #e8e8e8 100%);
+            border-radius: 14px 14px 0 0;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid #d0d0d0;
+            border-bottom: none;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+        }
+        .mac-traffic-lights {
+            display: flex;
+            gap: 8px;
+        }
+        .traffic-light {
+            width: 13px; height: 13px;
+            border-radius: 50%;
+            border: 1px solid rgba(0,0,0,0.06);
+            box-shadow: inset 0 1px 2px rgba(255,255,255,0.4), 0 1px 1px rgba(0,0,0,0.1);
             position: relative;
         }
-
-        .hero-logo-wrap img {
-            width: 100%;
-            max-width: 380px;
-            height: auto;
-            filter: drop-shadow(0 20px 40px rgba(0,0,0,0.08));
-            animation: float 6s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-12px); }
-        }
-
-        .hero-logo-ring {
+        .traffic-light::after {
+            content: '';
             position: absolute;
-            width: 450px; height: 450px;
-            border: 1px solid var(--border);
+            top: 2px; left: 3px;
+            width: 4px; height: 3px;
             border-radius: 50%;
-            animation: spin-slow 30s linear infinite;
-            pointer-events: none;
+            background: rgba(255,255,255,0.5);
+            filter: blur(0.5px);
         }
-
-        @keyframes spin-slow {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+        .traffic-light.red { background: #ff5f57; }
+        .traffic-light.yellow { background: #febc2e; }
+        .traffic-light.green { background: #28c840; }
+        .mac-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #666;
+            margin-left: 0.5rem;
+            letter-spacing: 0.02em;
+        }
+        .mac-content {
+            border-radius: 0 0 14px 14px;
+            overflow: hidden;
+            border: 1px solid #d0d0d0;
+            border-top: none;
+            background: #fff;
+            line-height: 0;
+        }
+        .mac-content img {
+            display: block;
+            width: 100%;
+            height: auto;
+            transition: transform 0.5s ease;
+        }
+        .screenshot-card:hover .mac-content img {
+            transform: scale(1.02);
+        }
+        .screenshot-label {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        .screenshot-card:hover .screenshot-label {
+            color: var(--primary);
+        }
+        .screenshot-shadow {
+            position: absolute;
+            bottom: -20px;
+            left: 10%;
+            right: 10%;
+            height: 40px;
+            background: radial-gradient(ellipse at center, rgba(0,0,0,0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(8px);
+            pointer-events: none;
+            transition: all 0.3s ease;
+            z-index: -1;
+        }
+        .screenshot-card:hover .screenshot-shadow {
+            left: 5%;
+            right: 5%;
+            height: 50px;
+            background: radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, transparent 70%);
+        }
+        .screenshot-frame-simple {
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            background: #fff;
+            line-height: 0;
+            box-shadow: var(--shadow);
+            transition: box-shadow 0.3s ease;
+        }
+        .screenshot-card:hover .screenshot-frame-simple {
+            box-shadow: var(--shadow-float);
+        }
+        .screenshot-frame-simple img {
+            display: block;
+            width: 100%;
+            height: auto;
+            transition: transform 0.5s ease;
+        }
+        .screenshot-card:hover .screenshot-frame-simple img {
+            transform: scale(1.02);
         }
 
         /* ===== SECTIONS COMMON ===== */
         section { padding: 5rem 1.5rem; }
         .container { max-width: 1200px; margin: 0 auto; }
-
         .section-header {
             text-align: center;
             max-width: 640px;
             margin: 0 auto 3.5rem;
         }
-
         .section-label {
             display: inline-flex;
             align-items: center;
@@ -489,7 +635,6 @@
             color: var(--accent);
             margin-bottom: 0.75rem;
         }
-
         .section-title {
             font-family: 'Noto Serif SC', serif;
             font-size: clamp(1.8rem, 4vw, 2.6rem);
@@ -498,7 +643,6 @@
             line-height: 1.3;
             color: var(--text);
         }
-
         .section-desc {
             font-size: 1.05rem;
             color: var(--text-muted);
@@ -512,7 +656,6 @@
             border-bottom: 1px solid var(--border-light);
             padding: 2.5rem 1.5rem;
         }
-
         .models-strip-inner {
             max-width: 1200px;
             margin: 0 auto;
@@ -522,25 +665,21 @@
             gap: 2rem;
             flex-wrap: wrap;
         }
-
         .models-strip-text {
             font-size: 1.1rem;
             font-weight: 600;
             color: var(--text);
         }
-
         .models-strip-text span { color: var(--accent); }
-
         .model-pills {
             display: flex;
             gap: 0.75rem;
             flex-wrap: wrap;
         }
-
         .model-pill {
             display: inline-flex;
             align-items: center;
-            gap: 0.4rem;
+            gap: 0.5rem;
             padding: 0.5rem 1rem;
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -550,35 +689,30 @@
             color: var(--text-secondary);
             transition: all 0.2s ease;
         }
-
         .model-pill:hover {
             border-color: var(--accent);
             color: var(--primary);
             transform: translateY(-1px);
             box-shadow: var(--shadow);
         }
-
         .pill-icon {
-            width: 18px; height: 18px;
+            width: 20px; height: 20px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.7rem;
         }
+        .pill-icon svg { width: 12px; height: 12px; }
 
         /* ===== FEATURES ===== */
         .features { background: var(--bg); }
-
         .features-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 1.5rem;
         }
-
         @media (max-width: 900px) { .features-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 600px) { .features-grid { grid-template-columns: 1fr; } }
-
         .feature-card {
             background: var(--bg-card);
             border: 1px solid var(--border-light);
@@ -588,7 +722,6 @@
             position: relative;
             overflow: hidden;
         }
-
         .feature-card::before {
             content: '';
             position: absolute;
@@ -598,48 +731,43 @@
             opacity: 0;
             transition: opacity 0.3s ease;
         }
-
         .feature-card:hover {
             transform: translateY(-6px);
             box-shadow: var(--shadow-hover);
             border-color: var(--border);
         }
-
         .feature-card:hover::before { opacity: 1; }
-
         .feature-icon-wrap {
             width: 56px; height: 56px;
             border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.6rem;
             margin-bottom: 1.25rem;
             transition: transform 0.3s ease;
         }
-
+        .feature-icon-wrap svg {
+            width: 28px; height: 28px;
+            stroke-width: 1.5;
+        }
         .feature-card:hover .feature-icon-wrap { transform: scale(1.1) rotate(-4deg); }
-
         .feature-card h3 {
             font-size: 1.15rem;
             font-weight: 700;
             margin-bottom: 0.6rem;
             color: var(--text);
         }
-
         .feature-card p {
             font-size: 0.9rem;
             color: var(--text-muted);
             line-height: 1.6;
         }
-
         .feature-tags {
             display: flex;
             flex-wrap: wrap;
             gap: 0.4rem;
             margin-top: 1rem;
         }
-
         .tag {
             font-size: 0.75rem;
             padding: 0.25rem 0.65rem;
@@ -652,16 +780,13 @@
 
         /* ===== CAPABILITIES ===== */
         .capabilities { background: var(--bg-alt); }
-
         .cap-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 1rem;
         }
-
         @media (max-width: 900px) { .cap-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 500px) { .cap-grid { grid-template-columns: 1fr; } }
-
         .cap-card {
             display: flex;
             align-items: flex-start;
@@ -673,13 +798,11 @@
             transition: all 0.25s ease;
             cursor: default;
         }
-
         .cap-card:hover {
             border-color: var(--accent);
             box-shadow: var(--shadow);
             transform: translateY(-2px);
         }
-
         .cap-check {
             width: 22px; height: 22px;
             border-radius: 50%;
@@ -689,18 +812,17 @@
             justify-content: center;
             flex-shrink: 0;
             color: var(--success);
-            font-size: 0.75rem;
-            font-weight: 700;
             margin-top: 1px;
         }
-
+        .cap-check svg {
+            width: 14px; height: 14px;
+        }
         .cap-text {
             font-size: 0.9rem;
             font-weight: 500;
             color: var(--text);
             line-height: 1.5;
         }
-
         .cap-text small {
             display: block;
             color: var(--text-muted);
@@ -711,15 +833,12 @@
 
         /* ===== WHY CHOOSE ===== */
         .why-choose { background: var(--bg); }
-
         .why-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 1.5rem;
         }
-
         @media (max-width: 900px) { .why-grid { grid-template-columns: 1fr; } }
-
         .why-card {
             padding: 2rem;
             background: var(--bg-card);
@@ -727,12 +846,10 @@
             border: 1px solid var(--border-light);
             transition: all 0.3s ease;
         }
-
         .why-card:hover {
             box-shadow: var(--shadow-hover);
             border-color: var(--border);
         }
-
         .why-card h4 {
             font-size: 1.1rem;
             font-weight: 700;
@@ -742,7 +859,11 @@
             align-items: center;
             gap: 0.5rem;
         }
-
+        .why-card h4 svg {
+            width: 22px; height: 22px;
+            flex-shrink: 0;
+            stroke-width: 1.5;
+        }
         .why-card p {
             font-size: 0.9rem;
             color: var(--text-muted);
@@ -751,15 +872,12 @@
 
         /* ===== TESTIMONIALS ===== */
         .testimonials { background: var(--bg-alt); }
-
         .testi-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 1.5rem;
         }
-
         @media (max-width: 900px) { .testi-grid { grid-template-columns: 1fr; } }
-
         .testi-card {
             background: var(--bg-card);
             border-radius: var(--radius);
@@ -768,17 +886,16 @@
             transition: all 0.3s ease;
             position: relative;
         }
-
         .testi-card:hover { box-shadow: var(--shadow); transform: translateY(-3px); }
-
-        .testi-quote {
-            font-size: 2.5rem;
+        .testi-quote-icon {
+            width: 40px; height: 40px;
+            margin-bottom: 0.75rem;
             color: var(--accent);
-            line-height: 1;
-            margin-bottom: 0.5rem;
-            font-family: Georgia, serif;
+            opacity: 0.5;
         }
-
+        .testi-quote-icon svg {
+            width: 100%; height: 100%;
+        }
         .testi-text {
             font-size: 0.95rem;
             color: var(--text-secondary);
@@ -786,13 +903,11 @@
             margin-bottom: 1.25rem;
             font-style: italic;
         }
-
         .testi-author {
             display: flex;
             align-items: center;
             gap: 0.75rem;
         }
-
         .testi-avatar {
             width: 40px; height: 40px;
             border-radius: 50%;
@@ -805,18 +920,15 @@
             font-size: 0.85rem;
             flex-shrink: 0;
         }
-
         .testi-name { font-weight: 700; font-size: 0.9rem; color: var(--text); }
         .testi-role { font-size: 0.8rem; color: var(--text-muted); }
 
         /* ===== FAQ ===== */
         .faq { background: var(--bg); }
-
         .faq-list {
             max-width: 800px;
             margin: 0 auto;
         }
-
         .faq-item {
             border: 1px solid var(--border-light);
             border-radius: var(--radius-sm);
@@ -824,9 +936,7 @@
             overflow: hidden;
             transition: all 0.25s ease;
         }
-
         .faq-item:hover { border-color: var(--border); }
-
         .faq-question {
             display: flex;
             align-items: center;
@@ -839,9 +949,7 @@
             transition: background 0.2s ease;
             user-select: none;
         }
-
         .faq-question:hover { background: var(--bg-alt); }
-
         .faq-question svg {
             width: 20px; height: 20px;
             color: var(--text-muted);
@@ -849,30 +957,24 @@
             flex-shrink: 0;
             margin-left: 0.5rem;
         }
-
         .faq-item.open .faq-question svg { transform: rotate(180deg); color: var(--accent); }
-
         .faq-answer {
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.4s ease, padding 0.4s ease;
             padding: 0 1.5rem;
         }
-
         .faq-item.open .faq-answer {
             max-height: 300px;
             padding-bottom: 1.25rem;
         }
-
         .faq-answer p {
             font-size: 0.9rem;
             color: var(--text-muted);
             line-height: 1.7;
         }
-
         .faq-answer a { color: var(--primary); text-decoration: none; }
         .faq-answer a:hover { text-decoration: underline; }
-
         .faq-answer code {
             display: inline-block;
             background: var(--bg-alt);
@@ -893,30 +995,25 @@
             position: relative;
             overflow: hidden;
         }
-
         .cta::before {
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
             background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }
-
         .cta-inner { position: relative; z-index: 1; }
-
         .cta h2 {
             font-family: 'Noto Serif SC', serif;
             font-size: clamp(1.8rem, 4vw, 2.5rem);
             font-weight: 700;
             margin-bottom: 1rem;
         }
-
         .cta p {
             color: rgba(255,255,255,0.7);
             max-width: 480px;
             margin: 0 auto 1.75rem;
             font-size: 1.05rem;
         }
-
         .btn {
             display: inline-flex;
             align-items: center;
@@ -930,26 +1027,22 @@
             transition: all 0.25s ease;
             border: none;
         }
-
         .btn-cta-primary {
             background: #fff;
             color: var(--primary);
             box-shadow: 0 4px 16px rgba(0,0,0,0.2);
         }
-
         .btn-cta-primary:hover {
             background: var(--accent-light);
             color: var(--text);
             box-shadow: 0 8px 24px rgba(0,0,0,0.3);
             transform: translateY(-2px);
         }
-
         .btn-cta-secondary {
             background: transparent;
             color: rgba(255,255,255,0.9);
             border: 1px solid rgba(255,255,255,0.3);
         }
-
         .btn-cta-secondary:hover {
             background: rgba(255,255,255,0.1);
             border-color: rgba(255,255,255,0.5);
@@ -963,9 +1056,7 @@
             padding: 3rem 1.5rem 2rem;
             text-align: center;
         }
-
         .footer-inner { max-width: 1200px; margin: 0 auto; }
-
         .footer-brand {
             display: inline-flex;
             align-items: center;
@@ -976,9 +1067,7 @@
             text-decoration: none;
             margin-bottom: 1rem;
         }
-
         .footer-brand img { height: 28px; width: auto; }
-
         .footer-links {
             display: flex;
             gap: 1.5rem;
@@ -986,16 +1075,13 @@
             margin-bottom: 1.5rem;
             flex-wrap: wrap;
         }
-
         .footer-links a {
             color: rgba(255,255,255,0.5);
             text-decoration: none;
             font-size: 0.85rem;
             transition: color 0.2s ease;
         }
-
         .footer-links a:hover { color: var(--accent-light); }
-
         .footer-copy {
             font-size: 0.8rem;
             color: rgba(255,255,255,0.35);
@@ -1008,16 +1094,16 @@
             transform: translateY(30px);
             transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
         }
-
         .fade-up.visible {
             opacity: 1;
             transform: translateY(0);
         }
-
         .delay-1 { transition-delay: 0.1s; }
         .delay-2 { transition-delay: 0.2s; }
         .delay-3 { transition-delay: 0.3s; }
         .delay-4 { transition-delay: 0.4s; }
+        .delay-5 { transition-delay: 0.5s; }
+        .delay-6 { transition-delay: 0.6s; }
 
         /* ===== SCROLLBAR ===== */
         ::-webkit-scrollbar { width: 8px; }
@@ -1032,20 +1118,182 @@
             .hero h1 { font-size: 2.2rem; }
             .hero-desc { margin-left: auto; margin-right: auto; }
             .hero-logo-wrap { order: -1; }
-            .hero-logo-wrap img { max-width: 260px; }
+            .hero-logo-wrap img { max-width: 320px; }
             .hero-logo-ring { display: none; }
-            .product-preview-grid { grid-template-columns: 1fr; }
+            .stats-strip { grid-template-columns: repeat(2, 1fr); }
+            .screenshot-grid { grid-template-columns: 1fr; }
+            .screenshot-card.hero-shot { transform: scale(1); }
             .download-recommendation { grid-template-columns: 1fr; text-align: center; }
             .features-grid { grid-template-columns: 1fr; }
             .cap-grid { grid-template-columns: 1fr; }
             .why-grid { grid-template-columns: 1fr; }
             .testi-grid { grid-template-columns: 1fr; }
             .models-strip-inner { flex-direction: column; text-align: center; }
+            .hero-typing { justify-content: center; display: flex; }
         }
+        @media (max-width: 500px) {
+            .stats-strip { grid-template-columns: 1fr; }
+        }
+        /* ===== LOADER ===== */
+        .page-loader {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg); z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+        .page-loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .loader-ring {
+            width: 48px; height: 48px;
+            border: 3px solid var(--border-light);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: loader-spin 0.8s linear infinite;
+        }
+        @keyframes loader-spin { to { transform: rotate(360deg); } }
+
+        /* ===== PROGRESS BAR ===== */
+        #scroll-progress {
+            position: fixed; top: 0; left: 0; height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
+            z-index: 10000;
+            width: 0%; transition: width 0.1s linear;
+        }
+
+        /* ===== PARTICLE CANVAS ===== */
+        #particle-canvas {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 0; opacity: 0.6;
+        }
+
+        /* ===== MAGNETIC BUTTON ===== */
+        .magnetic { transition: transform 0.15s ease-out; }
+
+        /* ===== HERO ENHANCEMENTS ===== */
+        .hero-accent-glow {
+            position: absolute; width: 700px; height: 700px;
+            border-radius: 50%; background: radial-gradient(circle, var(--accent-glow) 0%, transparent 60%);
+            pointer-events: none; z-index: 0; filter: blur(80px);
+            transition: left 0.4s ease, top 0.4s ease;
+        }
+        .hero h1 .accent-word::after {
+            height: 10px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
+            opacity: 0.25;
+        }
+
+        /* ===== FEATURE CARD GLOW ===== */
+        .feature-card::after {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: var(--radius);
+            background: radial-gradient(ellipse at 50% 0%, var(--accent-glow) 0%, transparent 60%);
+            opacity: 0; transition: opacity 0.35s ease;
+            pointer-events: none; z-index: -1;
+        }
+        .feature-card:hover::after { opacity: 1; }
+
+        /* ===== FAQ SMOOTH ===== */
+        .faq-item {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .faq-item.open {
+            box-shadow: var(--shadow);
+            border-color: var(--accent);
+            background: var(--bg-card);
+        }
+        .faq-answer {
+            transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), padding 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* ===== CTA ANIMATED BG ===== */
+        .cta {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 25%, #0f172a 50%, #1e293b 75%, #0f172a 100%);
+            background-size: 400% 400%;
+            animation: cta-gradient 15s ease infinite;
+        }
+        @keyframes cta-gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* ===== SCREENSHOT SHOWCASE ===== */
+        .screenshot-showcase {
+            background: linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
+            border-top: 1px solid var(--border-light);
+            border-bottom: 1px solid var(--border-light);
+            padding: 4rem 1.5rem;
+            overflow: hidden;
+        }
+        .macbook-frame {
+            background: #1a1a1a;
+            border-radius: 16px 16px 0 0;
+            padding: 10px 10px 0;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.25), 0 10px 30px rgba(0,0,0,0.15);
+            position: relative;
+        }
+        .macbook-lights {
+            display: flex; gap: 6px; padding: 0 0 10px 6px;
+        }
+        .macbook-lights span {
+            width: 10px; height: 10px; border-radius: 50%;
+        }
+        .ml-red { background: #ff5f57; }
+        .ml-yellow { background: #febc2e; }
+        .ml-green { background: #28c840; }
+        .macbook-base {
+            height: 16px;
+            background: linear-gradient(180deg, #d1d5db 0%, #9ca3af 40%, #6b7280 100%);
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            position: relative;
+        }
+        .macbook-base::after {
+            content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            width: 80px; height: 4px; background: rgba(0,0,0,0.15); border-radius: 0 0 4px 4px;
+        }
+        .macbook-content {
+            background: #fff; border-radius: 4px 4px 0 0; overflow: hidden;
+            line-height: 0;
+        }
+        .macbook-content img {
+            width: 100%; height: auto; display: block;
+        }
+        .screenshot-carousel {
+            display: flex; gap: 2rem; justify-content: center;
+            align-items: flex-end; flex-wrap: wrap;
+        }
+        .screenshot-item {
+            flex: 0 1 auto;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
+        }
+        .screenshot-item.hero-shot { transform: scale(1.08); z-index: 2; }
+        .screenshot-item.hero-shot:hover { transform: scale(1.12); }
+        .screenshot-item.side-shot { transform: scale(0.92); opacity: 0.85; }
+        .screenshot-item.side-shot:hover { transform: scale(0.96); opacity: 1; }
+        .screenshot-label {
+            text-align: center; margin-top: 1rem;
+            font-size: 0.85rem; color: var(--text-muted); font-weight: 500;
+        }
+
+        /* ===== TESTIMONIALS CAROUSEL ===== */
+        .testi-wrapper { position: relative; }
+        .testi-dots {
+            display: flex; gap: 0.5rem; justify-content: center; margin-top: 2rem;
+        }
+        .testi-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--border); transition: all 0.3s ease; cursor: pointer;
+        }
+        .testi-dot.active { background: var(--accent); width: 24px; border-radius: 4px; }
+
+        /* ===== BUTTON MAGNETIC ===== */
+        .btn-magnetic { position: relative; display: inline-flex; }
     </style>
 </head>
 <body>
-
+    <div class="page-loader" id="pageLoader"><div class="loader-ring"></div></div>
+    <div id="scroll-progress"></div>
     <!-- NAV -->
     <nav id="navbar">
         <div class="nav-inner">
@@ -1058,7 +1306,7 @@
                 <a href="#capabilities">能力</a>
                 <a href="#why">优势</a>
                 <a href="#faq">FAQ</a>
-                <a href="https://github.com/sunyifeisb-art/legalwork" class="nav-cta" target="_blank">
+                <a href="https://github.com/sunyifeisb-art/legalwork" class="nav-cta" target="_blank" rel="noopener">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
                     GitHub
                 </a>
@@ -1067,7 +1315,9 @@
     </nav>
 
     <!-- HERO -->
-    <section class="hero">
+    <section class="hero" id="hero">
+        <div class="hero-accent-glow" id="heroGlow"></div>
+        <canvas id="particle-canvas"></canvas>
         <div class="hero-inner">
             <div class="hero-text">
                 <div class="hero-badge fade-up">
@@ -1075,14 +1325,17 @@
                     开源法律 AI 工作台 v0.1.0
                 </div>
                 <h1 class="fade-up delay-1">LegalWork<br><span class="accent-word">法律人工智能工作台</span></h1>
-                <p class="hero-desc fade-up delay-2">
+                <div class="hero-typing fade-up delay-2">
+                    <span id="typeText"></span><span class="cursor"></span>
+                </div>
+                <p class="hero-desc fade-up delay-3">
                     面向法律专业人士的 <strong>AI 全流程赋能平台</strong>。70+ 法律 AI 技能、智能 OCR 识别、文件脱敏、案件管理，让法律工作更高效、更专业、更安全。
                 </p>
 
                 <!-- DOWNLOAD ZONE -->
-                <div class="download-zone fade-up delay-3">
+                <div class="download-zone fade-up delay-4">
                     <div class="download-primary">
-                        <a class="btn-download btn-main" id="mainDownloadBtn" href="https://github.com/sunyifeisb-art/legalwork/releases/latest" rel="noopener">
+                        <a class="btn-download btn-main magnetic" id="mainDownloadBtn" href="https://github.com/sunyifeisb-art/legalwork/releases/latest" rel="noopener">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                 <polyline points="7 10 12 15 17 10"></polyline>
@@ -1134,27 +1387,77 @@
                     </div>
                 </div>
 
-                <!-- SCREENSHOTS -->
-                <div class="product-preview fade-up delay-4" aria-label="LegalWork 产品界面预览">
-                    <div class="product-preview-grid">
-                        <figure class="preview-card">
-                            <div class="preview-frame">
-                                <img src="legalwork-app-screenshot.png" alt="LegalWork 桌面端工作台界面截图" width="2558" height="1672" loading="eager" decoding="async">
-                            </div>
-                            <figcaption>主工作台：会话、项目、法律调研、文书写作、知识库与插件统一在一个界面中。</figcaption>
-                        </figure>
-                        <figure class="preview-card">
-                            <div class="preview-frame">
-                                <img src="legalwork-settings-screenshot.png" alt="LegalWork 设置界面截图" width="1892" height="1658" loading="lazy" decoding="async">
-                            </div>
-                            <figcaption>设置中心：统一管理模型归属、API Key、服务地址、语言、主题和首次引导。</figcaption>
-                        </figure>
+                <!-- STATS -->
+                <div class="stats-strip fade-up delay-5">
+                    <div class="stat-item">
+                        <div class="stat-number" data-target="70" data-suffix="+">0<span class="suffix">+</span></div>
+                        <div class="stat-label">法律 AI 技能</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" data-target="3" data-suffix="">0</div>
+                        <div class="stat-label">智能处理引擎</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" data-target="0" data-suffix="∞" data-infinite="true">∞</div>
+                        <div class="stat-label">扩展可能</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" data-target="1" data-suffix="">0</div>
+                        <div class="stat-label">统一平台</div>
                     </div>
                 </div>
             </div>
-            <div class="hero-logo-wrap fade-up delay-2">
+            <div class="hero-logo-wrap fade-up delay-3">
                 <div class="hero-logo-ring"></div>
                 <img src="legalwork-logo.png" alt="LegalWork Logo">
+            </div>
+        </div>
+    </section>
+
+    <!-- SCREENSHOT SHOWCASE -->
+    <section class="screenshot-showcase" id="screenshots">
+        <div class="container">
+            <div class="section-header fade-up">
+                <div class="section-label">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    产品界面
+                </div>
+                <h2 class="section-title">直观、专业、强大</h2>
+                <p class="section-desc">现代化桌面端界面，将法律 AI 能力无缝融入日常工作流。</p>
+            </div>
+            <div class="screenshot-grid">
+                <div class="screenshot-card fade-up" data-tilt>
+                    <div class="screenshot-inner">
+                        <div class="screenshot-frame-simple">
+                            <img src="legalwork-app-screenshot.png" alt="LegalWork 桌面端工作台界面截图" width="2558" height="1672" loading="lazy" decoding="async" class="parallax-img">
+                        </div>
+                        <div class="screenshot-shadow"></div>
+                        <div class="screenshot-label">主工作台 · 会话与项目管理</div>
+                    </div>
+                </div>
+                <div class="screenshot-card hero-shot fade-up delay-1" data-tilt>
+                    <div class="macbook-frame">
+                        <div class="macbook-lights">
+                            <span class="ml-red"></span>
+                            <span class="ml-yellow"></span>
+                            <span class="ml-green"></span>
+                        </div>
+                        <div class="macbook-content">
+                            <img src="legalwork-app-screenshot-new.png" alt="LegalWork 新界面截图" width="2532" height="1674" loading="eager" decoding="async" class="parallax-img">
+                        </div>
+                    </div>
+                    <div class="macbook-base"></div>
+                    <div class="screenshot-label">全新工作台 · 法律调研与技能引擎</div>
+                </div>
+                <div class="screenshot-card fade-up delay-2" data-tilt>
+                    <div class="screenshot-inner">
+                        <div class="screenshot-frame-simple">
+                            <img src="legalwork-settings-screenshot.png" alt="LegalWork 设置界面截图" width="1892" height="1658" loading="lazy" decoding="async" class="parallax-img">
+                        </div>
+                        <div class="screenshot-shadow"></div>
+                        <div class="screenshot-label">设置中心 · 模型与系统配置</div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -1164,12 +1467,36 @@
         <div class="models-strip-inner">
             <div class="models-strip-text">70+ 法律 AI 技能，<span>开箱即用</span></div>
             <div class="model-pills">
-                <div class="model-pill"><span class="pill-icon" style="background:#e3f2fd;color:#1565c0;">⚖</span> 案情分析</div>
-                <div class="model-pill"><span class="pill-icon" style="background:#e8f5e9;color:#2e7d32;">📄</span> 文书起草</div>
-                <div class="model-pill"><span class="pill-icon" style="background:#fff3e0;color:#e65100;">🔍</span> 法律检索</div>
-                <div class="model-pill"><span class="pill-icon" style="background:#fce4ec;color:#c2185b;">🔒</span> 文件脱敏</div>
-                <div class="model-pill"><span class="pill-icon" style="background:#f3e5f5;color:#7b1fa2;">🧠</span> 裁判预测</div>
-                <div class="model-pill"><span class="pill-icon" style="background:#e0f2f1;color:#00695c;">📚</span> 合规审查</div>
+                <div class="model-pill">
+                    <span class="pill-icon" style="background:#e3f2fd;color:#1565c0;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    </span> 案情分析
+                </div>
+                <div class="model-pill">
+                    <span class="pill-icon" style="background:#e8f5e9;color:#2e7d32;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    </span> 文书起草
+                </div>
+                <div class="model-pill">
+                    <span class="pill-icon" style="background:#fff3e0;color:#e65100;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    </span> 法律检索
+                </div>
+                <div class="model-pill">
+                    <span class="pill-icon" style="background:#fce4ec;color:#c2185b;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    </span> 文件脱敏
+                </div>
+                <div class="model-pill">
+                    <span class="pill-icon" style="background:#f3e5f5;color:#7b1fa2;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 6v6l4 2"/></svg>
+                    </span> 裁判预测
+                </div>
+                <div class="model-pill">
+                    <span class="pill-icon" style="background:#e0f2f1;color:#00695c;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    </span> 合规审查
+                </div>
             </div>
         </div>
     </section>
@@ -1178,13 +1505,18 @@
     <section class="features" id="features">
         <div class="container">
             <div class="section-header fade-up">
-                <div class="section-label">核心功能</div>
+                <div class="section-label">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                    核心功能
+                </div>
                 <h2 class="section-title">全栈法律 AI 能力矩阵</h2>
                 <p class="section-desc">从文档识别到案件分析，从文书起草到裁判预测，覆盖法律工作的每一个关键环节。</p>
             </div>
             <div class="features-grid">
                 <div class="feature-card fade-up">
-                    <div class="feature-icon-wrap" style="background: rgba(26,54,93,0.08);">🧠</div>
+                    <div class="feature-icon-wrap" style="background: rgba(26,54,93,0.08); color: var(--primary);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2z"/></svg>
+                    </div>
                     <h3>法律 AI 技能引擎</h3>
                     <p>70 项标准化法律 AI 技能，涵盖案情分析、证据评估、裁判预测、文书起草、合规审查等全流程。</p>
                     <div class="feature-tags">
@@ -1194,7 +1526,9 @@
                     </div>
                 </div>
                 <div class="feature-card fade-up delay-1">
-                    <div class="feature-icon-wrap" style="background: rgba(56,161,105,0.08);">📄</div>
+                    <div class="feature-icon-wrap" style="background: rgba(56,161,105,0.08); color: var(--success);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    </div>
                     <h3>智能 OCR 识别</h3>
                     <p>PaddleOCR + Tesseract 双引擎，支持 PDF/图片/Word 扫描件自动识别，坐标级精确输出。</p>
                     <div class="feature-tags">
@@ -1204,7 +1538,9 @@
                     </div>
                 </div>
                 <div class="feature-card fade-up delay-2">
-                    <div class="feature-icon-wrap" style="background: rgba(229,62,62,0.08);">🔒</div>
+                    <div class="feature-icon-wrap" style="background: rgba(229,62,62,0.08); color: var(--danger);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    </div>
                     <h3>文件智能脱敏</h3>
                     <p>自动识别身份证号、手机号、银行卡号等敏感实体，三种脱敏策略，PDF 坐标级精确涂黑。</p>
                     <div class="feature-tags">
@@ -1214,7 +1550,9 @@
                     </div>
                 </div>
                 <div class="feature-card fade-up">
-                    <div class="feature-icon-wrap" style="background: rgba(201,162,39,0.12);">⚖️</div>
+                    <div class="feature-icon-wrap" style="background: rgba(201,162,39,0.12); color: var(--accent);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 4 0v2"/><path d="M12 13v4"/><path d="M12 17h.01"/></svg>
+                    </div>
                     <h3>案件管理系统</h3>
                     <p>AI 案件编排、数据存储、裁判预测、证据链分析、时间线生成，全流程案件管理。</p>
                     <div class="feature-tags">
@@ -1224,7 +1562,9 @@
                     </div>
                 </div>
                 <div class="feature-card fade-up delay-1">
-                    <div class="feature-icon-wrap" style="background: rgba(139,92,246,0.08);">📚</div>
+                    <div class="feature-icon-wrap" style="background: rgba(139,92,246,0.08); color: #8b5cf6;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                    </div>
                     <h3>实战经验知识库</h3>
                     <p>收录资深律师实战经验，按主题结构化存储，涵盖执业理念、工作方法、案件准备、团队管理。</p>
                     <div class="feature-tags">
@@ -1234,7 +1574,9 @@
                     </div>
                 </div>
                 <div class="feature-card fade-up delay-2">
-                    <div class="feature-icon-wrap" style="background: rgba(59,130,246,0.08);">🖥️</div>
+                    <div class="feature-icon-wrap" style="background: rgba(59,130,246,0.08); color: #3b82f6;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                    </div>
                     <h3>桌面端应用</h3>
                     <p>基于 Electron 的本地 AI Agent 运行时，支持 DeepSeek 等模型集成、MCP 协议、长期记忆。</p>
                     <div class="feature-tags">
@@ -1251,23 +1593,86 @@
     <section class="capabilities" id="capabilities">
         <div class="container">
             <div class="section-header fade-up">
-                <div class="section-label">能力清单</div>
+                <div class="section-label">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    能力清单
+                </div>
                 <h2 class="section-title">70 项法律 AI 技能一览</h2>
                 <p class="section-desc">标准化 intake → 处理 → 输出流水线，每一项技能都经过法律实务验证。</p>
             </div>
             <div class="cap-grid">
-                <div class="cap-card fade-up"><div class="cap-check">✓</div><div class="cap-text">法律调研<small>系统性检索、法规分析、类案研究</small></div></div>
-                <div class="cap-card fade-up delay-1"><div class="cap-check">✓</div><div class="cap-text">案情综合分析<small>事实抽取、要素提取、结构化分析</small></div></div>
-                <div class="cap-card fade-up delay-2"><div class="cap-check">✓</div><div class="cap-text">证据评估<small>三性认证、证明力评估、证据链构建</small></div></div>
-                <div class="cap-card fade-up delay-3"><div class="cap-check">✓</div><div class="cap-text">裁判预测<small>裁判结果预测、风险评估、争议焦点识别</small></div></div>
-                <div class="cap-card fade-up"><div class="cap-check">✓</div><div class="cap-text">文书起草<small>判决书、备忘录、评估报告、会议纪要</small></div></div>
-                <div class="cap-card fade-up delay-1"><div class="cap-check">✓</div><div class="cap-text">法律检索<small>法条检索、案例检索、来源验证</small></div></div>
-                <div class="cap-card fade-up delay-2"><div class="cap-check">✓</div><div class="cap-text">合规审查<small>合同风险、尽职调查、数据合规</small></div></div>
-                <div class="cap-card fade-up delay-3"><div class="cap-check">✓</div><div class="cap-text">法律推理<small>14 种推理方法：演绎、归纳、类比、溯因等</small></div></div>
-                <div class="cap-card fade-up"><div class="cap-check">✓</div><div class="cap-text">文书格式化<small>法律文档格式规范化、自动排版</small></div></div>
-                <div class="cap-card fade-up delay-1"><div class="cap-check">✓</div><div class="cap-text">案件生命周期<small>案件规划、时间线、进度管理</small></div></div>
-                <div class="cap-card fade-up delay-2"><div class="cap-check">✓</div><div class="cap-text">法规知识库<small>国家法律、行业标准、地方规范</small></div></div>
-                <div class="cap-card fade-up delay-3"><div class="cap-check">✓</div><div class="cap-text">去 AI 痕迹<small>法学论文润色、降低 AI 检测率</small></div></div>
+                <div class="cap-card fade-up">
+                    <div class="cap-check">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div class="cap-text">法律调研<small>系统性检索、法规分析、类案研究</small></div>
+                </div>
+                <div class="cap-card fade-up delay-1">
+                    <div class="cap-check">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div class="cap-text">案情综合分析<small>事实抽取、要素提取、结构化分析</small></div>
+                </div>
+                <div class="cap-card fade-up delay-2">
+                    <div class="cap-check">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div class="cap-text">证据评估<small>三性认证、证明力评估、证据链构建</small></div>
+                </div>
+                <div class="cap-card fade-up delay-3">
+                    <div class="cap-check">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div class="cap-text">裁判预测<small>裁判结果预测、风险评估、争议焦点识别</small></div>
+                </div>
+                <div class="cap-card fade-up">
+                    <div class="cap-check">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div class="cap-text">文书起草<small>判决书、备忘录、评估报告、会议纪要</small></div>
+                </div>
+                <div class="cap-card fade-up delay-1">
+                    <div class="cap-check">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div class="cap-text">法律检索<small>法条检索、案例检索、来源验证</small></div>
+                </div>
+                <div class="cap-card fade-up delay-2">
+                    <div class="cap-check">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div class="cap-text">合规审查<small>合同风险、尽职调查、数据合规</small></div>
+                </div>
+                <div class="cap-card fade-up delay-3">
+                    <div class="cap-check">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div class="cap-text">法律推理<small>14 种推理方法：演绎、归纳、类比、溯因等</small></div>
+                </div>
+                <div class="cap-card fade-up">
+                    <div class="cap-check">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div class="cap-text">文书格式化<small>法律文档格式规范化、自动排版</small></div>
+                </div>
+                <div class="cap-card fade-up delay-1">
+                    <div class="cap-check">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div class="cap-text">案件生命周期<small>案件规划、时间线、进度管理</small></div>
+                </div>
+                <div class="cap-card fade-up delay-2">
+                    <div class="cap-check">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div class="cap-text">法规知识库<small>国家法律、行业标准、地方规范</small></div>
+                </div>
+                <div class="cap-card fade-up delay-3">
+                    <div class="cap-check">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div class="cap-text">去 AI 痕迹<small>法学论文润色、降低 AI 检测率</small></div>
+                </div>
             </div>
         </div>
     </section>
@@ -1276,33 +1681,54 @@
     <section class="why-choose" id="why">
         <div class="container">
             <div class="section-header fade-up">
-                <div class="section-label">为什么选择</div>
+                <div class="section-label">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    为什么选择
+                </div>
                 <h2 class="section-title">LegalWork 的独特优势</h2>
                 <p class="section-desc">专为法律行业设计的 AI 工作台，不同于通用 AI 工具，每一项功能都源自法律实务需求。</p>
             </div>
             <div class="why-grid">
                 <div class="why-card fade-up">
-                    <h4>⚖️ 法律专业深度</h4>
+                    <h4>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 4 0v2"/><path d="M12 13v4"/><path d="M12 17h.01"/></svg>
+                        法律专业深度
+                    </h4>
                     <p>70 项技能覆盖法律工作全流程，从案情分析到裁判预测，从文书起草到合规审查，不是通用 AI 的泛泛而谈。</p>
                 </div>
                 <div class="why-card fade-up delay-1">
-                    <h4>🔒 本地优先隐私</h4>
+                    <h4>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+                        本地优先隐私
+                    </h4>
                     <p>桌面端本地运行，文档数据不上传云端。敏感案件材料、客户信息完全由你掌控，符合法律行业保密要求。</p>
                 </div>
                 <div class="why-card fade-up delay-2">
-                    <h4>📚 实战经验驱动</h4>
+                    <h4>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                        实战经验驱动
+                    </h4>
                     <p>知识库收录资深律师的实战经验总结，AI 推理融入行业最佳实践，输出结果更贴近法律实务标准。</p>
                 </div>
                 <div class="why-card fade-up">
-                    <h4>📄 文档处理能力</h4>
+                    <h4>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        文档处理能力
+                    </h4>
                     <p>OCR 双引擎 + 智能脱敏 + 语义分块，支持扫描件识别、敏感信息处理、长文档分析，法律文档处理一站式解决。</p>
                 </div>
                 <div class="why-card fade-up delay-1">
-                    <h4>🧠 模型自由切换</h4>
+                    <h4>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                        模型自由切换
+                    </h4>
                     <p>支持 DeepSeek、OpenAI 兼容 API 等多种模型，根据任务需求自由切换，推理成本与质量灵活平衡。</p>
                 </div>
                 <div class="why-card fade-up delay-2">
-                    <h4>🛠️ 开源可扩展</h4>
+                    <h4>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                        开源可扩展
+                    </h4>
                     <p>基于 MIT 许可证开源，支持自定义技能开发、MCP 工具服务器扩展，打造属于你的法律 AI 工作流。</p>
                 </div>
             </div>
@@ -1313,13 +1739,18 @@
     <section class="testimonials">
         <div class="container">
             <div class="section-header fade-up">
-                <div class="section-label">用户评价</div>
+                <div class="section-label">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                    用户评价
+                </div>
                 <h2 class="section-title">法律从业者怎么说</h2>
                 <p class="section-desc">来自法律科技社区的真实反馈，看看同行如何评价 LegalWork。</p>
             </div>
             <div class="testi-grid">
                 <div class="testi-card fade-up">
-                    <div class="testi-quote">"</div>
+                    <div class="testi-quote-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
+                    </div>
                     <p class="testi-text">案情分析功能帮我快速梳理了复杂的建设工程纠纷证据链，原本需要一天的人工整理，现在半小时就拿到了结构化的要素分析。</p>
                     <div class="testi-author">
                         <div class="testi-avatar">李</div>
@@ -1330,7 +1761,9 @@
                     </div>
                 </div>
                 <div class="testi-card fade-up delay-1">
-                    <div class="testi-quote">"</div>
+                    <div class="testi-quote-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
+                    </div>
                     <p class="testi-text">文件脱敏功能太实用了。处理客户材料时一键脱敏，PDF 坐标级涂黑，不用担心敏感信息泄露，完全符合律所的合规要求。</p>
                     <div class="testi-author">
                         <div class="testi-avatar">王</div>
@@ -1341,7 +1774,9 @@
                     </div>
                 </div>
                 <div class="testi-card fade-up delay-2">
-                    <div class="testi-quote">"</div>
+                    <div class="testi-quote-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
+                    </div>
                     <p class="testi-text">法律调研技能的方法论体系非常专业，类案检索和法规汇编的逻辑和我平时做调研的思路一致，输出结果可以直接用在代理意见里。</p>
                     <div class="testi-author">
                         <div class="testi-avatar">张</div>
@@ -1352,6 +1787,11 @@
                     </div>
                 </div>
             </div>
+            <div class="testi-dots" id="testiDots">
+                <div class="testi-dot active" data-index="0"></div>
+                <div class="testi-dot" data-index="1"></div>
+                <div class="testi-dot" data-index="2"></div>
+            </div>
         </div>
     </section>
 
@@ -1359,12 +1799,15 @@
     <section class="faq" id="faq">
         <div class="container">
             <div class="section-header fade-up">
-                <div class="section-label">常见问题</div>
+                <div class="section-label">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    常见问题
+                </div>
                 <h2 class="section-title">FAQ</h2>
                 <p class="section-desc">关于 LegalWork 的常见疑问，快速解答你的困惑。</p>
             </div>
             <div class="faq-list">
-                <div class="faq-item fade-up">
+                <div class="faq-item fade-up open">
                     <div class="faq-question" onclick="toggleFaq(this)">
                         <span>LegalWork 是什么？适合谁使用？</span>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -1406,7 +1849,7 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </div>
                     <div class="faq-answer">
-                        <p>命令行方式：安装 Python 依赖后，使用 <code>python3 run_skill.py &lt;技能名&gt; &lt;文件&gt;</code> 调用技能。桌面端方式：下载对应系统的安装包，启动后即可获得完整的可视化 AI Agent 工作体验。详见 <a href="https://github.com/sunyifeisb-art/legalwork" target="_blank">GitHub 文档</a>。</p>
+                        <p>命令行方式：安装 Python 依赖后，使用 <code>python3 run_skill.py &lt;技能名&gt; &lt;文件&gt;</code> 调用技能。桌面端方式：下载对应系统的安装包，启动后即可获得完整的可视化 AI Agent 工作体验。详见 <a href="https://github.com/sunyifeisb-art/legalwork" target="_blank" rel="noopener">GitHub 文档</a>。</p>
                     </div>
                 </div>
                 <div class="faq-item fade-up delay-2">
@@ -1428,11 +1871,11 @@
             <h2 class="fade-up">开始你的法律 AI 之旅</h2>
             <p class="fade-up delay-1">加入开源社区，与法律科技同行一起探索 AI 赋能的无限可能。</p>
             <div class="fade-up delay-2" style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
-                <a href="https://github.com/sunyifeisb-art/legalwork" class="btn btn-cta-primary" target="_blank">
+                <a href="https://github.com/sunyifeisb-art/legalwork" class="btn btn-cta-primary" target="_blank" rel="noopener">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
                     访问 GitHub 仓库
                 </a>
-                <a href="https://github.com/sunyifeisb-art/legalwork/releases" class="btn btn-cta-secondary" target="_blank">
+                <a href="https://github.com/sunyifeisb-art/legalwork/releases" class="btn btn-cta-secondary" target="_blank" rel="noopener">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                     下载最新版本
                 </a>
@@ -1448,10 +1891,10 @@
                 LegalWork
             </a>
             <div class="footer-links">
-                <a href="https://github.com/sunyifeisb-art/legalwork" target="_blank">GitHub</a>
-                <a href="https://github.com/sunyifeisb-art/legalwork/releases" target="_blank">Releases</a>
-                <a href="https://github.com/sunyifeisb-art/legalwork/blob/main/README.md" target="_blank">文档</a>
-                <a href="https://github.com/sunyifeisb-art/legalwork/issues" target="_blank">Issues</a>
+                <a href="https://github.com/sunyifeisb-art/legalwork" target="_blank" rel="noopener">GitHub</a>
+                <a href="https://github.com/sunyifeisb-art/legalwork/releases" target="_blank" rel="noopener">Releases</a>
+                <a href="https://github.com/sunyifeisb-art/legalwork/blob/main/README.md" target="_blank" rel="noopener">文档</a>
+                <a href="https://github.com/sunyifeisb-art/legalwork/issues" target="_blank" rel="noopener">Issues</a>
             </div>
             <div class="footer-copy">
                 LegalWork — 法律人工智能工作台<br>
@@ -1622,10 +2065,12 @@
             if (!wasOpen) item.classList.add('open');
         }
 
-        // ===== SCROLL ANIMATION =====
+        // ===== SCROLL ANIMATION (IntersectionObserver) =====
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
-                if (entry.isIntersecting) entry.target.classList.add('visible');
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
             });
         }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
 
@@ -1638,6 +2083,278 @@
             else navbar.classList.remove('scrolled');
         });
 
+        // ===== 3D TILT EFFECT ON SCREENSHOTS =====
+        function initTilt() {
+            document.querySelectorAll('[data-tilt]').forEach(card => {
+                const inner = card.querySelector('.screenshot-inner');
+                if (!inner) return;
+
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    const rotateX = ((y - centerY) / centerY) * -8;
+                    const rotateY = ((x - centerX) / centerX) * 8;
+                    inner.style.setProperty('--rotateX', `${rotateX}deg`);
+                    inner.style.setProperty('--rotateY', `${rotateY}deg`);
+                });
+
+                card.addEventListener('mouseleave', () => {
+                    inner.style.setProperty('--rotateX', '0deg');
+                    inner.style.setProperty('--rotateY', '0deg');
+                });
+            });
+        }
+        initTilt();
+
+        // ===== MOUSE-FOLLOWING GRADIENT GLOW =====
+        const heroGlow = document.getElementById('heroGlow');
+        const heroSection = document.querySelector('.hero');
+        if (heroGlow && heroSection) {
+            heroSection.addEventListener('mousemove', (e) => {
+                const rect = heroSection.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                heroGlow.style.left = `${x}px`;
+                heroGlow.style.top = `${y}px`;
+            });
+        }
+
+        // ===== COUNTER ANIMATION =====
+        function animateCounters() {
+            const counters = document.querySelectorAll('.stat-number');
+            const counterObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && !entry.target.dataset.counted) {
+                        entry.target.dataset.counted = 'true';
+                        const target = parseInt(entry.target.dataset.target) || 0;
+                        const suffix = entry.target.dataset.suffix || '';
+                        const infinite = entry.target.dataset.infinite === 'true';
+                        const duration = 2000;
+                        const startTime = performance.now();
+
+                        function update(currentTime) {
+                            const elapsed = currentTime - startTime;
+                            const progress = Math.min(elapsed / duration, 1);
+                            const easeOut = 1 - Math.pow(1 - progress, 3);
+                            if (infinite) {
+                                entry.target.innerHTML = `<span class="suffix">${suffix}</span>`;
+                                return;
+                            }
+                            const current = Math.floor(target * easeOut);
+                            entry.target.innerHTML = `${current}<span class="suffix">${suffix}</span>`;
+                            if (progress < 1) requestAnimationFrame(update);
+                        }
+                        requestAnimationFrame(update);
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            counters.forEach(c => counterObserver.observe(c));
+        }
+        animateCounters();
+
+        // ===== TYPING ANIMATION =====
+        function initTyping() {
+            const typeText = document.getElementById('typeText');
+            if (!typeText) return;
+            const phrases = ['AI 全流程赋能平台', '70+ 法律技能引擎', '智能文档处理专家', '本地优先 · 隐私安全', '法律人的 AI 副驾驶'];
+            let phraseIndex = 0;
+            let charIndex = 0;
+            let isDeleting = false;
+            let typeSpeed = 80;
+
+            function type() {
+                const current = phrases[phraseIndex];
+                if (isDeleting) {
+                    typeText.textContent = current.substring(0, charIndex - 1);
+                    charIndex--;
+                    typeSpeed = 40;
+                } else {
+                    typeText.textContent = current.substring(0, charIndex + 1);
+                    charIndex++;
+                    typeSpeed = 80;
+                }
+                if (!isDeleting && charIndex === current.length) {
+                    isDeleting = true;
+                    typeSpeed = 1800;
+                } else if (isDeleting && charIndex === 0) {
+                    isDeleting = false;
+                    phraseIndex = (phraseIndex + 1) % phrases.length;
+                    typeSpeed = 400;
+                }
+                setTimeout(type, typeSpeed);
+            }
+            type();
+        }
+        initTyping();
+
+        // ===== PARTICLE NETWORK =====
+        function initParticles() {
+            const canvas = document.getElementById('particle-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            const particleCount = 40;
+            const connectionDistance = 120;
+
+            function resize() {
+                canvas.width = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            for (let i = 0; i < particleCount; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5,
+                    radius: Math.random() * 2 + 1
+                });
+            }
+
+            let frame = 0;
+            function animate() {
+                frame++;
+                if (frame % 2 !== 0) { requestAnimationFrame(animate); return; }
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach((p, i) => {
+                    p.x += p.vx; p.y += p.vy;
+                    if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                    if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(59,130,246,0.3)';
+                    ctx.fill();
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[j].x - p.x;
+                        const dy = particles[j].y - p.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < connectionDistance) {
+                            ctx.beginPath();
+                            ctx.moveTo(p.x, p.y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = `rgba(59,130,246,${0.15 * (1 - dist / connectionDistance)})`;
+                            ctx.lineWidth = 0.8;
+                            ctx.stroke();
+                        }
+                    }
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+        initParticles();
+
+        // ===== SCROLL PROGRESS =====
+        function initProgress() {
+            const bar = document.getElementById('scroll-progress');
+            if (!bar) return;
+            window.addEventListener('scroll', () => {
+                const scrollTop = window.scrollY;
+                const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+                const progress = (scrollTop / docHeight) * 100;
+                bar.style.width = progress + '%';
+            }, { passive: true });
+        }
+        initProgress();
+
+        // ===== PAGE LOADER =====
+        function initLoader() {
+            const loader = document.getElementById('pageLoader');
+            if (!loader) return;
+            window.addEventListener('load', () => {
+                setTimeout(() => loader.classList.add('hidden'), 600);
+            });
+        }
+        initLoader();
+
+        // ===== MAGNETIC BUTTONS =====
+        function initMagnetic() {
+            document.querySelectorAll('.magnetic').forEach(btn => {
+                btn.addEventListener('mousemove', e => {
+                    const rect = btn.getBoundingClientRect();
+                    const x = e.clientX - rect.left - rect.width / 2;
+                    const y = e.clientY - rect.top - rect.height / 2;
+                    btn.style.transform = `translate(${x * 0.25}px, ${y * 0.25}px)`;
+                });
+                btn.addEventListener('mouseleave', () => {
+                    btn.style.transform = 'translate(0, 0)';
+                });
+            });
+        }
+        initMagnetic();
+
+        // ===== HERO GLOW FOLLOW MOUSE =====
+        function initHeroGlow() {
+            const glow = document.getElementById('heroGlow');
+            const hero = document.getElementById('hero');
+            if (!glow || !hero) return;
+            hero.addEventListener('mousemove', e => {
+                const rect = hero.getBoundingClientRect();
+                const x = e.clientX - rect.left - 350;
+                const y = e.clientY - rect.top - 350;
+                glow.style.left = x + 'px';
+                glow.style.top = y + 'px';
+            });
+        }
+        initHeroGlow();
+
+        // ===== PARALLAX SCROLL =====
+        function initParallax() {
+            const parallaxImages = document.querySelectorAll('.parallax-img');
+            if (!parallaxImages.length) return;
+
+            let ticking = false;
+            window.addEventListener('scroll', () => {
+                if (!ticking) {
+                    requestAnimationFrame(() => {
+                        const scrolled = window.scrollY;
+                        parallaxImages.forEach((img, i) => {
+                            const parent = img.closest('.screenshot-card, .preview-card');
+                            if (!parent) return;
+                            const rect = parent.getBoundingClientRect();
+                            const viewportCenter = window.innerHeight / 2;
+                            const elementCenter = rect.top + rect.height / 2;
+                            const offset = (elementCenter - viewportCenter) * 0.05;
+                            img.style.transform = `translateY(${offset}px) scale(1.02)`;
+                        });
+                        ticking = false;
+                    });
+                    ticking = true;
+                }
+            });
+        }
+        initParallax();
+
+        // ===== TESTIMONIALS CAROUSEL =====
+        function initTestiCarousel() {
+            const cards = document.querySelectorAll('.testi-card');
+            const dots = document.querySelectorAll('.testi-dot');
+            if (!cards.length || !dots.length) return;
+            let current = 0;
+            let interval;
+            function show(index) {
+                cards.forEach((c, i) => {
+                    c.style.opacity = i === index ? '1' : '0.4';
+                    c.style.transform = i === index ? 'scale(1)' : 'scale(0.96)';
+                    c.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+                });
+                dots.forEach((d, i) => d.classList.toggle('active', i === index));
+                current = index;
+            }
+            function next() { show((current + 1) % cards.length); }
+            dots.forEach((d, i) => d.addEventListener('click', () => { show(i); resetInterval(); }));
+            function resetInterval() { clearInterval(interval); interval = setInterval(next, 5000); }
+            show(0);
+            interval = setInterval(next, 5000);
+        }
+        initTestiCarousel();
+
         // ===== INIT =====
         (async function init() {
             currentPlatform = await detectDeviceProfile();
@@ -1645,9 +2362,6 @@
             await loadLatestRelease();
             updateDownloadUI();
         })();
-
-        // Open first FAQ
-        document.querySelector('.faq-item').classList.add('open');
     </script>
 </body>
 </html>

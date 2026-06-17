@@ -22,7 +22,7 @@ const distDir = resolve(process.env.LEGALWORK_DIST_DIR || process.env.LEGALWORK_
 const appOutDir = join(distDir, arch === 'arm64' ? 'mac-arm64' : 'mac')
 const appName = 'LegalWork.app'
 const appPath = join(appOutDir, appName)
-const zipPath = join(distDir, `LegalWork-${version}-mac-${arch}.zip`)
+const zipPath = join(distDir, `legalwork-${version}-mac-${arch}.zip`)
 
 if (!existsSync(appPath)) {
   console.error(`[zip-mac-app] App bundle not found: ${appPath}`)

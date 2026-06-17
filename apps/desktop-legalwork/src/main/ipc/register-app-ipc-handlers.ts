@@ -531,7 +531,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
   async function downloadAndInstallPythonWindows(
     sendProgress: (progress: DataComplianceInstallProgress) => void
   ): Promise<string | null> {
-    const { https } = await import('node:https')
+    const https = await import('node:https')
     const { createWriteStream } = await import('node:fs')
     const { pipeline } = await import('node:stream/promises')
     const tmpDir = join(app.getPath('userData'), 'data-compliance', 'tmp')

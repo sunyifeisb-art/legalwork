@@ -59,6 +59,8 @@ export const LEGALWORK_KNOWLEDGE_WRITE_FILE_PATH = '/v1/knowledge/file'
 export const LEGALWORK_KNOWLEDGE_WRITE_FILE_TEMPLATE = '/v1/knowledge/file'
 export const LEGALWORK_KNOWLEDGE_READ_FILE_PATH = '/v1/knowledge/file'
 export const LEGALWORK_KNOWLEDGE_READ_FILE_TEMPLATE = '/v1/knowledge/file'
+export const LEGALWORK_KNOWLEDGE_EXTRACT_TEXT_PATH = '/v1/knowledge/file/extract-text'
+export const LEGALWORK_KNOWLEDGE_EXTRACT_TEXT_TEMPLATE = '/v1/knowledge/file/extract-text'
 export const LEGALWORK_KNOWLEDGE_ABSOLUTE_PATH_PATH = '/v1/knowledge/file/absolute-path'
 export const LEGALWORK_KNOWLEDGE_ABSOLUTE_PATH_TEMPLATE = '/v1/knowledge/file/absolute-path'
 export const LEGALWORK_KNOWLEDGE_MOVE_PATH = '/v1/knowledge/move'
@@ -102,6 +104,11 @@ export function legalworkThreadReviewPath(threadId: string): string {
 export const LEGALWORK_THREAD_TURNS_TEMPLATE = '/v1/threads/{id}/turns'
 export function legalworkThreadTurnsPath(threadId: string): string {
   return `${legalworkThreadPath(threadId)}/turns`
+}
+
+export const LEGALWORK_THREAD_TURN_TEMPLATE = '/v1/threads/{id}/turns/{turn}'
+export function legalworkThreadTurnPath(threadId: string, turnId: string): string {
+  return `${legalworkThreadTurnsPath(threadId)}/${encodeURIComponent(turnId)}`
 }
 
 export const LEGALWORK_THREAD_STEER_TEMPLATE = '/v1/threads/{id}/turns/{turn}/steer'

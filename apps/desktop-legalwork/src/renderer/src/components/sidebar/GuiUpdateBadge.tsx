@@ -23,7 +23,8 @@ export function GuiUpdateBadge(): ReactElement | null {
   }, [])
 
   // Determine what to show
-  const { status, info, message: errorMessage } = guiUpdateState
+  const { status, info } = guiUpdateState
+  const errorMessage = guiUpdateState.status === 'error' ? guiUpdateState.message : undefined
 
   // Only show when there's an actionable state
   const hasUpdate = info?.ok && info.hasUpdate
