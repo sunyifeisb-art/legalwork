@@ -107,18 +107,28 @@ function normalizeGithubOwnerRepo(raw: string): string | null {
   return null
 }
 
-function packageJsonPath(): string {
-  return join(app.getAppPath(), 'package.json')
+function packageJsonPaths(): string[] {
+  // In packaged apps app.getAppPath() usually points to the asar archive, and
+  // Electron's fs patch can read app.asar/package.json. Provide fallbacks so we
+  // still resolve the repository field if that path fails.
+  return [
+    join(app.getAppPath(), 'package.json'),
+    join(process.resourcesPath || '', 'app.asar', 'package.json'),
+    join(process.resourcesPath || '', 'app', 'package.json')
+  ]
 }
 
 function readPackageJson(): Record<string, unknown> | null {
-  try {
-    const path = packageJsonPath()
-    if (!existsSync(path)) return null
-    return JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown>
-  } catch {
-    return null
+  for (const path of packageJsonPaths()) {
+    try {
+      if (existsSync(path)) {
+        return JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown>
+      }
+    } catch {
+      // try next candidate
+    }
   }
+  return null
 }
 
 function resolveGithubReleaseUrl(): string | null {
