@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a reproducible bug or regression in DeepSeek GUI
+description: Report a reproducible bug or regression in LegalWork
 title: "[Bug] "
 labels:
   - bug
@@ -7,7 +7,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for helping us improve DeepSeek GUI.
+        Thanks for helping us improve LegalWork.
         Please include enough detail for someone else to reproduce the issue.
   - type: textarea
     id: summary
@@ -45,7 +45,7 @@ body:
   - type: input
     id: version
     attributes:
-      label: DeepSeek GUI version
+      label: LegalWork version
       placeholder: e.g. v0.1.0
     validations:
       required: true

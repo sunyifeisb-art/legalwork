@@ -6,15 +6,13 @@ import {
   JsonSettingsStore,
   devServerHintUrl
 } from './settings-store'
-import deepseekLogoPng from '../asset/img/deepseek.png?url'
+import legalworkLogoPng from '../asset/img/legalwork.png?url'
 import { createAppIcon } from './app-icon'
-import { configureAppIdentity } from './app-identity'
 import {
-  applyKunRuntimePatch,
-  kunSettingsEnvelope,
+  applyLegalworkRuntimePatch,
+  computeLegalworkRuntimeCredentialPatch,
   getActiveAgentApiKey,
-  getKunRuntimeSettings,
-  mergeKunRuntimeSettings,
+  getLegalworkRuntimeSettings,
   mergeClawSettings,
   mergeModelProviderSettings,
   mergeScheduleSettings,
@@ -22,7 +20,7 @@ import {
   normalizeAppSettings,
   normalizeAppBehaviorSettings,
   normalizeKeyboardShortcuts,
-  resolveKunRuntimeSettings,
+  resolveLegalworkRuntimeSettings,
   type AppBehaviorConfigV1,
   type AppSettingsPatch,
   type AppSettingsV1
@@ -31,19 +29,20 @@ import { parseRuntimeErrorBody, runtimeErrorToError, type RuntimeErrorCode } fro
 import type { GuiUpdateState } from '../shared/gui-update'
 import { isAllowedDevPreviewUrl } from '../shared/dev-preview-url'
 import { fetchUpstreamModelIds } from './upstream-models'
+import { APP_PRODUCT_NAME, APP_USER_MODEL_ID, configureAppIdentity } from './app-identity'
 import {
-  kunRuntimeAdapter,
+  legalworkRuntimeAdapter,
   getRuntimeBaseUrlForSettings,
   runtimeAuthHeaders,
   runtimeRequestViaHost
-} from './runtime/kun-adapter'
+} from './runtime/legalwork-adapter'
 import { configureLogger, logError, logWarn, pruneOnStartup } from './logger'
 import { createClawRuntime, type ClawRuntime } from './claw-runtime'
 import { createScheduleRuntime, type ScheduleRuntime } from './schedule-runtime'
 import { runClawScheduleMcpServerFromArgv } from './claw-schedule-mcp-server'
 import {
   clawScheduleMcpSettingsChanged,
-  resolveKunMcpJsonPath,
+  resolveLegalworkMcpJsonPath,
   syncClawScheduleMcpConfig,
   type ClawScheduleMcpLaunchConfig
 } from './claw-schedule-mcp-config'
@@ -63,10 +62,9 @@ import {
   stopWeixinBridgeRuntime
 } from './weixin-bridge-runtime'
 import { webhookUrl } from './claw-runtime-helpers'
-import { isKunHealthResponseBody } from './kun-health'
+import { isLegalworkHealthResponseBody } from './legalwork-health'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const APP_USER_MODEL_ID = 'com.xingyuzhong.deepseekgui'
 const HIDDEN_START_ARG = '--hidden'
 const startupTraceEnabled = process.env.DEEPSEEK_GUI_STARTUP_TRACE === '1'
 const startupTraceStart = Date.now()
@@ -141,15 +139,13 @@ function runtimeJsonError(code: string, message: string): Error {
 
 traceStartup('main module evaluated')
 
-if (runningClawScheduleMcpServer && process.platform === 'darwin') {
+if (runningClawScheduleMcpServer && process.platform === 'darwin' && app.dock) {
   app.dock.hide()
 }
 
 // 在最早的阶段把 app 名称、AppUserModelId 都设好。
 // Windows 任务栏 / 系统托盘 / 通知中心看到的应用名都来自这里;
 // 设得太晚的话 BrowserWindow title、托盘、IPC 启动时拿到的还是旧的。
-// 抽到 app-identity.ts 是为了让测试可以直接 import,不被 main 的
-// whenReady 副作用污染。
 configureAppIdentity()
 
 if (!runningClawScheduleMcpServer && process.platform === 'win32') {
@@ -177,9 +173,14 @@ function emitClawChannelActivity(payload: { channelId: string; threadId: string 
   mainWindow.webContents.send('claw:channel-activity', payload)
 }
 
+const MANAGED_STOP_TIMEOUT_MS = 1200
+
 async function stopManagedRuntimesForQuit(): Promise<void> {
   if (managedRuntimesStoppedForQuit) return
-  await stopManagedRuntimes()
+  await Promise.race([
+    stopManagedRuntimes(),
+    new Promise<void>((resolve) => setTimeout(resolve, MANAGED_STOP_TIMEOUT_MS))
+  ])
   managedRuntimesStoppedForQuit = true
 }
 
@@ -189,7 +190,7 @@ async function stopManagedRuntimes(): Promise<void> {
       scheduleRuntime?.stop()
       clawRuntime?.stop()
       stopWeixinBridgeRuntime()
-      await kunRuntimeAdapter.stopAndWait()
+      await legalworkRuntimeAdapter.stopAndWait()
     })().finally(() => {
       managedRuntimesStopPromise = null
     })
@@ -265,8 +266,8 @@ function installDevPreviewWebviewGuards(): void {
 }
 
 
-const appIcon = createAppIcon(deepseekLogoPng)
-traceStartup('app icon loaded', { source: deepseekLogoPng.startsWith('data:') ? 'data-url' : 'path' })
+const appIcon = createAppIcon(legalworkLogoPng)
+traceStartup('app icon loaded', { source: legalworkLogoPng.startsWith('data:') ? 'data-url' : 'path' })
 const gotSingleInstanceLock = runningClawScheduleMcpServer || app.requestSingleInstanceLock()
 traceStartup('single instance lock checked', {
   gotSingleInstanceLock,
@@ -276,15 +277,15 @@ traceStartup('single instance lock checked', {
 function trayLabels(locale: AppSettingsV1['locale']): { show: string; quit: string; tooltip: string } {
   if (locale === 'zh') {
     return {
-      show: '显示 DeepSeek GUI',
+      show: `显示 ${APP_PRODUCT_NAME}`,
       quit: '退出',
-      tooltip: 'DeepSeek GUI'
+      tooltip: APP_PRODUCT_NAME
     }
   }
   return {
-    show: 'Show DeepSeek GUI',
+    show: `Show ${APP_PRODUCT_NAME}`,
     quit: 'Quit',
-    tooltip: 'DeepSeek GUI'
+    tooltip: APP_PRODUCT_NAME
   }
 }
 
@@ -310,7 +311,7 @@ function syncLoginItemSettings(settings: AppSettingsV1): void {
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    console.warn('[deepseek-gui] failed to update login item settings:', error)
+    console.warn('[legalwork] failed to update login item settings:', error)
     logWarn('desktop-behavior', 'Failed to update login item settings.', { message })
   }
 }
@@ -380,7 +381,7 @@ async function showTurnCompleteNotification(
     return { ok: true, shown: false, reason: 'unsupported' }
   }
 
-  const title = normalizeNotificationText(payload.title, 'DeepSeek GUI', 80)
+  const title = normalizeNotificationText(payload.title, APP_PRODUCT_NAME, 80)
   const body = normalizeNotificationText(payload.body, 'Conversation complete.', 180)
 
   try {
@@ -443,7 +444,7 @@ async function probeThreadApi(settings: AppSettingsV1): Promise<
   }
 }
 
-async function waitForKunHealth(settings: AppSettingsV1, timeoutMs: number): Promise<boolean> {
+async function waitForLegalworkHealth(settings: AppSettingsV1, timeoutMs: number): Promise<boolean> {
   const base = getRuntimeBaseUrlForSettings(settings)
   const deadline = Date.now() + timeoutMs
 
@@ -454,7 +455,7 @@ async function waitForKunHealth(settings: AppSettingsV1, timeoutMs: number): Pro
         headers: runtimeAuthHeaders(settings),
         signal: AbortSignal.timeout(Math.max(250, Math.min(1_000, remaining)))
       })
-      if (res.ok && isKunHealthResponseBody(await res.text())) return true
+      if (res.ok && isLegalworkHealthResponseBody(await res.text())) return true
     } catch {
       /* retry until the deadline */
     }
@@ -502,7 +503,7 @@ function queueRuntimeSettingsApply(prev: AppSettingsV1, next: AppSettingsV1): vo
       await restartManagedRuntimeForSettingsChange(anchor, current)
     })
     .catch((error: unknown) => {
-      logWarn('settings-apply', 'Failed to apply Kun runtime settings in background', {
+      logWarn('settings-apply', 'Failed to apply Legalwork runtime settings in background', {
         message: error instanceof Error ? error.message : String(error)
       })
     })
@@ -526,7 +527,7 @@ function queueRuntimeMcpConfigApply(settings: AppSettingsV1): void {
       await restartManagedRuntimeForMcpConfigChange(current)
     })
     .catch((error: unknown) => {
-      logWarn('mcp-config', 'Failed to apply Kun MCP config change in background', {
+      logWarn('mcp-config', 'Failed to apply Legalwork MCP config change in background', {
         message: error instanceof Error ? error.message : String(error)
       })
     })
@@ -546,13 +547,13 @@ async function waitForQueuedRuntimeSettingsApply(): Promise<void> {
 
 /**
  * Build a stable fingerprint of the settings that affect the
- * Kun runtime so that `ensureRuntime` can debounce on real
+ * Legalwork runtime so that `ensureRuntime` can debounce on real
  * state instead of on a single in-flight promise. Without this,
  * a fresh call that arrives while a failing ensure is still pending
  * would re-throw the old error.
  */
 function runtimeFingerprint(settings: AppSettingsV1): string {
-  return stableSettingsStringify(resolveKunRuntimeSettings(settings))
+  return stableSettingsStringify(resolveLegalworkRuntimeSettings(settings))
 }
 
 async function ensureRuntime(settings: AppSettingsV1): Promise<void> {
@@ -585,14 +586,14 @@ async function ensureRuntime(settings: AppSettingsV1): Promise<void> {
 
 async function ensureRuntimeOnce(settings: AppSettingsV1): Promise<void> {
   await waitForQueuedRuntimeSettingsApply()
-  await ensureKunRuntime(settings)
+  await ensureLegalworkRuntime(settings)
 }
 
-async function ensureKunRuntime(settings: AppSettingsV1): Promise<void> {
-  const runtime = getKunRuntimeSettings(settings)
+async function ensureLegalworkRuntime(settings: AppSettingsV1): Promise<void> {
+  const runtime = getLegalworkRuntimeSettings(settings)
   const hasApiKey = Boolean(resolveConfiguredApiKey(settings))
 
-  const healthy = await waitForKunHealth(settings, 2_000)
+  const healthy = await waitForLegalworkHealth(settings, 2_000)
   if (healthy) {
     const threadApi = await probeThreadApi(settings)
     if (threadApi.ok) return
@@ -602,17 +603,17 @@ async function ensureKunRuntime(settings: AppSettingsV1): Promise<void> {
   if (!hasApiKey) {
     throw runtimeJsonError(
       'missing_api_key',
-      'DeepSeek API Key is required before the GUI can start Kun.'
+      'DeepSeek API Key is required before the GUI can start Legalwork.'
     )
   }
   if (!runtime.autoStart) {
     throw runtimeJsonError(
       'runtime_offline',
-      'Kun is offline. Enable automatic startup in Settings, or start `kun serve` manually.'
+      'Legalwork is offline. Enable automatic startup in Settings, or start `legalwork serve` manually.'
     )
   }
 
-  const adapter = kunRuntimeAdapter
+  const adapter = legalworkRuntimeAdapter
   const reclaim = await adapter.reclaimPort(runtime.port)
   if (!reclaim.ok) {
     throw runtimeJsonError('runtime_port_conflict', reclaim.message)
@@ -620,14 +621,14 @@ async function ensureKunRuntime(settings: AppSettingsV1): Promise<void> {
   try {
     await adapter.ensureRunning(settings)
   } catch (e) {
-    console.error('[deepseek-gui] failed to start kun:', e)
+    console.error('[legalwork] failed to start legalwork:', e)
     throw e
   }
-  const started = await waitForKunHealth(settings, 20_000)
+  const started = await waitForLegalworkHealth(settings, 20_000)
   if (!started) {
     throw runtimeJsonError(
       'runtime_unhealthy',
-      'Kun did not become healthy after launch.'
+      'Legalwork did not become healthy after launch.'
     )
   }
 
@@ -664,7 +665,7 @@ function createWindow(options: { suppressInitialShow?: boolean } = {}): void {
   }
   mainWindow.webContents.on('preload-error', (_event, preloadPath, error) => {
     const message = error instanceof Error ? error.message : String(error)
-    console.error(`[deepseek-gui] failed to load preload ${preloadPath}:`, error)
+    console.error(`[legalwork] failed to load preload ${preloadPath}:`, error)
     logError('preload', 'Failed to load preload script', { preloadPath, message })
   })
   const showWindow = (): void => {
@@ -702,13 +703,13 @@ function createWindow(options: { suppressInitialShow?: boolean } = {}): void {
 }
 
 /**
- * Stable equality for the Kun runtime settings. Most fields are flat,
+ * Stable equality for the Legalwork runtime settings. Most fields are flat,
  * but GUI-managed capability options can be nested, so compare values
  * structurally while still surviving future field additions.
  */
-function kunRuntimeConfigChanged(prev: AppSettingsV1, next: AppSettingsV1): boolean {
-  const a = resolveKunRuntimeSettings(prev)
-  const b = resolveKunRuntimeSettings(next)
+function legalworkRuntimeConfigChanged(prev: AppSettingsV1, next: AppSettingsV1): boolean {
+  const a = resolveLegalworkRuntimeSettings(prev)
+  const b = resolveLegalworkRuntimeSettings(next)
   const keys = new Set([...Object.keys(a), ...Object.keys(b)] as Array<keyof typeof a>)
   for (const key of keys) {
     if (!stableSettingsValueEqual(a[key], b[key])) return true
@@ -736,7 +737,7 @@ function canonicalSettingsValue(value: unknown): unknown {
 }
 
 function runtimeStartupConfigChanged(prev: AppSettingsV1, next: AppSettingsV1): boolean {
-  return kunRuntimeConfigChanged(prev, next) || clawScheduleMcpSettingsChanged(prev, next)
+  return legalworkRuntimeConfigChanged(prev, next) || clawScheduleMcpSettingsChanged(prev, next)
 }
 
 async function restartManagedRuntimeForSettingsChange(
@@ -745,8 +746,8 @@ async function restartManagedRuntimeForSettingsChange(
 ): Promise<void> {
   if (!runtimeStartupConfigChanged(prev, next)) return
 
-  const runtime = resolveKunRuntimeSettings(next)
-  const adapter = kunRuntimeAdapter
+  const runtime = resolveLegalworkRuntimeSettings(next)
+  const adapter = legalworkRuntimeAdapter
   const wasRunning = adapter.isChildRunning()
 
   if (!wasRunning) return
@@ -757,18 +758,18 @@ async function restartManagedRuntimeForSettingsChange(
 
   try {
     await adapter.ensureRunning(next)
-    const healthy = await waitForKunHealth(next, 20_000)
+    const healthy = await waitForLegalworkHealth(next, 20_000)
     if (!healthy) {
-      console.warn('[deepseek-gui] Kun restart did not become healthy after settings change')
+      console.warn('[legalwork] Legalwork restart did not become healthy after settings change')
     }
   } catch (e) {
-    console.warn('[deepseek-gui] Kun restart failed after settings change:', e)
+    console.warn('[legalwork] Legalwork restart failed after settings change:', e)
   }
 }
 
 async function restartManagedRuntimeForMcpConfigChange(settings: AppSettingsV1): Promise<void> {
-  const runtime = resolveKunRuntimeSettings(settings)
-  const adapter = kunRuntimeAdapter
+  const runtime = resolveLegalworkRuntimeSettings(settings)
+  const adapter = legalworkRuntimeAdapter
   const wasRunning = adapter.isChildRunning()
 
   if (!wasRunning) return
@@ -777,12 +778,12 @@ async function restartManagedRuntimeForMcpConfigChange(settings: AppSettingsV1):
 
   try {
     await adapter.ensureRunning(settings)
-    const healthy = await waitForKunHealth(settings, 20_000)
+    const healthy = await waitForLegalworkHealth(settings, 20_000)
     if (!healthy) {
-      console.warn('[deepseek-gui] Kun restart did not become healthy after MCP config change')
+      console.warn('[legalwork] Legalwork restart did not become healthy after MCP config change')
     }
   } catch (e) {
-    console.warn('[deepseek-gui] Kun restart failed after MCP config change:', e)
+    console.warn('[legalwork] Legalwork restart failed after MCP config change:', e)
   }
 }
 
@@ -818,7 +819,7 @@ app.whenReady().then(async () => {
   installDevPreviewWebviewGuards()
   traceStartup('install webview guards:done')
 
-  if (process.platform === 'darwin' && !appIcon.isEmpty()) {
+  if (process.platform === 'darwin' && app.dock && !appIcon.isEmpty()) {
     app.dock.setIcon(appIcon)
   }
 
@@ -868,10 +869,22 @@ app.whenReady().then(async () => {
   const applySettingsPatch = async (partial: AppSettingsPatch): Promise<AppSettingsV1> => {
     const prev = await store.load()
     const { agents: agentsPatch, provider: providerPatch, ...restPatch } = partial
+
+    // Keep the Legalwork runtime API key/base URL in sync with whichever provider
+    // profile the runtime is actually configured to use. Settings > General edits the
+    // active profile's credentials; the runtime override at agents.legalwork.apiKey
+    // should inherit from that profile unless the user explicitly edited the override
+    // in Settings > Agents.
+    const mergedProvider = mergeModelProviderSettings(prev.provider, providerPatch)
+    const agentsPatchWithKey = computeLegalworkRuntimeCredentialPatch(prev, {
+      agents: agentsPatch,
+      provider: providerPatch
+    })
+
     const next = normalizeAppSettings({
-      ...applyKunRuntimePatch(prev, agentsPatch?.kun),
+      ...applyLegalworkRuntimePatch(prev, agentsPatchWithKey.legalwork),
       ...restPatch,
-      provider: mergeModelProviderSettings(prev.provider, providerPatch),
+      provider: mergedProvider,
       log: { ...prev.log, ...(partial.log ?? {}) },
       notifications: { ...prev.notifications, ...(partial.notifications ?? {}) },
       appBehavior: normalizeAppBehaviorSettings({
@@ -892,7 +905,15 @@ app.whenReady().then(async () => {
     if (prev.log.enabled !== next.log.enabled || prev.log.retentionDays !== next.log.retentionDays) {
       configureLogger({ enabled: next.log.enabled, retentionDays: next.log.retentionDays })
     }
-    const saved = await store.patch(partial)
+
+    // Persist the merged/normalized settings so that computed fields (like the
+    // synchronized agent API key above) are actually written to disk. Passing
+    // the raw partial would drop anything computed in this function.
+    const patchToSave: AppSettingsPatch = {
+      ...partial,
+      agents: agentsPatchWithKey
+    }
+    const saved = await store.patch(patchToSave)
     await syncClawScheduleMcpConfig(saved, getClawScheduleMcpLaunchConfig()).catch((error) => {
       console.error('[claw-schedule-mcp] failed to sync config after settings change:', error)
     })
@@ -922,6 +943,11 @@ app.whenReady().then(async () => {
       const settings = await store.load()
       return runtimeRequest(settings, path, { method, body })
     },
+    reconnectRuntime: async () => {
+      const settings = await store.load()
+      await ensureRuntime(settings)
+      return settings
+    },
     fetchUpstreamModels: fetchModels,
     getClawRuntime: () => clawRuntime,
     getScheduleRuntime: () => scheduleRuntime,
@@ -929,8 +955,8 @@ app.whenReady().then(async () => {
     pollFeishuInstall,
     startWeixinInstallQrcode,
     pollWeixinInstall,
-    resolveKunConfigPath: resolveKunMcpJsonPath,
-    onKunMcpConfigWritten: async () => {
+    resolveLegalworkConfigPath: resolveLegalworkMcpJsonPath,
+    onLegalworkMcpConfigWritten: async () => {
       const settings = await store.load()
       queueRuntimeMcpConfigApply(settings)
     },
@@ -943,7 +969,7 @@ app.whenReady().then(async () => {
   })
 
   void loadGuiUpdaterModule().catch((error) => {
-    console.warn('[deepseek-gui updater] failed to initialize on startup:', error)
+    console.warn('[legalwork updater] failed to initialize on startup:', error)
   })
 
   registerRuntimeSseIpc({ ipcMain, store, ensureRuntime, logError })
@@ -952,14 +978,22 @@ app.whenReady().then(async () => {
   createWindow({ suppressInitialShow: shouldStartHidden(initial) })
   traceStartup('createWindow:returned')
 
+  if (resolveConfiguredApiKey(initial) && getLegalworkRuntimeSettings(initial).autoStart) {
+    setTimeout(() => {
+      void ensureRuntime(initial).catch((err) => {
+        console.warn('[legalwork] startup runtime warmup failed:', err)
+      })
+    }, 250)
+  }
+
   void pruneOnStartup().catch((err) => {
-    console.warn('[deepseek-gui] prune logs:', err)
+    console.warn('[legalwork] prune logs:', err)
   })
 
   if (resolveConfiguredApiKey(initial)) {
     setTimeout(() => {
-      void kunRuntimeAdapter.resolveExecutable(initial).catch((err) => {
-        console.warn('[deepseek-gui] prewarm Kun binary:', err)
+      void legalworkRuntimeAdapter.resolveExecutable(initial).catch((err) => {
+        console.warn('[legalwork] prewarm Legalwork binary:', err)
       })
     }, 1500)
   }
@@ -974,15 +1008,15 @@ app.whenReady().then(async () => {
   })
 }).catch((error) => {
   const message = error instanceof Error ? error.message : String(error)
-  console.error('[deepseek-gui] startup failed:', error)
-  dialog.showErrorBox('DeepSeek GUI failed to start', message)
+  console.error('[legalwork] startup failed:', error)
+  dialog.showErrorBox(`${APP_PRODUCT_NAME} failed to start`, message)
   app.quit()
 })
 }
 
 app.on('window-all-closed', () => {
   void stopManagedRuntimes().catch((error) => {
-    console.warn('[deepseek-gui] failed to stop Kun runtime:', error)
+    console.warn('[legalwork] failed to stop Legalwork runtime:', error)
   })
   if (process.platform !== 'darwin') {
     app.quit()
@@ -993,12 +1027,22 @@ app.on('before-quit', (event) => {
   isQuitting = true
   if (managedRuntimesStoppedForQuit) return
   event.preventDefault()
-  void stopManagedRuntimesForQuit()
-    .catch((error) => {
-      console.warn('[deepseek-gui] failed to stop Kun runtime:', error)
+
+  // Force-quit guard: if backend doesn't exit within 1500ms, force quit
+  const forceQuitTimer = setTimeout(() => {
+    if (!managedRuntimesStoppedForQuit) {
       managedRuntimesStoppedForQuit = true
-    })
-    .finally(() => {
       app.quit()
+    }
+  }, 1500)
+
+  void stopManagedRuntimesForQuit()
+    .catch(() => {})
+    .finally(() => {
+      clearTimeout(forceQuitTimer)
+      if (!managedRuntimesStoppedForQuit) {
+        managedRuntimesStoppedForQuit = true
+        app.quit()
+      }
     })
 })

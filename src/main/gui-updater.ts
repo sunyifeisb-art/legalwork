@@ -1,5 +1,5 @@
 import { app, autoUpdater as nativeAutoUpdater, BrowserWindow } from 'electron'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import electronUpdater from 'electron-updater'
@@ -15,8 +15,8 @@ import type {
 import { nextGuiUpdateCheckDelay } from '../shared/gui-update-schedule'
 import { DEFAULT_GUI_UPDATE_CHANNEL, normalizeGuiUpdateChannel } from '../shared/gui-update'
 
-const DEFAULT_R2_PUBLIC_BASE_URL = 'https://deepseek-gui.com/api/r2'
-const DEFAULT_R2_RELEASE_PREFIX = 'deepseek-gui'
+const DEFAULT_R2_PUBLIC_BASE_URL = 'https://legalwork.local/api/r2'
+const DEFAULT_R2_RELEASE_PREFIX = 'legalwork'
 const { autoUpdater } = electronUpdater
 
 let initialized = false
@@ -26,7 +26,7 @@ let lastState: GuiUpdateState = { status: 'idle' }
 let downloaded = false
 let downloadPromise: Promise<string[]> | null = null
 let configuredChannel: GuiUpdateChannel = normalizeGuiUpdateChannel(
-  process.env.DEEPSEEK_GUI_UPDATE_CHANNEL?.trim()
+  process.env.LEGALWORK_UPDATE_CHANNEL?.trim()
 )
 let configuredFeedUrl = ''
 let getSelectedChannel: (() => GuiUpdateChannel | Promise<GuiUpdateChannel>) | null = null
@@ -52,8 +52,8 @@ function joinUrl(base: string, ...parts: string[]): string {
 }
 
 function envUpdateUrl(channel: GuiUpdateChannel): string {
-  const channelSpecific = process.env[`DEEPSEEK_GUI_UPDATE_URL_${channel.toUpperCase()}`]?.trim()
-  const direct = channelSpecific || process.env.DEEPSEEK_GUI_UPDATE_URL?.trim() || ''
+  const channelSpecific = process.env[`LEGALWORK_UPDATE_URL_${channel.toUpperCase()}`]?.trim()
+  const direct = channelSpecific || process.env.LEGALWORK_UPDATE_URL?.trim() || ''
   return direct ? direct.replace(/\{channel\}/g, channel).replace(/\/?$/, '/') : ''
 }
 
@@ -61,6 +61,10 @@ function updateFeedUrl(channel: GuiUpdateChannel): string {
   const direct = envUpdateUrl(channel)
   if (direct) return direct
 
+  return fallbackGenericUpdateUrl(channel)
+}
+
+function fallbackGenericUpdateUrl(channel: GuiUpdateChannel): string {
   const base = process.env.R2_PUBLIC_BASE_URL?.trim() || DEFAULT_R2_PUBLIC_BASE_URL
   const prefix = process.env.R2_RELEASE_PREFIX?.trim() || DEFAULT_R2_RELEASE_PREFIX
   return `${joinUrl(base, prefix, 'channels', channel, 'latest')}/`
@@ -118,7 +122,7 @@ function readPackageJson(): Record<string, unknown> | null {
 }
 
 function resolveGithubReleaseUrl(): string | null {
-  const envRepo = normalizeGithubOwnerRepo(process.env.DEEPSEEK_GUI_GITHUB_REPO?.trim() ?? '')
+  const envRepo = normalizeGithubOwnerRepo(process.env.LEGALWORK_GITHUB_REPO?.trim() ?? '')
   if (envRepo) return `https://github.com/${envRepo}/releases`
 
   const pkg = readPackageJson()
@@ -133,19 +137,29 @@ function resolveGithubReleaseUrl(): string | null {
   return repo ? `https://github.com/${repo}/releases` : null
 }
 
+function resolveGithubOwnerRepo(): string | null {
+  const releaseUrl = resolveGithubReleaseUrl()
+  if (!releaseUrl) return null
+  const match = releaseUrl.match(/^https:\/\/github\.com\/([^/]+\/[^/]+)\/releases$/i)
+  return match?.[1] ?? null
+}
+
 function downloadPageUrl(): string {
-  const direct = process.env.DEEPSEEK_GUI_DOWNLOAD_URL?.trim()
+  const direct = process.env.LEGALWORK_DOWNLOAD_URL?.trim()
   if (direct) return direct
+
+  const githubReleaseUrl = resolveGithubReleaseUrl()
+  if (githubReleaseUrl) return githubReleaseUrl
 
   const pkg = readPackageJson()
   const homepage = typeof pkg?.homepage === 'string' ? pkg.homepage.trim() : ''
   if (homepage) return homepage
 
-  return resolveGithubReleaseUrl() ?? updateFeedUrl(configuredChannel)
+  return updateFeedUrl(configuredChannel)
 }
 
 function releaseUrlForVersion(version: string): string {
-  const page = downloadPageUrl()
+  const page = resolveGithubReleaseUrl() ?? downloadPageUrl()
   if (/github\.com\/.+\/releases\/?$/i.test(page)) {
     return `${page.replace(/\/+$/, '')}/tag/v${version.replace(/^v/i, '')}`
   }
@@ -182,21 +196,7 @@ function parseYamlScalar(source: string, key: string): string {
   return match?.[1]?.trim() ?? ''
 }
 
-function macAutoUpdateAllowed(): boolean {
-  if (process.platform !== 'darwin') return true
-  if (process.env.DEEPSEEK_GUI_ALLOW_UNSIGNED_UPDATES === '1') return true
-
-  const pkg = readPackageJson()
-  const hints = pkg?.buildHints
-  if (!hints || typeof hints !== 'object') return false
-  const values = hints as { macSigningEnabled?: unknown; notarizationEnabled?: unknown }
-  return values.macSigningEnabled === true && values.notarizationEnabled === true
-}
-
 function unsupportedMessage(): string {
-  if (process.platform === 'darwin') {
-    return 'Automatic updates require a signed and notarized macOS build. Use the download page for this build.'
-  }
   return 'Automatic updates are not supported for this build. Use the download page instead.'
 }
 
@@ -307,7 +307,7 @@ async function runScheduledGuiUpdateCheck(): Promise<void> {
       await writeLastScheduledCheckAt(nowMs)
       await checkGuiUpdate()
     } catch (error) {
-      console.warn('[deepseek-gui updater] scheduled GUI update check failed:', error)
+      console.warn('[legalwork updater] scheduled GUI update check failed:', error)
     } finally {
       backgroundCheckPromise = null
       void scheduleNextBackgroundCheck()
@@ -326,12 +326,23 @@ async function resolveUpdateChannel(requested?: GuiUpdateChannel): Promise<GuiUp
 
 function configureUpdaterChannel(channel: GuiUpdateChannel): void {
   const normalized = normalizeGuiUpdateChannel(channel)
-  const feedUrl = updateFeedUrl(normalized)
+  const directFeedUrl = envUpdateUrl(normalized)
+  const repo = directFeedUrl ? null : resolveGithubOwnerRepo()
+  const feedUrl = directFeedUrl || (repo ? `github:${repo}` : fallbackGenericUpdateUrl(normalized))
   const changed = normalized !== configuredChannel || feedUrl !== configuredFeedUrl
   configuredChannel = normalized
   configuredFeedUrl = feedUrl
   autoUpdater.allowPrerelease = normalized === 'frontier'
-  autoUpdater.setFeedURL({ provider: 'generic', url: feedUrl })
+  if (repo) {
+    const [owner, repoName] = repo.split('/')
+    autoUpdater.setFeedURL({
+      provider: 'github',
+      owner,
+      repo: repoName
+    })
+  } else {
+    autoUpdater.setFeedURL({ provider: 'generic', url: feedUrl })
+  }
   if (!changed) return
   downloaded = false
   downloadPromise = null
@@ -343,17 +354,107 @@ export function setGuiUpdateChannel(channel: GuiUpdateChannel): void {
   configureUpdaterChannel(channel)
 }
 
+async function resolveGithubManifestUrl(channel: GuiUpdateChannel): Promise<string | null> {
+  const repo = resolveGithubOwnerRepo()
+  if (!repo) return null
+
+  if (channel === 'stable') {
+    return `https://github.com/${repo}/releases/latest/download/${platformManifestName()}`
+  }
+
+  // frontier: GitHub releases do not have a /latest/download for prereleases,
+  // so we query the API and pick the newest prerelease tag.
+  const apiUrl = `https://api.github.com/repos/${repo}/releases`
+  try {
+    const res = await fetch(apiUrl, {
+      headers: {
+        Accept: 'application/vnd.github+json',
+        'User-Agent': `legalwork/${app.getVersion()}`
+      }
+    })
+    if (!res.ok) return null
+    const releases = (await res.json()) as Array<{ prerelease: boolean; tag_name: string }>
+    const pre = releases.find((r) => r.prerelease)
+    if (!pre) return null
+    return `https://github.com/${repo}/releases/download/${pre.tag_name}/${platformManifestName()}`
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Fallback update check that uses the GitHub Releases API directly.
+ * This lets the UI report "up to date" / "update available" even when the
+ * updater manifest YAML files (latest-*.yml) are missing from the release.
+ * Downloads still require the manifest, so results are marked manualOnly.
+ */
+async function checkGithubApiUpdate(channel: GuiUpdateChannel): Promise<GuiUpdateInfo | null> {
+  const repo = resolveGithubOwnerRepo()
+  if (!repo) return null
+
+  const currentVersion = app.getVersion()
+  try {
+    let tagName: string | undefined
+    let releaseDate: string | undefined
+
+    if (channel === 'stable') {
+      const res = await fetch(`https://api.github.com/repos/${repo}/releases/latest`, {
+        headers: {
+          Accept: 'application/vnd.github+json',
+          'User-Agent': `legalwork/${currentVersion}`
+        }
+      })
+      if (!res.ok) return null
+      const release = (await res.json()) as { tag_name?: string; published_at?: string }
+      tagName = release.tag_name
+      releaseDate = release.published_at
+    } else {
+      const res = await fetch(`https://api.github.com/repos/${repo}/releases`, {
+        headers: {
+          Accept: 'application/vnd.github+json',
+          'User-Agent': `legalwork/${currentVersion}`
+        }
+      })
+      if (!res.ok) return null
+      const releases = (await res.json()) as Array<{ prerelease: boolean; tag_name: string; published_at?: string }>
+      const pre = releases.find((r) => r.prerelease)
+      if (!pre) return null
+      tagName = pre.tag_name
+      releaseDate = pre.published_at
+    }
+
+    if (!tagName) return null
+    const latestVersion = tagName.trim().replace(/^v/i, '')
+    const info: Extract<GuiUpdateInfo, { ok: true }> = {
+      ok: true,
+      currentVersion,
+      latestVersion,
+      hasUpdate: isVersionGreater(latestVersion, currentVersion),
+      releaseUrl: releaseUrlForVersion(latestVersion),
+      releaseDate,
+      channel,
+      manualOnly: true,
+      downloaded: false
+    }
+    lastInfo = info
+    emitGuiUpdateState(info.hasUpdate ? { status: 'available', info } : { status: 'not_available', info })
+    return info
+  } catch {
+    return null
+  }
+}
+
 async function checkManualUpdate(
   channel: GuiUpdateChannel,
   code: GuiUpdateFailureCode = 'unsupported'
 ): Promise<GuiUpdateInfo> {
   const currentVersion = app.getVersion()
   try {
-    const url = `${updateFeedUrl(channel)}${platformManifestName()}`
+    const url = (await resolveGithubManifestUrl(channel)) ?? `${updateFeedUrl(channel)}${platformManifestName()}`
     const res = await fetch(url, {
       headers: {
         Accept: 'application/x-yaml,text/yaml,text/plain,*/*',
-        'User-Agent': `deepseek-gui/${currentVersion}`
+        'User-Agent': `legalwork/${currentVersion}`
       }
     })
     if (!res.ok) {
@@ -404,6 +505,30 @@ async function checkManualUpdate(
   }
 }
 
+/** Clean up any leftover update temp files from previous aborted updates */
+function cleanupStaleUpdateFiles(): void {
+  try {
+    const userDataPath = app.getPath('userData')
+    // electron-updater caches downloads in a __update__ subdirectory
+    const updateCacheDir = join(userDataPath, '__update__')
+    if (!existsSync(updateCacheDir)) return
+
+    const entries = readdirSync(updateCacheDir)
+    for (const entry of entries) {
+      const fullPath = join(updateCacheDir, entry)
+      const stat = statSync(fullPath)
+      if (stat.isFile() && (entry.endsWith('.dmg') || entry.endsWith('.zip') || entry.endsWith('.exe') || entry.endsWith('.AppImage'))) {
+        // Only clean files older than 1 hour to avoid deleting an in-progress download
+        if (Date.now() - stat.mtimeMs > 3_600_000) {
+          rmSync(fullPath, { force: true })
+        }
+      }
+    }
+  } catch {
+    // best-effort cleanup, ignore errors
+  }
+}
+
 export function initializeGuiUpdater(
   windowGetter: () => BrowserWindow | null,
   channelGetter?: () => GuiUpdateChannel | Promise<GuiUpdateChannel>,
@@ -415,6 +540,9 @@ export function initializeGuiUpdater(
   if (initialized) return
   initialized = true
 
+  // Remove leftover update temp files from previous aborted updates
+  cleanupStaleUpdateFiles()
+
   autoUpdater.autoDownload = false
   autoUpdater.autoInstallOnAppQuit = false
   configureUpdaterChannel(configuredChannel)
@@ -423,9 +551,9 @@ export function initializeGuiUpdater(
   }
 
   autoUpdater.logger = {
-    info: (message?: unknown) => console.info('[deepseek-gui updater]', message),
-    warn: (message?: unknown) => console.warn('[deepseek-gui updater]', message),
-    error: (message?: unknown) => console.error('[deepseek-gui updater]', message)
+    info: (message?: unknown) => console.info('[legalwork updater]', message),
+    warn: (message?: unknown) => console.warn('[legalwork updater]', message),
+    error: (message?: unknown) => console.error('[legalwork updater]', message)
   }
 
   autoUpdater.on('checking-for-update', () => {
@@ -459,12 +587,23 @@ export function initializeGuiUpdater(
 
   autoUpdater.on('error', (error) => {
     const message = error instanceof Error ? error.message : String(error)
+    // When the release is missing the files electron-updater expects (e.g. no
+    // mac zip, only dmgs), fall back to the GitHub API so the UI can at least
+    // show "up to date" or "update available (manual)" instead of an error.
+    if (resolveGithubOwnerRepo() && /ZIP file not provided|Cannot download|sha512 checksum mismatch/i.test(message)) {
+      void checkGithubApiUpdate(configuredChannel).then((info) => {
+        if (!info) {
+          emitGuiUpdateState({ status: 'error', info: lastInfo ?? undefined, message, code: 'unknown' })
+        }
+      })
+      return
+    }
     emitGuiUpdateState({ status: 'error', info: lastInfo ?? undefined, message, code: 'unknown' })
   })
 
   nativeAutoUpdater?.on?.('before-quit-for-update', () => {
     void runBeforeInstallUpdate().catch((error) => {
-      console.warn('[deepseek-gui updater] failed to stop runtimes before update quit:', error)
+      console.warn('[legalwork updater] failed to stop runtimes before update quit:', error)
     })
   })
 
@@ -479,10 +618,6 @@ export async function checkGuiUpdate(channel?: GuiUpdateChannel): Promise<GuiUpd
   const selectedChannel = await resolveUpdateChannel(channel)
   configureUpdaterChannel(selectedChannel)
 
-  if (!macAutoUpdateAllowed()) {
-    return checkManualUpdate(selectedChannel, 'unsupported')
-  }
-
   emitGuiUpdateState({ status: 'checking', info: lastInfo ?? undefined })
   try {
     const result = await autoUpdater.checkForUpdates()
@@ -494,7 +629,11 @@ export async function checkGuiUpdate(channel?: GuiUpdateChannel): Promise<GuiUpd
     emitGuiUpdateState(info.hasUpdate ? { status: 'available', info } : { status: 'not_available', info })
     return info
   } catch (e) {
-    const message = sanitizeUpdaterError(e instanceof Error ? e.message : String(e), selectedChannel)
+    const rawMessage = e instanceof Error ? e.message : String(e)
+    const githubApiInfo = await checkGithubApiUpdate(selectedChannel)
+    if (githubApiInfo) return githubApiInfo
+
+    const message = sanitizeUpdaterError(rawMessage, selectedChannel)
     const info: GuiUpdateInfo = {
       ok: false,
       currentVersion: app.getVersion(),
@@ -511,15 +650,6 @@ export async function checkGuiUpdate(channel?: GuiUpdateChannel): Promise<GuiUpd
 export async function downloadGuiUpdate(channel?: GuiUpdateChannel): Promise<GuiUpdateDownloadResult> {
   const selectedChannel = await resolveUpdateChannel(channel)
   configureUpdaterChannel(selectedChannel)
-
-  if (!macAutoUpdateAllowed()) {
-    return {
-      ok: false,
-      currentVersion: app.getVersion(),
-      code: 'unsupported',
-      message: unsupportedMessage()
-    }
-  }
 
   try {
     if (!lastInfo?.hasUpdate || lastInfo.channel !== selectedChannel) {

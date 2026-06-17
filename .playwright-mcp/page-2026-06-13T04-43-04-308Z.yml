@@ -1,0 +1,77 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - link [ref=e5] [cursor=pointer]:
+      - /url: /
+      - img [ref=e6]
+    - list [ref=e8]:
+      - listitem [ref=e9]: 主办：最高人民法院办公厅主管：最高人民法院
+      - listitem [ref=e10]: 总编辑：邓修明 副总编辑：林文学 海伟
+    - list [ref=e12]:
+      - listitem [ref=e13]:
+        - link "首 页" [ref=e14] [cursor=pointer]:
+          - /url: /
+      - listitem [ref=e15]:
+        - link "公报介绍" [ref=e16] [cursor=pointer]:
+          - /url: /SinglePage.html?result=introduction
+      - listitem [ref=e17]:
+        - link "公报过刊" [ref=e18] [cursor=pointer]:
+          - /url: /PeriodicalsDic.html
+      - listitem [ref=e19]:
+        - link "读者留言" [ref=e20] [cursor=pointer]:
+          - /url: /message.html
+      - listitem [ref=e21]:
+        - link "订购" [ref=e22] [cursor=pointer]:
+          - /url: /order.html
+  - list [ref=e27]:
+    - listitem [ref=e28]
+  - generic [ref=e32]:
+    - paragraph [ref=e34]:
+      - link "首页" [ref=e35] [cursor=pointer]:
+        - /url: /
+      - text: ">"
+      - link "司法解释" [ref=e36] [cursor=pointer]:
+        - /url: /ArticleList.html?serial_no=sfjs
+    - generic [ref=e40]:
+      - paragraph
+      - paragraph [ref=e41]: 中华人民共和国最高人民法院
+      - paragraph [ref=e42]: 公 告
+      - paragraph [ref=e43]: 《最高人民法院关于行政诉讼撤诉若干问题的规定》已于2007年12月17日由最高人民法院审判委员会第1441次会议通过，现予公布，自2008年2月1日起施行。
+      - paragraph [ref=e44]: 2008年1月14日
+      - paragraph [ref=e45]: 最高人民法院
+      - paragraph [ref=e46]:
+        - strong [ref=e48]: 关于行政诉讼撤诉若干问题的规定
+      - paragraph [ref=e49]: 法释〔2008〕2号
+      - paragraph [ref=e50]: 为妥善化解行政争议，依法审查行政诉讼中行政机关改变被诉具体行政行为及当事人申请撤诉的行为，根据《中华人民共和国行政诉讼法》制定本规定。
+      - paragraph [ref=e51]: 第一条 人民法院经审查认为被诉具体行政行为违法或者不当，可以在宣告判决或者裁定前，建议被告改变其所作的具体行政行为。
+      - paragraph [ref=e52]: 第二条 被告改变被诉具体行政行为，原告申请撤诉，符合下列条件的，人民法院应当裁定准许：
+      - paragraph [ref=e53]: （一）申请撤诉是当事人真实意思表示；
+      - paragraph [ref=e54]:
+        - generic [ref=e55]: （二）被告改变被诉具体行政行为，不违反法律、法规的禁止性规定，不超越或者放弃职权，不损害公共利益和他人合法权益；
+      - paragraph [ref=e56]: （三）被告已经改变或者决定改变被诉具体行政行为，并书面告知人民法院；
+      - paragraph [ref=e57]: （四）第三人无异议。
+      - paragraph [ref=e58]: 第三条 有下列情形之一的，属于行政诉讼法第五十一条规定的“被告改变其所作的具体行政行为”：
+      - paragraph [ref=e59]: （一）改变被诉具体行政行为所认定的主要事实和证据；
+      - paragraph [ref=e60]: （二）改变被诉具体行政行为所适用的规范依据且对定性产生影响；
+      - paragraph [ref=e61]: （三）撤销、部分撤销或者变更被诉具体行政行为处理结果。
+      - paragraph [ref=e62]: 第四条 有下列情形之一的，可以视为“被告改变其所作的具体行政行为”：
+      - paragraph [ref=e63]: （一）根据原告的请求依法履行法定职责；
+      - paragraph [ref=e64]: （二）采取相应的补救、补偿等措施；
+      - paragraph [ref=e65]: （三）在行政裁决案件中，书面认可原告与第三人达成的和解。
+      - paragraph [ref=e66]: 第五条 被告改变被诉具体行政行为，原告申请撤诉，有履行内容且履行完毕的，人民法院可以裁定准许撤诉；不能即时或者一次性履行的，人民法院可以裁定准许撤诉，也可以裁定中止审理。
+      - paragraph [ref=e67]: 第六条 准许撤诉裁定可以载明被告改变被诉具体行政行为的主要内容及履行情况，并可以根据案件具体情况，在裁定理由中明确被诉具体行政行为全部或者部分不再执行。
+      - paragraph [ref=e68]: 第七条 申请撤诉不符合法定条件，或者被告改变被诉具体行政行为后当事人不撤诉的，人民法院应当及时作出裁判。
+      - paragraph [ref=e69]: 第八条 第二审或者再审期间行政机关改变被诉具体行政行为，当事人申请撤回上诉或者再审申请的，参照本规定。
+      - paragraph [ref=e70]: 准许撤回上诉或者再审申请的裁定可以载明行政机关改变被诉具体行政行为的主要内容及履行情况，并可以根据案件具体情况，在裁定理由中明确被诉具体行政行为或者原裁判全部或者部分不再执行。
+      - paragraph [ref=e71]: 第九条 本院以前所作的司法解释及规范性文件，凡与本规定不一致的，按本规定执行。
+      - paragraph
+  - generic [ref=e72]:
+    - paragraph [ref=e73]:
+      - link "法律声明" [ref=e74] [cursor=pointer]:
+        - /url: /SinglePage.html?result=statement
+      - text: "|"
+      - link "联系我们" [ref=e75] [cursor=pointer]:
+        - /url: /SinglePage.html?result=contact
+      - text: "|"
+      - link "使用帮助" [ref=e76] [cursor=pointer]:
+        - /url: /UseHelp.html
+    - paragraph [ref=e77]: 中华人民共和国最高人民法院 版权所有

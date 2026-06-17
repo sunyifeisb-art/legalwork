@@ -27,7 +27,7 @@ describe('app-ipc-schemas', () => {
     expect(payload.path).toBe('/v1/threads?limit=1')
   })
 
-  it('accepts the Kun runtime info endpoint', () => {
+  it('accepts the Legalwork runtime info endpoint', () => {
     const payload = runtimeRequestPayloadSchema.parse({
       path: '/v1/runtime/info',
       method: 'GET'
@@ -36,7 +36,7 @@ describe('app-ipc-schemas', () => {
     expect(payload.path).toBe('/v1/runtime/info')
   })
 
-  it('accepts the Kun runtime tool diagnostics endpoint', () => {
+  it('accepts the Legalwork runtime tool diagnostics endpoint', () => {
     const payload = runtimeRequestPayloadSchema.parse({
       path: '/v1/runtime/tools',
       method: 'GET'
@@ -45,7 +45,7 @@ describe('app-ipc-schemas', () => {
     expect(payload.path).toBe('/v1/runtime/tools')
   })
 
-  it('accepts the Kun skills endpoint', () => {
+  it('accepts the Legalwork skills endpoint', () => {
     const payload = runtimeRequestPayloadSchema.parse({
       path: '/v1/skills',
       method: 'GET'
@@ -54,7 +54,7 @@ describe('app-ipc-schemas', () => {
     expect(payload.path).toBe('/v1/skills')
   })
 
-  it('accepts Kun attachment and memory endpoints', () => {
+  it('accepts Legalwork attachment and memory endpoints', () => {
     expect(runtimeRequestPayloadSchema.parse({
       path: '/v1/attachments',
       method: 'POST',
@@ -76,6 +76,57 @@ describe('app-ipc-schemas', () => {
     }).path).toBe('/v1/memory/mem_1')
   })
 
+  it('accepts Legalwork knowledge endpoints', () => {
+    expect(runtimeRequestPayloadSchema.parse({
+      path: '/v1/knowledge/sync',
+      method: 'POST',
+      body: '{"maxFiles":100}'
+    }).path).toBe('/v1/knowledge/sync')
+    expect(runtimeRequestPayloadSchema.parse({
+      path: '/v1/knowledge/search?q=个人信息&top_k=5',
+      method: 'GET'
+    }).path).toBe('/v1/knowledge/search?q=个人信息&top_k=5')
+    expect(runtimeRequestPayloadSchema.parse({
+      path: '/v1/knowledge/agent-sources?q=合同&top_k=3',
+      method: 'GET'
+    }).path).toBe('/v1/knowledge/agent-sources?q=合同&top_k=3')
+    expect(runtimeRequestPayloadSchema.parse({
+      path: '/v1/knowledge/diagnostics',
+      method: 'GET'
+    }).path).toBe('/v1/knowledge/diagnostics')
+    expect(runtimeRequestPayloadSchema.parse({
+      path: '/v1/knowledge/tree',
+      method: 'GET'
+    }).path).toBe('/v1/knowledge/tree')
+    expect(runtimeRequestPayloadSchema.parse({
+      path: '/v1/knowledge/file?path=%E8%AE%BA%E6%96%87%2Fa.pdf&encoding=base64',
+      method: 'GET'
+    }).path).toBe('/v1/knowledge/file?path=%E8%AE%BA%E6%96%87%2Fa.pdf&encoding=base64')
+    expect(runtimeRequestPayloadSchema.parse({
+      path: '/v1/knowledge/file/absolute-path?path=%E8%AE%BA%E6%96%87%2Fa.pdf',
+      method: 'GET'
+    }).path).toBe('/v1/knowledge/file/absolute-path?path=%E8%AE%BA%E6%96%87%2Fa.pdf')
+    expect(runtimeRequestPayloadSchema.parse({
+      path: '/v1/knowledge/folder',
+      method: 'POST',
+      body: '{"path":"论文"}'
+    }).path).toBe('/v1/knowledge/folder')
+    expect(runtimeRequestPayloadSchema.parse({
+      path: '/v1/knowledge/file',
+      method: 'POST',
+      body: '{"path":"论文/a.pdf","content":"","encoding":"base64"}'
+    }).path).toBe('/v1/knowledge/file')
+    expect(runtimeRequestPayloadSchema.parse({
+      path: '/v1/knowledge/move',
+      method: 'POST',
+      body: '{"from":"a.pdf","to":"论文/a.pdf"}'
+    }).path).toBe('/v1/knowledge/move')
+    expect(runtimeRequestPayloadSchema.parse({
+      path: '/v1/knowledge/file?path=%E8%AE%BA%E6%96%87%2Fa.pdf',
+      method: 'DELETE'
+    }).path).toBe('/v1/knowledge/file?path=%E8%AE%BA%E6%96%87%2Fa.pdf')
+  })
+
   it('accepts skill list payloads with an optional workspace root', () => {
     expect(skillListPayloadSchema.parse({
       workspaceRoot: ' /tmp/workspace '
@@ -83,7 +134,7 @@ describe('app-ipc-schemas', () => {
     expect(skillListPayloadSchema.parse({})).toEqual({})
   })
 
-  it('accepts Kun thread goal endpoints', () => {
+  it('accepts Legalwork thread goal endpoints', () => {
     expect(runtimeRequestPayloadSchema.parse({
       path: '/v1/threads/thr_1/goal',
       method: 'GET'
@@ -99,7 +150,7 @@ describe('app-ipc-schemas', () => {
     }).path).toBe('/v1/threads/thr_1/goal')
   })
 
-  it('accepts the Kun thread review endpoint', () => {
+  it('accepts the Legalwork thread review endpoint', () => {
     expect(runtimeRequestPayloadSchema.parse({
       path: '/v1/threads/thr_1/review',
       method: 'POST',
@@ -107,7 +158,7 @@ describe('app-ipc-schemas', () => {
     }).path).toBe('/v1/threads/thr_1/review')
   })
 
-  it('rejects runtime request paths outside the modeled Kun API surface', () => {
+  it('rejects runtime request paths outside the modeled Legalwork API surface', () => {
     expect(() =>
       runtimeRequestPayloadSchema.parse({
         path: '/v1/runtime/secrets',
@@ -125,11 +176,11 @@ describe('app-ipc-schemas', () => {
     ).toThrow(/runtime request path is not allowed/)
   })
 
-  it('accepts a valid settings patch for kun and write settings', () => {
+  it('accepts a valid settings patch for legalwork and write settings', () => {
     const payload = settingsPatchSchema.parse({
       theme: 'dark',
       agents: {
-        kun: {
+        legalwork: {
           port: 9000,
           model: 'deepseek-chat',
           tokenEconomy: {
@@ -149,9 +200,9 @@ describe('app-ipc-schemas', () => {
       }
     })
 
-    expect(payload.agents?.kun?.port).toBe(9000)
-    expect(payload.agents?.kun?.tokenEconomy?.enabled).toBe(true)
-    expect(payload.agents?.kun?.tokenEconomy?.historyHygiene?.maxToolResultTokens).toBe(4000)
+    expect(payload.agents?.legalwork?.port).toBe(9000)
+    expect(payload.agents?.legalwork?.tokenEconomy?.enabled).toBe(true)
+    expect(payload.agents?.legalwork?.tokenEconomy?.historyHygiene?.maxToolResultTokens).toBe(4000)
     expect(payload.write?.inlineCompletion?.model).toBe('deepseek-v4-pro')
   })
 
@@ -213,7 +264,7 @@ describe('app-ipc-schemas', () => {
       reasonix: { model: 'legacy-reasoner' },
       quickChat: { enabled: true },
       agents: {
-        kun: {
+        legalwork: {
           port: 9001
         },
         reasonix: {
@@ -226,7 +277,7 @@ describe('app-ipc-schemas', () => {
     })
 
     expect(payload.locale).toBe('zh')
-    expect(payload.agents?.kun?.port).toBe(9001)
+    expect(payload.agents?.legalwork?.port).toBe(9001)
     expect('reasonix' in payload).toBe(false)
     expect('quickChat' in payload).toBe(false)
     expect('reasonix' in (payload.agents ?? {})).toBe(false)
@@ -267,7 +318,7 @@ describe('app-ipc-schemas', () => {
     expect(() =>
       settingsPatchSchema.parse({
         agents: {
-          kun: {
+          legalwork: {
             mysteryFlag: true
           }
         }

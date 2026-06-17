@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -25,7 +25,7 @@ import type { SkillListItem } from '@shared/ds-gui-api'
 import type {
   CoreRuntimeInfoJson,
   CoreRuntimeToolDiagnosticsJson
-} from '../agent/kun-contract'
+} from '../agent/legalwork-contract'
 import { useChatStore } from '../store/chat-store'
 import { NoticeView, TabButton, type MarketplaceNotice } from './PluginMarketplaceParts'
 import {
@@ -51,6 +51,7 @@ type MarketplaceItem = {
   sourceLabel?: string
   statusTone?: 'default' | 'success' | 'warning' | 'error'
   systemManaged?: boolean
+  configurable?: boolean
   mcpConfig?: (workspaceRoot: string) => JsonRecord
   skillInstructions?: string
 }
@@ -64,8 +65,37 @@ type SkillRootOption = {
   available: boolean
 }
 
-const INSTALLED_STORAGE_KEY = 'deepseekgui.installedPlugins'
-const GUI_SCHEDULE_MCP_SERVER_ID = 'gui_schedule'
+const INSTALLED_STORAGE_KEY = 'legalwork.installedPlugins'
+const LEGALWORK_SCHEDULE_MCP_SERVER_ID = 'legalwork_schedule'
+const PKULAW_MCP_GROUP_ID = 'pkulaw'
+const PKULAW_MCP_ENDPOINTS = [
+  { id: 'pkulaw-law-keyword', url: 'https://apim-gateway.pkulaw.com/mcp-law', enabledByDefault: true },
+  { id: 'pkulaw-case-keyword', url: 'https://apim-gateway.pkulaw.com/mcp-case', enabledByDefault: true },
+  { id: 'pkulaw-law-search', url: 'https://apim-gateway.pkulaw.com/mcp-law-search-service', enabledByDefault: false },
+  { id: 'pkulaw-case-semantic-search', url: 'https://apim-gateway.pkulaw.com/mcp-case-search-service', enabledByDefault: false },
+  { id: 'pkulaw-law-item-keyword', url: 'https://apim-gateway.pkulaw.com/mcp-fatiao', enabledByDefault: false },
+  { id: 'pkulaw-law-recognition', url: 'https://apim-gateway.pkulaw.com/law_recognition', enabledByDefault: false },
+  { id: 'pkulaw-case-number-recognition', url: 'https://apim-gateway.pkulaw.com/case_number_recognition', enabledByDefault: false },
+  { id: 'pkulaw-citation-validator', url: 'https://apim-gateway.pkulaw.com/pku_citation_validator', enabledByDefault: false },
+  { id: 'pkulaw-doc-link', url: 'https://apim-gateway.pkulaw.com/add-doc-link', enabledByDefault: false }
+] as const
+const PKULAW_MCP_ENDPOINT_IDS = new Set(PKULAW_MCP_ENDPOINTS.map((endpoint) => endpoint.id))
+
+type McpMarketplaceLabels = {
+  configured: string
+  connected: string
+  error: string
+  disabled: string
+  pkulawTitle: string
+  pkulawSummary: (values: {
+    total: number
+    connected: number
+    tools: number
+    errors: number
+    disabled: number
+    lastError: string
+  }) => string
+}
 
 function loadInstalledPlugins(): string[] {
   try {
@@ -96,6 +126,10 @@ function normalizePluginId(raw: string): string {
 
 function isJsonRecord(value: unknown): value is JsonRecord {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function isPkulawMcpEndpointId(id: string): boolean {
+  return PKULAW_MCP_ENDPOINT_IDS.has(id as typeof PKULAW_MCP_ENDPOINTS[number]['id'])
 }
 
 function parseMcpJsonConfig(content: string): JsonRecord {
@@ -155,6 +189,22 @@ export function buildMcpConfig(
   }
 }
 
+function buildPkulawMcpConfig(token: string): JsonRecord {
+  const authorization = `Bearer ${token.trim()}`
+  const servers: JsonRecord = {}
+  for (const { id, url, enabledByDefault } of PKULAW_MCP_ENDPOINTS) {
+    servers[id] = {
+      enabled: enabledByDefault,
+      transport: 'streamable-http',
+      url,
+      headers: { Authorization: authorization },
+      trustScope: 'user',
+      timeoutMs: 30000
+    }
+  }
+  return { servers }
+}
+
 function mcpServersFromConfig(config: JsonRecord): JsonRecord {
   if (isJsonRecord(config.servers)) return config.servers
   const capabilities = isJsonRecord(config.capabilities) ? config.capabilities : undefined
@@ -198,7 +248,11 @@ function mcpStatusTone(status: string): MarketplaceItem['statusTone'] {
 
 export function mcpConfigHasServer(content: string, id: string): boolean {
   try {
-    return Object.prototype.hasOwnProperty.call(mcpServersFromConfig(parseMcpJsonConfig(content)), id)
+    const servers = mcpServersFromConfig(parseMcpJsonConfig(content))
+    if (id === PKULAW_MCP_GROUP_ID) {
+      return Object.keys(servers).some((serverId) => isPkulawMcpEndpointId(serverId))
+    }
+    return Object.prototype.hasOwnProperty.call(servers, id)
   } catch {
     return false
   }
@@ -270,7 +324,7 @@ function itemDescription(item: MarketplaceItem, t: (key: string) => string): str
 
 export function skillMarketplaceItemsFromDiscoveredSkills(
   skills: SkillListItem[],
-  labels: { project: string; global: string }
+  labels: { project: string; global: string; builtin: string }
 ): MarketplaceItem[] {
   return skills.map((skill) => ({
     id: skill.id,
@@ -278,19 +332,17 @@ export function skillMarketplaceItemsFromDiscoveredSkills(
     title: skill.name,
     description: skill.description ?? skill.root,
     group: 'personal' as const,
-    sourceLabel: skill.scope === 'project' ? labels.project : labels.global
+    sourceLabel:
+      skill.scope === 'builtin' ? labels.builtin :
+      skill.scope === 'project' ? labels.project : labels.global,
+    systemManaged: skill.scope === 'builtin'
   }))
 }
 
 export function mcpMarketplaceItemsFromConfigAndDiagnostics(
   configText: string,
   diagnostics: CoreRuntimeToolDiagnosticsJson | null,
-  labels: {
-    configured: string
-    connected: string
-    error: string
-    disabled: string
-  }
+  labels: McpMarketplaceLabels
 ): MarketplaceItem[] {
   const servers = new Map<string, {
     id: string
@@ -319,7 +371,11 @@ export function mcpMarketplaceItemsFromConfigAndDiagnostics(
       diagnostic
     })
   }
-  return [...servers.values()].map(({ id, config, diagnostic }) => {
+
+  const entries = [...servers.values()]
+  const pkulawEntries = entries.filter((entry) => isPkulawMcpEndpointId(entry.id))
+  const normalEntries = entries.filter((entry) => !isPkulawMcpEndpointId(entry.id))
+  const items: MarketplaceItem[] = normalEntries.map(({ id, config, diagnostic }) => {
     const status = mcpServerStatus(diagnostic, config)
     const details = { ...(config ?? {}), ...(diagnostic ?? {}) }
     const sourceLabel =
@@ -336,7 +392,69 @@ export function mcpMarketplaceItemsFromConfigAndDiagnostics(
       sourceLabel,
       statusTone: mcpStatusTone(status)
     }
-  }).sort((left, right) => left.title.localeCompare(right.title))
+  })
+  if (pkulawEntries.length > 0) {
+    items.push(pkulawMarketplaceItem(pkulawEntries, labels))
+  }
+  return items.sort((left, right) => (left.title ?? left.id).localeCompare(right.title ?? right.id))
+}
+
+function pkulawMarketplaceItem(
+  entries: Array<{
+    id: string
+    config?: JsonRecord
+    diagnostic?: JsonRecord
+  }>,
+  labels: McpMarketplaceLabels
+): MarketplaceItem {
+  const statuses = entries.map((entry) => mcpServerStatus(entry.diagnostic, entry.config))
+  const errorEntries = entries.filter((entry) => {
+    const details = { ...(entry.config ?? {}), ...(entry.diagnostic ?? {}) }
+    return mcpServerStatus(entry.diagnostic, entry.config) === 'error' ||
+      typeof details.lastError === 'string'
+  })
+  const connected = statuses.filter((status) => status === 'connected' || status === 'available').length
+  const disabled = statuses.filter((status) => status === 'disabled').length
+  const tools = entries.reduce((sum, entry) => {
+    const count = typeof entry.diagnostic?.toolCount === 'number'
+      ? entry.diagnostic.toolCount
+      : typeof entry.config?.toolCount === 'number'
+        ? entry.config.toolCount
+        : 0
+    return Number.isFinite(count) ? sum + count : sum
+  }, 0)
+  const lastError = errorEntries
+    .map((entry) => {
+      const details = { ...(entry.config ?? {}), ...(entry.diagnostic ?? {}) }
+      return typeof details.lastError === 'string' ? details.lastError : ''
+    })
+    .find(Boolean) ?? ''
+  const status =
+    errorEntries.length > 0 ? 'error' :
+    connected > 0 ? 'connected' :
+    disabled === entries.length ? 'disabled' :
+    'configured'
+  const sourceLabel =
+    status === 'connected' ? labels.connected :
+    status === 'error' ? labels.error :
+    status === 'disabled' ? labels.disabled :
+    labels.configured
+  return {
+    id: PKULAW_MCP_GROUP_ID,
+    kind: 'mcp',
+    title: labels.pkulawTitle,
+    description: labels.pkulawSummary({
+      total: entries.length,
+      connected,
+      tools,
+      errors: errorEntries.length,
+      disabled,
+      lastError
+    }),
+    group: 'personal',
+    sourceLabel,
+    statusTone: mcpStatusTone(status)
+  }
 }
 
 function skillNameLooksValid(raw: string): boolean {
@@ -346,7 +464,7 @@ function skillNameLooksValid(raw: string): boolean {
 
 const RECOMMENDED_ITEMS: MarketplaceItem[] = [
   {
-    id: GUI_SCHEDULE_MCP_SERVER_ID,
+    id: LEGALWORK_SCHEDULE_MCP_SERVER_ID,
     kind: 'mcp',
     titleKey: 'pluginMcpGuiScheduleTitle',
     descriptionKey: 'pluginMcpGuiScheduleDesc',
@@ -410,6 +528,14 @@ const RECOMMENDED_ITEMS: MarketplaceItem[] = [
       )
   },
   {
+    id: 'pkulaw',
+    kind: 'mcp',
+    titleKey: 'pluginMcpPkulawTitle',
+    descriptionKey: 'pluginMcpPkulawDesc',
+    group: 'recommended',
+    configurable: true
+  },
+  {
     id: 'code-review',
     kind: 'skill',
     titleKey: 'pluginSkillReviewTitle',
@@ -466,6 +592,8 @@ export function PluginMarketplaceView(): ReactElement {
   const [skillRootId, setSkillRootId] = useState<SkillRootId>(() => loadPreferredSkillRootId())
   const [mcpConfigText, setMcpConfigText] = useState('')
   const [mcpLoaded, setMcpLoaded] = useState(false)
+  const [configuringItemId, setConfiguringItemId] = useState<string | null>(null)
+  const [pkulawToken, setPkulawToken] = useState('')
   const [runtimeInfo, setRuntimeInfo] = useState<CoreRuntimeInfoJson | null>(null)
   const [toolDiagnostics, setToolDiagnostics] = useState<CoreRuntimeToolDiagnosticsJson | null>(null)
   const [runtimeOverlayLoading, setRuntimeOverlayLoading] = useState(false)
@@ -498,7 +626,7 @@ export function PluginMarketplaceView(): ReactElement {
       {
         id: 'global-deepseek',
         label: t('pluginSkillRootGlobalDeepseek'),
-        path: '~/.kun/skills',
+        path: '~/.legalwork/skills',
         available: true
       }
     ]
@@ -609,6 +737,8 @@ export function PluginMarketplaceView(): ReactElement {
   useEffect(() => {
     setNotice(null)
     setCustomOpen(false)
+    setConfiguringItemId(null)
+    setPkulawToken('')
   }, [activeKind])
 
   const markInstalled = (key: string): void => {
@@ -626,7 +756,8 @@ export function PluginMarketplaceView(): ReactElement {
   const discoveredSkillItems = useMemo(
     () => skillMarketplaceItemsFromDiscoveredSkills(discoveredSkills, {
       project: t('pluginSkillSourceProject'),
-      global: t('pluginSkillSourceGlobal')
+      global: t('pluginSkillSourceGlobal'),
+      builtin: t('pluginSkillSourceBuiltin')
     }),
     [discoveredSkills, t]
   )
@@ -635,8 +766,10 @@ export function PluginMarketplaceView(): ReactElement {
       configured: t('pluginMcpSourceConfigured'),
       connected: t('pluginMcpSourceConnected'),
       error: t('pluginMcpSourceError'),
-      disabled: t('pluginMcpSourceDisabled')
-    }).filter((item) => item.id !== GUI_SCHEDULE_MCP_SERVER_ID),
+      disabled: t('pluginMcpSourceDisabled'),
+      pkulawTitle: t('pluginMcpPkulawTitle'),
+      pkulawSummary: (values) => t('pluginMcpPkulawSummary', values)
+    }).filter((item) => item.id !== LEGALWORK_SCHEDULE_MCP_SERVER_ID),
     [mcpConfigText, t, toolDiagnostics]
   )
   const discoveredMcpIds = useMemo(
@@ -691,7 +824,7 @@ export function PluginMarketplaceView(): ReactElement {
     () => buildMcpMarketplaceOverlay({
       runtimeInfo,
       toolDiagnostics,
-      managedServers: [{ id: GUI_SCHEDULE_MCP_SERVER_ID, toolCount: 4 }]
+      managedServers: [{ id: LEGALWORK_SCHEDULE_MCP_SERVER_ID, toolCount: 4 }]
     }),
     [runtimeInfo, toolDiagnostics]
   )
@@ -712,6 +845,10 @@ export function PluginMarketplaceView(): ReactElement {
   }
 
   const addItem = async (item: MarketplaceItem): Promise<void> => {
+    if (item.configurable) {
+      setConfiguringItemId(item.id)
+      return
+    }
     setBusyId(storageKey(item.kind, item.id))
     setNotice(null)
     try {
@@ -742,6 +879,25 @@ export function PluginMarketplaceView(): ReactElement {
       markInstalled(storageKey('skill', item.id))
       await refreshSkillList()
       setNotice({ tone: 'success', message: t('pluginSkillAdded', { path: result.path }) })
+    } catch (e) {
+      setNotice({ tone: 'error', message: e instanceof Error ? e.message : String(e) })
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  const addPkulaw = async (): Promise<void> => {
+    const token = pkulawToken.trim()
+    if (!token) {
+      setNotice({ tone: 'error', message: t('pluginMcpPkulawTokenRequired') })
+      return
+    }
+    setBusyId(storageKey('mcp', 'pkulaw'))
+    setNotice(null)
+    try {
+      await appendMcpConfig('pkulaw', buildPkulawMcpConfig(token))
+      setConfiguringItemId(null)
+      setPkulawToken('')
     } catch (e) {
       setNotice({ tone: 'error', message: e instanceof Error ? e.message : String(e) })
     } finally {
@@ -798,6 +954,25 @@ export function PluginMarketplaceView(): ReactElement {
       setBusyId(null)
     }
   }
+
+  const renderConfigPanel = useCallback((item: MarketplaceItem): ReactNode => {
+    if (item.id === 'pkulaw') {
+      return (
+        <PkulawConfigPanel
+          token={pkulawToken}
+          onTokenChange={setPkulawToken}
+          onAdd={() => void addPkulaw()}
+          onCancel={() => {
+            setConfiguringItemId(null)
+            setPkulawToken('')
+          }}
+          busy={busyId === storageKey('mcp', 'pkulaw')}
+          t={t}
+        />
+      )
+    }
+    return null
+  }, [pkulawToken, addPkulaw, busyId, t])
 
   const openManageTarget = async (): Promise<void> => {
     try {
@@ -961,6 +1136,8 @@ export function PluginMarketplaceView(): ReactElement {
             busyId={busyId}
             isInstalled={isInstalled}
             onAdd={addItem}
+            configuringItemId={configuringItemId}
+            renderConfig={renderConfigPanel}
             t={t}
           />
         ) : null}
@@ -972,6 +1149,8 @@ export function PluginMarketplaceView(): ReactElement {
           busyId={busyId}
           isInstalled={isInstalled}
           onAdd={addItem}
+          configuringItemId={configuringItemId}
+          renderConfig={renderConfigPanel}
           t={t}
         />
 
@@ -982,6 +1161,8 @@ export function PluginMarketplaceView(): ReactElement {
           busyId={busyId}
           isInstalled={isInstalled}
           onAdd={addItem}
+          configuringItemId={configuringItemId}
+          renderConfig={renderConfigPanel}
           t={t}
         />
 
@@ -1010,6 +1191,7 @@ function McpRuntimeOverlayPanel({
   t: (key: string, values?: Record<string, unknown>) => string
 }): ReactElement {
   const status = mcpRuntimeStatusLabel(overlay.status, t)
+  const displayServerIds = groupedMcpServerIds(overlay.serverIds)
   return (
     <section className="mt-4 rounded-lg border border-ds-border bg-ds-card px-4 py-3 shadow-sm">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -1036,9 +1218,9 @@ function McpRuntimeOverlayPanel({
               })}</span>
               {overlay.driftCount > 0 ? <span>{t('pluginMcpRuntimeDrift', { count: overlay.driftCount })}</span> : null}
             </div>
-            {overlay.serverIds.length > 0 ? (
+            {displayServerIds.length > 0 ? (
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {overlay.serverIds.map((id) => (
+                {displayServerIds.map((id) => (
                   <span
                     key={id}
                     className="rounded-md border border-ds-border-muted bg-ds-subtle px-2 py-0.5 font-mono text-[11px] text-ds-muted"
@@ -1067,6 +1249,19 @@ function McpRuntimeOverlayPanel({
       </div>
     </section>
   )
+}
+
+function groupedMcpServerIds(serverIds: string[]): string[] {
+  let hasPkulaw = false
+  const grouped: string[] = []
+  for (const id of serverIds) {
+    if (isPkulawMcpEndpointId(id)) {
+      hasPkulaw = true
+      continue
+    }
+    grouped.push(id)
+  }
+  return hasPkulaw ? [...grouped, PKULAW_MCP_GROUP_ID].sort((left, right) => left.localeCompare(right)) : grouped
 }
 
 function mcpRuntimeStatusLabel(
@@ -1131,6 +1326,8 @@ function PluginSection({
   busyId,
   isInstalled,
   onAdd,
+  configuringItemId,
+  renderConfig,
   t
 }: {
   title: string
@@ -1139,6 +1336,8 @@ function PluginSection({
   busyId: string | null
   isInstalled: (item: Pick<MarketplaceItem, 'kind' | 'id'>) => boolean
   onAdd: (item: MarketplaceItem) => Promise<void>
+  configuringItemId?: string | null
+  renderConfig?: (item: MarketplaceItem) => ReactNode
   t: (key: string, values?: Record<string, unknown>) => string
 }): ReactElement {
   return (
@@ -1154,10 +1353,11 @@ function PluginSection({
             const itemKey = storageKey(item.kind, item.id)
             const installed = isInstalled(item)
             const busy = busyId === itemKey
+            const configuring = configuringItemId === item.id
             return (
               <div
                 key={itemKey}
-                className="flex min-h-[92px] items-center gap-5 border-b border-ds-border-muted py-5"
+                className={`flex flex-wrap items-center gap-5 border-b border-ds-border-muted py-5 ${configuring ? 'col-span-full md:col-span-2' : 'min-h-[92px]'}`}
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex min-w-0 items-center gap-2">
@@ -1195,6 +1395,9 @@ function PluginSection({
                     <Plus className="h-4 w-4" strokeWidth={2} />
                   )}
                 </button>
+                {configuring && renderConfig ? (
+                  <div className="mt-4 w-full">{renderConfig(item)}</div>
+                ) : null}
               </div>
             )
           })}
@@ -1300,5 +1503,73 @@ function CustomPluginPanel({
         </button>
       </div>
     </section>
+  )
+}
+
+function PkulawConfigPanel({
+  token,
+  onTokenChange,
+  onAdd,
+  onCancel,
+  busy,
+  t
+}: {
+  token: string
+  onTokenChange: (value: string) => void
+  onAdd: () => void
+  onCancel: () => void
+  busy: boolean
+  t: (key: string, values?: Record<string, unknown>) => string
+}): ReactElement {
+  const [showToken, setShowToken] = useState(false)
+  return (
+    <div className="rounded-2xl border border-ds-border bg-ds-card/95 p-4 shadow-sm">
+      <div className="flex flex-col gap-3 md:flex-row md:items-start">
+        <div className="min-w-0 flex-1">
+          <label className="block text-[12px] font-semibold text-ds-muted">
+            {t('pluginMcpPkulawTokenLabel')}
+          </label>
+          <div className="relative mt-1.5">
+            <input
+              type={showToken ? 'text' : 'password'}
+              value={token}
+              onChange={(event) => onTokenChange(event.target.value)}
+              placeholder={t('pluginMcpPkulawTokenPlaceholder')}
+              autoComplete="off"
+              className="w-full rounded-xl border border-ds-border bg-ds-main/45 px-3 py-2 pr-20 text-[14px] text-ds-ink outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/30"
+            />
+            <button
+              type="button"
+              onClick={() => setShowToken((value) => !value)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1 text-[12px] font-medium text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink"
+            >
+              {showToken ? t('pluginMcpPkulawTokenHide') : t('pluginMcpPkulawTokenShow')}
+            </button>
+          </div>
+          <p className="mt-2 text-[12px] leading-5 text-ds-faint">
+            {t('pluginMcpPkulawTokenHint')}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2 md:pt-5">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={busy}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[13px] font-medium text-ds-ink shadow-sm transition hover:bg-ds-hover disabled:cursor-not-allowed disabled:opacity-55"
+          >
+            {t('pluginMcpPkulawCancel')}
+          </button>
+          <button
+            type="button"
+            onClick={onAdd}
+            disabled={busy || !token.trim()}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-ds-userbubble px-3 py-2 text-[13px] font-semibold text-ds-userbubbleFg shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-55"
+          >
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} /> : <Plus className="h-4 w-4" strokeWidth={2} />}
+            {t('pluginMcpPkulawAdd')}
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }

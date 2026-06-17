@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Custom model">
+  <defs>
+    <linearGradient id="custom-a" x1="8" x2="56" y1="8" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#64748b"/>
+      <stop offset="1" stop-color="#0ea5e9"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="18" fill="url(#custom-a)"/>
+  <path fill="#fff" fill-opacity=".95" d="M32 12 48.5 22v20L32 52 15.5 42V22L32 12Zm0 8.2-9.4 5.7v12.2l9.4 5.7 9.4-5.7V25.9L32 20.2Z"/>
+  <circle cx="32" cy="32" r="6" fill="#fff"/>
+</svg>

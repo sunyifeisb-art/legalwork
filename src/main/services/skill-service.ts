@@ -1,11 +1,47 @@
 import { existsSync, readdirSync } from 'node:fs'
 import { readdir, readFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
-import { basename, join, resolve } from 'node:path'
+import { basename, dirname, join, resolve } from 'node:path'
 import type { AppSettingsV1 } from '../../shared/app-settings'
 import { expandHomePath } from './workspace-service'
 
-export type GuiSkillScope = 'project' | 'global'
+export type GuiSkillScope = 'project' | 'global' | 'builtin'
+
+function isPackagedApp(): boolean {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { app } = require('electron') as { app?: { isPackaged?: boolean } }
+    return app?.isPackaged === true
+  } catch {
+    return false
+  }
+}
+
+function getElectronAppPath(): string | undefined {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { app } = require('electron') as { app: { getAppPath: () => string } }
+    return app.getAppPath()
+  } catch {
+    return undefined
+  }
+}
+
+export function resolveBuiltinSkillsRoot(): string | undefined {
+  if (!isPackagedApp()) {
+    const appPath = getElectronAppPath()
+    const candidates = appPath
+      ? [resolve(appPath, '../../skills')]
+      : [resolve(process.cwd(), '../../skills')]
+    return candidates.find((candidate) => existsSync(candidate))
+  }
+  const resourcesPath = process.resourcesPath ?? dirname(process.execPath)
+  const candidates = [
+    join(resourcesPath, 'skills'),
+    join(resourcesPath, 'app.asar.unpacked', 'skills')
+  ]
+  return candidates.find((candidate) => existsSync(candidate))
+}
 
 export type GuiSkillSummary = {
   id: string
@@ -45,15 +81,17 @@ export async function guiSkillRootsForRuntime(
     join(workspaceRoot, '.agents', 'skills'),
     join(workspaceRoot, 'skills')
   ])
-  const globalRoots = [
+  const globalRoots: string[] = [
     join(homedir(), '.agents', 'skills'),
-    join(homedir(), '.kun', 'skills'),
-    ...await discoverCodexPluginSkillRoots()
+    join(homedir(), '.legalwork', 'skills'),
+    ...await discoverCodexPluginSkillRoots(),
+    ...await discoverComputerWideSkillRoots()
   ]
-  const configuredExtraRoots = [
+  const configuredExtraRoots: string[] = [
     ...(settings?.claw.skills.extraDirs ?? []),
     ...(settings?.schedule.skills.extraDirs ?? [])
   ].map(normalizeSkillRootPath)
+  const builtinRoot = resolveBuiltinSkillsRoot()
 
   return uniqueSkillRoots([
     ...projectRoots
@@ -64,7 +102,8 @@ export async function guiSkillRootsForRuntime(
       .map((path) => ({ path, scope: 'global' as const })),
     ...configuredExtraRoots
       .filter(Boolean)
-      .map((path) => ({ path, scope: scopeForConfiguredRoot(path, workspaceRoots) }))
+      .map((path) => ({ path, scope: scopeForConfiguredRoot(path, workspaceRoots) })),
+    ...(builtinRoot ? [{ path: builtinRoot, scope: 'builtin' as const }] : [])
   ])
 }
 
@@ -103,6 +142,72 @@ export function normalizeSkillRootPath(path: string | undefined): string {
   const trimmed = path?.trim() ?? ''
   if (!trimmed) return ''
   return resolve(expandHomePath(trimmed))
+}
+
+function isHiddenDirectory(name: string): boolean {
+  return name.startsWith('.') && name !== '.codex' && name !== '.agents'
+}
+
+async function discoverComputerWideSkillRoots(): Promise<string[]> {
+  const roots: string[] = []
+  const userHome = homedir()
+  const knownPaths = [
+    join(userHome, '.codex', 'skills'),
+    join(userHome, '.agents', 'skills'),
+    join(userHome, '.legalwork', 'skills'),
+    join(userHome, 'skills'),
+    '/usr/local/share/skills',
+    '/opt/skills'
+  ]
+  for (const path of knownPaths) {
+    if (existsSync(path) && skillRootHasPackages(path)) {
+      roots.push(path)
+    }
+  }
+  const scanRoots = [
+    userHome,
+    join(userHome, 'Documents'),
+    join(userHome, 'Projects'),
+    join(userHome, 'Workspace')
+  ]
+  const discovered = (await Promise.all(
+    scanRoots.map(async (root) => {
+      if (!existsSync(root)) return []
+      try {
+        return await findSkillRootsUnder(root, 2)
+      } catch {
+        return []
+      }
+    })
+  )).flat()
+  for (const path of discovered) {
+    if (!roots.some((r) => comparablePath(r) === comparablePath(path))) {
+      roots.push(path)
+    }
+  }
+  return roots
+}
+
+async function findSkillRootsUnder(root: string, maxDepth: number): Promise<string[]> {
+  const results: string[] = []
+  if (maxDepth <= 0) return results
+  try {
+    const entries = await readdir(root, { withFileTypes: true })
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue
+      const name = entry.name
+      if (isHiddenDirectory(name)) continue
+      const fullPath = join(root, name)
+      if (skillRootHasPackages(fullPath)) {
+        results.push(fullPath)
+      } else if (maxDepth > 1) {
+        results.push(...await findSkillRootsUnder(fullPath, maxDepth - 1))
+      }
+    }
+  } catch {
+    // ignore permission or access errors
+  }
+  return results
 }
 
 async function discoverCodexPluginSkillRoots(): Promise<string[]> {
@@ -153,33 +258,55 @@ async function packageCandidates(root: string): Promise<string[]> {
 
 async function loadSkillSummary(root: string, scope: GuiSkillScope): Promise<GuiSkillSummary | null> {
   const manifestPath = join(root, 'skill.json')
-  if (existsSync(manifestPath)) {
-    const manifest = JSON.parse(await readFile(manifestPath, 'utf8')) as Record<string, unknown>
-    const name = stringValue(manifest.name) || titleFromSlug(basename(root))
-    const entry = stringValue(manifest.entry) || 'SKILL.md'
-    return {
-      id: slug(stringValue(manifest.id) || name || basename(root)),
-      name,
-      ...(stringValue(manifest.description) ? { description: stringValue(manifest.description) } : {}),
-      root,
-      entryPath: join(root, entry),
-      scope,
-      legacy: false
-    }
-  }
+  const hasManifest = existsSync(manifestPath)
   const entryPath = join(root, 'SKILL.md')
-  if (!existsSync(entryPath)) return null
-  const content = await readFile(entryPath, 'utf8')
-  const frontmatter = readFrontmatter(content)
-  const name = displaySkillName(frontmatter.name, basename(root))
+  const hasEntry = existsSync(entryPath)
+  if (!hasManifest && !hasEntry) return null
+
+  const manifest = hasManifest
+    ? (JSON.parse(await readFile(manifestPath, 'utf8')) as Record<string, unknown>)
+    : {}
+  const manifestName = stringValue(manifest.name)
+  const manifestDescription = stringValue(manifest.description)
+  const manifestId = stringValue(manifest.id)
+  const entry = stringValue(manifest.entry) || 'SKILL.md'
+  const legacy = !hasManifest
+
+  let frontmatter: { id?: string; name?: string; description?: string } = {}
+  if (hasEntry) {
+    const content = await readFile(entryPath, 'utf8')
+    frontmatter = readFrontmatter(content)
+  }
+
+  let name: string
+  let description: string | undefined
+
+  if (scope === 'builtin') {
+    const frontmatterName = frontmatter.name?.trim()
+    const frontmatterDescription = frontmatter.description?.trim()
+    if (frontmatterName && isChineseText(frontmatterName)) {
+      name = frontmatterName
+    } else if (manifestDescription && isChineseText(manifestDescription)) {
+      name = extractChineseTitle(manifestDescription, manifestName || titleFromSlug(basename(root)))
+    } else {
+      name = manifestName || frontmatterName || titleFromSlug(basename(root))
+    }
+    description = frontmatterDescription || (manifestDescription && isChineseText(manifestDescription) ? manifestDescription : undefined)
+  } else {
+    name = manifestName || displaySkillName(frontmatter.name, basename(root))
+    description = manifestDescription || frontmatter.description || undefined
+  }
+
+  const id = slug(manifestId || frontmatter.id || (legacy ? basename(root) : name || basename(root)))
+
   return {
-    id: slug(frontmatter.id || basename(root)),
+    id,
     name,
-    ...(frontmatter.description ? { description: frontmatter.description } : {}),
+    ...(description ? { description } : {}),
     root,
-    entryPath,
+    entryPath: join(root, entry),
     scope,
-    legacy: true
+    legacy
   }
 }
 
@@ -221,6 +348,21 @@ function stringValue(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
 }
 
+function isChineseText(text: string): boolean {
+  return /[一-鿿]/.test(text)
+}
+
+function extractChineseTitle(description: string | undefined, fallback: string): string {
+  if (!description) return fallback
+  if (!isChineseText(description)) return fallback
+  const colonIndex = description.indexOf('：')
+  if (colonIndex > 0 && colonIndex < 30) {
+    const title = description.slice(0, colonIndex).trim()
+    if (isChineseText(title)) return title
+  }
+  return fallback
+}
+
 function titleFromSlug(value: string): string {
   return value
     .trim()
@@ -253,7 +395,10 @@ function dedupeSkills(skills: GuiSkillSummary[]): GuiSkillSummary[] {
 }
 
 function compareSkillSummary(a: GuiSkillSummary, b: GuiSkillSummary): number {
-  if (a.scope !== b.scope) return a.scope === 'project' ? -1 : 1
+  if (a.scope !== b.scope) {
+    const priority = { project: 0, global: 1, builtin: 2 }
+    return priority[a.scope] - priority[b.scope]
+  }
   return a.name.localeCompare(b.name)
 }
 

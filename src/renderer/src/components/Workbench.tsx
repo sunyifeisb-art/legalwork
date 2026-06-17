@@ -3,7 +3,6 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/react/shallow'
 import { parseClawCommand } from '@shared/claw-commands'
-import { DEFAULT_COMPOSER_MODEL_IDS } from '@shared/default-composer-models'
 import { buildGuiPlanId, buildPlanRelativePath } from '@shared/gui-plan'
 import {
   findKeyboardShortcutCommand,
@@ -14,10 +13,11 @@ import {
 import type { DesktopCommand, SkillListItem } from '@shared/ds-gui-api'
 import type { ClipboardImageReadResult } from '@shared/workspace-file'
 import type { AttachmentReference, ChatBlock } from '../agent/types'
-import type { CoreRuntimeInfoJson, CoreRuntimeSkillJson } from '../agent/kun-contract'
+import type { CoreRuntimeInfoJson, CoreRuntimeSkillJson } from '../agent/legalwork-contract'
 import { getProvider } from '../agent/registry'
+import { rendererRuntimeClient } from '../agent/runtime-client'
 import { useChatStore } from '../store/chat-store'
-import { isClawThread } from '../store/chat-store-helpers'
+import { isClawThread, isLegalResearchThread } from '../store/chat-store-helpers'
 import {
   extractLatestTurnAutoOpenDevPreviewUrls,
   extractLatestTurnDevPreviewUrls
@@ -32,9 +32,6 @@ import {
 } from './chat/FloatingComposerModelPicker'
 import { SideConversationPanel } from './chat/SideConversationPanel'
 import { SessionHeader } from './SessionHeader'
-import { WriteWorkspaceView } from './write/WriteWorkspaceView'
-import { WriteAssistantPanel } from './write/WriteAssistantPanel'
-import { WriteSidebar } from './write/WriteSidebar'
 import { SddAssistantPanel } from './sdd/SddAssistantPanel'
 import { SddDraftEditorView } from './sdd/SddDraftEditorView'
 import { SidebarTitlebarToggleButton } from './sidebar/SidebarPrimitives'
@@ -59,10 +56,13 @@ import { DevPreviewLaunchCard } from './DevPreviewLaunchCard'
 import { RuntimeBanner } from './RuntimeBanner'
 import { useWorkbenchLayout } from './workbench-layout'
 import { useWorkbenchPlanController } from './workbench-plan-controller'
+import type { DataComplianceSection, DesensitizeSection } from './data-compliance/DataCompliancePanel'
+import { useLegalResearch } from './legal-research/useLegalResearch'
 import { prepareImageAttachmentUpload } from '../lib/image-attachment-upload'
 import { isChatAttachmentUploadEnabled } from '../lib/attachment-upload-availability'
 import { normalizeWorkspaceRoot } from '../lib/workspace-path'
 import { useKeyboardShortcutSettings } from '../lib/keyboard-shortcut-settings'
+import { workspaceLabelFromPath } from '../lib/workspace-label'
 import {
   buildComposerFileContextPrompt,
   mergeComposerFileReferences,
@@ -91,6 +91,21 @@ const TodoPanel = lazy(() =>
 )
 const ScheduleTasksView = lazy(() =>
   import('./schedule/ScheduleTasksView').then((module) => ({ default: module.ScheduleTasksView }))
+)
+const DataCompliancePanel = lazy(() =>
+  import('./data-compliance/DataCompliancePanel').then((module) => ({ default: module.DataCompliancePanel }))
+)
+const DesensitizationPanel = lazy(() =>
+  import('./data-compliance/DataCompliancePanel').then((module) => ({ default: module.DesensitizationPanel }))
+)
+const DocumentWritingView = lazy(() =>
+  import('./document-writing/DocumentWritingView').then((module) => ({ default: module.DocumentWritingView }))
+)
+const LegalResearchPanel = lazy(() =>
+  import('./legal-research/LegalResearchPanel').then((module) => ({ default: module.LegalResearchPanel }))
+)
+const KnowledgeBaseView = lazy(() =>
+  import('./knowledge-base/KnowledgeBaseView').then((module) => ({ default: module.KnowledgeBaseView }))
 )
 
 type PendingSddPlanTarget = {
@@ -234,17 +249,20 @@ export function Workbench(): ReactElement {
     route,
     pluginHostRoute,
     workspaceRoot,
+    codeWorkspaceRoots,
     runtimeConnection,
     setRoute,
     openCode,
-    openWrite,
-    ensureWriteThreadForWorkspace,
-    createWriteThread,
     openSettings,
     openPlugins,
     openClaw,
     openSchedule,
+    openDocumentWriting,
+    openLegalResearch,
+    openKnowledgeBase,
     chooseWorkspace,
+    setWorkspaceRoot,
+    clearWorkspace,
     clawChannels,
     activeClawChannelId,
     selectClawChannel,
@@ -290,17 +308,20 @@ export function Workbench(): ReactElement {
       route: s.route,
       pluginHostRoute: s.pluginHostRoute,
       workspaceRoot: s.workspaceRoot,
+      codeWorkspaceRoots: s.codeWorkspaceRoots,
       runtimeConnection: s.runtimeConnection,
       setRoute: s.setRoute,
       openCode: s.openCode,
-      openWrite: s.openWrite,
-      ensureWriteThreadForWorkspace: s.ensureWriteThreadForWorkspace,
-      createWriteThread: s.createWriteThread,
       openSettings: s.openSettings,
       openPlugins: s.openPlugins,
       openClaw: s.openClaw,
       openSchedule: s.openSchedule,
+      openDocumentWriting: s.openDocumentWriting,
+      openLegalResearch: s.openLegalResearch,
+      openKnowledgeBase: s.openKnowledgeBase,
       chooseWorkspace: s.chooseWorkspace,
+      setWorkspaceRoot: s.setWorkspaceRoot,
+      clearWorkspace: s.clearWorkspace,
       clawChannels: s.clawChannels,
       activeClawChannelId: s.activeClawChannelId,
       selectClawChannel: s.selectClawChannel,
@@ -338,6 +359,7 @@ export function Workbench(): ReactElement {
   const [runtimeInfo, setRuntimeInfo] = useState<CoreRuntimeInfoJson | null>(null)
   const [runtimeSkills, setRuntimeSkills] = useState<CoreRuntimeSkillJson[]>([])
   const [composerAttachments, setComposerAttachments] = useState<AttachmentReference[]>([])
+  const legalResearch = useLegalResearch()
   const [composerFileReferences, setComposerFileReferences] = useState<ComposerFileReference[]>([])
   const [attachmentUploadBusy, setAttachmentUploadBusy] = useState(false)
   const [attachmentUploadError, setAttachmentUploadError] = useState<string | null>(null)
@@ -347,22 +369,10 @@ export function Workbench(): ReactElement {
   const setWriteAssistantOpen = useWriteWorkspaceStore((s) => s.setAssistantOpen)
   const writeAssistantModel = useWriteWorkspaceStore((s) => s.assistantModel)
   const setWriteAssistantModel = useWriteWorkspaceStore((s) => s.setAssistantModel)
+  const [dataComplianceSection, setDataComplianceSection] = useState<DataComplianceSection>('review')
+  const [desensitizeSection, setDesensitizeSection] = useState<DesensitizeSection>('info')
   const activeSddDraft = useSddDraftStore((s) => s.activeDraft)
   const sddDraftOperationStatus = useSddDraftStore((s) => s.operationStatus)
-  const writeAssistantPickList = useMemo(() => {
-    const ordered = new Set<string>()
-    for (const id of DEFAULT_COMPOSER_MODEL_IDS) {
-      const normalized = id.trim()
-      if (normalized) ordered.add(normalized)
-    }
-    for (const id of composerPickList) {
-      const normalized = id.trim()
-      if (normalized) ordered.add(normalized)
-    }
-    const current = writeAssistantModel.trim()
-    if (current) ordered.add(current)
-    return [...ordered]
-  }, [composerPickList, writeAssistantModel])
   const stageInsetClass = 'ds-stage-inset'
   const keyboardShortcuts = useKeyboardShortcutSettings()
   const keyboardShortcutBindings = useMemo(
@@ -378,6 +388,7 @@ export function Workbench(): ReactElement {
   const timelineBlocks = blocks
   const timelineLiveReasoning = liveReasoning
   const timelineLiveAssistant = liveAssistant
+  const hasMessages = timelineBlocks.length > 0 || !!timelineLiveAssistant.trim() || !!timelineLiveReasoning.trim()
   const devPreviewBlocks = useMemo<ChatBlock[]>(() => {
     const liveText = timelineLiveAssistant.trim()
     if (!liveText) return timelineBlocks
@@ -403,8 +414,11 @@ export function Workbench(): ReactElement {
     [activeClawChannelId, clawChannels]
   )
   const activeSkillWorkspace = useMemo(
-    () => threads.find((thread) => thread.id === activeThreadId)?.workspace || workspaceRoot || '',
-    [activeThreadId, threads, workspaceRoot]
+    () => {
+      if (!hasMessages) return workspaceRoot || ''
+      return threads.find((thread) => thread.id === activeThreadId)?.workspace || workspaceRoot || ''
+    },
+    [activeThreadId, hasMessages, threads, workspaceRoot]
   )
   const latestDevPreviewUrl = detectedDevPreviewUrls[0] ?? null
   const latestAutoOpenDevPreviewUrl = autoOpenDevPreviewUrls[0] ?? null
@@ -440,8 +454,7 @@ export function Workbench(): ReactElement {
     latestAutoOpenDevPreviewUrl,
     latestDevPreviewUrl,
     route,
-    workspaceRoot,
-    writeAssistantOpen
+    workspaceRoot
   })
   const {
     activeGuiPlan,
@@ -557,9 +570,9 @@ export function Workbench(): ReactElement {
 
   const codeThreads = useMemo(
     () => threads.filter((thread) =>
-      !isWriteThreadId(thread.id) &&
       !isClawThread(thread, clawChannels) &&
-      !isSddAssistantThread(thread)
+      !isSddAssistantThread(thread) &&
+      !isLegalResearchThread(thread)
     ),
     [clawChannels, threads]
   )
@@ -777,34 +790,6 @@ export function Workbench(): ReactElement {
     await handlePickAttachments([clipboardImageToFile(image)])
   }
 
-  const sendWritePrompt = (value: string): void => {
-    const v = value.trim()
-    if (!v) return
-    const writeState = useWriteWorkspaceStore.getState()
-    const writeWorkspaceRoot = writeState.workspaceRoot || workspaceRoot
-    const prompt = composeWritePrompt(v, writeState.quotedSelections, {
-      workspaceRoot: writeWorkspaceRoot,
-      activeFilePath: writeState.activeFilePath
-    })
-    setInput('')
-    void (async () => {
-      const threadId = await ensureWriteThreadForWorkspace(writeWorkspaceRoot)
-      if (!threadId) {
-        setInput(v)
-        return
-      }
-      const model = writeState.assistantModel.trim()
-      const reasoningEffort = composerReasoningEffortRequestValue(composerReasoningEffort)
-      const sent = await sendMessage(prompt, mode === 'plan' ? 'plan' : 'agent', {
-        ...(model ? { model } : {}),
-        ...(reasoningEffort ? { reasoningEffort } : {})
-      })
-      if (sent) {
-        useWriteWorkspaceStore.getState().clearQuotedSelections()
-      }
-    })()
-  }
-
   const createSddAssistantThreadForDraft = async (draft: SddDraft): Promise<string | null> => {
     const normalizedWorkspace = normalizeWorkspaceRoot(draft.workspaceRoot)
     if (!normalizedWorkspace) {
@@ -931,7 +916,7 @@ export function Workbench(): ReactElement {
       workspaceRoot: draft.workspaceRoot
     })
     setInput('')
-    const model = writeAssistantModel.trim()
+    const model = composerModel.trim()
     const reasoningEffort = composerReasoningEffortRequestValue(composerReasoningEffort)
     const sent = await sendMessage(prompt, mode === 'plan' ? 'plan' : 'agent', {
       displayText: v,
@@ -1177,10 +1162,6 @@ export function Workbench(): ReactElement {
       })
       return
     }
-    if (route === 'write') {
-      sendWritePrompt(v)
-      return
-    }
     if (route === 'claw') {
       const command = parseClawCommand(v)
       if (command?.kind === 'clear') {
@@ -1312,14 +1293,68 @@ export function Workbench(): ReactElement {
     void createThread({ workspaceRoot })
   }
 
+  const selectNewConversationWorkspace = (nextWorkspaceRoot: string): void => {
+    if (activeSddDraft) {
+      void saveActiveSddDraftToDisk()
+      useSddDraftStore.getState().clearActiveDraft()
+    }
+    setConnectPhoneSidebarOpen(false)
+    setRoute('chat')
+    void (async () => {
+      await setWorkspaceRoot(nextWorkspaceRoot)
+      if (activeThreadId && !hasMessages) {
+        await createThread({ workspaceRoot: nextWorkspaceRoot })
+      }
+    })()
+  }
+
+  const pickNewConversationWorkspace = (): void => {
+    if (activeSddDraft) {
+      void saveActiveSddDraftToDisk()
+      useSddDraftStore.getState().clearActiveDraft()
+    }
+    setConnectPhoneSidebarOpen(false)
+    setRoute('chat')
+    void chooseWorkspace({ selectThreadAfter: false })
+  }
+
+  const clearNewConversationWorkspace = (): void => {
+    setConnectPhoneSidebarOpen(false)
+    setRoute('chat')
+    void clearWorkspace()
+  }
+
   const openCodeMode = (): void => {
     setConnectPhoneSidebarOpen(false)
     void openCode()
   }
 
-  const openWriteMode = (): void => {
+  const openDataComplianceProject = (): void => {
     setConnectPhoneSidebarOpen(false)
-    void openWrite()
+    if (activeSddDraft) {
+      void saveActiveSddDraftToDisk()
+      useSddDraftStore.getState().clearActiveDraft()
+      if (rightPanelMode === 'sdd-ai') setRightPanelMode(null)
+    }
+    if (rightPanelMode !== null) setRightPanelMode(null)
+    useChatStore.setState({
+      route: 'dataCompliance',
+      error: null
+    })
+  }
+
+  const openDesensitizeProject = (): void => {
+    setConnectPhoneSidebarOpen(false)
+    if (activeSddDraft) {
+      void saveActiveSddDraftToDisk()
+      useSddDraftStore.getState().clearActiveDraft()
+      if (rightPanelMode === 'sdd-ai') setRightPanelMode(null)
+    }
+    if (rightPanelMode !== null) setRightPanelMode(null)
+    useChatStore.setState({
+      route: 'desensitize',
+      error: null
+    })
   }
 
   const openPluginsView = (): void => {
@@ -1332,6 +1367,22 @@ export function Workbench(): ReactElement {
     openSchedule()
   }
 
+  const openDocumentWritingView = (): void => {
+    setConnectPhoneSidebarOpen(false)
+    openDocumentWriting()
+  }
+
+  const openLegalResearchView = (): void => {
+    setConnectPhoneSidebarOpen(false)
+    openLegalResearch()
+  }
+
+  const openKnowledgeBaseView = (): void => {
+    setConnectPhoneSidebarOpen(false)
+    if (rightPanelMode !== null) setRightPanelMode(null)
+    openKnowledgeBase()
+  }
+
   const toggleConnectPhone = (): void => {
     if (activeSddDraft) {
       void saveActiveSddDraftToDisk()
@@ -1342,20 +1393,24 @@ export function Workbench(): ReactElement {
     setConnectPhoneSidebarOpen((open) => !open)
   }
 
-  const sidebarView: 'chat' | 'write' | 'claw' | 'schedule' =
+  const sidebarView: 'chat' | 'dataCompliance' | 'desensitize' | 'claw' | 'schedule' | 'documentWriting' | 'legalResearch' | 'knowledgeBase' =
     route === 'claw' || (route === 'plugins' && pluginHostRoute === 'claw')
       ? 'claw'
       : route === 'schedule'
         ? 'schedule'
-      : route === 'write'
-        ? 'write'
-        : 'chat'
+        : route === 'documentWriting'
+          ? 'documentWriting'
+          : route === 'legalResearch'
+            ? 'legalResearch'
+            : route === 'knowledgeBase'
+              ? 'knowledgeBase'
+              : route === 'dataCompliance'
+                ? 'dataCompliance'
+                : route === 'desensitize'
+                  ? 'desensitize'
+                  : 'chat'
 
   const closeRightPanel = (): void => {
-    if (route === 'write') {
-      setWriteAssistantOpen(false)
-      return
-    }
     setRightPanelMode(null)
     setFilePreviewTarget(null)
   }
@@ -1365,7 +1420,7 @@ export function Workbench(): ReactElement {
     const writeWorkspaceRoot = writeState.workspaceRoot || workspaceRoot
     setInput('')
     writeState.clearQuotedSelections()
-    void createWriteThread(writeWorkspaceRoot)
+    void createThread({ workspaceRoot: writeWorkspaceRoot })
   }
 
   const renderRuntimeBanner = (message: string, detail?: string | null): ReactElement => (
@@ -1386,10 +1441,6 @@ export function Workbench(): ReactElement {
     />
   )
 
-  const writeRuntimeBannerMessage = runtimeConnection !== 'ready'
-    ? (error?.trim() || t('writeRuntimeUnavailable'))
-    : null
-
   const renderRightPanel = (): ReactElement | null => {
     if (!rightPanelVisible) return null
     return (
@@ -1402,35 +1453,7 @@ export function Workbench(): ReactElement {
         />
         <div className="h-full min-h-0 shrink-0" style={{ width: rightSidebarWidth }}>
           <Suspense fallback={<div className="h-full w-full bg-ds-sidebar" />}>
-            {route === 'write' && writeAssistantOpen ? (
-              <WriteAssistantPanel
-                input={input}
-                setInput={setInput}
-                mode={mode}
-                setMode={setMode}
-                busy={busy}
-                runtimeConnection={runtimeConnection}
-                activeThreadId={activeThreadId}
-                blocks={blocks}
-                liveReasoning={liveReasoning}
-                liveAssistant={liveAssistant}
-                composerModel={writeAssistantModel}
-                composerPickList={writeAssistantPickList}
-                composerModelGroups={composerModelGroups}
-                composerReasoningEffort={composerReasoningEffort}
-                setComposerModel={setWriteAssistantModel}
-                setComposerReasoningEffort={setComposerReasoningEffort}
-                queuedMessages={queuedMessages}
-                removeQueuedMessage={removeQueuedMessage}
-                onSend={handleSend}
-                onInterrupt={(options) => void interrupt(options)}
-                onRetryConnection={() => void probeRuntime('user')}
-                onOpenSettings={() => openSettings('agents')}
-                onNewConversation={startNewWriteAssistantConversation}
-                onCollapse={closeRightPanel}
-                className="h-full max-h-full w-full"
-              />
-            ) : rightPanelMode === 'sdd-ai' && activeSddDraft ? (
+            {rightPanelMode === 'sdd-ai' && activeSddDraft ? (
               <SddAssistantPanel
                 draft={activeSddDraft}
                 input={input}
@@ -1443,11 +1466,11 @@ export function Workbench(): ReactElement {
                 blocks={blocks}
                 liveReasoning={liveReasoning}
                 liveAssistant={liveAssistant}
-                composerModel={writeAssistantModel}
-                composerPickList={writeAssistantPickList}
+                composerModel={composerModel}
+                composerPickList={composerPickList}
                 composerModelGroups={composerModelGroups}
                 composerReasoningEffort={composerReasoningEffort}
-                setComposerModel={setWriteAssistantModel}
+                setComposerModel={setComposerModel}
                 setComposerReasoningEffort={setComposerReasoningEffort}
                 queuedMessages={queuedMessages}
                 removeQueuedMessage={removeQueuedMessage}
@@ -1513,26 +1536,20 @@ export function Workbench(): ReactElement {
       {!leftSidebarCollapsed ? (
         <>
           <div className="min-h-0 shrink-0" style={{ width: leftSidebarWidth }}>
-            {route === 'write' ? (
-              <WriteSidebar
-                activeView={sidebarView}
-                connectPhoneSidebarOpen={connectPhoneSidebarOpen}
-                onCodeOpen={openCodeMode}
-                onWriteOpen={openWriteMode}
-                onOpenSettings={(section) => openSettings(section)}
-                onToggleConnectPhone={toggleConnectPhone}
-                onToggleSidebar={toggleLeftSidebar}
-              />
-            ) : (
             <Sidebar
               threads={codeThreads}
               activeThreadId={activeThreadId}
               activeView={sidebarView}
+              dataComplianceSection={dataComplianceSection}
+              desensitizeSection={desensitizeSection}
               connectPhoneSidebarOpen={connectPhoneSidebarOpen}
               pluginsActive={route === 'plugins'}
+              knowledgePanelOpen={route === 'knowledgeBase'}
               runtimeReady={runtimeConnection === 'ready'}
               threadSearch={threadSearch}
               showArchivedThreads={showArchivedThreads}
+              legalResearchRecords={legalResearch.records}
+              activeLegalResearchRecordId={legalResearch.activeRecordId}
               onThreadSearchChange={setThreadSearch}
               onShowArchivedThreadsChange={setShowArchivedThreads}
               onSelectThread={openThread}
@@ -1547,11 +1564,20 @@ export function Workbench(): ReactElement {
               onOpenPlugins={openPluginsView}
               onToggleConnectPhone={toggleConnectPhone}
               onCodeOpen={openCodeMode}
-              onWriteOpen={openWriteMode}
+              onDesensitizeOpen={openDesensitizeProject}
+              onDesensitizeSectionChange={setDesensitizeSection}
+              onDataComplianceOpen={openDataComplianceProject}
+              onDataComplianceSectionChange={setDataComplianceSection}
               onScheduleOpen={openScheduleView}
+              onDocumentWritingOpen={openDocumentWritingView}
+              onLegalResearchOpen={openLegalResearchView}
+              onKnowledgeOpen={openKnowledgeBaseView}
+              onSelectLegalResearchRecord={legalResearch.setActiveRecordId}
+              onDeleteLegalResearchRecord={legalResearch.deleteRecord}
+              onClearLegalResearchHistory={legalResearch.clearHistory}
+              onStopLegalResearch={legalResearch.stopResearch}
               onToggleSidebar={toggleLeftSidebar}
             />
-            )}
           </div>
           <div
             role="separator"
@@ -1588,18 +1614,95 @@ export function Workbench(): ReactElement {
               onOpenThread={openThread}
             />
           </Suspense>
-        ) : route === 'write' ? (
+        ) : route === 'documentWriting' ? (
           <>
-            {writeRuntimeBannerMessage ? renderRuntimeBanner(writeRuntimeBannerMessage, runtimeErrorDetail) : null}
-            <div className="flex min-h-0 flex-1">
-              <WriteWorkspaceView
-                leftSidebarCollapsed={leftSidebarCollapsed}
-                onToggleLeftSidebar={toggleLeftSidebar}
-                input={input}
-                setInput={setInput}
-                onSubmitPrompt={sendWritePrompt}
-              />
-              {renderRightPanel()}
+            <div className="ds-no-drag shrink-0 px-4 pt-4">
+              {leftSidebarCollapsed ? (
+                <SidebarTitlebarToggleButton
+                  onClick={toggleLeftSidebar}
+                  title={t('sidebarExpand')}
+                  ariaLabel={t('sidebarExpand')}
+                />
+              ) : null}
+            </div>
+            <div className="ds-no-drag flex min-h-0 flex-1 overflow-hidden">
+              <Suspense fallback={<div className="h-full bg-ds-main" />}>
+                <DocumentWritingView />
+              </Suspense>
+            </div>
+          </>
+        ) : route === 'legalResearch' ? (
+          <>
+            <div className="ds-no-drag shrink-0 px-4 pt-4">
+              {leftSidebarCollapsed ? (
+                <SidebarTitlebarToggleButton
+                  onClick={toggleLeftSidebar}
+                  title={t('sidebarExpand')}
+                  ariaLabel={t('sidebarExpand')}
+                />
+              ) : null}
+            </div>
+            <div className="ds-no-drag flex min-h-0 flex-1 overflow-hidden">
+              <Suspense fallback={<div className="h-full flex-1 bg-ds-main" />}>
+                <LegalResearchPanel legalResearch={legalResearch} />
+              </Suspense>
+            </div>
+          </>
+        ) : route === 'knowledgeBase' ? (
+          <>
+            <div className="ds-no-drag shrink-0 px-4 pt-4">
+              {leftSidebarCollapsed ? (
+                <SidebarTitlebarToggleButton
+                  onClick={toggleLeftSidebar}
+                  title={t('sidebarExpand')}
+                  ariaLabel={t('sidebarExpand')}
+                />
+              ) : null}
+            </div>
+            <div className="ds-no-drag flex min-h-0 flex-1 overflow-hidden">
+              <Suspense fallback={<div className="h-full flex-1 bg-ds-main" />}>
+                <KnowledgeBaseView />
+              </Suspense>
+            </div>
+          </>
+        ) : route === 'dataCompliance' ? (
+          <>
+            <div className="ds-no-drag shrink-0 px-4 pt-4">
+              {leftSidebarCollapsed ? (
+                <SidebarTitlebarToggleButton
+                  onClick={toggleLeftSidebar}
+                  title={t('sidebarExpand')}
+                  ariaLabel={t('sidebarExpand')}
+                />
+              ) : null}
+            </div>
+            <div className="ds-no-drag flex min-h-0 flex-1 overflow-hidden">
+              <Suspense fallback={<div className="h-full flex-1 bg-ds-main" />}>
+                <DataCompliancePanel
+                  activeSection={dataComplianceSection}
+                  onSectionChange={setDataComplianceSection}
+                />
+              </Suspense>
+            </div>
+          </>
+        ) : route === 'desensitize' ? (
+          <>
+            <div className="ds-no-drag shrink-0 px-4 pt-4">
+              {leftSidebarCollapsed ? (
+                <SidebarTitlebarToggleButton
+                  onClick={toggleLeftSidebar}
+                  title={t('sidebarExpand')}
+                  ariaLabel={t('sidebarExpand')}
+                />
+              ) : null}
+            </div>
+            <div className="ds-no-drag flex min-h-0 flex-1 overflow-hidden">
+              <Suspense fallback={<div className="h-full flex-1 bg-ds-main" />}>
+                <DesensitizationPanel
+                  activeSection={desensitizeSection}
+                  onSectionChange={setDesensitizeSection}
+                />
+              </Suspense>
             </div>
           </>
         ) : (
@@ -1657,6 +1760,7 @@ export function Workbench(): ReactElement {
                 </div>
               </div>
             </header>
+            <div className={hasMessages ? 'flex min-h-0 flex-1 flex-col' : 'flex-shrink-0'}>
             <MessageTimeline
               blocks={timelineBlocks}
               liveReasoning={timelineLiveReasoning}
@@ -1680,8 +1784,15 @@ export function Workbench(): ReactElement {
                 ) : null
               }
             />
-            <div className="flex shrink-0 justify-center px-2 pb-3 pt-0 sm:px-4 md:px-6 lg:px-8">
+            </div>
+            <div className={`flex justify-center px-2 pt-0 sm:px-4 md:px-6 lg:px-8 transition-all duration-300 ease-in-out ${hasMessages ? 'shrink-0 pb-3' : 'flex-col flex-1 items-center justify-center'}`}>
+              {!hasMessages && (
+                <div className="mb-6 text-center text-2xl font-medium text-ds-muted">
+                  我们需要在"{workspaceLabelFromPath(activeSkillWorkspace)}"中做什么？
+                </div>
+              )}
               <FloatingComposer
+                workspaceRootOverride={!hasMessages ? workspaceRoot : undefined}
                 input={input}
                 setInput={setInput}
                 mode={mode}
@@ -1735,6 +1846,11 @@ export function Workbench(): ReactElement {
                   }
                   openSideConversationDraft()
                 }}
+                threads={!hasMessages ? codeThreads : undefined}
+                workspaceRoots={!hasMessages ? codeWorkspaceRoots : undefined}
+                onSelectWorkspace={!hasMessages ? selectNewConversationWorkspace : undefined}
+                onPickWorkspace={!hasMessages ? pickNewConversationWorkspace : undefined}
+                onClearWorkspace={!hasMessages ? clearNewConversationWorkspace : undefined}
               />
             </div>
           </section>

@@ -2,8 +2,11 @@ import { type CSSProperties, type ReactElement, useEffect, useState } from 'reac
 import { useTranslation } from 'react-i18next'
 import {
   getActiveAgentApiKey,
+  getLegalworkRuntimeSettings,
+  getModelProviderProfile,
   getModelProviderSettings,
   normalizeAppSettings,
+  withLegalworkRuntimeSettings,
   type AppSettingsPatch,
   type AppSettingsV1
 } from '@shared/app-settings'
@@ -94,7 +97,18 @@ export function InitialSetupDialog(): ReactElement {
     setSaving(true)
     setError(null)
     try {
-      const next = await rendererRuntimeClient.setSettings(form)
+      // The first-run dialog edits the shared/default model-provider API key.
+      // The Legalwork runtime is configured to use a specific provider profile
+      // (providerId), so copy the active provider's key into the runtime's own
+      // apiKey override. This makes the configuration stick even when the
+      // runtime provider is not the default deepseek profile.
+      const runtime = getLegalworkRuntimeSettings(form)
+      const activeProvider = getModelProviderProfile(form, runtime.providerId)
+      const formWithAgentKey = withLegalworkRuntimeSettings(form, {
+        ...runtime,
+        apiKey: activeProvider.apiKey.trim() || runtime.apiKey.trim()
+      })
+      const next = await rendererRuntimeClient.setSettings(formWithAgentKey)
       setForm(next)
       await applyI18n(next.locale)
       void reloadUiSettings()

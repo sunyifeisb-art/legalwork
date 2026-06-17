@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { isChatAttachmentUploadEnabled } from './attachment-upload-availability'
 
 describe('isChatAttachmentUploadEnabled', () => {
-  it('enables composer attachments in chat when the Kun attachment store is ready', () => {
+  it('enables composer attachments in chat when the Legalwork attachment store is ready', () => {
     expect(isChatAttachmentUploadEnabled({
       runtimeConnection: 'ready',
       route: 'chat',

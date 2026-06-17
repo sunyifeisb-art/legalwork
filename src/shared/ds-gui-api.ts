@@ -47,6 +47,22 @@ import type {
   WriteInlineCompletionResult
 } from './write-inline-completion'
 import type {
+  DocumentGenerationRequest,
+  DocumentGenerationResult
+} from './document-generation'
+import type {
+  UserTemplate,
+  TemplateLearningRequest,
+  TemplateLearningResult,
+  TemplateGenerateWithMaterialsRequest,
+  TemplateGenerateWithMaterialsResult
+} from './user-templates'
+import type {
+  DocumentHistoryRecord,
+  DocumentHistorySummary,
+  HistoryActionResult
+} from './document-history'
+import type {
   WriteExportPayload,
   WriteExportResult,
   WriteRichClipboardPayload,
@@ -54,6 +70,49 @@ import type {
 } from './write-export'
 
 export type RuntimeRequestResult = { ok: boolean; status: number; body: string }
+export type DataComplianceStatus =
+  | {
+      ok: true
+      running: boolean
+      installing: boolean
+      baseUrl: string
+      message?: string
+    }
+  | {
+      ok: false
+      running: false
+      installing: boolean
+      baseUrl: string
+      message: string
+    }
+
+export type DataComplianceInstallProgress = {
+  step: 'detecting' | 'venv' | 'installing' | 'done' | 'error'
+  percent: number
+  message: string
+}
+export type DataComplianceRequestResult = {
+  ok: boolean
+  status: number
+  body: string
+  contentType?: string
+}
+export type DataComplianceSubmitPayload = {
+  mode: 'review' | 'desensitize'
+  documentName?: string
+  inputText?: string
+  reviewType?: 'document' | 'code'
+  outputDir?: string
+  outputFormat?: 'md' | 'docx' | 'txt'
+  file?: {
+    name: string
+    type?: string
+    dataBase64: string
+  }
+}
+export type DataComplianceDownloadResult =
+  | { ok: true; dataBase64: string; filename: string; contentType: string }
+  | { ok: false; message: string }
 export type WorkspacePickResult = { canceled: boolean; path: string | null }
 export type PathOpenResult = { ok: boolean; message?: string }
 export const DESKTOP_COMMANDS = [
@@ -81,14 +140,14 @@ export type SkillListItem = {
   description?: string
   root: string
   entryPath: string
-  scope: 'project' | 'global'
+  scope: 'project' | 'global' | 'builtin'
   legacy: boolean
 }
 export type SkillListResult =
   | { ok: true; skills: SkillListItem[]; validationErrors: Array<{ root: string; message: string }> }
   | { ok: false; message: string }
-export type DeepseekConfigFileResult = { path: string; content: string; exists: boolean }
-export type DeepseekConfigSaveResult = { ok: true; path: string }
+export type LegalworkConfigFileResult = { path: string; content: string; exists: boolean }
+export type LegalworkConfigSaveResult = { ok: true; path: string }
 export type TurnCompleteNotificationPayload = {
   threadId?: string
   title: string
@@ -123,11 +182,36 @@ export type SseEventPayload = { streamId: string; data: unknown }
 export type SseEndPayload = { streamId: string }
 export type SseErrorPayload = { streamId: string; status?: number; message?: string }
 
+export type LegalResearchExportResult =
+  | { ok: true; path: string }
+  | { ok: false; canceled: true; message?: string }
+  | { ok: false; canceled: false; message: string }
+
+export type LegalResearchExportPayload = {
+  html: string
+  defaultName: string
+}
+
 export type DsGuiApi = {
   platform: string
   getSettings: () => Promise<AppSettingsV1>
   setSettings: (partial: AppSettingsPatch) => Promise<AppSettingsV1>
   runtimeRequest: (path: string, method?: string, body?: string) => Promise<RuntimeRequestResult>
+  reconnectRuntime: () => Promise<AppSettingsV1>
+  getDataComplianceStatus: () => Promise<DataComplianceStatus>
+  installDataCompliance: () => Promise<boolean>
+  dataComplianceRequest: (
+    path: string,
+    method?: 'GET' | 'POST' | 'DELETE',
+    body?: string
+  ) => Promise<DataComplianceRequestResult>
+  submitDataComplianceTask: (
+    payload: DataComplianceSubmitPayload
+  ) => Promise<DataComplianceRequestResult>
+  downloadDataComplianceFile: (
+    taskId: string,
+    fileKey: string
+  ) => Promise<DataComplianceDownloadResult>
   fetchUpstreamModels: () => Promise<UpstreamModelsResult>
   getClawStatus: () => Promise<ClawRuntimeStatus>
   runClawTask: (taskId: string) => Promise<ClawRunResult>
@@ -145,8 +229,8 @@ export type DsGuiApi = {
   listSkills: (workspaceRoot?: string) => Promise<SkillListResult>
   saveSkillFile: (rootPath: string, skillName: string, content: string) => Promise<SkillSaveResult>
   openSkillRoot: (rootPath: string) => Promise<PathOpenResult>
-  getDeepseekConfigFile: () => Promise<DeepseekConfigFileResult>
-  setDeepseekConfigFile: (content: string) => Promise<DeepseekConfigSaveResult>
+  getDeepseekConfigFile: () => Promise<LegalworkConfigFileResult>
+  setDeepseekConfigFile: (content: string) => Promise<LegalworkConfigSaveResult>
   openDeepseekConfigDir: () => Promise<PathOpenResult>
   getGitBranches: (workspaceRoot: string) => Promise<GitBranchesResult>
   switchGitBranch: (workspaceRoot: string, branch: string) => Promise<GitBranchesResult>
@@ -178,12 +262,42 @@ export type DsGuiApi = {
   requestWriteInlineCompletion: (
     payload: WriteInlineCompletionRequest
   ) => Promise<WriteInlineCompletionResult>
+  generateDocument: (
+    payload: DocumentGenerationRequest
+  ) => Promise<DocumentGenerationResult>
+  /** List all user-created templates */
+  listUserTemplates: () => Promise<UserTemplate[]>
+  /** Save a user template (create or update) */
+  saveUserTemplate: (template: UserTemplate) => Promise<{ ok: true } | { ok: false; message: string }>
+  /** Delete a user template */
+  deleteUserTemplate: (id: string) => Promise<{ ok: true } | { ok: false; message: string }>
+  /** AI-learn from an uploaded document to create a template */
+  learnTemplateFromFile: (
+    payload: TemplateLearningRequest
+  ) => Promise<TemplateLearningResult>
+  /** Generate document from a user template + materials */
+  generateDocumentFromTemplate: (
+    payload: TemplateGenerateWithMaterialsRequest
+  ) => Promise<TemplateGenerateWithMaterialsResult>
+  /** List document generation history summaries */
+  listDocumentHistory: () => Promise<DocumentHistorySummary[]>
+  /** Get a full history record by id */
+  getDocumentHistoryRecord: (id: string) => Promise<DocumentHistoryRecord | null>
+  /** Save a new generation history record */
+  saveDocumentHistoryRecord: (record: DocumentHistoryRecord) => Promise<HistoryActionResult>
+  /** Delete a history record */
+  deleteDocumentHistoryRecord: (id: string) => Promise<HistoryActionResult>
+  /** Clear all history */
+  clearDocumentHistory: () => Promise<HistoryActionResult>
   listWriteInlineCompletionDebugEntries: () => Promise<WriteInlineCompletionDebugEntry[]>
   clearWriteInlineCompletionDebugEntries: () => Promise<boolean>
   exportWriteDocument: (payload: WriteExportPayload) => Promise<WriteExportResult>
   copyWriteDocumentAsRichText: (
     payload: WriteRichClipboardPayload
   ) => Promise<WriteRichClipboardResult>
+  exportLegalResearchToWord: (
+    payload: LegalResearchExportPayload
+  ) => Promise<LegalResearchExportResult>
   startSse: (threadId: string, sinceSeq: number, streamId?: string) => Promise<{ streamId: string }>
   stopSse: (streamId: string) => Promise<boolean>
   onSseEvent: (handler: (payload: SseEventPayload) => void) => () => void
@@ -210,6 +324,7 @@ export type DsGuiApi = {
   ) => Promise<ScheduleTaskFromTextResult>
   runDesktopCommand: (command: DesktopCommand) => Promise<void>
   openExternal: (url: string) => Promise<void>
+  openKnowledgeFile: (path: string) => Promise<PathOpenResult>
   showTurnCompleteNotification: (
     payload: TurnCompleteNotificationPayload
   ) => Promise<SystemNotificationResult>
@@ -219,6 +334,7 @@ export type DsGuiApi = {
   downloadGuiUpdate: (channel?: GuiUpdateChannel) => Promise<GuiUpdateDownloadResult>
   installGuiUpdate: () => Promise<GuiUpdateInstallResult>
   onGuiUpdateState: (handler: (payload: GuiUpdateState) => void) => () => void
+  onDataComplianceInstallProgress: (handler: (payload: DataComplianceInstallProgress) => void) => () => void
   logError: (category: string, message: string, detail?: unknown) => Promise<void>
   getLogPath: () => Promise<string>
   openLogDir: () => Promise<{ ok: boolean; message?: string }>

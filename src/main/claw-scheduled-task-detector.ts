@@ -2,7 +2,7 @@ import type { AppSettingsV1, ScheduleRunMode, ScheduledTaskV1 } from '../shared/
 import {
   DEFAULT_SCHEDULE_MODEL,
   DEFAULT_SCHEDULE_REASONING_EFFORT,
-  resolveKunRuntimeSettings
+  resolveLegalworkRuntimeSettings
 } from '../shared/app-settings'
 
 const SCHEDULED_TASK_CANDIDATE_RE =
@@ -176,7 +176,7 @@ export async function detectClawScheduledTaskRequest(
   now = new Date()
 ): Promise<ParsedClawScheduledTaskRequest | null> {
   if (!looksLikeClawScheduledTaskCandidate(sourceText)) return null
-  const runtime = resolveKunRuntimeSettings(settings)
+  const runtime = resolveLegalworkRuntimeSettings(settings)
   const apiKey = runtime.apiKey.trim()
   if (!apiKey) return null
   const response = await fetch(buildChatCompletionsUrl(runtime.baseUrl), {

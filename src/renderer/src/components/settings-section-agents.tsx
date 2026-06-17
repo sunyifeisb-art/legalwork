@@ -6,10 +6,10 @@ import {
   DEFAULT_WRITE_INLINE_COMPLETION_MAX_TOKENS,
   DEFAULT_WRITE_INLINE_COMPLETION_MODEL,
   DEFAULT_WRITE_INLINE_LONG_COMPLETION_MAX_TOKENS,
-  DEFAULT_KUN_DATA_DIR,
+  DEFAULT_LEGALWORK_DATA_DIR,
   WRITE_INLINE_COMPLETION_MODEL_IDS,
   defaultModelProviderSettings,
-  isKunRuntimeInsecure
+  isLegalworkRuntimeInsecure
 } from '@shared/app-settings'
 import type { GuiUpdateChannel } from '@shared/gui-update'
 import type { SkillRootId } from '../lib/skill-root-preference'
@@ -101,7 +101,7 @@ function modelContextProfileSummary(input: {
       contextWindowLabel: formatTokenNumber(DEEPSEEK_V4_CONTEXT_PROFILE.contextWindowTokens),
       softThresholdLabel: formatTokenNumber(DEEPSEEK_V4_CONTEXT_PROFILE.softThreshold),
       hardThresholdLabel: formatTokenNumber(DEEPSEEK_V4_CONTEXT_PROFILE.hardThreshold),
-      sourceLabelKey: 'kunModelContextSourceBuiltIn'
+      sourceLabelKey: 'legalworkModelContextSourceBuiltIn'
     }
   }
   const model = input.model?.trim() || 'auto'
@@ -110,7 +110,7 @@ function modelContextProfileSummary(input: {
     contextWindowLabel: 'models.profiles',
     softThresholdLabel: formatTokenNumber(input.fallbackSoftThreshold),
     hardThresholdLabel: formatTokenNumber(input.fallbackHardThreshold),
-    sourceLabelKey: 'kunModelContextSourceFallback'
+    sourceLabelKey: 'legalworkModelContextSourceFallback'
   }
 }
 
@@ -165,10 +165,10 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     tCommon,
     form,
     provider: providerFromContext,
-    kun,
+    legalwork,
     activeApiKey,
     update,
-    updateKun,
+    updateLegalwork,
     updateSharedCredential,
     sharedApiKey,
     sharedBaseUrl,
@@ -231,7 +231,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     memoryRecords,
     runtimeDiagnosticsBusy,
     runtimeDiagnosticsNotice,
-    refreshKunDiagnostics,
+    refreshLegalworkDiagnostics,
     disableMemoryRecord,
     deleteMemoryRecord,
     pickClawWorkspace,
@@ -240,7 +240,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     splitSettingsList,
     listSettingsText
   } = ctx
-  const mcpSearch = kun.mcpSearch ?? {
+  const mcpSearch = legalwork.mcpSearch ?? {
     enabled: false,
     mode: 'auto',
     autoThresholdToolCount: 24,
@@ -264,11 +264,11 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
   }
   const tokenEconomy = {
     ...tokenEconomyDefaults,
-    ...(kun.tokenEconomy ?? {}),
-    enabled: kun.tokenEconomy?.enabled ?? kun.tokenEconomyMode ?? false,
+    ...(legalwork.tokenEconomy ?? {}),
+    enabled: legalwork.tokenEconomy?.enabled ?? legalwork.tokenEconomyMode ?? false,
     historyHygiene: {
       ...tokenEconomyDefaults.historyHygiene,
-      ...(kun.tokenEconomy?.historyHygiene ?? {})
+      ...(legalwork.tokenEconomy?.historyHygiene ?? {})
     }
   }
   const [tokenEconomySavingsState, setTokenEconomySavingsState] =
@@ -293,11 +293,11 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
   }, [tokenEconomy.enabled])
   const tokenEconomySavings = tokenEconomySavingsState.summary
   const settingsLocale = typeof form?.locale === 'string' ? form.locale : undefined
-  const storage = kun.storage ?? {
+  const storage = legalwork.storage ?? {
     backend: 'hybrid',
     sqlitePath: ''
   }
-  const contextCompaction = kun.contextCompaction ?? {
+  const contextCompaction = legalwork.contextCompaction ?? {
     defaultSoftThreshold: 16000,
     defaultHardThreshold: 24000,
     summaryMode: 'heuristic',
@@ -306,11 +306,11 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     summaryInputMaxBytes: 98304
   }
   const modelContext = modelContextProfileSummary({
-    model: kun.model,
+    model: legalwork.model,
     fallbackSoftThreshold: contextCompaction.defaultSoftThreshold,
     fallbackHardThreshold: contextCompaction.defaultHardThreshold
   })
-  const runtimeTuning = kun.runtimeTuning ?? {
+  const runtimeTuning = legalwork.runtimeTuning ?? {
     toolStorm: {
       enabled: true,
       windowSize: 8,
@@ -321,7 +321,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     }
   }
   const updateMcpSearch = (patch: Record<string, unknown>): void => {
-    updateKun({
+    updateLegalwork({
       mcpSearch: {
         ...mcpSearch,
         ...patch
@@ -330,7 +330,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
   }
   const updateTokenEconomy = (patch: Record<string, unknown>): void => {
     const enabled = typeof patch.enabled === 'boolean' ? patch.enabled : tokenEconomy.enabled
-    updateKun({
+    updateLegalwork({
       tokenEconomyMode: enabled,
       tokenEconomy: {
         ...tokenEconomy,
@@ -348,7 +348,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     })
   }
   const updateStorage = (patch: Record<string, unknown>): void => {
-    updateKun({
+    updateLegalwork({
       storage: {
         ...storage,
         ...patch
@@ -356,7 +356,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     })
   }
   const updateContextCompaction = (patch: Record<string, unknown>): void => {
-    updateKun({
+    updateLegalwork({
       contextCompaction: {
         ...contextCompaction,
         ...patch
@@ -364,7 +364,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     })
   }
   const updateRuntimeTuning = (patch: Record<string, unknown>): void => {
-    updateKun({
+    updateLegalwork({
       runtimeTuning: {
         ...runtimeTuning,
         ...patch
@@ -389,7 +389,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
   }
   const provider = providerFromContext ?? form.provider ?? defaultModelProviderSettings()
   const modelProviders = provider.providers as ModelProviderProfileV1[]
-  const activeProviderId = kun.providerId?.trim() || DEFAULT_MODEL_PROVIDER_ID
+  const activeProviderId = legalwork.providerId?.trim() || DEFAULT_MODEL_PROVIDER_ID
   const activeProvider = modelProviders.find((item) => item.id === activeProviderId) ?? modelProviders[0]
   const updateModelProviders = (providers: ModelProviderProfileV1[]): void => {
     const defaultProvider = providers.find((item) => item.id === DEFAULT_MODEL_PROVIDER_ID)
@@ -421,14 +421,14 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
       models: []
     }
     updateModelProviders([...modelProviders, nextProvider])
-    updateKun({ providerId: id })
+    updateLegalwork({ providerId: id })
   }
   const removeModelProvider = (id: string): void => {
     if (id === DEFAULT_MODEL_PROVIDER_ID) return
     const nextProviders = modelProviders.filter((item) => item.id !== id)
     updateModelProviders(nextProviders)
     if (activeProviderId === id) {
-      updateKun({ providerId: DEFAULT_MODEL_PROVIDER_ID })
+      updateLegalwork({ providerId: DEFAULT_MODEL_PROVIDER_ID })
     }
   }
 
@@ -451,20 +451,20 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     description={t('autoStartDesc')}
                     control={
                       <Toggle
-                        checked={kun.autoStart}
-                        onChange={(v) => updateKun({ autoStart: v })}
+                        checked={legalwork.autoStart}
+                        onChange={(v) => updateLegalwork({ autoStart: v })}
                       />
                     }
                   />
                   <div className="px-3 py-4">
                     <AdvancedSettingsDisclosure
-                      title={t('kunAssistantAdvanced')}
-                      description={t('kunAssistantAdvancedDesc')}
+                      title={t('legalworkAssistantAdvanced')}
+                      description={t('legalworkAssistantAdvancedDesc')}
                     >
                       <div className="divide-y divide-ds-border-muted">
                   <SettingRow
-                    title={t('kunProvider')}
-                    description={t('kunProviderDesc')}
+                    title={t('legalworkProvider')}
+                    description={t('legalworkProviderDesc')}
                     wideControl
                     control={
                       <div className="grid gap-3 lg:grid-cols-[260px_minmax(0,1fr)]">
@@ -472,7 +472,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           <select
                             className={selectControlClass}
                             value={activeProvider?.id ?? DEFAULT_MODEL_PROVIDER_ID}
-                            onChange={(e) => updateKun({ providerId: e.target.value })}
+                            onChange={(e) => updateLegalwork({ providerId: e.target.value })}
                           >
                             {modelProviders.map((item) => (
                               <option key={item.id} value={item.id}>{item.name}</option>
@@ -514,7 +514,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                                 onChange={(value) => updateModelProvider(activeProvider.id, { apiKey: value })}
                                 visible={showApiKey}
                                 onToggleVisibility={() => setShowApiKey((value: boolean) => !value)}
-                                placeholder={t('kunApiKeyPlaceholder')}
+                                placeholder={t('legalworkApiKeyPlaceholder')}
                                 autoComplete="off"
                                 showLabel={t('showSecret')}
                                 hideLabel={t('hideSecret')}
@@ -556,45 +556,45 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('kunApiKey')}
-                    description={t('kunApiKeyDesc')}
+                    title={t('legalworkApiKey')}
+                    description={t('legalworkApiKeyDesc')}
                     control={
                       <div className="w-full min-w-0 md:max-w-md">
                         <SecretInput
-                          value={kun.apiKey}
-                          onChange={(value) => updateKun({ apiKey: value })}
+                          value={legalwork.apiKey}
+                          onChange={(value) => updateLegalwork({ apiKey: value })}
                           visible={showApiKey}
                           onToggleVisibility={() => setShowApiKey((value: boolean) => !value)}
-                          placeholder={t('kunApiKeyPlaceholder')}
+                          placeholder={t('legalworkApiKeyPlaceholder')}
                           autoComplete="off"
                           showLabel={t('showSecret')}
                           hideLabel={t('hideSecret')}
                         />
                         <p className="mt-2 text-[12px] text-ds-muted">
-                          {kun.apiKey.trim()
-                            ? t('kunApiKeyOverride')
+                          {legalwork.apiKey.trim()
+                            ? t('legalworkApiKeyOverride')
                             : sharedApiKey.trim()
-                              ? t('kunApiKeyInherited')
-                              : t('kunApiKeyMissing')}
+                              ? t('legalworkApiKeyInherited')
+                              : t('legalworkApiKeyMissing')}
                         </p>
                       </div>
                     }
                   />
                   <SettingRow
-                    title={t('kunBaseUrl')}
-                    description={t('kunBaseUrlDesc')}
+                    title={t('legalworkBaseUrl')}
+                    description={t('legalworkBaseUrlDesc')}
                     control={
                       <div className="w-full min-w-0 md:max-w-md">
                         <input
                           className="w-full min-w-0 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[14px] text-ds-ink shadow-sm focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/30"
-                          value={kun.baseUrl}
-                          placeholder={t('kunBaseUrlPlaceholder')}
-                          onChange={(e) => updateKun({ baseUrl: e.target.value })}
+                          value={legalwork.baseUrl}
+                          placeholder={t('legalworkBaseUrlPlaceholder')}
+                          onChange={(e) => updateLegalwork({ baseUrl: e.target.value })}
                         />
                         <p className="mt-2 text-[12px] text-ds-muted">
-                          {kun.baseUrl.trim()
-                            ? t('kunBaseUrlOverride', { value: kun.baseUrl.trim() })
-                            : t('kunBaseUrlInherited', { value: sharedBaseUrl.trim() || t('kunBaseUrlOfficial') })}
+                          {legalwork.baseUrl.trim()
+                            ? t('legalworkBaseUrlOverride', { value: legalwork.baseUrl.trim() })
+                            : t('legalworkBaseUrlInherited', { value: sharedBaseUrl.trim() || t('legalworkBaseUrlOfficial') })}
                         </p>
                       </div>
                     }
@@ -613,8 +613,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                               ? 'border-red-400 focus:ring-red-300'
                               : 'border-ds-border focus:border-accent/40 focus:ring-accent/30'
                           }`}
-                          value={kun.port}
-                          onChange={(e) => updateKun({ port: Number(e.target.value) })}
+                          value={legalwork.port}
+                          onChange={(e) => updateLegalwork({ port: Number(e.target.value) })}
                         />
                         {portError ? (
                           <p className="mt-1 text-[12px] text-red-700 dark:text-red-300">{portError}</p>
@@ -623,37 +623,37 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('kunBinary')}
-                    description={t('kunBinaryDesc')}
+                    title={t('legalworkBinary')}
+                    description={t('legalworkBinaryDesc')}
                     control={
                       <input
                         className="w-full min-w-0 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[14px] text-ds-ink shadow-sm focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/30 md:max-w-md"
-                        placeholder={t('kunBinaryPlaceholder')}
-                        value={kun.binaryPath}
-                        onChange={(e) => updateKun({ binaryPath: e.target.value })}
+                        placeholder={t('legalworkBinaryPlaceholder')}
+                        value={legalwork.binaryPath}
+                        onChange={(e) => updateLegalwork({ binaryPath: e.target.value })}
                       />
                     }
                   />
                   <SettingRow
-                    title={t('kunDataDir')}
-                    description={t('kunDataDirDesc')}
+                    title={t('legalworkDataDir')}
+                    description={t('legalworkDataDirDesc')}
                     control={
                       <input
                         className="w-full min-w-0 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[14px] text-ds-ink shadow-sm focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/30 md:max-w-md"
-                        placeholder={DEFAULT_KUN_DATA_DIR}
-                        value={kun.dataDir}
-                        onChange={(e) => updateKun({ dataDir: e.target.value })}
+                        placeholder={DEFAULT_LEGALWORK_DATA_DIR}
+                        value={legalwork.dataDir}
+                        onChange={(e) => updateLegalwork({ dataDir: e.target.value })}
                       />
                     }
                   />
                   <SettingRow
-                    title={t('kunModel')}
-                    description={t('kunModelDesc')}
+                    title={t('legalworkModel')}
+                    description={t('legalworkModelDesc')}
                     control={
                       <input
                         className="w-full min-w-0 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[14px] text-ds-ink shadow-sm focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/30 md:max-w-md"
-                        value={kun.model}
-                        onChange={(e) => updateKun({ model: e.target.value })}
+                        value={legalwork.model}
+                        onChange={(e) => updateLegalwork({ model: e.target.value })}
                       />
                     }
                   />
@@ -661,8 +661,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     </AdvancedSettingsDisclosure>
                   </div>
                   <SettingRow
-                    title={t('kunTokenEconomy')}
-                    description={t('kunTokenEconomyDesc')}
+                    title={t('legalworkTokenEconomy')}
+                    description={t('legalworkTokenEconomyDesc')}
                     control={
                       <div className="flex min-w-0 flex-col items-start gap-2 sm:items-end">
                         <Toggle
@@ -673,7 +673,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           <div className="max-w-full rounded-lg border border-emerald-400/25 bg-emerald-500/10 px-2.5 py-1.5 text-[12px] font-medium leading-5 text-emerald-700 dark:text-emerald-200">
                             {tokenEconomySavings ? (
                               <span>
-                                {t('kunTokenEconomySavings', {
+                                {t('legalworkTokenEconomySavings', {
                                   tokens: formatCompactNumber(tokenEconomySavings.tokens),
                                   cost: formatCost(
                                     tokenEconomySavings.costUsd,
@@ -683,9 +683,9 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                                 })}
                               </span>
                             ) : tokenEconomySavingsState.loading ? (
-                              <span>{t('kunTokenEconomySavingsLoading')}</span>
+                              <span>{t('legalworkTokenEconomySavingsLoading')}</span>
                             ) : (
-                              <span>{t('kunTokenEconomySavingsEmpty')}</span>
+                              <span>{t('legalworkTokenEconomySavingsEmpty')}</span>
                             )}
                           </div>
                         ) : null}
@@ -694,18 +694,18 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                   />
                   <div className="px-3 py-4">
                     <AdvancedSettingsDisclosure
-                      title={t('kunTokenEconomyAdvanced')}
-                      description={t('kunTokenEconomyAdvancedDesc')}
+                      title={t('legalworkTokenEconomyAdvanced')}
+                      description={t('legalworkTokenEconomyAdvancedDesc')}
                     >
                       <div className="divide-y divide-ds-border-muted">
                   <SettingRow
-                    title={t('kunTokenEconomyOptions')}
-                    description={t('kunTokenEconomyOptionsDesc')}
+                    title={t('legalworkTokenEconomyOptions')}
+                    description={t('legalworkTokenEconomyOptionsDesc')}
                     wideControl
                     control={
                       <div className="grid gap-3 sm:grid-cols-3">
                         <label className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[13px] font-medium text-ds-muted">
-                          <span>{t('kunCompressToolDescriptions')}</span>
+                          <span>{t('legalworkCompressToolDescriptions')}</span>
                           <Toggle
                             checked={tokenEconomy.compressToolDescriptions}
                             disabled={!tokenEconomy.enabled}
@@ -714,7 +714,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[13px] font-medium text-ds-muted">
-                          <span>{t('kunCompressToolResults')}</span>
+                          <span>{t('legalworkCompressToolResults')}</span>
                           <Toggle
                             checked={tokenEconomy.compressToolResults}
                             disabled={!tokenEconomy.enabled}
@@ -723,7 +723,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[13px] font-medium text-ds-muted">
-                          <span>{t('kunConciseResponses')}</span>
+                          <span>{t('legalworkConciseResponses')}</span>
                           <Toggle
                             checked={tokenEconomy.conciseResponses}
                             disabled={!tokenEconomy.enabled}
@@ -735,13 +735,13 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('kunHistoryHygiene')}
-                    description={t('kunHistoryHygieneDesc')}
+                    title={t('legalworkHistoryHygiene')}
+                    description={t('legalworkHistoryHygieneDesc')}
                     wideControl
                     control={
                       <div className="grid gap-3 sm:grid-cols-3">
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('kunHistoryMaxResultLines')}
+                          {t('legalworkHistoryMaxResultLines')}
                           <input
                             type="number"
                             min={1}
@@ -752,7 +752,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('kunHistoryMaxResultBytes')}
+                          {t('legalworkHistoryMaxResultBytes')}
                           <input
                             type="number"
                             min={512}
@@ -764,7 +764,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('kunHistoryMaxResultTokens')}
+                          {t('legalworkHistoryMaxResultTokens')}
                           <input
                             type="number"
                             min={128}
@@ -776,7 +776,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('kunHistoryMaxArgumentBytes')}
+                          {t('legalworkHistoryMaxArgumentBytes')}
                           <input
                             type="number"
                             min={512}
@@ -789,7 +789,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('kunHistoryMaxArgumentTokens')}
+                          {t('legalworkHistoryMaxArgumentTokens')}
                           <input
                             type="number"
                             min={128}
@@ -802,7 +802,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('kunHistoryMaxArrayItems')}
+                          {t('legalworkHistoryMaxArrayItems')}
                           <input
                             type="number"
                             min={1}
@@ -820,8 +820,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     description={t('runtimeTokenDesc')}
                     control={
                       <SecretInput
-                        value={kun.runtimeToken}
-                        onChange={(value) => updateKun({ runtimeToken: value })}
+                        value={legalwork.runtimeToken}
+                        onChange={(value) => updateLegalwork({ runtimeToken: value })}
                         visible={showRuntimeToken}
                         onToggleVisibility={() => setShowRuntimeToken((value: boolean) => !value)}
                         showLabel={t('showSecret')}
@@ -831,17 +831,17 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('kunInsecure')}
+                    title={t('legalworkInsecure')}
                     description={
-                      kun.runtimeToken.trim()
-                        ? t('kunInsecureDesc')
-                        : t('kunInsecureForcedDesc')
+                      legalwork.runtimeToken.trim()
+                        ? t('legalworkInsecureDesc')
+                        : t('legalworkInsecureForcedDesc')
                     }
                     control={
                       <Toggle
-                        checked={isKunRuntimeInsecure(kun)}
-                        disabled={!kun.runtimeToken.trim()}
-                        onChange={(v) => updateKun({ insecure: v })}
+                        checked={isLegalworkRuntimeInsecure(legalwork)}
+                        disabled={!legalwork.runtimeToken.trim()}
+                        onChange={(v) => updateLegalwork({ insecure: v })}
                       />
                     }
                   />
@@ -852,22 +852,22 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
               </div>
 
               <div className="mt-6">
-                <SettingsCard title={t('kunAdvanced')}>
+                <SettingsCard title={t('legalworkAdvanced')}>
                   <div className="px-3 py-4">
                     <AdvancedSettingsDisclosure
-                      title={t('kunAdvancedDetails')}
-                      description={t('kunAdvancedDetailsDesc')}
+                      title={t('legalworkAdvancedDetails')}
+                      description={t('legalworkAdvancedDetailsDesc')}
                     >
                       <div className="divide-y divide-ds-border-muted">
                   <SettingRow
-                    title={t('kunModelContextProfile')}
-                    description={t('kunModelContextProfileDesc')}
+                    title={t('legalworkModelContextProfile')}
+                    description={t('legalworkModelContextProfileDesc')}
                     wideControl
                     control={
                       <div className="grid gap-3 sm:grid-cols-4">
                         <div className="min-w-0 rounded-xl border border-ds-border-muted bg-ds-card px-3 py-2">
                           <div className="text-[11px] font-medium uppercase text-ds-faint">
-                            {t('kunModelContextModel')}
+                            {t('legalworkModelContextModel')}
                           </div>
                           <div className="mt-1 truncate text-[13px] font-semibold text-ds-ink">
                             {modelContext.modelLabel}
@@ -878,7 +878,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                         </div>
                         <div className="min-w-0 rounded-xl border border-ds-border-muted bg-ds-card px-3 py-2">
                           <div className="text-[11px] font-medium uppercase text-ds-faint">
-                            {t('kunModelContextWindow')}
+                            {t('legalworkModelContextWindow')}
                           </div>
                           <div className="mt-1 truncate text-[13px] font-semibold text-ds-ink">
                             {modelContext.contextWindowLabel}
@@ -886,7 +886,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                         </div>
                         <div className="min-w-0 rounded-xl border border-ds-border-muted bg-ds-card px-3 py-2">
                           <div className="text-[11px] font-medium uppercase text-ds-faint">
-                            {t('kunModelContextSoft')}
+                            {t('legalworkModelContextSoft')}
                           </div>
                           <div className="mt-1 truncate text-[13px] font-semibold text-ds-ink">
                             {modelContext.softThresholdLabel}
@@ -894,7 +894,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                         </div>
                         <div className="min-w-0 rounded-xl border border-ds-border-muted bg-ds-card px-3 py-2">
                           <div className="text-[11px] font-medium uppercase text-ds-faint">
-                            {t('kunModelContextHard')}
+                            {t('legalworkModelContextHard')}
                           </div>
                           <div className="mt-1 truncate text-[13px] font-semibold text-ds-ink">
                             {modelContext.hardThresholdLabel}
@@ -904,40 +904,40 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('kunStorageBackend')}
-                    description={t('kunStorageBackendDesc')}
+                    title={t('legalworkStorageBackend')}
+                    description={t('legalworkStorageBackendDesc')}
                     control={
                       <select
                         className={selectControlClass}
                         value={storage.backend}
                         onChange={(e) => updateStorage({ backend: e.target.value })}
                       >
-                        <option value="hybrid">{t('kunStorageHybrid')}</option>
-                        <option value="file">{t('kunStorageFile')}</option>
+                        <option value="hybrid">{t('legalworkStorageHybrid')}</option>
+                        <option value="file">{t('legalworkStorageFile')}</option>
                       </select>
                     }
                   />
                   <SettingRow
-                    title={t('kunStorageSqlitePath')}
-                    description={t('kunStorageSqlitePathDesc')}
+                    title={t('legalworkStorageSqlitePath')}
+                    description={t('legalworkStorageSqlitePathDesc')}
                     control={
                       <input
                         className="w-full min-w-0 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[14px] text-ds-ink shadow-sm focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/30 md:max-w-md"
                         value={storage.sqlitePath}
                         disabled={storage.backend !== 'hybrid'}
-                        placeholder={t('kunStorageSqlitePathPlaceholder')}
+                        placeholder={t('legalworkStorageSqlitePathPlaceholder')}
                         onChange={(e) => updateStorage({ sqlitePath: e.target.value })}
                       />
                     }
                   />
                   <SettingRow
-                    title={t('kunCompactionThresholds')}
-                    description={t('kunCompactionThresholdsDesc')}
+                    title={t('legalworkCompactionThresholds')}
+                    description={t('legalworkCompactionThresholdsDesc')}
                     wideControl
                     control={
                       <div className="grid gap-3 sm:grid-cols-2">
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('kunCompactionSoftThreshold')}
+                          {t('legalworkCompactionSoftThreshold')}
                           <input
                             type="number"
                             min={1024}
@@ -948,7 +948,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('kunCompactionHardThreshold')}
+                          {t('legalworkCompactionHardThreshold')}
                           <input
                             type="number"
                             min={1024}
@@ -962,24 +962,24 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('kunCompactionSummary')}
-                    description={t('kunCompactionSummaryDesc')}
+                    title={t('legalworkCompactionSummary')}
+                    description={t('legalworkCompactionSummaryDesc')}
                     wideControl
                     control={
                       <div className="grid gap-3 sm:grid-cols-4">
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('kunCompactionSummaryMode')}
+                          {t('legalworkCompactionSummaryMode')}
                           <select
                             className={selectControlClass}
                             value={contextCompaction.summaryMode}
                             onChange={(e) => updateContextCompaction({ summaryMode: e.target.value })}
                           >
-                            <option value="heuristic">{t('kunCompactionSummaryHeuristic')}</option>
-                            <option value="model">{t('kunCompactionSummaryModel')}</option>
+                            <option value="heuristic">{t('legalworkCompactionSummaryHeuristic')}</option>
+                            <option value="model">{t('legalworkCompactionSummaryModel')}</option>
                           </select>
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('kunCompactionSummaryTimeout')}
+                          {t('legalworkCompactionSummaryTimeout')}
                           <input
                             type="number"
                             min={1000}
@@ -991,7 +991,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('kunCompactionSummaryMaxTokens')}
+                          {t('legalworkCompactionSummaryMaxTokens')}
                           <input
                             type="number"
                             min={64}
@@ -1003,7 +1003,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('kunCompactionSummaryInputBytes')}
+                          {t('legalworkCompactionSummaryInputBytes')}
                           <input
                             type="number"
                             min={1024}
@@ -1018,8 +1018,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('kunToolStorm')}
-                    description={t('kunToolStormDesc')}
+                    title={t('legalworkToolStorm')}
+                    description={t('legalworkToolStormDesc')}
                     control={
                       <Toggle
                         checked={runtimeTuning.toolStorm.enabled}
@@ -1028,13 +1028,13 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('kunToolStormLimits')}
-                    description={t('kunToolStormLimitsDesc')}
+                    title={t('legalworkToolStormLimits')}
+                    description={t('legalworkToolStormLimitsDesc')}
                     wideControl
                     control={
                       <div className="grid gap-3 sm:grid-cols-2">
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('kunToolStormWindowSize')}
+                          {t('legalworkToolStormWindowSize')}
                           <input
                             type="number"
                             min={1}
@@ -1046,7 +1046,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('kunToolStormThreshold')}
+                          {t('legalworkToolStormThreshold')}
                           <input
                             type="number"
                             min={2}
@@ -1061,8 +1061,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('kunToolArgumentRepair')}
-                    description={t('kunToolArgumentRepairDesc')}
+                    title={t('legalworkToolArgumentRepair')}
+                    description={t('legalworkToolArgumentRepairDesc')}
                     control={
                       <input
                         type="number"
@@ -1082,16 +1082,16 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
               </div>
 
               <div className="mt-6">
-                <SettingsCard title={t('kunDiagnostics')}>
+                <SettingsCard title={t('legalworkDiagnostics')}>
                   <div className="px-3 py-4">
                     <AdvancedSettingsDisclosure
-                      title={t('kunDiagnosticsAdvanced')}
-                      description={t('kunDiagnosticsAdvancedDesc')}
+                      title={t('legalworkDiagnosticsAdvanced')}
+                      description={t('legalworkDiagnosticsAdvancedDesc')}
                     >
                       <div className="divide-y divide-ds-border-muted">
                   <SettingRow
-                    title={t('kunRuntimeCapabilities')}
-                    description={t('kunRuntimeCapabilitiesDesc')}
+                    title={t('legalworkRuntimeCapabilities')}
+                    description={t('legalworkRuntimeCapabilitiesDesc')}
                     wideControl
                     control={
                       <div className="flex w-full flex-col gap-3">
@@ -1115,10 +1115,10 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                         </div>
                         <div className="grid gap-2 text-[12.5px] text-ds-muted sm:grid-cols-2">
                           <div className="rounded-xl border border-ds-border-muted bg-ds-main/40 px-3 py-2">
-                            {t('kunRuntimeModel')}: <span className="font-mono text-ds-ink">{runtimeInfo?.capabilities?.model?.id ?? 'unknown'}</span>
+                            {t('legalworkRuntimeModel')}: <span className="font-mono text-ds-ink">{runtimeInfo?.capabilities?.model?.id ?? 'unknown'}</span>
                           </div>
                           <div className="rounded-xl border border-ds-border-muted bg-ds-main/40 px-3 py-2">
-                            {t('kunRuntimePid')}: <span className="font-mono text-ds-ink">{runtimeInfo?.pid ?? 'unknown'}</span>
+                            {t('legalworkRuntimePid')}: <span className="font-mono text-ds-ink">{runtimeInfo?.pid ?? 'unknown'}</span>
                           </div>
                           <div className="rounded-xl border border-ds-border-muted bg-ds-main/40 px-3 py-2">
                             MCP: <span className="font-mono text-ds-ink">{runtimeInfo?.capabilities?.mcp?.connectedServers ?? 0}/{runtimeInfo?.capabilities?.mcp?.configuredServers ?? 0}</span>
@@ -1130,12 +1130,12 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                         <div className="flex flex-wrap items-center gap-2">
                           <button
                             type="button"
-                            onClick={() => void refreshKunDiagnostics()}
+                            onClick={() => void refreshLegalworkDiagnostics()}
                             disabled={runtimeDiagnosticsBusy}
                             className="inline-flex items-center gap-1.5 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[13px] font-medium text-ds-ink shadow-sm transition hover:bg-ds-hover disabled:cursor-not-allowed disabled:opacity-55"
                           >
                             <RefreshCw className={`h-3.5 w-3.5 ${runtimeDiagnosticsBusy ? 'animate-spin' : ''}`} strokeWidth={1.75} />
-                            {t('kunDiagnosticsRefresh')}
+                            {t('legalworkDiagnosticsRefresh')}
                           </button>
                           {runtimeDiagnosticsNotice ? <InlineNoticeView notice={runtimeDiagnosticsNotice} /> : null}
                         </div>
@@ -1143,35 +1143,35 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('kunToolDiagnostics')}
-                    description={t('kunToolDiagnosticsDesc')}
+                    title={t('legalworkToolDiagnostics')}
+                    description={t('legalworkToolDiagnosticsDesc')}
                     wideControl
                     control={
                       <div className="grid gap-2 text-[12.5px] text-ds-muted sm:grid-cols-2">
                         <div className="rounded-xl border border-ds-border-muted bg-ds-main/40 px-3 py-2">
-                          {t('kunDiagnosticsProviders')}: <span className="font-mono text-ds-ink">{toolDiagnostics?.providers?.length ?? 0}</span>
+                          {t('legalworkDiagnosticsProviders')}: <span className="font-mono text-ds-ink">{toolDiagnostics?.providers?.length ?? 0}</span>
                         </div>
                         <div className="rounded-xl border border-ds-border-muted bg-ds-main/40 px-3 py-2">
-                          {t('kunDiagnosticsMcpServers')}: <span className="font-mono text-ds-ink">{toolDiagnostics?.mcpServers?.length ?? 0}</span>
+                          {t('legalworkDiagnosticsMcpServers')}: <span className="font-mono text-ds-ink">{toolDiagnostics?.mcpServers?.length ?? 0}</span>
                         </div>
                         <div className="rounded-xl border border-ds-border-muted bg-ds-main/40 px-3 py-2">
-                          {t('kunDiagnosticsSkills')}: <span className="font-mono text-ds-ink">{toolDiagnostics?.skills?.skills?.length ?? 0}</span>
+                          {t('legalworkDiagnosticsSkills')}: <span className="font-mono text-ds-ink">{toolDiagnostics?.skills?.skills?.length ?? 0}</span>
                         </div>
                         <div className="rounded-xl border border-ds-border-muted bg-ds-main/40 px-3 py-2">
-                          {t('kunDiagnosticsAttachments')}: <span className="font-mono text-ds-ink">{toolDiagnostics?.attachments?.count ?? 0}</span>
+                          {t('legalworkDiagnosticsAttachments')}: <span className="font-mono text-ds-ink">{toolDiagnostics?.attachments?.count ?? 0}</span>
                         </div>
                       </div>
                     }
                   />
                   <SettingRow
-                    title={t('kunMemoryRecords')}
-                    description={t('kunMemoryRecordsDesc')}
+                    title={t('legalworkMemoryRecords')}
+                    description={t('legalworkMemoryRecordsDesc')}
                     wideControl
                     control={
                       <div className="flex flex-col gap-2">
                         {memoryRecords.length === 0 ? (
                           <div className="rounded-xl border border-ds-border-muted bg-ds-main/40 px-3 py-3 text-[13px] text-ds-faint">
-                            {t('kunMemoryEmpty')}
+                            {t('legalworkMemoryEmpty')}
                           </div>
                         ) : (
                           memoryRecords.slice(0, 8).map((memory: any) => (
@@ -1182,7 +1182,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                                   <div className="mt-1 flex flex-wrap gap-1.5 text-[11px] text-ds-faint">
                                     <span className="font-mono">{memory.scope}</span>
                                     <span className="font-mono">{memory.id}</span>
-                                    {memory.disabledAt ? <span>{t('kunMemoryDisabled')}</span> : null}
+                                    {memory.disabledAt ? <span>{t('legalworkMemoryDisabled')}</span> : null}
                                     {memory.tags?.length ? <span>{compactList(memory.tags, '')}</span> : null}
                                   </div>
                                 </div>
@@ -1192,8 +1192,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                                     disabled={Boolean(memory.disabledAt)}
                                     onClick={() => void disableMemoryRecord(memory.id)}
                                     className="rounded-lg p-1.5 text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink disabled:cursor-not-allowed disabled:opacity-45"
-                                    aria-label={t('kunMemoryDisable')}
-                                    title={t('kunMemoryDisable')}
+                                    aria-label={t('legalworkMemoryDisable')}
+                                    title={t('legalworkMemoryDisable')}
                                   >
                                     <Ban className="h-3.5 w-3.5" strokeWidth={1.8} />
                                   </button>
@@ -1201,8 +1201,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                                     type="button"
                                     onClick={() => void deleteMemoryRecord(memory.id)}
                                     className="rounded-lg p-1.5 text-ds-muted transition hover:bg-red-500/10 hover:text-red-600"
-                                    aria-label={t('kunMemoryDelete')}
-                                    title={t('kunMemoryDelete')}
+                                    aria-label={t('legalworkMemoryDelete')}
+                                    title={t('legalworkMemoryDelete')}
                                   >
                                     <Trash2 className="h-3.5 w-3.5" strokeWidth={1.8} />
                                   </button>
@@ -1494,9 +1494,9 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     control={
                       <select
                         className={selectControlClass}
-                        value={kun.approvalPolicy}
+                        value={legalwork.approvalPolicy}
                         onChange={(e) =>
-                          updateKun({
+                          updateLegalwork({
                             approvalPolicy: e.target.value as ApprovalPolicy
                           })
                         }
@@ -1515,9 +1515,9 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     control={
                       <select
                         className={selectControlClass}
-                        value={kun.sandboxMode}
+                        value={legalwork.sandboxMode}
                         onChange={(e) =>
-                          updateKun({
+                          updateLegalwork({
                             sandboxMode: e.target.value as SandboxMode
                           })
                         }

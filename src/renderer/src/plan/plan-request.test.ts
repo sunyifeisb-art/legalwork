@@ -18,12 +18,12 @@ describe('plan-request', () => {
       {
         kind: 'user',
         id: 'u2',
-        text: 'DeepSeek GUI is asking you to draft a GUI-owned implementation plan.'
+        text: 'legalwork is asking you to draft a legalwork-owned implementation plan.'
       },
       {
         kind: 'user',
         id: 'u3',
-        text: 'Please read and execute the GUI plan file at `.deepseekgui/plan/auth.md`'
+        text: 'Please read and execute the legalwork plan file at `.deepseekgui/plan/auth.md`'
       },
       {
         kind: 'user',
@@ -35,8 +35,8 @@ describe('plan-request', () => {
   })
 
   it('recognizes internal plan prompts', () => {
-    expect(isInternalGuiPlanPrompt('DeepSeek GUI is asking you to revise an existing GUI-owned implementation plan.')).toBe(true)
-    expect(isInternalGuiPlanPrompt('Please read and execute the GUI plan file at `.deepseekgui/plan/a.md`')).toBe(true)
+    expect(isInternalGuiPlanPrompt('legalwork is asking you to revise an existing legalwork-owned implementation plan.')).toBe(true)
+    expect(isInternalGuiPlanPrompt('Please read and execute the legalwork plan file at `.deepseekgui/plan/a.md`')).toBe(true)
     expect(isInternalGuiPlanPrompt('Create plan: auth')).toBe(true)
     expect(isInternalGuiPlanPrompt('please make a plan for auth')).toBe(false)
   })

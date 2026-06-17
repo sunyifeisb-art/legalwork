@@ -8,6 +8,17 @@ const api = {
     ipcRenderer.invoke('settings:set', partial),
   runtimeRequest: (path, method, body) =>
     ipcRenderer.invoke('runtime:request', { path, method, body }),
+  reconnectRuntime: () => ipcRenderer.invoke('runtime:reconnect'),
+  getDataComplianceStatus: () =>
+    ipcRenderer.invoke('data-compliance:status'),
+  installDataCompliance: () =>
+    ipcRenderer.invoke('data-compliance:install'),
+  dataComplianceRequest: (path, method, body) =>
+    ipcRenderer.invoke('data-compliance:request', { path, method, body }),
+  submitDataComplianceTask: (payload) =>
+    ipcRenderer.invoke('data-compliance:submit', payload),
+  downloadDataComplianceFile: (taskId, fileKey) =>
+    ipcRenderer.invoke('data-compliance:download-file', { taskId, fileKey }),
   fetchUpstreamModels: () => ipcRenderer.invoke('upstream:models'),
   getClawStatus: () => ipcRenderer.invoke('claw:status'),
   runClawTask: (taskId) =>
@@ -80,8 +91,32 @@ const api = {
     ipcRenderer.invoke('write:export', payload),
   copyWriteDocumentAsRichText: (payload) =>
     ipcRenderer.invoke('write:copy-rich-text', payload),
+  exportLegalResearchToWord: (payload) =>
+    ipcRenderer.invoke('legal-research:export-word', payload),
   requestWriteInlineCompletion: (payload) =>
     ipcRenderer.invoke('write:inline-completion', payload),
+  generateDocument: (payload) =>
+    ipcRenderer.invoke('document:generate', payload),
+  listUserTemplates: () =>
+    ipcRenderer.invoke('templates:list'),
+  saveUserTemplate: (template) =>
+    ipcRenderer.invoke('templates:save', template),
+  deleteUserTemplate: (id) =>
+    ipcRenderer.invoke('templates:delete', id),
+  learnTemplateFromFile: (payload) =>
+    ipcRenderer.invoke('templates:learn', payload),
+  generateDocumentFromTemplate: (payload) =>
+    ipcRenderer.invoke('templates:generate', payload),
+  listDocumentHistory: () =>
+    ipcRenderer.invoke('history:list'),
+  getDocumentHistoryRecord: (id) =>
+    ipcRenderer.invoke('history:get', id),
+  saveDocumentHistoryRecord: (record) =>
+    ipcRenderer.invoke('history:save', record),
+  deleteDocumentHistoryRecord: (id) =>
+    ipcRenderer.invoke('history:delete', id),
+  clearDocumentHistory: () =>
+    ipcRenderer.invoke('history:clear'),
   listWriteInlineCompletionDebugEntries: () =>
     ipcRenderer.invoke('write:inline-completion-debug:list'),
   clearWriteInlineCompletionDebugEntries: () =>
@@ -142,6 +177,7 @@ const api = {
   runDesktopCommand: (command) =>
     ipcRenderer.invoke('desktop:command', command),
   openExternal: (url) => ipcRenderer.invoke('shell:open-external', url),
+  openKnowledgeFile: (path) => ipcRenderer.invoke('knowledge:open-file', { path }),
   showTurnCompleteNotification: (payload) => ipcRenderer.invoke('notification:turn-complete', payload),
   getAppVersion: () => ipcRenderer.invoke('app:version'),
   getGuiUpdateState: () => ipcRenderer.invoke('gui:update-state'),
@@ -157,6 +193,14 @@ const api = {
     ) => handler(payload)
     ipcRenderer.on('gui:update-state', wrapped)
     return () => ipcRenderer.removeListener('gui:update-state', wrapped)
+  },
+  onDataComplianceInstallProgress: (handler) => {
+    const wrapped = (
+      _: Electron.IpcRendererEvent,
+      payload: Parameters<typeof handler>[0]
+    ) => handler(payload)
+    ipcRenderer.on('data-compliance:install-progress', wrapped)
+    return () => ipcRenderer.removeListener('data-compliance:install-progress', wrapped)
   },
   logError: (category, message, detail) =>
     ipcRenderer.invoke('log:error', { category, message, detail }),

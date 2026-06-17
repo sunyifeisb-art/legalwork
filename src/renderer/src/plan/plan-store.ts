@@ -51,8 +51,8 @@ export type GuiPlanState = {
   clearActivePlan: () => void
 }
 
-const PLAN_REGISTRY_STORAGE_KEY = 'deepseekgui.plan.registry.v1'
-const PLAN_PREVIEW_MODE_STORAGE_KEY = 'deepseekgui.plan.previewMode'
+const PLAN_REGISTRY_STORAGE_KEY = 'legalwork.plan.registry.v1'
+const PLAN_PREVIEW_MODE_STORAGE_KEY = 'legalwork.plan.previewMode'
 
 function normalizeWorkspaceRoot(value: string | undefined | null): string {
   return (value ?? '').trim().replaceAll('\\', '/').replace(/\/+$/, '')

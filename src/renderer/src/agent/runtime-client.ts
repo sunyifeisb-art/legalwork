@@ -46,6 +46,13 @@ class RendererRuntimeClient {
     return window.dsGui.runtimeRequest(path, method, body)
   }
 
+  async reconnectRuntime(): Promise<AppSettingsV1> {
+    const settings = await window.dsGui.reconnectRuntime()
+    this.cachedSettings = settings
+    this.settingsPromise = null
+    return settings
+  }
+
   startSse(threadId: string, sinceSeq: number, streamId?: string): Promise<{ streamId: string }> {
     return window.dsGui.startSse(threadId, sinceSeq, streamId)
   }

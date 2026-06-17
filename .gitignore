@@ -4,6 +4,7 @@ out/
 dist/
 .cache/
 .deepseek/
+.legalwork/
 *.log
 .DS_Store
 

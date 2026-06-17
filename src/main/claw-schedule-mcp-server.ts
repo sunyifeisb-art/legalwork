@@ -71,15 +71,15 @@ export async function runClawScheduleMcpServerFromArgv(argv: string[]): Promise<
   if (!options) return false
 
   const server = new McpServer(
-    { name: 'deepseek-gui-schedule', version: '0.1.0' },
+    { name: 'legalwork-schedule', version: '0.1.0' },
     { capabilities: { logging: {} } }
   )
 
   const registerListTool = (name: string): void => {
     server.registerTool(name, {
       description: name.startsWith('claw_')
-        ? 'Legacy alias. List scheduled tasks managed by the currently running DeepSeek GUI app.'
-        : 'List scheduled tasks managed by the currently running DeepSeek GUI app.'
+        ? 'Legacy alias. List scheduled tasks managed by the currently running legalwork app.'
+        : 'List scheduled tasks managed by the currently running legalwork app.'
     }, async () => {
       try {
         const result = await postJson(options, '/schedule/internal/list', {})
@@ -96,13 +96,13 @@ export async function runClawScheduleMcpServerFromArgv(argv: string[]): Promise<
     })
   }
   registerListTool('claw_schedule_list')
-  registerListTool('gui_schedule_list')
+  registerListTool('legalwork_schedule_list')
 
   const registerCreateTool = (name: string): void => {
     server.registerTool(name, {
       description: name.startsWith('claw_')
-        ? 'Legacy alias. Create a scheduled task in DeepSeek GUI. Supports one-time (`at`), daily, or interval schedules.'
-        : 'Create a scheduled task in DeepSeek GUI. Supports one-time (`at`), daily, or interval schedules.',
+        ? 'Legacy alias. Create a scheduled task in legalwork. Supports one-time (`at`), daily, or interval schedules.'
+        : 'Create a scheduled task in legalwork. Supports one-time (`at`), daily, or interval schedules.',
       inputSchema: {
         title: z.string().min(1).describe('Short task title shown in the GUI'),
         prompt: z.string().min(1).describe('The prompt/instruction the agent should run at schedule time'),
@@ -146,15 +146,15 @@ export async function runClawScheduleMcpServerFromArgv(argv: string[]): Promise<
     })
   }
   registerCreateTool('claw_schedule_create')
-  registerCreateTool('gui_schedule_create')
+  registerCreateTool('legalwork_schedule_create')
 
   const registerUpdateTool = (name: string): void => {
     server.registerTool(name, {
       description: name.startsWith('claw_')
-        ? 'Legacy alias. Update an existing DeepSeek GUI scheduled task.'
-        : 'Update an existing DeepSeek GUI scheduled task.',
+        ? 'Legacy alias. Update an existing legalwork scheduled task.'
+        : 'Update an existing legalwork scheduled task.',
       inputSchema: {
-        task_id: z.string().min(1).describe('Task id returned by gui_schedule_list or gui_schedule_create'),
+        task_id: z.string().min(1).describe('Task id returned by legalwork_schedule_list or legalwork_schedule_create'),
         title: z.string().optional(),
         prompt: z.string().optional(),
         enabled: z.boolean().optional(),
@@ -205,15 +205,15 @@ export async function runClawScheduleMcpServerFromArgv(argv: string[]): Promise<
     })
   }
   registerUpdateTool('claw_schedule_update')
-  registerUpdateTool('gui_schedule_update')
+  registerUpdateTool('legalwork_schedule_update')
 
   const registerDeleteTool = (name: string): void => {
     server.registerTool(name, {
       description: name.startsWith('claw_')
-        ? 'Legacy alias. Delete a scheduled task from DeepSeek GUI.'
-        : 'Delete a scheduled task from DeepSeek GUI.',
+        ? 'Legacy alias. Delete a scheduled task from legalwork.'
+        : 'Delete a scheduled task from legalwork.',
       inputSchema: {
-        task_id: z.string().min(1).describe('Task id returned by gui_schedule_list or gui_schedule_create')
+        task_id: z.string().min(1).describe('Task id returned by legalwork_schedule_list or legalwork_schedule_create')
       }
     }, async ({ task_id }) => {
       try {
@@ -225,10 +225,10 @@ export async function runClawScheduleMcpServerFromArgv(argv: string[]): Promise<
     })
   }
   registerDeleteTool('claw_schedule_delete')
-  registerDeleteTool('gui_schedule_delete')
+  registerDeleteTool('legalwork_schedule_delete')
 
   // The `gui_plan_create` MCP tool has been retired in favour of the
-  // native Kun `create_plan` tool. See RETIRED_CLAW_GUI_PLAN_TOOL_NAMES
+  // native Legalwork `create_plan` tool. See RETIRED_CLAW_GUI_PLAN_TOOL_NAMES
   // for the list of removed tool names.
 
   const transport = new StdioServerTransport()

@@ -17,7 +17,7 @@ function getNotaryCredentials() {
     return { keyId, issuer, keyPath, cleanup: null }
   }
 
-  const tempDir = mkdtempSync(join(tmpdir(), 'deepseek-gui-notary-'))
+  const tempDir = mkdtempSync(join(tmpdir(), 'legalwork-notary-'))
   const tempKeyPath = join(tempDir, `AuthKey_${keyId}.p8`)
   writeFileSync(tempKeyPath, Buffer.from(keyBase64, 'base64'))
 

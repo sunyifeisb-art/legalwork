@@ -1,0 +1,257 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - button "跳至内容" [ref=e3] [cursor=pointer]:
+      - generic [ref=e5]: 跳至内容
+    - button "辅助功能反馈" [ref=e6] [cursor=pointer]:
+      - generic [ref=e8]: 辅助功能反馈
+    - generic [ref=e9]:
+      - link "返回到必应搜索" [ref=e10] [cursor=pointer]:
+        - /url: /?FORM=Z9FD1
+        - heading "返回到必应搜索" [level=1] [ref=e11]
+      - search [ref=e12]:
+        - button "搜索" [ref=e15] [cursor=pointer]
+        - searchbox "在此处输入你的搜索 — 输入时会显示搜索建议" [ref=e16]: 行政协议 政府违约 救济 行政诉讼 司法解释
+        - button "使用图像搜索" [ref=e22] [cursor=pointer]
+    - complementary "帐户奖励和偏好设置" [ref=e24]:
+      - button "Microsoft Rewards" [ref=e25] [cursor=pointer]:
+        - generic [ref=e27]:
+          - generic [ref=e28]: Rewards
+          - img [ref=e30]
+      - link "登录" [ref=e42] [cursor=pointer]:
+        - /url: javascript:void(0)
+        - generic "登录" [ref=e43]
+    - navigation "主菜单" [ref=e44]:
+      - list [ref=e45]:
+        - listitem [ref=e46]:
+          - link "全部" [ref=e47] [cursor=pointer]:
+            - /url: /?scope=web&FORM=HDRSC1
+        - listitem [ref=e48]:
+          - link "搜索" [ref=e49] [cursor=pointer]:
+            - /url: /copilotsearch?q=%e8%a1%8c%e6%94%bf%e5%8d%8f%e8%ae%ae+%e6%94%bf%e5%ba%9c%e8%bf%9d%e7%ba%a6+%e6%95%91%e6%b5%8e+%e8%a1%8c%e6%94%bf%e8%af%89%e8%ae%bc+%e5%8f%b8%e6%b3%95%e8%a7%a3%e9%87%8a&FORM=CSSCOP
+            - img [ref=e50]
+            - text: 搜索
+        - listitem [ref=e52]:
+          - link "图片" [ref=e53] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=437f7247a9974092dbdb40dfda2b90815cdeec6b113c525348ba5ce9f7a53910JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L2ltYWdlcy9zZWFyY2g_cT0lZTglYTElOGMlZTYlOTQlYmYlZTUlOGQlOGYlZTglYWUlYWUrJWU2JTk0JWJmJWU1JWJhJTljJWU4JWJmJTlkJWU3JWJhJWE2KyVlNiU5NSU5MSVlNiViNSU4ZSslZTglYTElOGMlZTYlOTQlYmYlZTglYWYlODklZTglYWUlYmMrJWU1JThmJWI4JWU2JWIzJTk1JWU4JWE3JWEzJWU5JTg3JThhJkZPUk09SERSU0Mz&ntb=1
+        - listitem [ref=e54]:
+          - link "视频" [ref=e55] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=49a325492e8e9632144ded776cc78de5c7d540e1fb28abad42efd475d30ecb8eJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3ZpZGVvcy9zZWFyY2g_cT0lZTglYTElOGMlZTYlOTQlYmYlZTUlOGQlOGYlZTglYWUlYWUrJWU2JTk0JWJmJWU1JWJhJTljJWU4JWJmJTlkJWU3JWJhJWE2KyVlNiU5NSU5MSVlNiViNSU4ZSslZTglYTElOGMlZTYlOTQlYmYlZTglYWYlODklZTglYWUlYmMrJWU1JThmJWI4JWU2JWIzJTk1JWU4JWE3JWEzJWU5JTg3JThhJkZPUk09SERSU0M0&ntb=1
+        - listitem [ref=e56]:
+          - link "地图" [ref=e57] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=36526a0667237d4f990b25607f7869e45d530832a1b82748abeef91e3039958dJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L21hcHM_cT0lZTglYTElOGMlZTYlOTQlYmYlZTUlOGQlOGYlZTglYWUlYWUrJWU2JTk0JWJmJWU1JWJhJTljJWU4JWJmJTlkJWU3JWJhJWE2KyVlNiU5NSU5MSVlNiViNSU4ZSslZTglYTElOGMlZTYlOTQlYmYlZTglYWYlODklZTglYWUlYmMrJWU1JThmJWI4JWU2JWIzJTk1JWU4JWE3JWEzJWU5JTg3JThhJkZPUk09SERSU0M2&ntb=1
+        - listitem [ref=e58]:
+          - link "资讯" [ref=e59] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=af899a7b736eb476613ed4b91868463514cb79a49ad774e68e7c1aef510d461fJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L25ld3Mvc2VhcmNoP3E9JWU4JWExJThjJWU2JTk0JWJmJWU1JThkJThmJWU4JWFlJWFlKyVlNiU5NCViZiVlNSViYSU5YyVlOCViZiU5ZCVlNyViYSVhNislZTYlOTUlOTElZTYlYjUlOGUrJWU4JWExJThjJWU2JTk0JWJmJWU4JWFmJTg5JWU4JWFlJWJjKyVlNSU4ZiViOCVlNiViMyU5NSVlOCVhNyVhMyVlOSU4NyU4YSZGT1JNPUhEUlNDNw&ntb=1
+        - listitem [ref=e60]:
+          - link "Copilot" [ref=e61] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=b30cb38054378bdf1fe8a7c6ee21ca973d3645a95eed80b0c8894d4e438fa549JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L2NoYXQ_cHJvbXB0PSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSslZTYlOTQlYmYlZTUlYmElOWMlZTglYmYlOWQlZTclYmElYTYrJWU2JTk1JTkxJWU2JWI1JThlKyVlOCVhMSU4YyVlNiU5NCViZiVlOCVhZiU4OSVlOCVhZSViYyslZTUlOGYlYjglZTYlYjMlOTUlZTglYTclYTMlZTklODclOGEmc2VuZHF1ZXJ5PTEmRk9STT1TQ0NPRFg&ntb=1
+        - listitem [ref=e62]:
+          - button "更多" [ref=e63] [cursor=pointer]:
+            - img [ref=e65]
+            - text: 更多
+  - generic [ref=e67]:
+    - main "搜索结果" [ref=e68]:
+      - list [ref=e69]:
+        - listitem [ref=e70]:
+          - generic [ref=e74]:
+            - generic [ref=e76]:
+              - button "喜欢" [ref=e77]:
+                - img [ref=e78]
+              - button "不喜欢" [ref=e80]:
+                - img [ref=e81]
+            - tooltip "AI 免责声明" [ref=e83]:
+              - img [ref=e84]
+        - listitem [ref=e108]:
+          - link "中华人民共和国最高人民法院公报" [ref=e110] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=716c2ecf0a1f7a72768f6e6cbb140e96aecac1a4e82a9649976fba009c00d84dJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cDovL2dvbmdiYW8uY291cnQuZ292LmNuL0RldGFpbHMvMTI4YjVhZDYzYmNiMDQ3OWUzZTA3NWJjZjVkOWJlLmh0bWw_c3c9JWU4JWExJThjJWU2JTk0JWJmJWU1JThkJThmJWU4JWFlJWFl&ntb=1
+            - generic [ref=e115]:
+              - generic [ref=e116]: 中华人民共和国最高人民法院公报
+              - generic [ref=e119]: http://gongbao.court.gov.cn › Details
+          - heading "最高人民法院关于审理行政协议案件若干问题的规定 - 中华人民共和国 …" [level=2] [ref=e120]:
+            - link "最高人民法院关于审理行政协议案件若干问题的规定 - 中华人民共和国 …" [ref=e121] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=716c2ecf0a1f7a72768f6e6cbb140e96aecac1a4e82a9649976fba009c00d84dJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cDovL2dvbmdiYW8uY291cnQuZ292LmNuL0RldGFpbHMvMTI4YjVhZDYzYmNiMDQ3OWUzZTA3NWJjZjVkOWJlLmh0bWw_c3c9JWU4JWExJThjJWU2JTk0JWJmJWU1JThkJThmJWU4JWFlJWFl&ntb=1
+          - paragraph [ref=e123]: 中华人民共和国最高人民法院 公 告 《最高人民法院关于审理 行政协议 案件若干问题的规定》已于 2019 年 11 月 12 日由最高人民法院审判委员会第 1781 次会议通过，现予公布，自 2020年1月1日起施行。 …
+          - list [ref=e125]:
+            - listitem [ref=e126]:
+              - link "司法解释" [ref=e127] [cursor=pointer]:
+                - /url: https://www.bing.com/ck/a?!&&p=5a5a6a9e13d05a274159f9a5f9946258a8b14b3915c0a0919448f4d0d092b8d6JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cDovL2dvbmdiYW8uY291cnQuZ292LmNuL0FydGljbGVMaXN0Lmh0bWw_c2VyaWFsX25vPXNmanM&ntb=1
+              - paragraph [ref=e128]: 最高人民法院 关于审理矿产资源纠纷案件适用法律若干问题的解释 2026年03期 最高人民法院 关于基本医疗保险基金先行支付申请条件法律适用问题的批复 202…
+          - link "仅显示来自 gongbao.court.gov.cn 的搜索结果" [ref=e129] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=62cb90301b9249e1ae27868c1f3f85be62ff6650bfc0d8cce7b15ac0e960752eJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPXNpdGU6Z29uZ2Jhby5jb3VydC5nb3YuY24rJWU4JWExJThjJWU2JTk0JWJmJWU1JThkJThmJWU4JWFlJWFlKyVlNiU5NCViZiVlNSViYSU5YyVlOCViZiU5ZCVlNyViYSVhNislZTYlOTUlOTElZTYlYjUlOGUrJWU4JWExJThjJWU2JTk0JWJmJWU4JWFmJTg5JWU4JWFlJWJjKyVlNSU4ZiViOCVlNiViMyU5NSVlOCVhNyVhMyVlOSU4NyU4YSZmb3JtPURMSU5LUg&ntb=1
+        - listitem [ref=e130]:
+          - link "中国人大网" [ref=e132] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=9784f28159944dd7518d42df6fa55c9555012e8f6a1472cf9b1547927744470cJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cDovL3d3dy5ucGMuZ292LmNuL2MyL2MzMDgzNC8yMDE5MTIvdDIwMTkxMjEwXzMwMzE0OS5odG1s&ntb=1
+            - generic [ref=e137]:
+              - generic [ref=e138]: 中国人大网
+              - generic [ref=e141]: http://www.npc.gov.cn
+          - heading "最高人民法院关于审理行政协议案件若干问题的规定_中国人大网" [level=2] [ref=e142]:
+            - link "最高人民法院关于审理行政协议案件若干问题的规定_中国人大网" [ref=e143] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=9784f28159944dd7518d42df6fa55c9555012e8f6a1472cf9b1547927744470cJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cDovL3d3dy5ucGMuZ292LmNuL2MyL2MzMDgzNC8yMDE5MTIvdDIwMTkxMjEwXzMwMzE0OS5odG1s&ntb=1
+          - paragraph [ref=e145]: 《最高人民法院关于审理行政协议案件若干问题的规定》已于2019年11月12日由最高人民法院审判委员会第1781次会议通过，现予公布，自2020年1月1日起施行。
+        - listitem [ref=e146]:
+          - link "河南省高级人民法院" [ref=e148] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=44339e830a81c0772fdf1963cb25bdbca6bb346d1f57a3ff657619c880e98a94JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly93d3cuaG5jb3VydC5nb3YuY24vcHVibGljL2RldGFpbC5waHA_aWQ9MTc5MzE0&ntb=1
+            - generic [ref=e153]:
+              - generic [ref=e154]: 河南省高级人民法院
+              - generic [ref=e157]: https://www.hncourt.gov.cn › public › detail.php
+          - heading "最高人民法院关于审理行政协议案件若干问题的规定" [level=2] [ref=e158]:
+            - link "最高人民法院关于审理行政协议案件若干问题的规定" [ref=e159] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=44339e830a81c0772fdf1963cb25bdbca6bb346d1f57a3ff657619c880e98a94JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly93d3cuaG5jb3VydC5nb3YuY24vcHVibGljL2RldGFpbC5waHA_aWQ9MTc5MzE0&ntb=1
+          - paragraph [ref=e161]: 《最高人民法院关于审理行政协议案件若干问题的规定》已于2019年11月12日由最高人民法院审判委员会第1781次会议通过，现予公布，自2020年1月1日起施行。 最高人民法院 2019年11月27日 法释 …
+        - listitem [ref=e162]:
+          - link "中国法学网" [ref=e164] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=8322d9d741d7da6b9318f45d6b701af137b31b96de487bc6e509e6ee9aaab6a1JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cDovL2lvbGF3LmNzc24uY24vZnh5amR0LzIwMTkxMi90MjAxOTEyMTBfNTA1NjYwNy5zaHRtbA&ntb=1
+            - generic [ref=e169]:
+              - generic [ref=e170]: 中国法学网
+              - generic [ref=e173]: http://iolaw.cssn.cn › fxyjdt
+          - heading "《最高人民法院关于审理行政协议案件若干问题的规定》全文" [level=2] [ref=e174]:
+            - link "《最高人民法院关于审理行政协议案件若干问题的规定》全文" [ref=e175] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=8322d9d741d7da6b9318f45d6b701af137b31b96de487bc6e509e6ee9aaab6a1JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cDovL2lvbGF3LmNzc24uY24vZnh5amR0LzIwMTkxMi90MjAxOTEyMTBfNTA1NjYwNy5zaHRtbA&ntb=1
+          - paragraph [ref=e177]: 《最高人民法院关于审理行政协议案件若干问题的规定》已于 2019 年 11 月 12 日由最高人民法院审判委员会第 1781 次会议通过，现予公布，自 2020 年 1 月 1 日起施行。 最高人民法院 2019 年 11 月 27 …
+        - listitem [ref=e178]:
+          - link "法律文库" [ref=e180] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=f8b7cfee0d6d6ef85d637e50649bd5a9b5223a0c7590602d3a385d74ebbe27d7JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cDovL2xhd2RiLmNuY291cnQub3JnL3Nob3cucGhwP2ZpZD0xNTIxNjA&ntb=1
+            - generic [ref=e185]:
+              - generic [ref=e186]: 法律文库
+              - generic [ref=e189]: http://lawdb.cncourt.org › show.php
+          - heading "最高人民法院关于审理行政协议案件若干问题的规定【2019-11-27】" [level=2] [ref=e190]:
+            - link "最高人民法院关于审理行政协议案件若干问题的规定【2019-11-27】" [ref=e191] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=f8b7cfee0d6d6ef85d637e50649bd5a9b5223a0c7590602d3a385d74ebbe27d7JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cDovL2xhd2RiLmNuY291cnQub3JnL3Nob3cucGhwP2ZpZD0xNTIxNjA&ntb=1
+          - paragraph [ref=e193]: 【发布单位】最高人民法院 【发布文号】法释〔2019〕17号 【发布日期】2019-11-27 【生效日期】2020-01-01 【失效日期】----------- 【所属类别】国家法律法规 【文件来源】 最高人民法院网 《最高 …
+        - listitem [ref=e194]:
+          - link "wikisource.org" [ref=e196] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=8eed65990005d5dffebbfdfdc213285c7fcc879dd523b4dcbf494821a777c0cdJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly96aC53aWtpc291cmNlLm9yZy93aWtpLyVFNiU5QyU4MCVFOSVBQiU5OCVFNCVCQSVCQSVFNiVCMCU5MSVFNiVCMyU5NSVFOSU5OSVBMiVFNSU4NSVCMyVFNCVCQSU4RSVFNSVBRSVBMSVFNyU5MCU4NiVFOCVBMSU4QyVFNiU5NCVCRiVFNSU4RCU4RiVFOCVBRSVBRSVFNiVBMSU4OCVFNCVCQiVCNiVFOCU4QiVBNSVFNSVCOSVCMiVFOSU5NyVBRSVFOSVBMiU5OCVFNyU5QSU4NCVFOCVBNyU4NCVFNSVBRSU5QQ&ntb=1
+            - generic [ref=e201]:
+              - generic [ref=e202]: wikisource.org
+              - generic [ref=e205]: https://zh.wikisource.org › wiki › 最高人民法院关于审理行政协议案件若干...
+          - heading "最高人民法院关于审理行政协议案件若干问题的规定 - 维基文库，自由 …" [level=2] [ref=e206]:
+            - link "最高人民法院关于审理行政协议案件若干问题的规定 - 维基文库，自由 …" [ref=e207] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=8eed65990005d5dffebbfdfdc213285c7fcc879dd523b4dcbf494821a777c0cdJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly96aC53aWtpc291cmNlLm9yZy93aWtpLyVFNiU5QyU4MCVFOSVBQiU5OCVFNCVCQSVCQSVFNiVCMCU5MSVFNiVCMyU5NSVFOSU5OSVBMiVFNSU4NSVCMyVFNCVCQSU4RSVFNSVBRSVBMSVFNyU5MCU4NiVFOCVBMSU4QyVFNiU5NCVCRiVFNSU4RCU4RiVFOCVBRSVBRSVFNiVBMSU4OCVFNCVCQiVCNiVFOCU4QiVBNSVFNSVCOSVCMiVFOSU5NyVBRSVFOSVBMiU5OCVFNyU5QSU4NCVFOCVBNyU4NCVFNSVBRSU5QQ&ntb=1
+          - paragraph [ref=e209]: 《最高人民法院关于审理行政协议案件若干问题的规定》已于2019年11月12日由最高人民法院审判委员会第1781次会议通过，现予公布，自2020年1月1日起施行。
+        - listitem [ref=e210]:
+          - link "sdcourt.gov.cn" [ref=e212] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=ce8467310eb4d80e1201a6b89fd34993bd9c2a4d7234123c616bee3ea1d862e7JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cDovL2puaW5ncWZmeS5zZGNvdXJ0Lmdvdi5jbi9oemtmcWZ5LzQwMDcwMy80MDA3MDkvNTg4MTg0MC9pbmRleC5odG1s&ntb=1
+            - generic [ref=e217]:
+              - generic [ref=e218]: sdcourt.gov.cn
+              - generic [ref=e221]: http://jningqffy.sdcourt.gov.cn › hzkfqfy › index.html
+          - heading "最高人民法院关于审理行政协议案件若干问题的规定" [level=2] [ref=e222]:
+            - link "最高人民法院关于审理行政协议案件若干问题的规定":
+              - /url: https://www.bing.com/ck/a?!&&p=ce8467310eb4d80e1201a6b89fd34993bd9c2a4d7234123c616bee3ea1d862e7JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cDovL2puaW5ncWZmeS5zZGNvdXJ0Lmdvdi5jbi9oemtmcWZ5LzQwMDcwMy80MDA3MDkvNTg4MTg0MC9pbmRleC5odG1s&ntb=1
+          - paragraph [ref=e224]: 《最高人民法院关于审理行政协议案件若干问题的规定》已于2019年11月12日由最高人民法院审判委员会第1781次会议通过，现予公布，自2020年1月1日起施行。 最高人民法院 2019年11月27日 法释 …
+        - listitem [ref=e225]:
+          - link "66laws.com" [ref=e227] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=e1ee1f158a5357d931fb13ffd2c2a8bcd0132a256eb5bc27fd63e8e37c9919bfJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly9tLjY2bGF3cy5jb20vZmFndWkvMTc5NzcuaHRtbA&ntb=1
+            - generic [ref=e232]:
+              - generic [ref=e233]: 66laws.com
+              - generic [ref=e236]: https://m.66laws.com › fagui
+          - heading "最高人民法院关于审理行政协议案件若干问题的规定 - 司法解释 - 律科网" [level=2] [ref=e237]:
+            - link "最高人民法院关于审理行政协议案件若干问题的规定 - 司法解释 - 律科网":
+              - /url: https://www.bing.com/ck/a?!&&p=e1ee1f158a5357d931fb13ffd2c2a8bcd0132a256eb5bc27fd63e8e37c9919bfJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly9tLjY2bGF3cy5jb20vZmFndWkvMTc5NzcuaHRtbA&ntb=1
+          - paragraph [ref=e239]: 中华人民共和国最高人民法院 公 告 《最高人民法院关于审理行政协议案件若干问题的规定》已于2019年11月12日由最高人民法院审判委员会第1781次会议通过，现予公布，自2020年1月1日起施行。 2019 …
+        - listitem [ref=e240]:
+          - link "baidu.com" [ref=e242] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=f7054f265a88ca197c0ce452038f99e959f29ed456d33e50bb460ee076cc7f09JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly9haWxlZ2FsLmJhaWR1LmNvbS9sZWdhbGFydGljbGUvcWFkZXRhaWw_aWQ9ZDM4MDc2YjFkY2MxNTUyNTEyMjE&ntb=1
+            - generic [ref=e247]:
+              - generic [ref=e248]: baidu.com
+              - generic [ref=e251]: https://ailegal.baidu.com › legalarticle › qadetail
+          - heading "最高法院关于审理行政协议若干问题的规定" [level=2] [ref=e252]:
+            - link "最高法院关于审理行政协议若干问题的规定":
+              - /url: https://www.bing.com/ck/a?!&&p=f7054f265a88ca197c0ce452038f99e959f29ed456d33e50bb460ee076cc7f09JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly9haWxlZ2FsLmJhaWR1LmNvbS9sZWdhbGFydGljbGUvcWFkZXRhaWw_aWQ9ZDM4MDc2YjFkY2MxNTUyNTEyMjE&ntb=1
+          - paragraph [ref=e254]: 1 天前 · **《最高人民法院关于审理行政协议案件若干问题的规定》为行政协议案件的审理提供了全面且具体的法律依据**。1. **行政协议的定义与范围**：行政协议是行政机关为实现行政管理或公共服务 …
+        - listitem [ref=e255]:
+          - link "越律网" [ref=e257] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=c2981a648e7d985f57c410379f4e93d0f886c0d2f9226d3930ade674da9245c0JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly93d3cuc3hscy5jb20veGluZ3poZW5neGlleWkuaHRtbA&ntb=1
+            - generic [ref=e262]:
+              - generic [ref=e263]: 越律网
+              - generic [ref=e266]: https://www.sxls.com › xingzhengxieyi.html
+          - heading "最高院发布审理行政协议案件司法解释（附全文） - 越律网" [level=2] [ref=e267]:
+            - link "最高院发布审理行政协议案件司法解释（附全文） - 越律网":
+              - /url: https://www.bing.com/ck/a?!&&p=c2981a648e7d985f57c410379f4e93d0f886c0d2f9226d3930ade674da9245c0JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly93d3cuc3hscy5jb20veGluZ3poZW5neGlleWkuaHRtbA&ntb=1
+          - paragraph [ref=e269]: 2019年12月10日 · 《最高人民法院关于审理行政协议案件若干问题的规定》已于2019年11月12日由最高人民法院审判委员会第1781次会议通过，现予公布，自2020年1月1日起施行。 最高人民法院 2019年11 …
+        - listitem [ref=e270]:
+          - generic [ref=e271]:
+            - heading "深入了解 行政协议 政府违约 救济 行政诉讼 司法解释" [level=2] [ref=e272]:
+              - text: 深入了解
+              - strong [ref=e273]: 行政协议 政府违约 救济 行政诉讼 司法解释
+            - list [ref=e274]:
+              - listitem [ref=e275]:
+                - link "行政机关与他人订立行政协议的法律依据" [ref=e276] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=412dd772b42890174d2d140e6a552903972a055e768996f1e9422c6baffa06e2JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNiU5YyViYSVlNSU4NSViMyVlNCViOCU4ZSVlNCViYiU5NiVlNCViYSViYSVlOCVhZSVhMiVlNyVhYiU4YiVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlNyU5YSU4NCVlNiViMyU5NSVlNSViZSU4YiVlNCViZSU5ZCVlNiU4ZCVhZSZGT1JNPVFTUkUx&ntb=1
+                  - strong [ref=e279]: 行政机关与他人订立行政协议的法律依据
+              - listitem [ref=e280]:
+                - link "与行政协议有利害关系的公民或者法人或者其他组织提起行政诉讼" [ref=e281] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=8e4e35b1892996cb0d4e09d4ef6eb673d8be6b6cecfe7277a926879271a84225JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlNCViOCU4ZSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlNiU5YyU4OSVlNSU4OCVhOSVlNSVhZSViMyVlNSU4NSViMyVlNyViMyViYiVlNyU5YSU4NCVlNSU4NSVhYyVlNiViMCU5MSVlNiU4OCU5NiVlOCU4MCU4NSVlNiViMyU5NSVlNCViYSViYSVlNiU4OCU5NiVlOCU4MCU4NSVlNSU4NSViNiVlNCViYiU5NiVlNyViYiU4NCVlNyViYiU4NyVlNiU4ZiU5MCVlOCViNSViNyVlOCVhMSU4YyVlNiU5NCViZiVlOCVhZiU4OSVlOCVhZSViYyZGT1JNPVFTUkUy&ntb=1
+                  - strong [ref=e284]: 与行政协议有利害关系的公民或者法人或者其他组织提起行政诉讼
+              - listitem [ref=e285]:
+                - link "最高人民法院关于行政协议案件若干问题的规定" [ref=e286] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=e31a198bfbdfab3431ea783c9d42d25f0527fb31f8860e3c76c1e46a4e1d55cfJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlNiU5YyU4MCVlOSVhYiU5OCVlNCViYSViYSVlNiViMCU5MSVlNiViMyU5NSVlOSU5OSVhMiVlNSU4NSViMyVlNCViYSU4ZSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlNiVhMSU4OCVlNCViYiViNiVlOCU4YiVhNSVlNSViOSViMiVlOSU5NyVhZSVlOSVhMiU5OCVlNyU5YSU4NCVlOCVhNyU4NCVlNSVhZSU5YSZGT1JNPVFTUkUz&ntb=1
+                  - strong [ref=e289]: 最高人民法院关于行政协议案件若干问题的规定
+              - listitem [ref=e290]:
+                - link "行政协议撤销后反诉" [ref=e291] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=1dfa468a2c525f47ae6f2af13fff6d77b950228106df64604452e57a4aae154fJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlNiU5MiVhNCVlOSU5NCU4MCVlNSU5MCU4ZSVlNSU4ZiU4ZCVlOCVhZiU4OSZGT1JNPVFTUkU0&ntb=1
+                  - strong [ref=e294]: 行政协议撤销后反诉
+              - listitem [ref=e295]:
+                - link "行政协议反诉的法律规定" [ref=e296] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=0bea2cdc0783e54cfca064e7a50b7de8d7a1f9aa8de334def68ece7cac7823d9JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlNSU4ZiU4ZCVlOCVhZiU4OSVlNyU5YSU4NCVlNiViMyU5NSVlNSViZSU4YiVlOCVhNyU4NCVlNSVhZSU5YSZGT1JNPVFTUkU1&ntb=1
+                  - strong [ref=e299]: 行政协议反诉的法律规定
+              - listitem [ref=e300]:
+                - link "行政协议执行后反诉" [ref=e301] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=a25309285156b6f45a43244ed21c9e4f7ecca8459bdc7a18ff760e5341bd2176JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlNiU4OSVhNyVlOCVhMSU4YyVlNSU5MCU4ZSVlNSU4ZiU4ZCVlOCVhZiU4OSZGT1JNPVFTUkU2&ntb=1
+                  - strong [ref=e304]: 行政协议执行后反诉
+              - listitem [ref=e305]:
+                - link "行政诉讼法关于行政协议" [ref=e306] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=39b368be0c5d08a0449ff194d46e437c9bbfd0c681a04aa9502fe78b132933e1JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlOCVhZiU4OSVlOCVhZSViYyVlNiViMyU5NSVlNSU4NSViMyVlNCViYSU4ZSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSZGT1JNPVFTUkU3&ntb=1
+                  - strong [ref=e309]: 行政诉讼法关于行政协议
+              - listitem [ref=e310]:
+                - link "行政诉讼法 劳务协议" [ref=e311] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=e0bf24a33d7f1172b2d113621030670ced630347acf6a554a0ba4d042e40927eJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlOCVhZiU4OSVlOCVhZSViYyVlNiViMyU5NSslZTUlOGElYjMlZTUlOGElYTElZTUlOGQlOGYlZTglYWUlYWUmRk9STT1RU1JFOA&ntb=1
+                  - strong [ref=e314]: 行政诉讼法 劳务协议
+        - listitem [ref=e315]:
+          - generic [ref=e316]:
+            - link "某些结果已被删除" [ref=e317] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=7ee39faff3db2c8896d70043c7abb33cfcefe9b2ef73d7fb947b5933a50ac272JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cDovL2dvLm1pY3Jvc29mdC5jb20vZndsaW5rLz9MaW5rSUQ9NjE3MzUw&ntb=1
+            - generic [ref=e318]: 一些您可能无法访问的结果已被隐去。
+            - link "显示无法访问的结果" [ref=e319] [cursor=pointer]:
+              - /url: /search?q=%E8%A1%8C%E6%94%BF%E5%8D%8F%E8%AE%AE+%E6%94%BF%E5%BA%9C%E8%BF%9D%E7%BA%A6+%E6%95%91%E6%B5%8E+%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC+%E5%8F%B8%E6%B3%95%E8%A7%A3%E9%87%8A&ubiroff=1&FORM=P4041
+    - complementary "更多结果" [ref=e320]:
+      - list [ref=e321]:
+        - listitem [ref=e322]:
+          - generic "相关搜索" [ref=e323]:
+            - generic [ref=e325]:
+              - heading "深入了解 行政协议 政府违约 救济 行政诉讼 司法解释" [level=2] [ref=e327]:
+                - text: 深入了解
+                - strong [ref=e328]: 行政协议 政府违约 救济 行政诉讼 司法解释
+              - generic [ref=e329]:
+                - link "行政机关与他人订立行政协议的法律依据" [ref=e331] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=cdf8ef22b70bb5d010bc79b6a7c098d9d740342ec6d8f4d765adf994d8e76274JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNiU5YyViYSVlNSU4NSViMyVlNCViOCU4ZSVlNCViYiU5NiVlNCViYSViYSVlOCVhZSVhMiVlNyVhYiU4YiVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlNyU5YSU4NCVlNiViMyU5NSVlNSViZSU4YiVlNCViZSU5ZCVlNiU4ZCVhZSZGT1JNPVI1RkQ&ntb=1
+                  - strong [ref=e334]: 行政机关与他人订立行政协议的法律依据
+                - link "与行政协议有利害关系的公民或者法人或者其他组织提起行政诉讼" [ref=e336] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=e65ebd407b15f3973a3ed104aa5540b06d291c5f79500e0d0904ac692c8c26bdJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlNCViOCU4ZSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlNiU5YyU4OSVlNSU4OCVhOSVlNSVhZSViMyVlNSU4NSViMyVlNyViMyViYiVlNyU5YSU4NCVlNSU4NSVhYyVlNiViMCU5MSVlNiU4OCU5NiVlOCU4MCU4NSVlNiViMyU5NSVlNCViYSViYSVlNiU4OCU5NiVlOCU4MCU4NSVlNSU4NSViNiVlNCViYiU5NiVlNyViYiU4NCVlNyViYiU4NyVlNiU4ZiU5MCVlOCViNSViNyVlOCVhMSU4YyVlNiU5NCViZiVlOCVhZiU4OSVlOCVhZSViYyZGT1JNPVI1RkQx&ntb=1
+                  - strong [ref=e339]: 与行政协议有利害关系的公民或者法人或者其他组织提起行政诉讼
+                - link "最高人民法院关于行政协议案件若干问题的规定" [ref=e341] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=dece948ead57144971963c98adf715f0d0e4a878ca3bd179712bb21665bd70deJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlNiU5YyU4MCVlOSVhYiU5OCVlNCViYSViYSVlNiViMCU5MSVlNiViMyU5NSVlOSU5OSVhMiVlNSU4NSViMyVlNCViYSU4ZSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlNiVhMSU4OCVlNCViYiViNiVlOCU4YiVhNSVlNSViOSViMiVlOSU5NyVhZSVlOSVhMiU5OCVlNyU5YSU4NCVlOCVhNyU4NCVlNSVhZSU5YSZGT1JNPVI1RkQy&ntb=1
+                  - strong [ref=e344]: 最高人民法院关于行政协议案件若干问题的规定
+                - link "行政协议撤销后反诉" [ref=e346] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=265568f927890dd9cbd111cbd2709a76d0a1e866ebd0c165c320b5cc4c6be113JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlNiU5MiVhNCVlOSU5NCU4MCVlNSU5MCU4ZSVlNSU4ZiU4ZCVlOCVhZiU4OSZGT1JNPVI1RkQz&ntb=1
+                  - strong [ref=e349]: 行政协议撤销后反诉
+                - link "行政协议反诉的法律规定" [ref=e351] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=abe31225764a3d418a34a02e2aa92b281b935f3f3ace4af292ebcebeaeae6c73JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlNSU4ZiU4ZCVlOCVhZiU4OSVlNyU5YSU4NCVlNiViMyU5NSVlNSViZSU4YiVlOCVhNyU4NCVlNSVhZSU5YSZGT1JNPVI1RkQ0&ntb=1
+                  - strong [ref=e354]: 行政协议反诉的法律规定
+                - link "行政协议执行后反诉" [ref=e356] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=46473e33958d45a106f4eec52e7db29c42a686e382ed8a34daa5fc4525882775JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlNiU4OSVhNyVlOCVhMSU4YyVlNSU5MCU4ZSVlNSU4ZiU4ZCVlOCVhZiU4OSZGT1JNPVI1RkQ1&ntb=1
+                  - strong [ref=e359]: 行政协议执行后反诉
+                - link "行政诉讼法关于行政协议" [ref=e361] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=caf2307e8cf1a81509f0130a80e90d0bb34888783d570960823d4c215d7cba28JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlOCVhZiU4OSVlOCVhZSViYyVlNiViMyU5NSVlNSU4NSViMyVlNCViYSU4ZSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSZGT1JNPVI1RkQ2&ntb=1
+                  - strong [ref=e364]: 行政诉讼法关于行政协议
+                - link "行政诉讼法 劳务协议" [ref=e366] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=937d6b002a5bcc93bbfb547b846dd8736c5ed22b571a0903e1951dd49da72d3eJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlOCVhZiU4OSVlOCVhZSViYyVlNiViMyU5NSslZTUlOGElYjMlZTUlOGElYTElZTUlOGQlOGYlZTglYWUlYWUmRk9STT1SNUZENw&ntb=1
+                  - strong [ref=e369]: 行政诉讼法 劳务协议
+  - contentinfo [ref=e370]:
+    - generic [ref=e371]:
+      - list:
+        - listitem [ref=e372]:
+          - link "隐私" [ref=e373] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=b6ae5025ca05a9355701d8c46fef00b8e81042e9b0f4924d2f294e7af12e03edJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cDovL2dvLm1pY3Jvc29mdC5jb20vZndsaW5rLz9MaW5rSWQ9NTIxODM5&ntb=1
+        - listitem [ref=e374]:
+          - link "条款" [ref=e375] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=c61bca14e329b196e6ce6120d01882f38123084d1fda1ef2680551364c4c6728JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cDovL2dvLm1pY3Jvc29mdC5jb20vZndsaW5rLz9MaW5rSUQ9MjQ2MzM4&ntb=1

@@ -1,23 +1,23 @@
 import { describe, expect, it } from 'vitest'
 import {
-  applyKunRuntimePatch,
-  kunSettingsEnvelope,
-  kunSettingsPatch,
-  DEFAULT_KUN_DATA_DIR,
-  DEFAULT_KUN_MODEL,
+  applyLegalworkRuntimePatch,
+  legalworkSettingsEnvelope,
+  legalworkSettingsPatch,
+  DEFAULT_LEGALWORK_DATA_DIR,
+  DEFAULT_LEGALWORK_MODEL,
   DEFAULT_APPROVAL_POLICY,
   DEFAULT_WEIXIN_BRIDGE_RPC_URL,
   DEFAULT_SCHEDULE_INTERNAL_PORT,
   buildClawRuntimePrompt,
   defaultClawSettings,
+  defaultKeyboardShortcuts,
   defaultModelProviderSettings,
-  mergeKunRuntimeSettings,
+  mergeLegalworkRuntimeSettings,
   mergeScheduleSettings,
-  defaultKunRuntimeSettings,
+  defaultLegalworkRuntimeSettings,
   defaultScheduleSettings,
   defaultWriteSettings,
-  defaultKeyboardShortcuts,
-  isKunRuntimeInsecure,
+  isLegalworkRuntimeInsecure,
   migrateLegacyAppSettings,
   normalizeAppSettings,
   parseClawUserPromptForDisplay,
@@ -38,7 +38,7 @@ function settings(): AppSettingsV1 {
     uiFontScale: 'small',
     provider: defaultModelProviderSettings(),
     agents: {
-      kun: defaultKunRuntimeSettings()
+      legalwork: defaultLegalworkRuntimeSettings()
     },
     workspaceRoot: '/tmp/workspace',
     log: { enabled: false, retentionDays: 7 },
@@ -76,23 +76,23 @@ function clawChannel(provider: ClawImProvider, label: string, name = label): Cla
   }
 }
 
-describe('kun defaults', () => {
+describe('legalwork defaults', () => {
   it('keeps a single shared default data directory source', () => {
-    expect(defaultKunRuntimeSettings().dataDir).toBe(DEFAULT_KUN_DATA_DIR)
+    expect(defaultLegalworkRuntimeSettings().dataDir).toBe(DEFAULT_LEGALWORK_DATA_DIR)
   })
 
   it('defaults the assistant model to v4 pro', () => {
-    expect(defaultKunRuntimeSettings().model).toBe(DEFAULT_KUN_MODEL)
+    expect(defaultLegalworkRuntimeSettings().model).toBe(DEFAULT_LEGALWORK_MODEL)
   })
 
   it('defaults approval policy to auto', () => {
-    expect(defaultKunRuntimeSettings().approvalPolicy).toBe(DEFAULT_APPROVAL_POLICY)
-    expect(defaultKunRuntimeSettings().approvalPolicy).toBe('auto')
+    expect(defaultLegalworkRuntimeSettings().approvalPolicy).toBe(DEFAULT_APPROVAL_POLICY)
+    expect(defaultLegalworkRuntimeSettings().approvalPolicy).toBe('auto')
   })
 
   it('defaults token economy mode to off', () => {
-    expect(defaultKunRuntimeSettings().tokenEconomyMode).toBe(false)
-    expect(defaultKunRuntimeSettings().tokenEconomy).toMatchObject({
+    expect(defaultLegalworkRuntimeSettings().tokenEconomyMode).toBe(false)
+    expect(defaultLegalworkRuntimeSettings().tokenEconomy).toMatchObject({
       enabled: false,
       compressToolDescriptions: true,
       compressToolResults: true,
@@ -109,7 +109,7 @@ describe('kun defaults', () => {
   })
 
   it('defaults MCP search discovery to off', () => {
-    expect(defaultKunRuntimeSettings().mcpSearch).toMatchObject({
+    expect(defaultLegalworkRuntimeSettings().mcpSearch).toMatchObject({
       enabled: false,
       mode: 'auto',
       autoThresholdToolCount: 24,
@@ -118,8 +118,8 @@ describe('kun defaults', () => {
     })
   })
 
-  it('defaults advanced Kun runtime tuning to conservative values', () => {
-    expect(defaultKunRuntimeSettings()).toMatchObject({
+  it('defaults advanced Legalwork runtime tuning to conservative values', () => {
+    expect(defaultLegalworkRuntimeSettings()).toMatchObject({
       storage: {
         backend: 'hybrid',
         sqlitePath: ''
@@ -251,11 +251,11 @@ describe('claw settings', () => {
   })
 })
 
-describe('isKunRuntimeInsecure', () => {
+describe('isLegalworkRuntimeInsecure', () => {
   it('treats an empty runtime token as effectively insecure', () => {
     expect(
-      isKunRuntimeInsecure({
-        ...defaultKunRuntimeSettings(),
+      isLegalworkRuntimeInsecure({
+        ...defaultLegalworkRuntimeSettings(),
         insecure: false,
         runtimeToken: ''
       })
@@ -264,8 +264,8 @@ describe('isKunRuntimeInsecure', () => {
 
   it('keeps auth enabled when a token exists and insecure is false', () => {
     expect(
-      isKunRuntimeInsecure({
-        ...defaultKunRuntimeSettings(),
+      isLegalworkRuntimeInsecure({
+        ...defaultLegalworkRuntimeSettings(),
         insecure: false,
         runtimeToken: 'tok-1'
       })
@@ -273,10 +273,10 @@ describe('isKunRuntimeInsecure', () => {
   })
 })
 
-describe('mergeKunRuntimeSettings', () => {
-  it('merges a direct kun patch without the envelope wrapper', () => {
-    const current = defaultKunRuntimeSettings()
-    const next = mergeKunRuntimeSettings(current, {
+describe('mergeLegalworkRuntimeSettings', () => {
+  it('merges a direct legalwork patch without the envelope wrapper', () => {
+    const current = defaultLegalworkRuntimeSettings()
+    const next = mergeLegalworkRuntimeSettings(current, {
       model: 'deepseek-reasoner',
       port: 9000,
       tokenEconomyMode: true
@@ -289,8 +289,8 @@ describe('mergeKunRuntimeSettings', () => {
   })
 
   it('deep-merges token economy settings and keeps the legacy switch synced', () => {
-    const current = defaultKunRuntimeSettings()
-    const next = mergeKunRuntimeSettings(current, {
+    const current = defaultLegalworkRuntimeSettings()
+    const next = mergeLegalworkRuntimeSettings(current, {
       tokenEconomy: {
         enabled: true,
         compressToolResults: false,
@@ -309,14 +309,14 @@ describe('mergeKunRuntimeSettings', () => {
       current.tokenEconomy.historyHygiene.maxToolResultBytes
     )
 
-    const legacySwitch = mergeKunRuntimeSettings(next, { tokenEconomyMode: false })
+    const legacySwitch = mergeLegalworkRuntimeSettings(next, { tokenEconomyMode: false })
     expect(legacySwitch.tokenEconomyMode).toBe(false)
     expect(legacySwitch.tokenEconomy.enabled).toBe(false)
   })
 
   it('deep-merges MCP search settings', () => {
-    const current = defaultKunRuntimeSettings()
-    const next = mergeKunRuntimeSettings(current, {
+    const current = defaultLegalworkRuntimeSettings()
+    const next = mergeLegalworkRuntimeSettings(current, {
       mcpSearch: {
         enabled: true,
         mode: 'search',
@@ -330,11 +330,11 @@ describe('mergeKunRuntimeSettings', () => {
     expect(next.mcpSearch.topKMax).toBe(current.mcpSearch.topKMax)
   })
 
-  it('deep-merges advanced Kun settings', () => {
-    const current = defaultKunRuntimeSettings()
-    const next = mergeKunRuntimeSettings(current, {
+  it('deep-merges advanced Legalwork settings', () => {
+    const current = defaultLegalworkRuntimeSettings()
+    const next = mergeLegalworkRuntimeSettings(current, {
       storage: {
-        sqlitePath: ' /tmp/kun.sqlite3 '
+        sqlitePath: ' /tmp/legalwork.sqlite3 '
       },
       contextCompaction: {
         defaultSoftThreshold: 64000
@@ -347,7 +347,7 @@ describe('mergeKunRuntimeSettings', () => {
     })
 
     expect(next.storage.backend).toBe('hybrid')
-    expect(next.storage.sqlitePath).toBe('/tmp/kun.sqlite3')
+    expect(next.storage.sqlitePath).toBe('/tmp/legalwork.sqlite3')
     expect(next.contextCompaction.defaultSoftThreshold).toBe(64000)
     expect(next.contextCompaction.defaultHardThreshold).toBe(64000)
     expect(next.contextCompaction.summaryMode).toBe('heuristic')
@@ -358,25 +358,25 @@ describe('mergeKunRuntimeSettings', () => {
   })
 })
 
-describe('kun envelope helpers', () => {
+describe('legalwork envelope helpers', () => {
   it('wraps runtime settings and patches into the compatibility shell', () => {
-    const runtime = defaultKunRuntimeSettings()
-    expect(kunSettingsEnvelope(runtime)).toEqual({ kun: runtime })
-    expect(kunSettingsPatch({ model: 'deepseek-reasoner' })).toEqual({
-      kun: { model: 'deepseek-reasoner' }
+    const runtime = defaultLegalworkRuntimeSettings()
+    expect(legalworkSettingsEnvelope(runtime)).toEqual({ legalwork: runtime })
+    expect(legalworkSettingsPatch({ model: 'deepseek-reasoner' })).toEqual({
+      legalwork: { model: 'deepseek-reasoner' }
     })
   })
 
-  it('applies a kun patch onto full app settings', () => {
+  it('applies a legalwork patch onto full app settings', () => {
     const current = settings()
-    const next = applyKunRuntimePatch(current, { model: 'deepseek-reasoner' })
-    expect(next.agents.kun.model).toBe('deepseek-reasoner')
+    const next = applyLegalworkRuntimePatch(current, { model: 'deepseek-reasoner' })
+    expect(next.agents.legalwork.model).toBe('deepseek-reasoner')
     expect(next.write).toEqual(current.write)
   })
 })
 
-describe('legacy Kun defaults migration', () => {
-  it('normalizes old master settings without an agents.kun envelope', () => {
+describe('legacy Legalwork defaults migration', () => {
+  it('normalizes old master settings without an agents.legalwork envelope', () => {
     const normalized = normalizeAppSettings({
       version: 1,
       locale: 'zh',
@@ -401,7 +401,7 @@ describe('legacy Kun defaults migration', () => {
       claw: defaultClawSettings()
     } as unknown as AppSettingsV1)
 
-    expect(normalized.agents.kun).toEqual(expect.objectContaining({
+    expect(normalized.agents.legalwork).toEqual(expect.objectContaining({
       binaryPath: '',
       port: 8787,
       autoStart: false,
@@ -417,7 +417,7 @@ describe('legacy Kun defaults migration', () => {
     expect('deepseek' in normalized).toBe(false)
   })
 
-  it('moves the legacy local HTTP default port to the Kun default port', () => {
+  it('moves the legacy local HTTP default port to the Legalwork default port', () => {
     const migrated = migrateLegacyAppSettings({
       version: 1,
       agentProvider: 'deepseek-runtime',
@@ -426,7 +426,7 @@ describe('legacy Kun defaults migration', () => {
       }
     } as unknown as Parameters<typeof migrateLegacyAppSettings>[0])
 
-    expect(migrated.agents?.kun?.port).toBe(8899)
+    expect(migrated.agents?.legalwork?.port).toBe(8899)
   })
 
   it('uses the current approval policy default for missing legacy local HTTP settings', () => {
@@ -436,39 +436,39 @@ describe('legacy Kun defaults migration', () => {
       deepseek: {}
     } as unknown as Parameters<typeof migrateLegacyAppSettings>[0])
 
-    expect(migrated.agents?.kun?.approvalPolicy).toBe(DEFAULT_APPROVAL_POLICY)
+    expect(migrated.agents?.legalwork?.approvalPolicy).toBe(DEFAULT_APPROVAL_POLICY)
   })
 
-  it('upgrades old persisted Kun defaults to the current defaults', () => {
+  it('upgrades old persisted Legalwork defaults to the current defaults', () => {
     const migrated = migrateLegacyAppSettings({
       version: 1,
       agents: {
-        kun: {
+        legalwork: {
           dataDir: '~/.deepseekgui/coreagent',
           model: 'deepseek-chat'
         }
       }
     } as Parameters<typeof migrateLegacyAppSettings>[0])
 
-    expect(migrated.agents?.kun).toEqual(expect.objectContaining({
-      dataDir: DEFAULT_KUN_DATA_DIR,
-      model: DEFAULT_KUN_MODEL
+    expect(migrated.agents?.legalwork).toEqual(expect.objectContaining({
+      dataDir: DEFAULT_LEGALWORK_DATA_DIR,
+      model: DEFAULT_LEGALWORK_MODEL
     }))
   })
 
-  it('preserves a non-legacy Kun model override', () => {
+  it('preserves a non-legacy Legalwork model override', () => {
     const migrated = migrateLegacyAppSettings({
       version: 1,
       agents: {
-        kun: {
-          dataDir: '/tmp/custom-kun',
+        legalwork: {
+          dataDir: '/tmp/custom-legalwork',
           model: 'deepseek-v4-flash'
         }
       }
     } as Parameters<typeof migrateLegacyAppSettings>[0])
 
-    expect(migrated.agents?.kun).toEqual(expect.objectContaining({
-      dataDir: '/tmp/custom-kun',
+    expect(migrated.agents?.legalwork).toEqual(expect.objectContaining({
+      dataDir: '/tmp/custom-legalwork',
       model: 'deepseek-v4-flash'
     }))
   })
@@ -543,14 +543,14 @@ describe('claw runtime prompts', () => {
     state.claw.channels = [{
       id: 'channel-1',
       provider: 'feishu',
-      label: 'kun',
+      label: 'legalwork',
       enabled: true,
       model: 'auto',
       threadId: '',
       workspaceRoot: '',
       conversations: [],
       agentProfile: {
-        name: 'kun',
+        name: 'legalwork',
         description: '',
         identity: '',
         personality: '',
@@ -564,8 +564,8 @@ describe('claw runtime prompts', () => {
     const prompt = buildClawRuntimePrompt(state, 'hi', { channel: state.claw.channels[0] })
 
     expect(prompt).toContain('[Claw managed instructions]')
-    expect(prompt).toContain('[Agent name]\nkun')
-    expect(prompt).not.toContain('gui_schedule')
+    expect(prompt).toContain('[Agent name]\nlegalwork')
+    expect(prompt).not.toContain('legalwork_schedule')
     expect(prompt).not.toContain('scheduled-task tools')
   })
 
@@ -576,7 +576,7 @@ describe('claw runtime prompts', () => {
       '[Claw IM agent instructions]',
       '',
       '[Agent name]',
-      'kun',
+      'legalwork',
       '',
       '---',
       '[Current user request]',
@@ -611,15 +611,15 @@ describe('write inline completion runtime config', () => {
     expect(resolveWriteInlineCompletionBaseUrl(state)).toBe('https://write-only.example/v1')
   })
 
-  it('falls back to the kun model when write keeps the default inline model', () => {
+  it('falls back to the legalwork model when write keeps the default inline model', () => {
     const state = settings()
-    state.agents.kun.model = 'deepseek-chat'
+    state.agents.legalwork.model = 'deepseek-chat'
     expect(resolveWriteInlineCompletionModel(state)).toBe('deepseek-chat')
   })
 
   it('keeps an explicit flash override when write disables inheritance', () => {
     const state = settings()
-    state.agents.kun.model = 'deepseek-chat'
+    state.agents.legalwork.model = 'deepseek-chat'
     state.write.inlineCompletion.inheritModel = false
     state.write.inlineCompletion.model = 'deepseek-v4-flash'
 
@@ -628,7 +628,7 @@ describe('write inline completion runtime config', () => {
 
   it('preserves an explicit request model before any fallback', () => {
     const state = settings()
-    state.agents.kun.model = 'deepseek-chat'
+    state.agents.legalwork.model = 'deepseek-chat'
     expect(resolveWriteInlineCompletionModel(state, 'deepseek-v4-pro')).toBe('deepseek-v4-pro')
   })
 
@@ -636,7 +636,7 @@ describe('write inline completion runtime config', () => {
     const state = settings()
     state.provider.apiKey = 'general-key'
     state.provider.baseUrl = 'https://general.example/v1'
-    state.agents.kun.model = 'deepseek-chat'
+    state.agents.legalwork.model = 'deepseek-chat'
     const legacyInlineCompletion = { ...state.write.inlineCompletion } as Partial<AppSettingsV1['write']['inlineCompletion']>
     delete legacyInlineCompletion.apiKey
     delete legacyInlineCompletion.baseUrl
@@ -651,7 +651,7 @@ describe('write inline completion runtime config', () => {
 
   it('treats legacy flash defaults without an inherit flag as inherited', () => {
     const state = settings()
-    state.agents.kun.model = 'deepseek-chat'
+    state.agents.legalwork.model = 'deepseek-chat'
     const legacyInlineCompletion = {
       ...state.write.inlineCompletion,
       model: 'deepseek-v4-flash'

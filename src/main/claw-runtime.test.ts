@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os'
 import {
   defaultClawSettings,
   defaultKeyboardShortcuts,
-  defaultKunRuntimeSettings,
+  defaultLegalworkRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultWriteSettings,
@@ -23,7 +23,7 @@ function buildSettings(): AppSettingsV1 {
     uiFontScale: 'small',
     provider: defaultModelProviderSettings(),
     agents: {
-      kun: defaultKunRuntimeSettings()
+      legalwork: defaultLegalworkRuntimeSettings()
     },
     workspaceRoot: '/tmp/workspace',
     log: { enabled: true, retentionDays: 7 },
@@ -86,7 +86,7 @@ function buildChannel(overrides: Partial<ClawImChannelV1> = {}): ClawImChannelV1
     threadId: 'thr_old',
     workspaceRoot: '/tmp/workspace',
     agentProfile: {
-      name: 'kun',
+      name: 'legalwork',
       description: '',
       identity: '',
       personality: '',
@@ -143,7 +143,7 @@ describe('ClawRuntime', () => {
       threadId: '',
       workspaceRoot: '',
       agentProfile: {
-        name: 'kun',
+        name: 'legalwork',
         description: '',
         identity: '',
         personality: '',
@@ -200,7 +200,7 @@ describe('ClawRuntime', () => {
       threadId: '',
       workspaceRoot: '',
       agentProfile: {
-        name: 'kun',
+        name: 'legalwork',
         description: '',
         identity: '',
         personality: '',
@@ -393,7 +393,7 @@ describe('ClawRuntime', () => {
     expect(result).toMatchObject({ ok: true, text: 'hello from claw' })
   })
 
-  it('reads assistant text from the Kun thread detail shape used by the real runtime', async () => {
+  it('reads assistant text from the Legalwork thread detail shape used by the real runtime', async () => {
     const settings = buildSettings()
     const runtimeRequest = vi.fn(async (_settings, path, init) => {
       if (path === '/v1/threads') {
@@ -715,7 +715,7 @@ describe('ClawRuntime', () => {
     )
   })
 
-  it('handles webhook /help as an IM command before starting a Kun turn', async () => {
+  it('handles webhook /help as an IM command before starting a Legalwork turn', async () => {
     const settings = buildSettings()
     settings.claw.im.enabled = true
     settings.claw.channels = [buildChannel({ provider: 'weixin' as const, id: 'channel_weixin' })]
@@ -1195,7 +1195,7 @@ describe('ClawRuntime', () => {
   })
 
   it('sends the latest generated workspace file to Feishu when the user asks for it', async () => {
-    const workspaceRoot = await mkdtemp(join(tmpdir(), 'deepseek-gui-feishu-file-'))
+    const workspaceRoot = await mkdtemp(join(tmpdir(), 'legalwork-feishu-file-'))
     const filePath = join(workspaceRoot, 'hello.md')
     await writeFile(filePath, '# Hello\n')
     const realFilePath = await realpath(filePath)
@@ -1224,7 +1224,7 @@ describe('ClawRuntime', () => {
         threadId: '',
         workspaceRoot,
         agentProfile: {
-          name: 'kun',
+          name: 'legalwork',
           description: '',
           identity: '',
           personality: '',

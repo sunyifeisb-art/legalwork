@@ -47,7 +47,7 @@ type CodeProps = DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement> & {
 }
 
 export const writeMarkdownHardenOptions = {
-  defaultOrigin: 'https://deepseek-gui.local',
+  defaultOrigin: 'https://legalwork.local',
   allowedLinkPrefixes: ['*'],
   allowedImagePrefixes: ['*']
 }

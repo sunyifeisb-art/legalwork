@@ -6,7 +6,7 @@ import type {
   CoreRuntimeInfoJson,
   CoreRuntimeSkillJson,
   CoreRuntimeToolDiagnosticsJson
-} from './kun-contract'
+} from './legalwork-contract'
 
 export type ToolItemKind = 'tool_call' | 'command_execution' | 'file_change'
 export type RuntimeErrorSeverity = 'info' | 'warning' | 'error'
@@ -342,7 +342,7 @@ export type ThreadDeltaEvent = {
   seq?: number
 }
 
-/** Cumulative usage/cost for a Kun thread. */
+/** Cumulative usage/cost for a Legalwork thread. */
 export type ThreadUsageSnapshot = {
   inputTokens: number
   outputTokens: number
@@ -382,7 +382,7 @@ export type ThreadEventSink = {
 }
 
 export interface AgentProvider {
-  readonly id: 'kun'
+  readonly id: 'legalwork'
   readonly displayName: string
   getCapabilities(): {
     interrupt: boolean

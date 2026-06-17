@@ -12,17 +12,17 @@ if (arch !== 'arm64' && arch !== 'x64') {
 
 const root = resolve(__dirname, '..')
 const pkg = require(join(root, 'package.json'))
-const version = (process.env.DEEPSEEK_GUI_APP_VERSION || pkg.version || '').trim()
+const version = (process.env.LEGALWORK_APP_VERSION || process.env.LEGALWORK_APP_VERSION || pkg.version || '').trim()
 if (!version) {
   console.error('[zip-mac-app] Could not resolve package version.')
   process.exit(1)
 }
 
-const distDir = resolve(process.env.DEEPSEEK_GUI_DIST_DIR || join(root, 'dist'))
+const distDir = resolve(process.env.LEGALWORK_DIST_DIR || process.env.LEGALWORK_DIST_DIR || join(root, 'dist'))
 const appOutDir = join(distDir, arch === 'arm64' ? 'mac-arm64' : 'mac')
-const appName = 'DeepSeek GUI.app'
+const appName = 'LegalWork.app'
 const appPath = join(appOutDir, appName)
-const zipPath = join(distDir, `DeepSeek-GUI-${version}-mac-${arch}.zip`)
+const zipPath = join(distDir, `legalwork-${version}-mac-${arch}.zip`)
 
 if (!existsSync(appPath)) {
   console.error(`[zip-mac-app] App bundle not found: ${appPath}`)

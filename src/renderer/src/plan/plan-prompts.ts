@@ -2,13 +2,13 @@ const GUI_PLAN_OPEN = '<gui_plan>'
 const GUI_PLAN_CLOSE = '</gui_plan>'
 /**
  * @deprecated Kept for legacy prompt compatibility only. New turns use
- * the native Kun `create_plan` tool; the renderer still emits a
+ * the native Legalwork `create_plan` tool; the renderer still emits a
  * brief tag-based fallback section for legacy providers.
  */
 export const GUI_PLAN_CREATE_TOOL_NAME = 'create_plan'
-const DRAFT_PLAN_INTRO = 'DeepSeek GUI is asking you to draft a GUI-owned implementation plan.'
-const REFINE_PLAN_INTRO = 'DeepSeek GUI is asking you to revise an existing GUI-owned implementation plan.'
-const BUILD_PLAN_INTRO = 'Please read and execute the GUI plan file at'
+const DRAFT_PLAN_INTRO = 'legalwork is asking you to draft a legalwork-owned implementation plan.'
+const REFINE_PLAN_INTRO = 'legalwork is asking you to revise an existing legalwork-owned implementation plan.'
+const BUILD_PLAN_INTRO = 'Please read and execute the legalwork plan file at'
 const DRAFT_PLAN_DISPLAY_PREFIX = 'Create plan:'
 const REFINE_PLAN_DISPLAY_PREFIX = 'Revise plan:'
 const BUILD_PLAN_DISPLAY_PREFIX = 'Build plan:'
@@ -22,7 +22,7 @@ export function buildDraftPlanPrompt(options: {
 }): string {
   return [
     DRAFT_PLAN_INTRO,
-    `The GUI will save your answer into \`${options.planRelativePath}\`.`,
+    `legalwork will save your answer into \`${options.planRelativePath}\`.`,
     `You MUST use the \`${GUI_PLAN_CREATE_TOOL_NAME}\` tool to save the plan. Call it exactly once with:`,
     `- \`operation\` set to \`draft\``,
     `- \`markdown\` set to the complete plan Markdown`,
@@ -58,7 +58,7 @@ export function buildRefinePlanPrompt(options: {
 }): string {
   return [
     REFINE_PLAN_INTRO,
-    `The GUI will overwrite \`${options.planRelativePath}\` with your revised Markdown.`,
+    `legalwork will overwrite \`${options.planRelativePath}\` with your revised Markdown.`,
     `You MUST use the \`${GUI_PLAN_CREATE_TOOL_NAME}\` tool to save the revised plan. Call it exactly once with:`,
     `- \`operation\` set to \`refine\``,
     `- \`markdown\` set to the complete revised Markdown`,
@@ -104,21 +104,21 @@ export function getGuiPlanPromptKind(text: string): GuiPlanPromptKind | null {
   if (
     normalized.includes(DRAFT_PLAN_INTRO) ||
     normalized.startsWith(DRAFT_PLAN_DISPLAY_PREFIX) ||
-    normalized === 'Create GUI plan'
+    normalized === 'Create legalwork plan'
   ) {
     return 'draft'
   }
   if (
     normalized.includes(REFINE_PLAN_INTRO) ||
     normalized.startsWith(REFINE_PLAN_DISPLAY_PREFIX) ||
-    normalized === 'Revise GUI plan'
+    normalized === 'Revise legalwork plan'
   ) {
     return 'refine'
   }
   if (
     normalized.includes(BUILD_PLAN_INTRO) ||
     normalized.startsWith(BUILD_PLAN_DISPLAY_PREFIX) ||
-    normalized === 'Build GUI plan'
+    normalized === 'Build legalwork plan'
   ) {
     return 'build'
   }
@@ -129,15 +129,15 @@ export function formatGuiPlanPromptForDisplay(text: string): string | null {
   const normalized = text.trim()
   if (normalized.includes(DRAFT_PLAN_INTRO)) {
     const request = readSectionAfter(normalized, 'User request:')
-    return request ? `Create plan: ${request}` : 'Create GUI plan'
+    return request ? `Create plan: ${request}` : 'Create legalwork plan'
   }
   if (normalized.includes(REFINE_PLAN_INTRO)) {
     const feedback = readSectionBetween(normalized, 'User feedback:', 'Current plan:')
-    return feedback ? `Revise plan: ${feedback}` : 'Revise GUI plan'
+    return feedback ? `Revise plan: ${feedback}` : 'Revise legalwork plan'
   }
   if (normalized.includes(BUILD_PLAN_INTRO)) {
     const path = normalized.match(/`([^`]+\.md)`/)?.[1]
-    return path ? `Build plan: ${path}` : 'Build GUI plan'
+    return path ? `Build plan: ${path}` : 'Build legalwork plan'
   }
   return null
 }

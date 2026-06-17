@@ -3,11 +3,11 @@ import { homedir } from 'node:os'
 import { basename, dirname, join, posix } from 'node:path'
 import type { AppSettingsV1 } from '../shared/app-settings'
 
-const CLAW_SCHEDULE_MCP_MARKER_START = '# DeepSeek GUI plugin:mcp:claw-schedule START'
-const CLAW_SCHEDULE_MCP_MARKER_END = '# DeepSeek GUI plugin:mcp:claw-schedule END'
-export const GUI_SCHEDULE_MCP_SERVER_NAME = 'gui_schedule'
+const CLAW_SCHEDULE_MCP_MARKER_START = '# legalwork plugin:mcp:claw-schedule START'
+const CLAW_SCHEDULE_MCP_MARKER_END = '# legalwork plugin:mcp:claw-schedule END'
+export const LEGALWORK_SCHEDULE_MCP_SERVER_NAME = 'legalwork_schedule'
 const LEGACY_CLAW_SCHEDULE_MCP_SERVER_NAME = 'claw_schedule'
-const GUI_SCHEDULE_MCP_NODE_ENTRY = 'out/main/claw-schedule-mcp-node-entry.js'
+const LEGALWORK_SCHEDULE_MCP_NODE_ENTRY = 'out/main/claw-schedule-mcp-node-entry.cjs'
 const ELECTRON_RUN_AS_NODE_ENV = { ELECTRON_RUN_AS_NODE: '1' }
 
 type JsonRecord = Record<string, unknown>
@@ -23,16 +23,16 @@ type ClawScheduleMcpConfigPaths = {
   mcpJsonPath?: string
 }
 
-export function resolveKunConfigPath(): string {
-  return join(homedir(), '.kun', 'config.toml')
+export function resolveLegalworkConfigPath(): string {
+  return join(homedir(), '.legalwork', 'config.toml')
 }
 
 export function resolveDeepseekConfigPath(): string {
-  return resolveKunConfigPath()
+  return resolveLegalworkConfigPath()
 }
 
-export function resolveKunMcpJsonPath(): string {
-  return join(homedir(), '.kun', 'mcp.json')
+export function resolveLegalworkMcpJsonPath(): string {
+  return join(homedir(), '.legalwork', 'mcp.json')
 }
 
 function isRecord(value: unknown): value is JsonRecord {
@@ -62,9 +62,9 @@ export function buildClawScheduleMcpArgs(
 
 export function resolveClawScheduleMcpNodeEntryPath(launch: ClawScheduleMcpLaunchConfig): string {
   if (launch.appPath.includes('/') && !launch.appPath.includes('\\')) {
-    return posix.join(launch.appPath, GUI_SCHEDULE_MCP_NODE_ENTRY)
+    return posix.join(launch.appPath, LEGALWORK_SCHEDULE_MCP_NODE_ENTRY)
   }
-  return join(launch.appPath, GUI_SCHEDULE_MCP_NODE_ENTRY)
+  return join(launch.appPath, LEGALWORK_SCHEDULE_MCP_NODE_ENTRY)
 }
 
 export function resolveClawScheduleMcpCommand(
@@ -128,7 +128,7 @@ export function buildSyncedClawScheduleMcpJson(
     timeouts,
     servers: {
       ...userServers,
-      [GUI_SCHEDULE_MCP_SERVER_NAME]: buildClawScheduleMcpServerConfig(settings, launch)
+      [LEGALWORK_SCHEDULE_MCP_SERVER_NAME]: buildClawScheduleMcpServerConfig(settings, launch)
     }
   }
 }
@@ -194,7 +194,7 @@ async function readJsonFile(path: string): Promise<unknown | null> {
     return JSON.parse(raw) as unknown
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    throw new Error(`Failed to parse Kun MCP config at ${path}: ${message}`, { cause: error })
+    throw new Error(`Failed to parse Legalwork MCP config at ${path}: ${message}`, { cause: error })
   }
 }
 
@@ -224,8 +224,8 @@ export async function syncClawScheduleMcpConfig(
   launch: ClawScheduleMcpLaunchConfig,
   paths: ClawScheduleMcpConfigPaths = {}
 ): Promise<void> {
-  const configTomlPath = paths.configTomlPath ?? resolveKunConfigPath()
-  const mcpJsonPath = paths.mcpJsonPath ?? resolveKunMcpJsonPath()
+  const configTomlPath = paths.configTomlPath ?? resolveLegalworkConfigPath()
+  const mcpJsonPath = paths.mcpJsonPath ?? resolveLegalworkMcpJsonPath()
 
   await cleanupLegacyTomlConfig(configTomlPath)
 

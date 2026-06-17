@@ -1,0 +1,923 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e5] [cursor=pointer]: 黄浦区
+    - list [ref=e8]:
+      - listitem [ref=e9]:
+        - link "进入上海站" [ref=e10] [cursor=pointer]:
+          - /url: //www.66law.cn/shanghai/
+      - listitem [ref=e11]:
+        - link "首页" [ref=e12] [cursor=pointer]:
+          - /url: //www.66law.cn/
+      - listitem [ref=e13]:
+        - link "法律咨询" [ref=e14] [cursor=pointer]:
+          - /url: //www.66law.cn/question/
+      - listitem [ref=e15]:
+        - link "找律师" [ref=e16] [cursor=pointer]:
+          - /url: //www.66law.cn/findlawyers/
+      - listitem [ref=e17]:
+        - link "法律知识" [ref=e18] [cursor=pointer]:
+          - /url: //www.66law.cn/laws/
+    - generic [ref=e19]:
+      - generic [ref=e20]:
+        - link "登录" [ref=e21] [cursor=pointer]:
+          - /url: //login.66law.cn/
+        - link "免费注册" [ref=e22] [cursor=pointer]:
+          - /url: //login.66law.cn/register.aspx
+      - link "移动华律" [ref=e23] [cursor=pointer]:
+        - /url: //m.66law.cn
+        - text: 移动华律
+      - generic [ref=e25] [cursor=pointer]: 网站导航
+  - generic [ref=e28]:
+    - link [ref=e29] [cursor=pointer]:
+      - /url: /
+    - list [ref=e30]:
+      - listitem [ref=e31]:
+        - link "常识首页" [ref=e32] [cursor=pointer]:
+          - /url: //www.66law.cn/laws/
+      - listitem [ref=e33]:
+        - link "法律专题" [ref=e34] [cursor=pointer]:
+          - /url: //www.66law.cn/topic2010/
+      - listitem [ref=e35]:
+        - link "法律聚焦" [ref=e36] [cursor=pointer]:
+          - /url: //www.66law.cn/special/
+      - listitem [ref=e37]:
+        - link "视频说法" [ref=e38] [cursor=pointer]:
+          - /url: //v.66law.cn
+      - listitem [ref=e39]:
+        - link "热门条例" [ref=e40] [cursor=pointer]:
+          - /url: //www.66law.cn/tiaoli/
+    - link "咨询" [ref=e42] [cursor=pointer]:
+      - /url: //www.66law.cn/question/add.aspx?t_code=PC_Core_LawsHead
+      - emphasis [ref=e43]
+      - text: 咨询
+  - generic [ref=e44]:
+    - generic [ref=e45]:
+      - generic [ref=e46]: 热门专长
+      - list [ref=e48]:
+        - listitem [ref=e49]:
+          - link "婚姻家庭" [ref=e50] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/hunyinjiating/
+          - link "结婚" [ref=e51] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/hunyinjiating/jiehun/
+          - link "离婚" [ref=e52] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/hunyinjiating/lihun/
+        - listitem [ref=e54]:
+          - link "刑事辩护" [ref=e55] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/xingfa/
+          - link "犯罪" [ref=e56] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/xingfa/xffanzui/
+          - link "刑罚种类" [ref=e57] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/xingfa/xfzl/
+        - listitem [ref=e59]:
+          - link "交通事故" [ref=e60] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/jiaotongshigu/
+          - link "交通事故认定" [ref=e61] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/jiaotongshigu/jtsgrd/
+        - listitem [ref=e63]:
+          - link "合同纠纷" [ref=e64] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/hetongfa/
+          - link "合同订立" [ref=e65] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/hetongfa/htdl/
+          - link "合同终止" [ref=e66] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/hetongfa/hetongzhongzhi/
+        - listitem [ref=e68]:
+          - link "房产纠纷" [ref=e69] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/fangchanjiufen/
+          - link "房屋买卖" [ref=e70] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/fangchanjiufen/fangwumaimai/
+          - link "房屋租赁" [ref=e71] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/fangchanjiufen/fangwuzulin/
+        - listitem [ref=e73]:
+          - link "公司法" [ref=e74] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/gongsifa/
+          - link "公司类型" [ref=e75] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/gongsifa/gongsileixing/
+        - listitem [ref=e77]:
+          - link "知识产权" [ref=e78] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/zscqf/
+          - link "著作权法" [ref=e79] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/zscqf/zhuzqf/
+          - link "商标法" [ref=e80] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/zscqf/shangbiaofa/
+        - listitem [ref=e82]:
+          - link "劳动纠纷" [ref=e83] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/laodonggongshang/
+          - link "劳动合同" [ref=e84] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/laodonggongshang/ldht/
+          - link "劳动关系" [ref=e85] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/laodonggongshang/laodongguanxird/
+        - listitem [ref=e87]:
+          - link "债权债务" [ref=e88] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/zhaiwuzhaiquan/
+          - link "债的主体" [ref=e89] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/zhaiwuzhaiquan/zdzt/
+          - link "债的担保" [ref=e90] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/zhaiwuzhaiquan/zwzqqt/
+      - link "全部专长" [ref=e92] [cursor=pointer]:
+        - /url: https://www.66law.cn/laws/cateall.aspx
+    - generic [ref=e93]:
+      - list [ref=e99]:
+        - listitem [ref=e100]:
+          - link [ref=e101] [cursor=pointer]:
+            - /url: //www.66law.cn/fangan/calc_susong.aspx
+        - listitem [ref=e102]:
+          - link [ref=e103] [cursor=pointer]:
+            - /url: //www.66law.cn/special/
+        - listitem [ref=e104]:
+          - link [ref=e105] [cursor=pointer]:
+            - /url: //www.66law.cn/contractmodel/
+        - listitem [ref=e106]:
+          - link [ref=e107] [cursor=pointer]:
+            - /url: //www.66law.cn/fangan/calc_susong.aspx
+        - listitem [ref=e108]:
+          - link [ref=e109] [cursor=pointer]:
+            - /url: //www.66law.cn/special/
+      - generic [ref=e110]: 最新文章
+      - list [ref=e112]:
+        - listitem [ref=e113]:
+          - generic [ref=e114]: 2026-06-13
+          - link "刑辩律师邢紫龙：十四载坚守，为正义护航" [ref=e115] [cursor=pointer]:
+            - /url: /laws/10608104.aspx
+        - listitem [ref=e116]:
+          - generic [ref=e117]: 2026-06-13
+          - link "宝鸡陈旭玲律师：专业致胜，守护公平正义" [ref=e118] [cursor=pointer]:
+            - /url: /laws/10608103.aspx
+        - listitem [ref=e119]:
+          - generic [ref=e120]: 2026-06-13
+          - link "吕庆喜律师：医疗损害赔偿纠纷的护航者" [ref=e121] [cursor=pointer]:
+            - /url: /laws/10608102.aspx
+        - listitem [ref=e122]:
+          - generic [ref=e123]: 2026-06-13
+          - link "大连贾艳蕊律师：多领域维权的专业担当" [ref=e124] [cursor=pointer]:
+            - /url: /laws/10608101.aspx
+        - listitem [ref=e125]:
+          - generic [ref=e126]: 2026-06-13
+          - link "保险理赔难题多？专业律师来破局" [ref=e127] [cursor=pointer]:
+            - /url: /laws/10608100.aspx
+      - generic [ref=e128]: 其它专长
+      - generic [ref=e129]:
+        - link "医疗纠纷" [ref=e130] [cursor=pointer]:
+          - /url: /laws/yiliaoshigu/
+        - link "保险理赔" [ref=e131] [cursor=pointer]:
+          - /url: /laws/baoxianfa/
+        - link "工程建筑" [ref=e132] [cursor=pointer]:
+          - /url: /laws/gcjz/
+        - link "拆迁安置" [ref=e133] [cursor=pointer]:
+          - /url: /laws/cqaz/
+        - link "侵权" [ref=e134] [cursor=pointer]:
+          - /url: /laws/qqzr/
+        - link "行政诉讼" [ref=e135] [cursor=pointer]:
+          - /url: /laws/xzyxs/
+        - link "涉外法律" [ref=e136] [cursor=pointer]:
+          - /url: /laws/guojijingjifa/
+        - link "法律顾问" [ref=e137] [cursor=pointer]:
+          - /url: /laws/topic/
+        - link "公司法" [ref=e138] [cursor=pointer]:
+          - /url: /laws/xsb/
+        - link "更多" [ref=e139] [cursor=pointer]:
+          - /url: /laws/cateall.aspx
+          - text: 更多
+    - generic [ref=e141]:
+      - generic [ref=e142]:
+        - generic [ref=e143]: 知法 · 懂法 · 用法
+        - paragraph [ref=e144]: 知法懂法得以守法用法，我们只有学习了基本的法律常识，深入了解法律条款及应用，才能积极寻求法律途径解决纠纷和争议，维护自己的合法权益。
+      - generic [ref=e145]: 热门文章
+      - list [ref=e147]:
+        - listitem [ref=e148]:
+          - generic [ref=e149]: "1"
+          - link "找律师怎么找" [ref=e151] [cursor=pointer]:
+            - /url: /laws/6068837.aspx
+          - paragraph [ref=e152]: 寻找律师有多种常见途径，包括通过熟人推荐获取真实反馈；向律师事务所咨询让其匹...
+        - listitem [ref=e153]:
+          - generic [ref=e154]: "2"
+          - link "房屋租赁标准合同免费版" [ref=e156] [cursor=pointer]:
+            - /url: /laws/3553248.aspx
+        - listitem [ref=e157]:
+          - generic [ref=e158]: "3"
+          - link "公司企业实缴资本是什么" [ref=e160] [cursor=pointer]:
+            - /url: /laws/8026900.aspx
+        - listitem [ref=e161]:
+          - generic [ref=e162]: "4"
+          - link "什么是商业广告？" [ref=e164] [cursor=pointer]:
+            - /url: /laws/17823.aspx
+        - listitem [ref=e165]:
+          - generic [ref=e166]: "5"
+          - link "律师咨询免费24小时在线，" [ref=e168] [cursor=pointer]:
+            - /url: /laws/5224089.aspx
+        - listitem [ref=e169]:
+          - generic [ref=e170]: "6"
+          - link "怎么知道企业是否实缴资本" [ref=e172] [cursor=pointer]:
+            - /url: /laws/9179832.aspx
+  - link [ref=e174] [cursor=pointer]:
+    - /url: //hd.66law.cn/new/wxpf/
+    - img [ref=e175]
+  - generic [ref=e176]:
+    - generic [ref=e177]: 精选法律知识
+    - generic [ref=e178]:
+      - generic [ref=e179]:
+        - generic [ref=e180]:
+          - link "取消开具无犯罪记录证明了吗,怎么开 我们知道，有的就业或者申请某些证书，是需要派出所开具无犯罪记录证明的。那么，取消开具无犯罪记录证明了..." [ref=e181] [cursor=pointer]:
+            - /url: /laws/147028.aspx
+            - generic [ref=e182]:
+              - heading "取消开具无犯罪记录证明了吗,怎么开" [level=6] [ref=e183]
+              - paragraph [ref=e184]: 我们知道，有的就业或者申请某些证书，是需要派出所开具无犯罪记录证明的。那么，取消开具无犯罪记录证明了...
+          - list [ref=e185]:
+            - listitem [ref=e186]:
+              - link [ref=e187] [cursor=pointer]:
+                - /url: /laws/147028.aspx
+              - heading "取消开具无犯罪记录证明了吗,怎么开" [level=6] [ref=e188]:
+                - link "取消开具无犯罪记录证明了吗,怎么开" [ref=e189] [cursor=pointer]:
+                  - /url: /laws/147028.aspx
+              - paragraph [ref=e190]: 我们知道，有的就业或者申请某些证书，是需要派出所开具无犯罪记录证明的。那么，...
+            - listitem [ref=e191]:
+              - link [ref=e192] [cursor=pointer]:
+                - /url: /laws/1607000.aspx
+              - heading "律师函警告!收到律师函不要慌，教你如何判断" [level=6] [ref=e193]:
+                - link "律师函警告!收到律师函不要慌，教你如何判断" [ref=e194] [cursor=pointer]:
+                  - /url: /laws/1607000.aspx
+              - paragraph [ref=e195]: 近年来，律师函作为非诉服务中的一把利器，越来越多的获得了当事人的认可和重视。...
+            - listitem [ref=e196]:
+              - link [ref=e197] [cursor=pointer]:
+                - /url: /laws/150321.aspx
+              - heading "袭警罪一般判多久（7种情况不适用缓刑）" [level=6] [ref=e198]:
+                - link "袭警罪一般判多久（7种情况不适用缓刑）" [ref=e199] [cursor=pointer]:
+                  - /url: /laws/150321.aspx
+              - paragraph [ref=e200]: 暴力袭击正在依法执行职务的人民警察的，处三年以下有期徒刑、拘役或者管制;使用...
+        - list [ref=e201]:
+          - listitem [ref=e202]:
+            - generic [ref=e203]: 刑事辩护
+            - link "刑事附带民事赔偿范围和标准是什么" [ref=e204] [cursor=pointer]:
+              - /url: /laws/105177.aspx
+          - listitem [ref=e205]:
+            - generic [ref=e206]: 刑事辩护
+            - link "一般累犯、特殊累犯、再犯、惯犯的区别" [ref=e207] [cursor=pointer]:
+              - /url: /laws/59721.aspx
+          - listitem [ref=e208]:
+            - generic [ref=e209]: 刑事辩护
+            - link "防卫过当致人死亡要判多少年" [ref=e210] [cursor=pointer]:
+              - /url: /laws/104242.aspx
+          - listitem [ref=e211]:
+            - generic [ref=e212]: 婚姻家庭
+            - link "什么叫结婚彩礼" [ref=e213] [cursor=pointer]:
+              - /url: /laws/9991.aspx
+          - listitem [ref=e214]:
+            - generic [ref=e215]: 侵权
+            - link "2025人身损害赔偿标准及计算方法是怎样的" [ref=e216] [cursor=pointer]:
+              - /url: /laws/105807.aspx
+          - listitem [ref=e217]:
+            - generic [ref=e218]: 侵权
+            - link "2025人身损害赔偿标准及计算方法是怎样的" [ref=e219] [cursor=pointer]:
+              - /url: /laws/105807.aspx
+      - generic [ref=e220]:
+        - generic [ref=e221]:
+          - text: 热门标签
+          - link "换一批" [ref=e222] [cursor=pointer]:
+            - /url: javascript:void(0);
+            - text: 换一批
+        - generic [ref=e224]:
+          - link "死刑缓期两年执行是什么意思" [ref=e225] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/124310.aspx
+          - link "子女抚养协议" [ref=e226] [cursor=pointer]:
+            - /url: https://www.66law.cn/special/znfyxy/
+          - link "房产证办理流程" [ref=e227] [cursor=pointer]:
+            - /url: https://www.66law.cn/special/fczbl/
+          - link "个人手写遗嘱范本" [ref=e228] [cursor=pointer]:
+            - /url: https://www.66law.cn/contractmodel/392936.aspx
+          - link "中山市工伤赔偿" [ref=e229] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/1062439.aspx
+          - link "股份合同" [ref=e230] [cursor=pointer]:
+            - /url: https://www.66law.cn/contractmodel/45613.aspx
+          - link "盗窃罪立案标准" [ref=e231] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/182922.aspx
+          - link "担保合同" [ref=e232] [cursor=pointer]:
+            - /url: https://www.66law.cn/contractmodel/jkht/mjjd/
+          - link "诉讼时效" [ref=e233] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/159279.aspx
+          - link "多大能领结婚证" [ref=e234] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/93254.aspx
+          - link "离婚办理需要哪些手续" [ref=e235] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/396374.aspx
+          - link "赡养老人协议书" [ref=e236] [cursor=pointer]:
+            - /url: https://www.66law.cn/contractmodel/4270.aspx
+          - link "诉讼离婚中争夺孩子抚养权" [ref=e237] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/477577.aspx
+          - link "买卖合同利息怎么算" [ref=e238] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/510257.aspx
+          - link "怎样立的遗嘱才有法律效力" [ref=e239] [cursor=pointer]:
+            - /url: https://www.66law.cn/laws/329570.aspx
+        - link [ref=e244] [cursor=pointer]:
+          - /url: "#"
+  - generic [ref=e245]:
+    - generic [ref=e246]:
+      - generic [ref=e247]:
+        - generic [ref=e248] [cursor=pointer]: 婚姻家庭
+        - generic [ref=e249] [cursor=pointer]: 刑事辩护
+        - generic [ref=e250] [cursor=pointer]: 交通事故
+      - generic [ref=e251]:
+        - generic [ref=e252]:
+          - heading "精选分类" [level=6] [ref=e253]
+          - generic [ref=e254]:
+            - term [ref=e255]:
+              - link "结婚" [ref=e256] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/jiehun/
+            - definition [ref=e257]:
+              - link "结婚条件" [ref=e258] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/jiehun/jhtj/
+              - link "结婚程序" [ref=e259] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/jiehun/jhsx/
+              - link "婚前婚后协议" [ref=e260] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/jiehun/hqxys/
+              - link "结婚彩礼" [ref=e261] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/jiehun/jhcl/
+              - link "同居" [ref=e262] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/jiehun/tongju/
+              - link "扶养" [ref=e263] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/jiehun/fuyang/
+              - link "婚姻自由" [ref=e264] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/jiehun/hunyinziyou/
+              - link "婚姻登记条例" [ref=e265] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/jiehun/hunyintiaoli/
+          - generic [ref=e266]:
+            - term [ref=e267]:
+              - link "离婚" [ref=e268] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/lihun/
+            - definition [ref=e269]:
+              - link "离婚条件" [ref=e270] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/lihun/lihuntiaojian/
+              - link "离婚程序" [ref=e271] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/lihun/lihunchengxu/
+              - link "协议离婚" [ref=e272] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/lihun/xylh/
+              - link "离婚协议书" [ref=e273] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/lihun/lhxys/
+              - link "诉讼离婚" [ref=e274] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/lihun/lihunsusong/
+              - link "离婚起诉书" [ref=e275] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/lihun/lhqss/
+              - link "离婚调解" [ref=e276] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/lihun/lihundiaojieshu/
+              - link "离婚证据" [ref=e277] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/lihun/lhqz/
+              - link "离婚案例" [ref=e278] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/lihun/lihunanli/
+              - link "离婚赔偿" [ref=e279] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/lihun/lhpc/
+          - generic [ref=e280]:
+            - term [ref=e281]:
+              - link "子女抚养" [ref=e282] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/zinvfuyang/
+            - definition [ref=e283]:
+              - link "抚养权" [ref=e284] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/zinvfuyang/fuyangquan/
+              - link "抚养费" [ref=e285] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/zinvfuyang/znfy/
+              - link "监护权" [ref=e286] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/zinvfuyang/jianhuquan/
+              - link "探视权" [ref=e287] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/zinvfuyang/tanshiquan/
+              - link "监护权变更" [ref=e288] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/zinvfuyang/jhqbg/
+          - generic [ref=e289]:
+            - term [ref=e290]:
+              - link "夫妻财产" [ref=e291] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/ccfg/
+            - definition [ref=e292]:
+              - link "婚前财产" [ref=e293] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/ccfg/hqcc/
+              - link "婚后个人财产" [ref=e294] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/ccfg/fqgrcc/
+              - link "婚后共同财产" [ref=e295] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/ccfg/gongtongcaichan/
+              - link "夫妻债务" [ref=e296] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/ccfg/lihunzhaiwu/
+              - link "离婚财产分割" [ref=e297] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/ccfg/lhccfg/
+              - link "夫妻财产协议" [ref=e298] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/ccfg/cqxy/
+              - link "夫妻财产公证" [ref=e299] [cursor=pointer]:
+                - /url: /laws/hunyinjiating/ccfg/fqccgz/
+          - link "查看更多" [ref=e300] [cursor=pointer]:
+            - /url: /laws/cateall.aspx#Cate_hunyinjiating
+        - generic [ref=e301]:
+          - link "女人出轨几年法律怎么判 女人出轨几年法律怎么判?单纯出轨一般不构成犯罪、不会判刑，这多是道德问题，违背婚姻忠诚义务。若符合重婚罪要件则会被判刑，重婚包括登记结婚或夫..." [ref=e302] [cursor=pointer]:
+            - /url: /laws/10588593.aspx
+            - generic [ref=e303]:
+              - heading "女人出轨几年法律怎么判" [level=6] [ref=e304]
+              - paragraph [ref=e305]: 女人出轨几年法律怎么判?单纯出轨一般不构成犯罪、不会判刑，这多是道德问题，违背婚姻忠诚义务。若符合重婚罪要件则会被判刑，重婚包括登记结婚或夫...
+          - generic [ref=e306]: 最近更新
+          - list [ref=e307]:
+            - listitem [ref=e308]:
+              - generic [ref=e309]: 06-11
+              - link "离婚冷静期满了后小孩怎么分" [ref=e310] [cursor=pointer]:
+                - /url: /laws/10588582.aspx
+            - listitem [ref=e311]:
+              - generic [ref=e312]: 06-11
+              - link "结婚后买车算夫妻财产吗" [ref=e313] [cursor=pointer]:
+                - /url: /laws/10588574.aspx
+            - listitem [ref=e314]:
+              - generic [ref=e315]: 06-11
+              - link "婚内父母的遗产算夫妻的财产吗" [ref=e316] [cursor=pointer]:
+                - /url: /laws/10588561.aspx
+            - listitem [ref=e317]:
+              - generic [ref=e318]: 06-11
+              - link "结完婚买车子算夫妻财产吗" [ref=e319] [cursor=pointer]:
+                - /url: /laws/10588528.aspx
+        - generic [ref=e320]:
+          - list [ref=e321]:
+            - listitem [ref=e322]:
+              - link [ref=e323] [cursor=pointer]:
+                - /url: /laws/120386.aspx
+              - heading "离婚后女方户口分户怎么办" [level=6] [ref=e324]:
+                - link "离婚后女方户口分户怎么办" [ref=e325] [cursor=pointer]:
+                  - /url: /laws/120386.aspx
+              - paragraph [ref=e326]: 我国历来的传统婚姻是女方嫁到男方家，很少有男方倒插...
+            - listitem [ref=e327]:
+              - link [ref=e328] [cursor=pointer]:
+                - /url: /laws/87911.aspx
+              - heading "夫妻离婚孩子抚养权怎么判" [level=6] [ref=e329]:
+                - link "夫妻离婚孩子抚养权怎么判" [ref=e330] [cursor=pointer]:
+                  - /url: /laws/87911.aspx
+              - paragraph [ref=e331]: 法院在判决孩子抚养权时主要考虑孩子的年龄、夫妻双方...
+            - listitem [ref=e332]:
+              - link [ref=e333] [cursor=pointer]:
+                - /url: /laws/87783.aspx
+              - heading "离婚条件的规定有哪些" [level=6] [ref=e334]:
+                - link "离婚条件的规定有哪些" [ref=e335] [cursor=pointer]:
+                  - /url: /laws/87783.aspx
+              - paragraph [ref=e336]: 离婚条件?的规定分为协议离婚与起诉离婚两种。夫妻双...
+          - generic [ref=e337]: 婚姻家庭专业律师推荐
+          - generic [ref=e338]:
+            - link "马赛男 13167055951" [ref=e339] [cursor=pointer]:
+              - /url: //jialishanghai.66law.cn/
+              - strong [ref=e340]: 马赛男
+              - paragraph [ref=e341]: "13167055951"
+            - link "在线咨询" [ref=e343] [cursor=pointer]:
+              - /url: https://www.66law.cn/case/add.aspx?toguid=55CFB0FD-B555-418D-8221-F941661B771B
+      - link "华律一秒告诉您打官司诉讼费需要多少" [ref=e345] [cursor=pointer]:
+        - /url: //www.66law.cn/fangan/calc_susong.aspx
+        - img "华律一秒告诉您打官司诉讼费需要多少" [ref=e346]
+    - generic [ref=e347]:
+      - generic [ref=e348]:
+        - generic [ref=e349] [cursor=pointer]: 合同纠纷
+        - generic [ref=e350] [cursor=pointer]: 房产纠纷
+        - generic [ref=e351] [cursor=pointer]: 公司法
+      - generic [ref=e352]:
+        - generic [ref=e353]:
+          - heading "精选分类" [level=6] [ref=e354]
+          - generic [ref=e355]:
+            - term [ref=e356]:
+              - link "合同订立" [ref=e357] [cursor=pointer]:
+                - /url: /laws/hetongfa/htdl/
+            - definition [ref=e358]:
+              - link "要约" [ref=e359] [cursor=pointer]:
+                - /url: /laws/hetongfa/htdl/yaoyue/
+              - link "承诺" [ref=e360] [cursor=pointer]:
+                - /url: /laws/hetongfa/htdl/chengnuo/
+              - link "格式合同" [ref=e361] [cursor=pointer]:
+                - /url: /laws/hetongfa/htdl/gsht/
+              - link "要约邀请" [ref=e362] [cursor=pointer]:
+                - /url: /laws/hetongfa/htdl/yaoyueyaoqing/
+              - link "合同形式" [ref=e363] [cursor=pointer]:
+                - /url: /laws/hetongfa/htdl/htxs/
+              - link "订立纠纷" [ref=e364] [cursor=pointer]:
+                - /url: /laws/hetongfa/htdl/dljf/
+              - link "合同订立的程序" [ref=e365] [cursor=pointer]:
+                - /url: /laws/hetongfa/htdl/htdlcx/
+              - link "合同条款" [ref=e366] [cursor=pointer]:
+                - /url: /laws/hetongfa/htdl/httk/
+              - link "合同种类" [ref=e367] [cursor=pointer]:
+                - /url: /laws/hetongfa/htdl/htzl/
+          - generic [ref=e368]:
+            - term [ref=e369]:
+              - link "合同终止" [ref=e370] [cursor=pointer]:
+                - /url: /laws/hetongfa/hetongzhongzhi/
+            - definition [ref=e371]:
+              - link "合同解除" [ref=e372] [cursor=pointer]:
+                - /url: /laws/hetongfa/hetongzhongzhi/htjc/
+              - link "合同提存" [ref=e373] [cursor=pointer]:
+                - /url: /laws/hetongfa/hetongzhongzhi/hetongticun/
+              - link "合同的终止" [ref=e374] [cursor=pointer]:
+                - /url: /laws/hetongfa/hetongzhongzhi/htzztj/
+              - link "合同终止效力" [ref=e375] [cursor=pointer]:
+                - /url: /laws/hetongfa/hetongzhongzhi/htzzxl/
+          - generic [ref=e376]:
+            - term [ref=e377]:
+              - link "合同债权" [ref=e378] [cursor=pointer]:
+                - /url: /laws/hetongfa/htzq/
+            - definition [ref=e379]:
+              - link "合同债权质押" [ref=e380] [cursor=pointer]:
+                - /url: /laws/hetongfa/htzq/zqzy/
+              - link "合同债权保护" [ref=e381] [cursor=pointer]:
+                - /url: /laws/hetongfa/htzq/zqbh/
+              - link "合同债权性质" [ref=e382] [cursor=pointer]:
+                - /url: /laws/hetongfa/htzq/zqxz/
+          - generic [ref=e383]:
+            - term [ref=e384]:
+              - link "合同欺诈" [ref=e385] [cursor=pointer]:
+                - /url: /laws/hetongfa/htqz/
+            - definition [ref=e386]:
+              - link "合同诈骗罪" [ref=e387] [cursor=pointer]:
+                - /url: /laws/hetongfa/htqz/htzpz/
+              - link "劳动合同欺诈" [ref=e388] [cursor=pointer]:
+                - /url: /laws/hetongfa/htqz/laodonghtqz/
+              - link "合同欺诈案例" [ref=e389] [cursor=pointer]:
+                - /url: /laws/hetongfa/htqz/qzal2726/
+              - link "合同欺诈方式及预防" [ref=e390] [cursor=pointer]:
+                - /url: /laws/hetongfa/htqz/qzyf/
+          - link "查看更多" [ref=e391] [cursor=pointer]:
+            - /url: /laws/cateall.aspx#Cate_hetongfa
+        - generic [ref=e392]:
+          - link "房租晚缴纳违约金犯法吗 房租晚缴纳违约金犯法吗?房租晚缴纳违约金本身不违法。租赁合同一般会明确租金支付时间和逾期违约责任，承租人违约应按约定担责，违约金可保障合同履..." [ref=e393] [cursor=pointer]:
+            - /url: /laws/10588600.aspx
+            - generic [ref=e394]:
+              - heading "房租晚缴纳违约金犯法吗" [level=6] [ref=e395]
+              - paragraph [ref=e396]: 房租晚缴纳违约金犯法吗?房租晚缴纳违约金本身不违法。租赁合同一般会明确租金支付时间和逾期违约责任，承租人违约应按约定担责，违约金可保障合同履...
+          - generic [ref=e397]: 最近更新
+          - list [ref=e398]:
+            - listitem [ref=e399]:
+              - generic [ref=e400]: 06-11
+              - link "租客违约能退违约金吗" [ref=e401] [cursor=pointer]:
+                - /url: /laws/10588596.aspx
+            - listitem [ref=e402]:
+              - generic [ref=e403]: 06-11
+              - link "租赁合同到期有损失吗" [ref=e404] [cursor=pointer]:
+                - /url: /laws/10588581.aspx
+            - listitem [ref=e405]:
+              - generic [ref=e406]: 06-11
+              - link "不付房租怎么违约金呢" [ref=e407] [cursor=pointer]:
+                - /url: /laws/10588579.aspx
+            - listitem [ref=e408]:
+              - generic [ref=e409]: 06-11
+              - link "房屋租赁合同不规范有法律效力吗" [ref=e410] [cursor=pointer]:
+                - /url: /laws/10588559.aspx
+        - generic [ref=e411]:
+          - list [ref=e412]:
+            - listitem [ref=e413]:
+              - link [ref=e414] [cursor=pointer]:
+                - /url: /laws/103889.aspx
+              - heading "合同终止与合同解除的区别有哪些" [level=6] [ref=e415]:
+                - link "合同终止与合同解除的区别有哪些" [ref=e416] [cursor=pointer]:
+                  - /url: /laws/103889.aspx
+              - paragraph [ref=e417]: 合同终止与合同解除在我们生活中常常会被误认为是一个...
+            - listitem [ref=e418]:
+              - link [ref=e419] [cursor=pointer]:
+                - /url: /laws/103889.aspx
+              - heading "合同终止与合同解除的区别有哪些" [level=6] [ref=e420]:
+                - link "合同终止与合同解除的区别有哪些" [ref=e421] [cursor=pointer]:
+                  - /url: /laws/103889.aspx
+              - paragraph [ref=e422]: 合同终止与合同解除在我们生活中常常会被误认为是一个...
+            - listitem [ref=e423]:
+              - link [ref=e424] [cursor=pointer]:
+                - /url: /laws/2470373.aspx
+              - heading "未成年偷卖金条变现行为可以撤销吗" [level=6] [ref=e425]:
+                - link "未成年偷卖金条变现行为可以撤销吗" [ref=e426] [cursor=pointer]:
+                  - /url: /laws/2470373.aspx
+              - paragraph [ref=e427]: 自己家的孩子偷拿家里的黄金首饰卖给金店，如果孩子为...
+          - generic [ref=e428]: 合同法专业律师推荐
+          - generic [ref=e429]:
+            - link "北京市京博（上海）律师事务所 15618807321" [ref=e430] [cursor=pointer]:
+              - /url: //jingbolvsuo.66law.cn/
+              - strong [ref=e431]: 北京市京博（上海）律师事务所
+              - paragraph [ref=e432]: "15618807321"
+            - link "在线咨询" [ref=e434] [cursor=pointer]:
+              - /url: https://www.66law.cn/case/add.aspx?toguid=BF4674C3-F138-4A58-8882-11A4A1A57C9F
+      - link "花最低钱获得高价值的法律建议 华律VIP通道点击" [ref=e436] [cursor=pointer]:
+        - /url: //www.66law.cn/question/vip/
+        - img "花最低钱获得高价值的法律建议 华律VIP通道点击" [ref=e437]
+    - generic [ref=e438]:
+      - generic [ref=e439]:
+        - generic [ref=e440] [cursor=pointer]: 知识产权
+        - generic [ref=e441] [cursor=pointer]: 债权债务
+        - generic [ref=e442] [cursor=pointer]: 劳动纠纷
+      - generic [ref=e443]:
+        - generic [ref=e444]:
+          - heading "精选分类" [level=6] [ref=e445]
+          - generic [ref=e446]:
+            - term [ref=e447]:
+              - link "著作权法" [ref=e448] [cursor=pointer]:
+                - /url: /laws/zscqf/zhuzqf/
+            - definition [ref=e449]:
+              - link "著作权归属" [ref=e450] [cursor=pointer]:
+                - /url: /laws/zscqf/zhuzqf/zhuzuoquanguishu/
+              - link "著作权保护" [ref=e451] [cursor=pointer]:
+                - /url: /laws/zscqf/zhuzqf/zhuzuoquanbaohu/
+              - link "著作权利用" [ref=e452] [cursor=pointer]:
+                - /url: /laws/zscqf/zhuzqf/zhuzuoquanliyong/
+              - link "著作权纠纷" [ref=e453] [cursor=pointer]:
+                - /url: /laws/zscqf/zhuzqf/zzqf/
+          - generic [ref=e454]:
+            - term [ref=e455]:
+              - link "商标法" [ref=e456] [cursor=pointer]:
+                - /url: /laws/zscqf/shangbiaofa/
+            - definition [ref=e457]:
+              - link "商标注册" [ref=e458] [cursor=pointer]:
+                - /url: /laws/zscqf/shangbiaofa/sbqqpc/
+              - link "商标使用" [ref=e459] [cursor=pointer]:
+                - /url: /laws/zscqf/shangbiaofa/shangbiaoshiyong/
+              - link "商标保护" [ref=e460] [cursor=pointer]:
+                - /url: /laws/zscqf/shangbiaofa/sbbh/
+              - link "商标转让" [ref=e461] [cursor=pointer]:
+                - /url: /laws/zscqf/shangbiaofa/sbzrw/
+          - generic [ref=e462]:
+            - term [ref=e463]:
+              - link "专利法" [ref=e464] [cursor=pointer]:
+                - /url: /laws/zscqf/zhuanlifa/
+            - definition [ref=e465]:
+              - link "专利申请" [ref=e466] [cursor=pointer]:
+                - /url: /laws/zscqf/zhuanlifa/zhuanlishenqing/
+              - link "专利实施" [ref=e467] [cursor=pointer]:
+                - /url: /laws/zscqf/zhuanlifa/zlqinquanshishi/
+              - link "专利保护" [ref=e468] [cursor=pointer]:
+                - /url: /laws/zscqf/zhuanlifa/zhuanlishenbao/
+              - link "专利转让" [ref=e469] [cursor=pointer]:
+                - /url: /laws/zscqf/zhuanlifa/zlzr/
+          - generic [ref=e470]:
+            - term [ref=e471]:
+              - link "其它知识产权相关" [ref=e472] [cursor=pointer]:
+                - /url: /laws/zscqf/qtzscqxg/
+            - definition [ref=e473]:
+              - link "商号" [ref=e474] [cursor=pointer]:
+                - /url: /laws/zscqf/qtzscqxg/shanghao/
+              - link "商业秘密" [ref=e475] [cursor=pointer]:
+                - /url: /laws/zscqf/qtzscqxg/shangyemimi/
+              - link "域名争议" [ref=e476] [cursor=pointer]:
+                - /url: /laws/zscqf/qtzscqxg/yumingzhengyi/
+              - link "产地标记" [ref=e477] [cursor=pointer]:
+                - /url: /laws/zscqf/qtzscqxg/laozihao/
+              - link "老字号" [ref=e478] [cursor=pointer]:
+                - /url: /laws/zscqf/qtzscqxg/lzh/
+              - link "知识产权解释" [ref=e479] [cursor=pointer]:
+                - /url: /laws/zscqf/qtzscqxg/zscqjs/
+              - link "知识产权法规" [ref=e480] [cursor=pointer]:
+                - /url: /laws/zscqf/qtzscqxg/zscqfg/
+              - link "知识产权新闻" [ref=e481] [cursor=pointer]:
+                - /url: /laws/zscqf/qtzscqxg/zscqnews/
+          - link "查看更多" [ref=e482] [cursor=pointer]:
+            - /url: /laws/cateall.aspx#Cate_zscqf
+        - generic [ref=e483]:
+          - link "饭店个体商标侵权怎么判 饭店个体商标侵权怎么判?饭店个体商标侵权判决需综合考量。民事上，侵权人要停止侵权、赔偿损失，赔偿按多种方式确定，恶意侵权可加重赔偿。构成犯罪..." [ref=e484] [cursor=pointer]:
+            - /url: /laws/10588592.aspx
+            - generic [ref=e485]:
+              - heading "饭店个体商标侵权怎么判" [level=6] [ref=e486]
+              - paragraph [ref=e487]: 饭店个体商标侵权怎么判?饭店个体商标侵权判决需综合考量。民事上，侵权人要停止侵权、赔偿损失，赔偿按多种方式确定，恶意侵权可加重赔偿。构成犯罪...
+          - generic [ref=e488]: 最近更新
+          - list [ref=e489]:
+            - listitem [ref=e490]:
+              - generic [ref=e491]: 06-11
+              - link "著作权怎么鉴定侵权行为?" [ref=e492] [cursor=pointer]:
+                - /url: /laws/10588488.aspx
+            - listitem [ref=e493]:
+              - generic [ref=e494]: 06-11
+              - link "发别人作品算是侵权吗" [ref=e495] [cursor=pointer]:
+                - /url: /laws/10588471.aspx
+            - listitem [ref=e496]:
+              - generic [ref=e497]: 06-11
+              - link "作品登记前上架算侵权吗" [ref=e498] [cursor=pointer]:
+                - /url: /laws/10588380.aspx
+            - listitem [ref=e499]:
+              - generic [ref=e500]: 06-11
+              - link "商标前面加2字算侵权吗" [ref=e501] [cursor=pointer]:
+                - /url: /laws/10588287.aspx
+        - generic [ref=e502]:
+          - list [ref=e503]:
+            - listitem [ref=e504]:
+              - link [ref=e505] [cursor=pointer]:
+                - /url: /laws/296645.aspx
+              - heading "商标注册流程是怎样的" [level=6] [ref=e506]:
+                - link "商标注册流程是怎样的" [ref=e507] [cursor=pointer]:
+                  - /url: /laws/296645.aspx
+              - paragraph [ref=e508]: 商标使用人可以向国家工商行政管理局商标局申请商标注...
+            - listitem [ref=e509]:
+              - link [ref=e510] [cursor=pointer]:
+                - /url: /laws/296645.aspx
+              - heading "商标注册流程是怎样的" [level=6] [ref=e511]:
+                - link "商标注册流程是怎样的" [ref=e512] [cursor=pointer]:
+                  - /url: /laws/296645.aspx
+              - paragraph [ref=e513]: 商标使用人可以向国家工商行政管理局商标局申请商标注...
+            - listitem [ref=e514]:
+              - link [ref=e515] [cursor=pointer]:
+                - /url: /laws/1071002.aspx
+              - heading "专利侵权赔偿数额如何认定" [level=6] [ref=e516]:
+                - link "专利侵权赔偿数额如何认定" [ref=e517] [cursor=pointer]:
+                  - /url: /laws/1071002.aspx
+              - paragraph [ref=e518]: 三方软件支付是我国两大移动支付平台之一，由于三方软...
+          - generic [ref=e519]:
+            - generic [ref=e520]: 有法律问题 ？
+            - paragraph [ref=e521]: 咨询知识产权法专业律师
+            - link "立即咨询" [ref=e522] [cursor=pointer]:
+              - /url: https://www.66law.cn/laws/zscqf/question/
+      - link [ref=e524] [cursor=pointer]:
+        - /url: //www.66law.cn/findlawyers/
+  - generic [ref=e525]:
+    - generic [ref=e526]: 精品栏目推荐
+    - generic [ref=e527]:
+      - generic [ref=e528]:
+        - generic [ref=e529]:
+          - text: 律师说法
+          - link "更多" [ref=e530] [cursor=pointer]:
+            - /url: //v.66law.cn/shuofa/
+        - list [ref=e532]:
+          - listitem [ref=e533]:
+            - link "01:45" [ref=e534] [cursor=pointer]:
+              - /url: //v.66law.cn/shuofa/14062.html
+              - generic [ref=e536]: 01:45
+            - paragraph [ref=e538]:
+              - link "工程价款的结算方式" [ref=e539] [cursor=pointer]:
+                - /url: //v.66law.cn/shuofa/14062.html
+          - listitem [ref=e540]:
+            - link "02:14" [ref=e541] [cursor=pointer]:
+              - /url: //v.66law.cn/shuofa/11206.html
+              - generic [ref=e543]: 02:14
+            - paragraph [ref=e545]:
+              - link "借条怎么写有法律效力" [ref=e546] [cursor=pointer]:
+                - /url: //v.66law.cn/shuofa/11206.html
+          - listitem [ref=e547]:
+            - link "01:57" [ref=e548] [cursor=pointer]:
+              - /url: //v.66law.cn/shuofa/8933.html
+              - generic [ref=e550]: 01:57
+            - paragraph [ref=e552]:
+              - link "直系亲属包括岳父母吗" [ref=e553] [cursor=pointer]:
+                - /url: //v.66law.cn/shuofa/8933.html
+        - list [ref=e558]:
+          - listitem [ref=e559]:
+            - link "01:04" [ref=e560] [cursor=pointer]:
+              - /url: //v.66law.cn/shuofa/1183.html
+              - generic [ref=e562]: 01:04
+            - paragraph [ref=e564]:
+              - link "定金与订金的区别" [ref=e565] [cursor=pointer]:
+                - /url: //v.66law.cn/shuofa/1183.html
+          - listitem [ref=e566]:
+            - link "02:07" [ref=e567] [cursor=pointer]:
+              - /url: //v.66law.cn/shuofa/12782.html
+              - generic [ref=e569]: 02:07
+            - paragraph [ref=e571]:
+              - link "2019离婚新规定" [ref=e572] [cursor=pointer]:
+                - /url: //v.66law.cn/shuofa/12782.html
+      - generic [ref=e573]:
+        - generic [ref=e574]:
+          - text: 语音问答
+          - link "更多" [ref=e575] [cursor=pointer]:
+            - /url: //v.66law.cn/yuyinask/
+        - list [ref=e576]:
+          - listitem [ref=e577]:
+            - link [ref=e578] [cursor=pointer]:
+              - /url: //v.66law.cn/yuyinask/6428.html
+            - paragraph [ref=e581]:
+              - link "过户费一般要多少费用" [ref=e582] [cursor=pointer]:
+                - /url: //v.66law.cn/yuyinask/6428.html
+            - generic [ref=e583]:
+              - link "周凡力律师律师" [ref=e585] [cursor=pointer]:
+                - /url: //www.66law.cn/lawyer/2619b49579431/
+              - generic [ref=e586]: 01:13
+              - generic [ref=e588]:
+                - emphasis [ref=e590]: "3335426"
+                - text: 人收听
+          - listitem [ref=e591]:
+            - link [ref=e592] [cursor=pointer]:
+              - /url: //v.66law.cn/yuyinask/26432.html
+            - paragraph [ref=e595]:
+              - link "籍贯是什么意思" [ref=e596] [cursor=pointer]:
+                - /url: //v.66law.cn/yuyinask/26432.html
+            - generic [ref=e597]:
+              - link "徐静律师律师" [ref=e599] [cursor=pointer]:
+                - /url: //www.66law.cn/lawyer/2f122003f5a22/
+              - generic [ref=e600]: 01:29
+              - generic [ref=e602]:
+                - emphasis [ref=e604]: "3323858"
+                - text: 人收听
+          - listitem [ref=e605]:
+            - link [ref=e606] [cursor=pointer]:
+              - /url: //v.66law.cn/yuyinask/52430.html
+            - paragraph [ref=e609]:
+              - link "房产证写夫妻名字利弊" [ref=e610] [cursor=pointer]:
+                - /url: //v.66law.cn/yuyinask/52430.html
+            - generic [ref=e611]:
+              - link "张硕律师律师" [ref=e613] [cursor=pointer]:
+                - /url: //www.66law.cn/lawyer/2b1514f6b4f3e/
+              - generic [ref=e614]: 01:43
+              - generic [ref=e616]:
+                - emphasis [ref=e618]: "3214867"
+                - text: 人收听
+          - listitem [ref=e619]:
+            - link [ref=e620] [cursor=pointer]:
+              - /url: //v.66law.cn/yuyinask/11661.html
+            - paragraph [ref=e623]:
+              - link "怎么申请法律援助" [ref=e624] [cursor=pointer]:
+                - /url: //v.66law.cn/yuyinask/11661.html
+            - generic [ref=e625]:
+              - link "陈林律师律师" [ref=e627] [cursor=pointer]:
+                - /url: //www.66law.cn/lawyer/2115813229640/
+              - generic [ref=e628]: 00:50
+              - generic [ref=e630]:
+                - emphasis [ref=e632]: "1805987"
+                - text: 人收听
+        - generic [ref=e633]: 网友还在关注：
+        - generic [ref=e634]:
+          - link "赔偿标准 交通、工伤、损害赔偿计算" [ref=e635] [cursor=pointer]:
+            - /url: //www.66law.cn/fangan/calc_susong.aspx
+            - paragraph [ref=e637]: 赔偿标准
+            - paragraph [ref=e638]: 交通、工伤、损害赔偿计算
+          - link "刑法罪名 刑法罪名大全一览" [ref=e639] [cursor=pointer]:
+            - /url: //www.66law.cn/zuiming/
+            - paragraph [ref=e641]: 刑法罪名
+            - paragraph [ref=e642]: 刑法罪名大全一览
+          - link "办事指南 政策及便民服务指南" [ref=e643] [cursor=pointer]:
+            - /url: //www.66law.cn/zhinan/
+            - paragraph [ref=e645]: 办事指南
+            - paragraph [ref=e646]: 政策及便民服务指南
+  - generic [ref=e647]:
+    - generic [ref=e648]:
+      - generic [ref=e649] [cursor=pointer]: 友情链接
+      - generic [ref=e650] [cursor=pointer]: 城市分站
+      - generic [ref=e651] [cursor=pointer]: 热门标签
+      - generic [ref=e652] [cursor=pointer]: 区县律师推荐
+      - generic [ref=e653] [cursor=pointer]: 城市律师推荐
+    - list [ref=e654]:
+      - listitem [ref=e655]:
+        - link "TOM新闻" [ref=e656] [cursor=pointer]:
+          - /url: http://news.tom.com/
+        - link "股票龙虎榜" [ref=e657] [cursor=pointer]:
+          - /url: https://www.zcaijing.com/longhubang/
+        - link "日本代购" [ref=e658] [cursor=pointer]:
+          - /url: http://www.gougoujp.com/
+        - link "法律方法" [ref=e659] [cursor=pointer]:
+          - /url: https://www.fabiao.com/flff/
+        - link "杂志之家" [ref=e660] [cursor=pointer]:
+          - /url: http://www.zazhi.com.cn
+        - link "英语四级成绩查询" [ref=e661] [cursor=pointer]:
+          - /url: http://cet4.koolearn.com/zixun/
+        - link "事业单位招聘网" [ref=e662] [cursor=pointer]:
+          - /url: http://www.offcn.com/sydw/
+        - link "法律咨询" [ref=e663] [cursor=pointer]:
+          - /url: https://www.lawtime.cn/ask/
+        - link "昆明律师" [ref=e664] [cursor=pointer]:
+          - /url: http://www.chinalawyeryn.com/
+        - link "友情链接QQ：3131575675" [ref=e665] [cursor=pointer]:
+          - /url: javascript:void(0)
+  - generic [ref=e667]:
+    - generic [ref=e668]:
+      - link [ref=e670] [cursor=pointer]:
+        - /url: //www.66law.cn/
+        - img [ref=e671]
+      - generic [ref=e672]:
+        - paragraph [ref=e673]: 服务热线：（ 工作日 09:00-18:00 ）
+        - paragraph [ref=e674]: 400-6012-708
+        - generic [ref=e675]:
+          - link "在线客服" [ref=e676] [cursor=pointer]:
+            - /url: //wpa.qq.com/msgrd?v=3&uin=2355858727&site=qq&menu=yes
+          - link "在线客服" [ref=e677] [cursor=pointer]:
+            - /url: //wpa.qq.com/msgrd?v=3&uin=2355858788&site=qq&menu=yes
+        - paragraph [ref=e678]: 投诉举报：（ 2个工作日响应 ）
+        - paragraph [ref=e679]: fankui@66law.cn
+        - link "在线反馈" [ref=e681] [cursor=pointer]:
+          - /url: https://www.66law.cn/help/feedback.aspx
+      - generic [ref=e682]:
+        - paragraph [ref=e683]: 关于华律
+        - generic [ref=e684]:
+          - link "关于我们" [ref=e685] [cursor=pointer]:
+            - /url: //www.66law.cn/about/
+          - link "联系方式" [ref=e686] [cursor=pointer]:
+            - /url: //www.66law.cn/about/contact.aspx
+          - link "帮助中心" [ref=e687] [cursor=pointer]:
+            - /url: //www.66law.cn/help/
+          - link "法律声明" [ref=e688] [cursor=pointer]:
+            - /url: //www.66law.cn/help/disclaimers.aspx
+          - link "网站地图" [ref=e689] [cursor=pointer]:
+            - /url: //www.66law.cn/about/sitemap.aspx
+      - generic [ref=e690]:
+        - paragraph [ref=e691]: 合作加盟
+        - generic [ref=e692]:
+          - link "律师加盟" [ref=e693] [cursor=pointer]:
+            - /url: //www.66law.cn/yingxiao/
+          - link "市场合作" [ref=e694] [cursor=pointer]:
+            - /url: //www.66law.cn/yingxiao/cooperation/
+          - link "支付方式" [ref=e695] [cursor=pointer]:
+            - /url: //www.66law.cn/yingxiao/pay/
+      - generic [ref=e696]:
+        - term [ref=e697]: 关注我们
+        - definition [ref=e698]:
+          - generic [ref=e699]:
+            - img [ref=e700]
+            - paragraph [ref=e701]:
+              - text: 我是公众
+              - text: 免费咨询 随时追问
+          - generic [ref=e702]:
+            - img [ref=e703]
+            - paragraph [ref=e704]:
+              - text: 我是律师
+              - text: 案件接洽 合作加盟
+    - paragraph [ref=e705]:
+      - text: Copyright 2004-2026 66Law.cn 版权所有
+      - link "川公网安备 51019002000193号" [ref=e706] [cursor=pointer]:
+        - /url: http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=51019002000193
+      - link "蜀ICP备11014096号-1" [ref=e707] [cursor=pointer]:
+        - /url: https://beian.miit.gov.cn/
+      - link "营业执照" [ref=e708] [cursor=pointer]:
+        - /url: javascript:;
+      - text: 增值电信业务经营许可证(川B2-20211656)
+      - link "有害信息举报" [ref=e709] [cursor=pointer]:
+        - /url: //www.12377.cn/
+      - text: 地址：成都市高新西区西区大道99号伯雅科技园华律大楼
+      - link "来访路线" [ref=e710] [cursor=pointer]:
+        - /url: https://j.map.baidu.com/8EWjL
+        - text: 来访路线

@@ -10,6 +10,8 @@ import { createPortal } from 'react-dom'
 import { Brain, Check, ChevronDown, ChevronRight, Gauge } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { ModelProviderModelGroup } from '@shared/ds-gui-api'
+import { brandForModel, type ModelBrand } from '../../lib/model-brand'
+import { ModelBrandIcon } from './ModelBrandIcon'
 
 export type ComposerReasoningEffort = 'low' | 'medium' | 'high' | 'max'
 
@@ -131,6 +133,7 @@ export function FloatingComposerModelPicker({
   const currentReasoning = normalizeComposerReasoningEffort(composerReasoningEffort)
   const currentReasoningLabel = t(reasoningLabelKey(currentReasoning))
   const modelLabel = fullModelLabel(composerModel, t('autoLabel'))
+  const currentBrand = brandForModel(composerModel, composerModelGroups)
   const controlsTitle = reasoningEnabled
     ? `${modelLabel} / ${currentReasoningLabel}`
     : modelLabel
@@ -326,6 +329,7 @@ export function FloatingComposerModelPicker({
                 }}
                 active={activeProviderId === group.providerId}
                 selected={selectedProviderId === group.providerId}
+                brand={brandForProviderGroup(group)}
                 title={group.label}
                 subtitle={selectedModel}
                 onClick={() => setActiveProviderId(group.providerId)}
@@ -350,6 +354,7 @@ export function FloatingComposerModelPicker({
               <PickerRow
                 key={`${activeProviderGroup.providerId}:${id}`}
                 selected={currentModel === id}
+                brand={brandForModel(id, composerModelGroups)}
                 title={id}
                 onClick={() => {
                   onComposerModelChange(id)
@@ -392,6 +397,7 @@ export function FloatingComposerModelPicker({
               : 'cursor-not-allowed text-ds-faint'
           }`}
         >
+          <ModelBrandIcon brand={currentBrand} className={`ds-model-brand-dot ds-model-brand-${currentBrand}`} />
           <span className="min-w-0 truncate text-right">
             {modelLabel}
           </span>
@@ -432,6 +438,7 @@ export function FloatingComposerModelPicker({
         aria-label={t('composerModelControls')}
         title={t('composerModelControls')}
       >
+        <ModelBrandIcon brand={currentBrand} className={`ds-model-brand-dot ds-model-brand-${currentBrand}`} />
         <span className="min-w-0 whitespace-nowrap">{modelLabel}</span>
         {reasoningEnabled ? (
           <span className="shrink-0 text-ds-faint">
@@ -620,10 +627,12 @@ function MenuSeparator(): ReactElement {
 }
 
 function PickerRow({
+  brand,
   selected,
   title,
   onClick
 }: {
+  brand?: ModelBrand
   selected: boolean
   title: string
   onClick: () => void
@@ -641,6 +650,7 @@ function PickerRow({
           : 'text-ds-muted hover:bg-ds-hover hover:text-ds-ink'
       }`}
     >
+      {brand ? <ModelBrandIcon brand={brand} className={`ds-model-brand-dot ds-model-brand-${brand}`} /> : null}
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[13px] font-semibold">{title}</span>
       </span>
@@ -651,6 +661,7 @@ function PickerRow({
 
 function ProviderRow({
   active,
+  brand,
   selected,
   title,
   subtitle,
@@ -659,6 +670,7 @@ function ProviderRow({
   onMouseEnter
 }: {
   active: boolean
+  brand: ModelBrand
   selected: boolean
   title: string
   subtitle: string
@@ -685,6 +697,7 @@ function ProviderRow({
             : 'text-ds-muted hover:bg-ds-hover hover:text-ds-ink'
       }`}
     >
+      <ModelBrandIcon brand={brand} className={`ds-model-brand-dot ds-model-brand-${brand}`} />
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[13px] font-semibold">{title}</span>
         {subtitle ? (
@@ -694,4 +707,12 @@ function ProviderRow({
       <ChevronRight className="h-4 w-4 shrink-0 text-ds-faint" strokeWidth={1.8} />
     </button>
   )
+}
+
+function brandForProviderGroup(group: ComposerModelMenuGroup): ModelBrand {
+  return brandForModel(group.modelIds[0] ?? '', [{
+    providerId: group.providerId,
+    label: group.label,
+    modelIds: group.modelIds
+  }])
 }

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
-APP_PATH="${1:-dist/mac-arm64/DeepSeek GUI.app}"
+APP_PATH="${1:-dist/mac-arm64/legalwork.app}"
 if [ ! -d "$APP_PATH" ]; then
   echo "App not found: $APP_PATH" >&2
-  echo "Usage: npm run mac:unquarantine -- '/path/to/DeepSeek GUI.app'" >&2
+  echo "Usage: npm run mac:unquarantine -- '/path/to/legalwork.app'" >&2
   exit 1
 fi
 xattr -cr "$APP_PATH"

@@ -52,7 +52,8 @@ function Require-Command([string]$Name) {
 }
 
 function Load-LocalReleaseEnv([string]$RootPath) {
-  $configured = [Environment]::GetEnvironmentVariable('DEEPSEEK_GUI_RELEASE_ENV', 'Process')
+  $configuredLegacy = [Environment]::GetEnvironmentVariable('DEEPSEEK_GUI_RELEASE_ENV', 'Process')
+  $configured = [Environment]::GetEnvironmentVariable('LEGALWORK_RELEASE_ENV', 'Process') || $configuredLegacy
   $candidates = @()
   if ($configured) { $candidates += $configured }
   $candidates += (Join-Path $RootPath 'scripts\release.local.env')
@@ -94,6 +95,8 @@ $RequestedChannel = if ($Stable) {
   $Channel
 } elseif ($env:RELEASE_CHANNEL) {
   $env:RELEASE_CHANNEL
+} elseif ($env:LEGALWORK_UPDATE_CHANNEL) {
+  $env:LEGALWORK_UPDATE_CHANNEL
 } elseif ($env:DEEPSEEK_GUI_UPDATE_CHANNEL) {
   $env:DEEPSEEK_GUI_UPDATE_CHANNEL
 } else {
@@ -138,10 +141,12 @@ Write-Info "GitHub release tag: $TagName"
 Write-Info "Release channel: $ReleaseChannel"
 $ReleaseVersion = $TagName.TrimStart('v')
 Assert-Semver $ReleaseVersion
+$env:LEGALWORK_APP_VERSION = $ReleaseVersion
 $env:DEEPSEEK_GUI_APP_VERSION = $ReleaseVersion
 $env:RELEASE_CHANNEL = $ReleaseChannel
+$env:LEGALWORK_UPDATE_CHANNEL = $ReleaseChannel
 $env:DEEPSEEK_GUI_UPDATE_CHANNEL = $ReleaseChannel
-Write-Info "App version: $env:DEEPSEEK_GUI_APP_VERSION"
+Write-Info "App version: $env:LEGALWORK_APP_VERSION"
 
 & gh release view $TagName 2>&1 | Out-Null
 if ($LASTEXITCODE -ne 0) {
@@ -158,8 +163,7 @@ Remove-Item -Recurse -Force -ErrorAction SilentlyContinue `
   (Join-Path $Root 'dist\mac-arm64'), `
   (Join-Path $Root 'dist\linux-unpacked')
 Remove-Item -Force -ErrorAction SilentlyContinue `
-  (Join-Path $Root 'dist\DeepSeek-GUI-*'), `
-  (Join-Path $Root 'dist\DeepSeek GUI-*'), `
+  (Join-Path $Root 'dist\legalwork-*'), `
   (Join-Path $Root 'dist\latest*.yml'), `
   (Join-Path $Root 'dist\*.blockmap')
 
@@ -173,7 +177,8 @@ if ($LASTEXITCODE -ne 0) {
 $DistDir = Join-Path $Root 'dist'
 $AssetSpecs = @(
   @{ Label = 'Windows exe'; Filter = '*-win-*.exe' },
-  @{ Label = 'Windows blockmap'; Filter = '*-win-*.exe.blockmap' }
+  @{ Label = 'Windows blockmap'; Filter = '*-win-*.exe.blockmap' },
+  @{ Label = 'Windows update metadata'; Filter = 'latest.yml' }
 )
 
 $Assets = @()

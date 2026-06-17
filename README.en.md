@@ -1,30 +1,28 @@
 <p align="center">
-  <img src="src/asset/img/deepseek.png" width="96" alt="DeepSeek GUI icon">
+  <img src="src/asset/img/legalwork.png" width="96" alt="LegalWork icon">
 </p>
 
-# DeepSeek GUI
+# LegalWork
 
 [简体中文](./README.md) | English
 
-> Bring Kun's high-token-ROI local agent runtime into a desktop workbench: **Code** for project work, **Write** for documents, and **Connect phone** for IM automation and scheduled tasks. Every token is steered toward requirements, code, decisions, and results.
-
-[Website](https://deepseek-gui.com) | [Download](https://deepseek-gui.com)
+> A local desktop workbench for legal professionals and document-intensive workflows. Built on the Legalwork agent runtime, designed for **document review**, **compliance analysis**, **case research**, and **automated legal drafting** — every token goes toward requirements, facts, rules, and results.
 
 [![GitHub release](https://img.shields.io/github/v/release/XingYu-Zhong/DeepSeek-GUI?label=github)](https://github.com/XingYu-Zhong/DeepSeek-GUI/releases)
 [![License](https://img.shields.io/github/license/XingYu-Zhong/DeepSeek-GUI)](./LICENSE)
 
-DeepSeek GUI is a local desktop workbench for developers and frequent AI users. It uses Kun as the only runtime and turns the terminal agent experience into an easier, longer-lived app: choose a workspace, start a task, watch reasoning and tool calls stream in, review file changes, and approve sensitive actions when needed.
+LegalWork is a local desktop workbench for legal professionals, compliance officers, and document-heavy workflows. It uses Legalwork as the only runtime and turns the terminal agent experience into a task-oriented desktop app: open a case workspace, start a review, watch the agent read documents, call tools, and produce structured findings.
 
-The goal is not to ship another chat wrapper. The goal is to make DeepSeek feel like a reliable desktop partner for real project work. Kun's core advantage is high token ROI: the same context budget spends less on repeated prefixes, giant tool catalogs, and runaway output, and more on the information that actually moves the task forward.
+The goal is to make an AI-powered legal assistant that works on real case files, regulations, contracts, and compliance documents — not another general-purpose chat wrapper. Legalwork's core advantage is high token ROI: the same context budget spends less on repeated prefixes, giant tool catalogs, and runaway output, and more on the information that actually moves the task forward.
 
 ---
 
 <p align="center">
   <a href="src/asset/img/code.mp4">
-    <img src="src/asset/img/code.gif" width="410" alt="DeepSeek GUI Code mode demo">
+    <img src="src/asset/img/code.gif" width="410" alt="LegalWork Code mode demo">
   </a>
   <a href="src/asset/img/write.mp4">
-    <img src="src/asset/img/write.gif" width="410" alt="DeepSeek GUI Write mode demo">
+    <img src="src/asset/img/write.gif" width="410" alt="LegalWork Write mode demo">
   </a>
 </p>
 
@@ -51,22 +49,22 @@ The goal is not to ship another chat wrapper. The goal is to make DeepSeek feel 
 </p>
 <p align="center"><em>Web tools demo.</em></p>
 
-## Why Kun Delivers High Token ROI
+## Why Legalwork Delivers High Token ROI
 
-Kun makes token economy the default behavior of the agent loop, not a cleanup step after the fact. It does more than compress text: before each model call, it decides which information is worth entering context.
+Legalwork makes token economy the default behavior of the agent loop, not a cleanup step after the fact. It does more than compress text: before each model call, it decides which information is worth entering context.
 
-| Kun advantage | Where the ROI comes from |
+| Legalwork advantage | Where the ROI comes from |
 | --- | --- |
 | **Cache-first agent loop** | Stable system prompts, tool schemas, and immutable prefixes make DeepSeek-native cache hits more likely, so long sessions do not keep paying for the same background. |
-| **Tool context on demand** | When MCP catalogs are large, Kun can search for relevant tools first, then describe and call the target tool instead of sending every tool schema on every turn. |
+| **Tool context on demand** | When MCP catalogs are large, Legalwork can search for relevant tools first, then describe and call the target tool instead of sending every tool schema on every turn. |
 | **Context hygiene** | Long tool results, long arguments, base64 payloads, repeated tool loops, and low-value history are bounded while code, paths, errors, decisions, and open tasks are preserved. |
 | **Visible usage payback** | Runtime telemetry tracks cache hit/miss, token usage, and estimated savings; the GUI surfaces Token economy savings so cost return is observable over time. |
 
-The result: Kun is built for real project work with long tasks, long sessions, and many tools. It keeps the model's attention on high-value context, helping the same API budget produce more useful progress.
+The result: Legalwork is built for real project work with long tasks, long sessions, and many tools. It keeps the model's attention on high-value context, helping the same API budget produce more useful progress.
 
 ## What We Built
 
-- A desktop app around the Kun local runtime, with default runtime auto-start and management.
+- A desktop app around the Legalwork local runtime, with default runtime auto-start and management.
 - A full chat workbench with multiple sessions, streaming output, history, interruption, and resend flows.
 - Local workspace integration so the agent can read, edit, and create files in real projects.
 - Change review surfaces that make every file modification visible and inspectable.
@@ -88,31 +86,30 @@ The result: Kun is built for real project work with long tasks, long sessions, a
 - **Side conversations and thread control**: `/btw` opens a context-inheriting side conversation; threads also support compact, fork, archive, and restore flows.
 - **Change review**: inline diffs and a side review panel help you understand exactly what the agent changed.
 - **Controlled permissions**: choose read-only, workspace-write, full-access, or external sandbox modes, and decide when tool calls require approval.
-- **Managed runtime**: use the bundled Kun by default, or point the app at your own `kun` executable.
+- **Managed runtime**: use the bundled Legalwork by default, or point the app at your own `legalwork` executable.
 - **Skill and MCP support**: create Skills, edit MCP config, add common tools, and open the related folders from the UI.
-- **Feature-flagged agent extensions**: Kun can enable MCP, web fetch/search, Skills, standalone CLI use, image attachments, cross-session memory, and delegated subagents by config; Settings shows the runtime-reported capability and diagnostics state.
+- **Feature-flagged agent extensions**: Legalwork can enable MCP, web fetch/search, Skills, standalone CLI use, image attachments, cross-session memory, and delegated subagents by config; Settings shows the runtime-reported capability and diagnostics state.
 - **Connect phone**: run a background agent alongside normal chat, with current support for Feishu / Lark / WeChat, IM webhook / relay flows, and scheduled tasks.
-- **Scheduled tasks**: create one-time, daily, interval, or manual tasks with their own workspace, model, and reasoning effort so Kun can run while the computer is awake.
-- **Write mode**: manage `~/.deepseekgui/write_workspace` and custom writing spaces, browse Markdown files, use live Markdown editing, preview relative images, get DeepSeek FIM short completion / inspiration completion with optional cross-document BM25 + keyword retrieval, export the current document as `HTML / PDF / DOC / DOCX`, and invoke the writing assistant directly from selected text.
-- **High token ROI**: Kun keeps prompt prefixes stable, tracks DeepSeek-native cache hit/miss fields, compacts context and tool output, and uses MCP search to discover tools progressively so tokens stay focused on requirements, code, decisions, and results.
+- **Scheduled tasks**: create one-time, daily, interval, or manual tasks with their own workspace, model, and reasoning effort so Legalwork can run while the computer is awake.
+- **Write mode**: manage `~/.legalwork/write_workspace` and custom writing spaces, browse Markdown files, use live Markdown editing, preview relative images, get DeepSeek FIM short completion / inspiration completion with optional cross-document BM25 + keyword retrieval, export the current document as `HTML / PDF / DOC / DOCX`, and invoke the writing assistant directly from selected text.
+- **High token ROI**: Legalwork keeps prompt prefixes stable, tracks DeepSeek-native cache hit/miss fields, compacts context and tool output, and uses MCP search to discover tools progressively so tokens stay focused on requirements, code, decisions, and results.
 - **Friendly first launch**: choose language, add your DeepSeek API key, and optionally set a compatible Base URL.
 - **Local-first**: preferences, sessions, logs, and runtime config stay on your machine; model calls use your own DeepSeek API key.
 - **English and Chinese UI**: switch languages from Settings at any time.
 - **Cross-platform use**: macOS `.dmg/.zip`, Windows `.exe`, and Linux `.AppImage`; source builds remain available.
 
-## Runtime: Kun
+## Runtime: Legalwork
 
 The only active local agent runtime in DeepSeek-GUI today is
-**Kun** (shipped under `kun/`), a self-contained
+**Legalwork** (shipped under `legalwork/`), a self-contained
 TypeScript package that boots a local HTTP/SSE server as the
 single boundary between the GUI and the agent loop.
 
-The name Kun is inspired by the great fish in Zhuangzi's line,
-"In the northern sea there is a fish; its name is Kun." The idea is
-not a temporary chat shell, but a deeper local runtime that can carry
-longer context, richer tools, and sustained project collaboration.
+Legalwork is not a temporary chat shell. It is a deeper local runtime
+that can carry longer context, richer tools, and sustained legal and
+project collaboration.
 
-Kun's operating principle is to raise the ROI of every token. The
+Legalwork's operating principle is to raise the ROI of every token. The
 user's context budget should go toward requirements, code, decisions,
 and results, not repeated tool schemas, runaway tool output, invalid
 history, or prefixes that could have been reused from cache. It is
@@ -120,46 +117,46 @@ optimized less for one-off questions and more for real workflows that
 read and write projects, call tools repeatedly, and carry context over
 long sessions.
 
-Kun fuses a design that has been battle-tested in the
+Legalwork fuses a design that has been battle-tested in the
 wild:
 
 - **The cache-first agent loop borrowed from Reasonix**: immutable prompt prefix (with sha256 fingerprint), append-only session log, bounded TTL/LRU cache, inflight tracking with guaranteed cleanup, mid-turn steering queue, context compaction that preserves pinned constraints, and cache/usage telemetry.
-- **Token economy and tool-context optimization**: Kun stabilizes system prompts and tool schemas, reads DeepSeek-native cache hit/miss fields, bounds long tool results, long arguments, base64 payloads, and repeated tool loops, and can use `mcp_search` / `mcp_describe` / `mcp_call` to discover MCP tools progressively when a tool catalog is too large to advertise all at once.
+- **Token economy and tool-context optimization**: Legalwork stabilizes system prompts and tool schemas, reads DeepSeek-native cache hit/miss fields, bounds long tool results, long arguments, base64 payloads, and repeated tool loops, and can use `mcp_search` / `mcp_describe` / `mcp_call` to discover MCP tools progressively when a tool catalog is too large to advertise all at once.
 
 > Thanks to the Reasonix team for sharing the runnable references
 > that made this design pillar testable in the first place. Nearly
-> every performance trait of Kun — cache hit rate, token replay,
+> every performance trait of Legalwork — cache hit rate, token replay,
 > reconnect, and interruptable approvals — can be traced back to
 > this project. The full design rationale
 > and the borrow map live in
-> [`docs/kun-architecture.md`](docs/kun-architecture.md).
+> [`docs/legalwork-architecture.md`](docs/legalwork-architecture.md).
 
 If you want the dedicated write-up for cache behavior, including
 stable prefixes, tool schema canonicalization, DeepSeek native
 hit/miss accounting, tool-pair healing, and validation strategy, see
-[`docs/kun-cache-optimization.md`](docs/kun-cache-optimization.md).
+[`docs/legalwork-cache-optimization.md`](docs/legalwork-cache-optimization.md).
 
-Kun's larger agent capabilities are controlled by feature flags:
+Legalwork's larger agent capabilities are controlled by feature flags:
 `capabilities.mcp` connects third-party MCP servers,
 `capabilities.web` exposes `web_fetch` / `web_search`,
 `capabilities.skills` discovers `skill.json` and legacy `SKILL.md`,
 `capabilities.attachments` enables image attachments with text-model fallback, `capabilities.memory`
 enables cross-session recall, and `capabilities.subagents` allows
-budgeted delegated child runs. `kun run`, `kun chat`, and `kun exec`
+budgeted delegated child runs. `legalwork run`, `legalwork chat`, and `legalwork exec`
 can run without the GUI. The GUI reads `/v1/runtime/info` and
 `/v1/runtime/tools` in Settings to show what is actually available.
 These capabilities are off by config or limited by model capability
 until explicitly enabled; examples and troubleshooting live in
-[`kun/README.md`](kun/README.md).
+[`legalwork/README.md`](legalwork/README.md).
 
 Simplified architecture:
 
 ```text
 Renderer (React)
-  → KunRuntimeProvider
+  → LegalworkRuntimeProvider
   → preload: dsGui.runtimeRequest / startSse
   → main: LocalHttpRuntimeAdapter
-  → kun serve (HTTP + SSE)
+  → legalwork serve (HTTP + SSE)
   → cache-first AgentLoop
 ```
 
@@ -167,12 +164,12 @@ Settings live under **Settings → Agent runtime**: binary path, port,
 auto-start, API key, base URL, runtime token, data dir, model,
 approval policy, sandbox mode, and the insecure switch. If an older
 provider was saved before, settings are migrated into
-`agents.kun` on load; after saving, only Kun settings
+`agents.legalwork` on load; after saving, only Legalwork settings
 remain.
 
 The full endpoint list, CLI flags, environment variables, data dir
 layout, and SSE event schema are documented in
-[`kun/README.md`](kun/README.md).
+[`legalwork/README.md`](legalwork/README.md).
 
 ## Who It Is For
 
@@ -185,9 +182,9 @@ layout, and SSE event schema are documented in
 
 ## Workbench And Entry Points
 
-DeepSeek GUI is centered on two main workbenches, **Code** and **Write**,
+LegalWork is centered on two main workbenches, **Code** and **Write**,
 with additional entry points for **Connect phone**, **Scheduled tasks**,
-and **Plugins / Skills / MCP**. They share the same Kun runtime and
+and **Plugins / Skills / MCP**. They share the same Legalwork runtime and
 settings, but keep sessions, workspaces, and layouts separate so you
 can switch by task.
 
@@ -196,7 +193,7 @@ can switch by task.
 The development workbench for real codebases: bind a local project directory, read and edit files, run commands, and review changes.
 
 <p align="center">
-  <img src="src/asset/img/codemode.png" alt="DeepSeek GUI Code mode" width="860">
+  <img src="src/asset/img/codemode.png" alt="LegalWork Code mode" width="860">
 </p>
 
 - Organize multiple agent sessions by workspace, with streamed reasoning, tool calls, and file changes in one view.
@@ -210,26 +207,26 @@ The development workbench for real codebases: bind a local project directory, re
 A dedicated Markdown writing workbench that keeps writing files, save state, and AI assistance separate from Code sessions.
 
 <p align="center">
-  <img src="src/asset/img/writemode.png" alt="DeepSeek GUI Write mode" width="860">
+  <img src="src/asset/img/writemode.png" alt="LegalWork Write mode" width="860">
 </p>
 
-- Manage `~/.deepseekgui/write_workspace` plus custom writing spaces from the left file tree.
+- Manage `~/.legalwork/write_workspace` plus custom writing spaces from the left file tree.
 - Switch between **Live / Source / Split / Preview**; Live keeps Markdown source on the active line and renders the rest.
 - Export the current Markdown document from the toolbar as `HTML / PDF / DOC / DOCX`, with best-effort preservation for headings, lists, code blocks, tables, and local images.
 - DeepSeek FIM short and inspiration completion, plus selection-based inline agent actions and a right-side writing assistant for summaries, outlines, and polish.
 
 ### Connect Phone
 
-Background automation and IM integration, so Kun can keep handling phone messages and scheduled jobs outside normal desktop chat.
+Background automation and IM integration, so Legalwork can keep handling phone messages and scheduled jobs outside normal desktop chat.
 
 <p align="center">
-  <img src="src/asset/img/clawmode.png" alt="DeepSeek GUI Connect phone" width="860">
+  <img src="src/asset/img/clawmode.png" alt="LegalWork Connect phone" width="860">
 </p>
 
 - Configure dedicated agents for Feishu / Lark / WeChat and other channels, each with its own profile, default model, and workspace.
 - Every IM agent gets its own thread, so you can debug replies and tool calls directly in the GUI.
 - Local webhook / relay support for team workflows and personal automation.
-- Scheduled tasks can run once, daily, on an interval, or manually. Each task creates a dedicated Kun thread and sends its configured prompt.
+- Scheduled tasks can run once, daily, on an interval, or manually. Each task creates a dedicated Legalwork thread and sends its configured prompt.
 
 ---
 
@@ -274,7 +271,7 @@ npm install --registry=https://registry.npmmirror.com
 
 ## First Run
 
-1. Open DeepSeek GUI.
+1. Open LegalWork.
 2. Choose your interface language in the onboarding guide.
 3. Enter your DeepSeek API key; set a custom Base URL if needed.
 4. Choose a default workspace, or use the default directory created by the app.
@@ -316,12 +313,12 @@ Keyboard shortcuts:
 
 ## Write Mode Design Notes
 
-Write mode extends DeepSeek GUI from a code/chat workbench into a long-form writing workspace. Its implementation borrows several ideas from the local `openhanako` reference project:
+Write mode extends LegalWork from a code/chat workbench into a long-form writing workspace. Its implementation borrows several ideas from the local `openhanako` reference project:
 
 - Markdown live editing: openhanako inspired the CodeMirror decorations approach where the active line stays editable as Markdown source while inactive lines render headings, tasks, images, dividers, and tables through widgets.
 - Selection inline agent: openhanako inspired the selection-capture and floating-input interaction, so selected text can be sent with file path, line numbers, and bounded original text as structured context.
-- AI session isolation: Write uses Kun threads, but the GUI keeps a local write thread registry per writing space so write conversations do not pollute Code / Connect phone sidebars.
-- Text completion: writing completion bypasses the local Kun serve runtime (**Kun** is the bundled local HTTP/SSE agent runtime, the single boundary between the GUI and the agent loop — see the [Runtime: Kun](#runtime-kun) section above for details) and calls the DeepSeek FIM Completion API directly for low-latency ghost text. Short completion uses a short debounce, small token budget, and strict local filtering; inspiration completion uses a longer pause, larger token budget, and only runs at line ends or paragraph boundaries. Before completion, the app builds a short-TTL lightweight index over Markdown / text files in the writing space, retrieves cross-document snippets with BM25 + keyword matching, and injects them as a hidden Markdown comment so terminology, facts, and style stay consistent.
+- AI session isolation: Write uses Legalwork threads, but the GUI keeps a local write thread registry per writing space so write conversations do not pollute Code / Connect phone sidebars.
+- Text completion: writing completion bypasses the local Legalwork serve runtime (**Legalwork** is the bundled local HTTP/SSE agent runtime, the single boundary between the GUI and the agent loop — see the [Runtime: Legalwork](#runtime-legalwork) section above for details) and calls the DeepSeek FIM Completion API directly for low-latency ghost text. Short completion uses a short debounce, small token budget, and strict local filtering; inspiration completion uses a longer pause, larger token budget, and only runs at line ends or paragraph boundaries. Before completion, the app builds a short-TTL lightweight index over Markdown / text files in the writing space, retrieves cross-document snippets with BM25 + keyword matching, and injects them as a hidden Markdown comment so terminology, facts, and style stay consistent.
 
 ---
 
@@ -329,7 +326,7 @@ Write mode extends DeepSeek GUI from a code/chat workbench into a long-form writ
 
 ### Windows
 
-- Open Settings -> Apps -> Installed apps, find `DeepSeek GUI`, and uninstall it.
+- Open Settings -> Apps -> Installed apps, find `LegalWork`, and uninstall it.
 - Or uninstall from Control Panel -> Programs and Features.
 - Or run the uninstaller from the installation directory.
 
@@ -337,12 +334,12 @@ The Windows installer creates Start Menu and desktop shortcuts by default. It do
 
 ### macOS
 
-- Move `DeepSeek GUI.app` from Applications to Trash.
+- Move `LegalWork.app` from Applications to Trash.
 - If macOS blocks the app on first open, right-click it in Finder and choose Open.
 - For local unsigned builds, you can remove the quarantine attribute first:
 
 ```bash
-npm run mac:unquarantine -- '/Applications/DeepSeek GUI.app'
+npm run mac:unquarantine -- '/Applications/LegalWork.app'
 ```
 
 ### Linux
@@ -356,11 +353,11 @@ By default, uninstalling removes the app but keeps local settings, sessions, and
 
 | Platform | App data path |
 | --- | --- |
-| macOS | `~/Library/Application Support/DeepSeek GUI` |
-| Windows | `%APPDATA%\DeepSeek GUI` |
-| Linux | `~/.config/DeepSeek GUI` |
+| macOS | `~/Library/Application Support/LegalWork` |
+| Windows | `%APPDATA%\LegalWork` |
+| Linux | `~/.config/LegalWork` |
 
-Kun data lives under `~/.deepseekgui/kun` or the configured Kun data dir. Check it before deleting, because it may contain sessions, MCP, or Skill settings you still need.
+Legalwork data lives under `~/.legalwork/legalwork` or the configured Legalwork data dir. Check it before deleting, because it may contain sessions, MCP, or Skill settings you still need.
 
 ---
 
@@ -402,10 +399,10 @@ For the full development workflow, see [DEVELOPMENT.md](./docs/DEVELOPMENT.md).
 
 | Doc | Contents |
 | --- | --- |
-| [docs/kun-architecture.en.md](docs/kun-architecture.en.md) | Single-Kun runtime plan, GUI removal scope, HTTP/SSE contract, and legacy agent retirement notes |
-| [docs/kun-cache-optimization.en.md](docs/kun-cache-optimization.en.md) | Kun cache optimization, token economy, MCP search, tool-output compaction, and usage savings |
-| [docs/kun-contributing.en.md](docs/kun-contributing.en.md) | Kun contribution guide: hexagonal architecture, design patterns (Ports & Adapters / Functional Core Imperative Shell / event sourcing / explicit DI / composition root), four typical PR scenarios |
-| [kun/README.md](kun/README.md) | Kun package: CLI, env, data dir, HTTP API |
+| [docs/legalwork-architecture.en.md](docs/legalwork-architecture.en.md) | Single-Legalwork runtime plan, GUI removal scope, HTTP/SSE contract, and legacy agent retirement notes |
+| [docs/legalwork-cache-optimization.en.md](docs/legalwork-cache-optimization.en.md) | Legalwork cache optimization, token economy, MCP search, tool-output compaction, and usage savings |
+| [docs/legalwork-contributing.en.md](docs/legalwork-contributing.en.md) | Legalwork contribution guide: hexagonal architecture, design patterns (Ports & Adapters / Functional Core Imperative Shell / event sourcing / explicit DI / composition root), four typical PR scenarios |
+| [legalwork/README.md](legalwork/README.md) | Legalwork package: CLI, env, data dir, HTTP API |
 | [CONTRIBUTING.en.md](docs/CONTRIBUTING.en.md) | Contribution guide |
 | [DEVELOPMENT.en.md](docs/DEVELOPMENT.en.md) | Local development workflow |
 | [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | Community code of conduct |
@@ -415,23 +412,23 @@ For the full development workflow, see [DEVELOPMENT.md](./docs/DEVELOPMENT.md).
 
 ## Thanks
 
-Kun stands on the shoulders of prior projects:
+Legalwork stands on the shoulders of prior projects:
 
-- **Reasonix** — the cache-first agent loop. `ImmutablePrefix` (with sha256 fingerprint) and its explicit mutation API, `AppendOnlySessionLog` (in-memory window + JSONL on disk), `LruCache` / `TtlLruCache`, `InflightTracker` with `finally`-block cleanup, `SteeringQueue` for mid-turn user guidance, `ContextCompactor` that preserves pinned constraints, and `UsageCounter` + `CacheTelemetry` are direct TypeScript ports and refinements of Reasonix's design prototypes. Reasonix's split between reasoning events and assistant text, the `tool_call` / `tool_result` pairing via `callId`, and the usage replay pattern also flow directly into the Kun event contract.
+- **Reasonix** — the cache-first agent loop. `ImmutablePrefix` (with sha256 fingerprint) and its explicit mutation API, `AppendOnlySessionLog` (in-memory window + JSONL on disk), `LruCache` / `TtlLruCache`, `InflightTracker` with `finally`-block cleanup, `SteeringQueue` for mid-turn user guidance, `ContextCompactor` that preserves pinned constraints, and `UsageCounter` + `CacheTelemetry` are direct TypeScript ports and refinements of Reasonix's design prototypes. Reasonix's split between reasoning events and assistant text, the `tool_call` / `tool_result` pairing via `callId`, and the usage replay pattern also flow directly into the Legalwork event contract.
 
 We are also grateful to:
 
 - **[LobsterAI](https://github.com/netease-youdao/LobsterAI)**: its IM management, QR binding, agent binding, and customizable agent-profile flows inspired the Connect phone integration in this project.
 - **OpenHanako**: its Markdown live editing, writing-space, and selection inline-agent patterns heavily informed Write mode.
 - **[DeepSeek](https://github.com/deepseek-ai)**: for the models and API.
-- Everyone who contributes issues, ideas, code, and documentation to DeepSeek GUI.
+- Everyone who contributes issues, ideas, code, and documentation to LegalWork.
 
 > [!NOTE]
 > This project is not affiliated with DeepSeek Inc.
 
 ## License
 
-[MIT](./LICENSE)
+[PolyForm Noncommercial License 1.0.0](./LICENSE)
 
 ## Star History
 

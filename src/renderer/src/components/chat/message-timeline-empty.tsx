@@ -1,10 +1,9 @@
-import { Fragment, useState, type ReactElement } from 'react'
+import type { ReactElement } from 'react'
 import { useTranslation } from 'react-i18next'
-import { FolderOpen, GitFork, RefreshCw, Settings } from 'lucide-react'
+import { FolderOpen, GitFork, RefreshCw } from 'lucide-react'
 import type { ClawImChannelV1 } from '@shared/app-settings'
 import { AnimatedWorkLogo } from './AnimatedWorkLogo'
-import { InitialSessionUsageHeatmap } from './InitialSessionUsageHeatmap'
-import { WhaleHeroStage } from './WhaleHeroStage'
+import type { ModelBrand } from '../../lib/model-brand'
 
 /**
  * Empty / hero states rendered by `MessageTimeline` when there is no
@@ -27,10 +26,12 @@ function clawChannelDisplayName(
 
 function ClawEmptyHero({
   channel,
-  onSelectSuggestion
+  onSelectSuggestion,
+  modelBrand = 'deepseek'
 }: {
   channel: ClawImChannelV1 | null
   onSelectSuggestion?: (prompt: string) => void
+  modelBrand?: ModelBrand
 }): ReactElement {
   const { t } = useTranslation('common')
   const agentName = clawChannelDisplayName(channel, t('clawEmptyHeroFallbackName'))
@@ -49,6 +50,7 @@ function ClawEmptyHero({
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[24px] border border-ds-border-muted bg-ds-main/55 text-accent">
             <AnimatedWorkLogo
               active
+              brand={modelBrand}
               className="ds-claw-empty-whale-logo"
               phase="lead"
               size="md"
@@ -80,35 +82,33 @@ function RuntimeWakeHero({
   const detail = runtimeError?.trim() || t('runtimeOfflineHeroSub')
 
   return (
-    <div className="ds-runtime-wake-hero ds-no-drag px-6 pb-8 pt-12 text-center md:pt-16">
-      <WhaleHeroStage />
-
-      <p className="text-[12px] font-semibold uppercase tracking-[0] text-accent">
-        {t('runtimeOfflineHeroKicker')}
-      </p>
-      <h1 className="mt-2 max-w-[620px] text-[26px] font-semibold leading-tight tracking-[0] text-ds-ink md:text-[32px]">
-        {t('runtimeOfflineHeroTitle')}
-      </h1>
-      <p className="mt-3 max-w-[620px] text-[15px] leading-7 text-ds-muted">
-        {detail}
-      </p>
-      <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-        <button
-          type="button"
-          className="ds-chip inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-medium text-ds-ink transition hover:text-ds-ink"
-          onClick={onRetry}
-        >
-          <RefreshCw className="h-3.5 w-3.5" strokeWidth={1.8} />
-          {t('retryConnection')}
-        </button>
-        <button
-          type="button"
-          className="ds-chip-muted inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-medium text-ds-muted transition hover:text-ds-ink"
-          onClick={onOpenSettings}
-        >
-          <Settings className="h-3.5 w-3.5" strokeWidth={1.8} />
-          {t('openSettings')}
-        </button>
+    <div className="ds-runtime-wake-hero ds-no-drag flex flex-col items-center justify-center px-6 py-12 text-center">
+      <div className="flex max-w-[420px] flex-col items-center gap-4">
+        <RefreshCw className="h-5 w-5 animate-spin text-ds-muted" strokeWidth={1.8} />
+        <div>
+          <p className="text-[13px] font-medium text-ds-ink">
+            {t('runtimeOfflineHeroTitle')}
+          </p>
+          <p className="mt-1 text-[12px] leading-5 text-ds-muted">
+            {detail}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <button
+            type="button"
+            className="ds-chip inline-flex items-center gap-2 rounded-full px-4 py-2 text-[12px] font-medium text-ds-ink transition hover:text-ds-ink"
+            onClick={onRetry}
+          >
+            {t('retryConnection')}
+          </button>
+          <button
+            type="button"
+            className="ds-chip-muted inline-flex items-center gap-2 rounded-full px-4 py-2 text-[12px] font-medium text-ds-muted transition hover:text-ds-ink"
+            onClick={onOpenSettings}
+          >
+            {t('openSettings')}
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -123,7 +123,8 @@ export function MessageTimelineEmptyHero({
   onPickWorkspace,
   onRetry,
   onOpenSettings,
-  onSelectSuggestion
+  onSelectSuggestion,
+  modelBrand = 'deepseek'
 }: {
   route: 'chat' | 'claw'
   ready: boolean
@@ -134,11 +135,12 @@ export function MessageTimelineEmptyHero({
   onRetry: () => void
   onOpenSettings: () => void
   onSelectSuggestion?: (prompt: string) => void
-}): ReactElement {
+  modelBrand?: ModelBrand
+}): ReactElement | null {
   const { t } = useTranslation('common')
 
   if (!ready) {
-    return <RuntimeWakeHero runtimeError={runtimeError} onRetry={onRetry} onOpenSettings={onOpenSettings} />
+    return <RuntimeWakeHero onRetry={onRetry} onOpenSettings={onOpenSettings} />
   }
 
   if (!hasWorkspace) {
@@ -167,11 +169,12 @@ export function MessageTimelineEmptyHero({
       <ClawEmptyHero
         channel={activeClawChannel}
         onSelectSuggestion={onSelectSuggestion}
+        modelBrand={modelBrand}
       />
     )
   }
 
-  return <InitialSessionUsageHeatmap />
+  return null
 }
 
 export function ThreadForkBanner({ parentTitle }: { parentTitle: string }): ReactElement {

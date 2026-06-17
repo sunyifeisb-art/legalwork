@@ -8,12 +8,29 @@ import {
   skillMarketplaceItemsFromDiscoveredSkills
 } from './PluginMarketplaceView'
 
+const mcpLabels = {
+  configured: 'Configured',
+  connected: 'Connected',
+  error: 'Error',
+  disabled: 'Disabled',
+  pkulawTitle: 'PKULaw',
+  pkulawSummary: (values: {
+    total: number
+    connected: number
+    tools: number
+    errors: number
+    disabled: number
+    lastError: string
+  }) =>
+    `${values.total} sub-services · ${values.connected} connected · ${values.tools} tools · ${values.errors} errors · ${values.disabled} disabled${values.lastError ? ` · ${values.lastError}` : ''}`
+}
+
 describe('PluginMarketplaceView MCP config helpers', () => {
   it('merges recommended MCP servers into JSON config without dropping existing fields', () => {
     const existing = JSON.stringify({
       timeouts: { read_timeout: 120 },
       servers: {
-        gui_schedule: { command: '/Applications/DeepSeek GUI.app' }
+        legalwork_schedule: { command: '/Applications/legalwork.app' }
       }
     })
 
@@ -25,7 +42,7 @@ describe('PluginMarketplaceView MCP config helpers', () => {
 
     expect(merged.alreadyExists).toBe(false)
     expect(parsed.timeouts).toEqual({ read_timeout: 120 })
-    expect(parsed.servers.gui_schedule).toEqual({ command: '/Applications/DeepSeek GUI.app' })
+    expect(parsed.servers.legalwork_schedule).toEqual({ command: '/Applications/legalwork.app' })
     expect(parsed.servers.playwright).toMatchObject({
       enabled: true,
       transport: 'stdio',
@@ -34,6 +51,19 @@ describe('PluginMarketplaceView MCP config helpers', () => {
       trustScope: 'user'
     })
     expect(mcpConfigHasServer(merged.text, 'playwright')).toBe(true)
+  })
+
+  it('treats PKULaw endpoint servers as the single PKULaw install', () => {
+    const content = JSON.stringify({
+      servers: {
+        'pkulaw-law-keyword': {
+          transport: 'streamable-http',
+          url: 'https://apim-gateway.pkulaw.com/mcp-law'
+        }
+      }
+    })
+
+    expect(mcpConfigHasServer(content, 'pkulaw')).toBe(true)
   })
 
   it('detects duplicate MCP servers instead of appending old-style snippets', () => {
@@ -46,7 +76,7 @@ describe('PluginMarketplaceView MCP config helpers', () => {
     expect(JSON.parse(second.text).servers.context7).toMatchObject({ command: 'npx' })
   })
 
-  it('accepts custom JSON as either a single server or a Kun config fragment', () => {
+  it('accepts custom JSON as either a single server or a Legalwork config fragment', () => {
     expect(customMcpConfigFragment(
       'docs',
       '{"transport":"stdio","command":"npx","args":["-y","docs-mcp"]}',
@@ -75,7 +105,7 @@ describe('PluginMarketplaceView MCP config helpers', () => {
     })
   })
 
-  it('detects MCP servers from full Kun capability config', () => {
+  it('detects MCP servers from full Legalwork capability config', () => {
     const content = JSON.stringify({
       capabilities: {
         mcp: {
@@ -96,12 +126,7 @@ describe('PluginMarketplaceView MCP config helpers', () => {
     const items = mcpMarketplaceItemsFromConfigAndDiagnostics(
       '{"servers":{"docs":{"transport":"stdio","command":"docs-mcp"}}}',
       null,
-      {
-        configured: 'Configured',
-        connected: 'Connected',
-        error: 'Error',
-        disabled: 'Disabled'
-      }
+      mcpLabels
     )
 
     expect(items).toEqual([
@@ -138,12 +163,7 @@ describe('PluginMarketplaceView MCP config helpers', () => {
           { id: 'bad', status: 'error', lastError: 'missing token' }
         ]
       },
-      {
-        configured: 'Configured',
-        connected: 'Connected',
-        error: 'Error',
-        disabled: 'Disabled'
-      }
+      mcpLabels
     )
 
     expect(items).toEqual([
@@ -165,6 +185,49 @@ describe('PluginMarketplaceView MCP config helpers', () => {
         description: expect.stringContaining('github-mcp')
       })
     ])
+  })
+
+  it('groups PKULaw child endpoints into one marketplace item', () => {
+    const items = mcpMarketplaceItemsFromConfigAndDiagnostics(
+      JSON.stringify({
+        servers: {
+          'pkulaw-law-keyword': {
+            enabled: true,
+            transport: 'streamable-http',
+            url: 'https://apim-gateway.pkulaw.com/mcp-law'
+          },
+          'pkulaw-case-keyword': {
+            enabled: true,
+            transport: 'streamable-http',
+            url: 'https://apim-gateway.pkulaw.com/mcp-case'
+          },
+          docs: {
+            transport: 'stdio',
+            command: 'docs-mcp'
+          }
+        }
+      }),
+      {
+        mcpServers: [
+          { id: 'pkulaw-law-keyword', status: 'connected', toolCount: 3 },
+          { id: 'pkulaw-case-keyword', status: 'error', lastError: '401' }
+        ]
+      },
+      mcpLabels
+    )
+
+    expect(items).toEqual([
+      expect.objectContaining({ id: 'docs' }),
+      expect.objectContaining({
+        id: 'pkulaw',
+        title: 'PKULaw',
+        sourceLabel: 'Error',
+        statusTone: 'error',
+        description: expect.stringContaining('2 sub-services')
+      })
+    ])
+    expect(items.some((item) => item.id === 'pkulaw-law-keyword')).toBe(false)
+    expect(items.some((item) => item.id === 'pkulaw-case-keyword')).toBe(false)
   })
 })
 
@@ -189,7 +252,7 @@ describe('skillMarketplaceItemsFromDiscoveredSkills', () => {
         scope: 'global',
         legacy: true
       }
-    ], { project: 'Project', global: 'Global' })
+    ], { project: 'Project', global: 'Global', builtin: 'Builtin' })
 
     expect(items).toEqual([
       expect.objectContaining({

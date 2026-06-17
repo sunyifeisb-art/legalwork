@@ -17,6 +17,7 @@ import {
   useModelUsageState
 } from '../../hooks/use-model-usage'
 import { WhaleHeroStage } from './WhaleHeroStage'
+import type { ModelBrand } from '../../lib/model-brand'
 
 type CalendarCell = DailyUsageBucket | null
 type CalendarWeek = {
@@ -699,16 +700,18 @@ function UsageHeroToggle({
 function UsageHeroSection({
   title,
   sub,
-  showText = true
+  showText = true,
+  modelBrand = 'deepseek'
 }: {
   title: string
   sub: string
   showText?: boolean
+  modelBrand?: ModelBrand
 }): ReactElement {
   return (
     <div className="flex w-full min-w-0 flex-col items-center text-center">
       <div>
-        <WhaleHeroStage />
+        <WhaleHeroStage brand={modelBrand} />
       </div>
       {showText ? (
         <>
@@ -740,7 +743,7 @@ function UsagePanelCard({ children }: { children: ReactElement }): ReactElement 
   )
 }
 
-export function InitialSessionUsageHeatmap(): ReactElement {
+export function InitialSessionUsageHeatmap({ modelBrand = 'deepseek' }: { modelBrand?: ModelBrand }): ReactElement {
   const [refreshKey, setRefreshKey] = useState(0)
   const [rangeKey, setRangeKey] = useState<UsageRangeKey>('all')
   const state = useDailyUsageState(true, refreshKey, USAGE_RANGE_DAYS.all)
@@ -751,6 +754,7 @@ export function InitialSessionUsageHeatmap(): ReactElement {
       state={state}
       modelState={modelState}
       rangeKey={rangeKey}
+      modelBrand={modelBrand}
       onRangeChange={setRangeKey}
       onRefresh={() => setRefreshKey((value) => value + 1)}
     />
@@ -764,6 +768,7 @@ export function InitialSessionUsageHeatmapView({
   initialCollapsed = false,
   initialActiveTab = 'overview',
   initialModelHoverIndex = null,
+  modelBrand = 'deepseek',
   onRangeChange,
   onRefresh
 }: {
@@ -773,6 +778,7 @@ export function InitialSessionUsageHeatmapView({
   initialCollapsed?: boolean
   initialActiveTab?: UsageTabKey
   initialModelHoverIndex?: number | null
+  modelBrand?: ModelBrand
   onRangeChange?: (rangeKey: UsageRangeKey) => void
   onRefresh?: () => void
 }): ReactElement {
@@ -817,7 +823,7 @@ export function InitialSessionUsageHeatmapView({
     if (typeof window === 'undefined' || typeof window.dsGui?.getSettings !== 'function') return
     void window.dsGui.getSettings()
       .then((settings) => {
-        if (!cancelled) setModelLabel(settings.agents.kun.model.trim())
+        if (!cancelled) setModelLabel(settings.agents.legalwork.model.trim())
       })
       .catch(() => {
         if (!cancelled) setModelLabel('')
@@ -833,6 +839,7 @@ export function InitialSessionUsageHeatmapView({
         <UsageHeroSection
           title={heroTitle}
           sub={heroSub}
+          modelBrand={modelBrand}
           showText={mode !== 'populated'}
         />
         {collapsed ? (

@@ -10,13 +10,14 @@ import {
   type WriteSettingsPatchV1
 } from './app-settings-types'
 import { normalizeKeyboardShortcuts, type KeyboardShortcutsConfigV1 } from './keyboard-shortcuts'
+export { normalizeKeyboardShortcuts, type KeyboardShortcutsConfigV1 }
 import {
-  defaultKunRuntimeSettings,
-  getKunRuntimeSettings,
-  kunSettingsEnvelope,
-  mergeKunRuntimeSettings,
+  defaultLegalworkRuntimeSettings,
+  getLegalworkRuntimeSettings,
+  legalworkSettingsEnvelope,
+  mergeLegalworkRuntimeSettings,
   migrateLegacyAppSettings
-} from './app-settings-kun'
+} from './app-settings-legalwork'
 import { normalizeModelProviderSettings } from './app-settings-provider'
 import { normalizeDeepseekBaseUrl } from './app-settings-normalizers'
 import { normalizeClawSettings } from './app-settings-claw'
@@ -37,11 +38,11 @@ export function normalizeAppSettings(settings: AppSettingsV1): AppSettingsV1 {
     schedule?: ScheduleSettingsPatchV1
     guiUpdate?: Partial<GuiUpdateConfigV1>
   }
-  const runtime = getKunRuntimeSettings(maybeSettings)
+  const runtime = getLegalworkRuntimeSettings(maybeSettings)
   return {
     ...migrated,
     version: 1,
-    locale: maybeSettings.locale === 'zh' ? 'zh' : 'en',
+    locale: maybeSettings.locale === 'en' ? 'en' : 'zh',
     theme:
       maybeSettings.theme === 'light' || maybeSettings.theme === 'dark' || maybeSettings.theme === 'system'
         ? maybeSettings.theme
@@ -53,7 +54,7 @@ export function normalizeAppSettings(settings: AppSettingsV1): AppSettingsV1 {
         ? maybeSettings.uiFontScale
         : 'small',
     provider: normalizeModelProviderSettings(maybeSettings.provider),
-    agents: kunSettingsEnvelope(mergeKunRuntimeSettings(defaultKunRuntimeSettings(), {
+    agents: legalworkSettingsEnvelope(mergeLegalworkRuntimeSettings(defaultLegalworkRuntimeSettings(), {
       ...runtime,
       baseUrl: runtime.baseUrl.trim() ? normalizeDeepseekBaseUrl(runtime.baseUrl) : ''
     })),
@@ -89,21 +90,21 @@ export function normalizeAppBehaviorSettings(
   }
 }
 
-function shouldMigrateLegacySettings(settings: AppSettingsV1): boolean {
+export function shouldMigrateLegacySettings(settings: AppSettingsV1): boolean {
   const raw = settings as AppSettingsV1 & {
     agentProvider?: unknown
     deepseek?: unknown
     agents?: {
-      kun?: Partial<ReturnType<typeof defaultKunRuntimeSettings>>
+      legalwork?: Partial<ReturnType<typeof defaultLegalworkRuntimeSettings>>
       codewhale?: unknown
       reasonix?: unknown
     }
   }
-  if (!raw.agents?.kun) return true
+  if (!raw.agents?.legalwork) return true
   if ('agentProvider' in raw || 'deepseek' in raw) return true
   if (raw.agents.codewhale || raw.agents.reasonix) return true
-  const dataDir = typeof raw.agents.kun.dataDir === 'string'
-    ? raw.agents.kun.dataDir.replace(/\\/g, '/').toLowerCase()
+  const dataDir = typeof raw.agents.legalwork.dataDir === 'string'
+    ? raw.agents.legalwork.dataDir.replace(/\\/g, '/').toLowerCase()
     : ''
   return dataDir === '~/.deepseekgui/coreagent' || dataDir.endsWith('/.deepseekgui/coreagent')
 }

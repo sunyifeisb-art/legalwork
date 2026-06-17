@@ -2,13 +2,27 @@ const { execFileSync } = require('node:child_process')
 const { existsSync, rmSync } = require('node:fs')
 const { join } = require('node:path')
 
-const KUN_RUNTIME_REQUIRED_PATHS = [
-  'kun/dist/cli/serve-entry.js',
-  'kun/package.json',
-  'kun/package-lock.json',
-  'kun/node_modules/zod/package.json',
-  'kun/node_modules/diff/package.json',
-  'kun/node_modules/@modelcontextprotocol/sdk/package.json'
+const LEGALWORK_RUNTIME_REQUIRED_PATHS = [
+  'legalwork/dist/cli/serve-entry.js',
+  'legalwork/package.json',
+  'legalwork/package-lock.json',
+  'legalwork/node_modules/zod/package.json',
+  'legalwork/node_modules/diff/package.json',
+  'legalwork/node_modules/@modelcontextprotocol/sdk/package.json'
+]
+
+const DATA_COMPLIANCE_REQUIRED_PATHS = [
+  'vendor/data-compliance-review-codex/data-compliance-web/app.py',
+  'vendor/data-compliance-review-codex/data-compliance-web/server_entry.py',
+  'vendor/data-compliance-review-codex/data-compliance-web/desensitize_engine.py',
+  'vendor/data-compliance-review-codex/data-compliance-web/requirements.txt',
+  'vendor/data-compliance-review-codex/data-compliance-web/templates/index.html',
+  'vendor/data-compliance-review-codex/data-compliance-web/templates/result.html',
+  'vendor/data-compliance-review-codex/data-compliance-web/config/review-paths.json'
+]
+
+const DATA_COMPLIANCE_OPTIONAL_PATHS = [
+  'vendor/data-compliance-review-codex/projects/data-compliance-ai-project-kit/knowledge-base/local-regulations.sqlite3'
 ]
 
 function normalizePlatform(platform) {
@@ -46,17 +60,17 @@ function npmCommand(args, platform = process.platform) {
   return { command: 'npm', args }
 }
 
-function prunePackedKunDependencies(context) {
+function prunePackedLegalworkDependencies(context) {
   const root = unpackedAppRoot(context)
-  const kunDir = join(root, 'kun')
-  if (!existsSync(kunDir)) return
+  const legalworkDir = join(root, 'legalwork')
+  if (!existsSync(legalworkDir)) return
 
-  assertExists(join(kunDir, 'package.json'), 'Kun package manifest')
-  assertExists(join(kunDir, 'node_modules'), 'Kun node_modules')
+  assertExists(join(legalworkDir, 'package.json'), 'Legalwork package manifest')
+  assertExists(join(legalworkDir, 'node_modules'), 'Legalwork node_modules')
 
   const prune = npmCommand(['prune', '--omit=dev', '--ignore-scripts'])
   execFileSync(prune.command, prune.args, {
-    cwd: kunDir,
+    cwd: legalworkDir,
     env: {
       ...process.env,
       npm_config_audit: 'false',
@@ -71,18 +85,31 @@ function prunePackedKunDependencies(context) {
     join(root, 'node_modules', 'better-sqlite3', 'package.json'),
     'root better-sqlite3 dependency'
   )
-  rmSync(join(kunDir, 'node_modules', 'better-sqlite3'), { recursive: true, force: true })
+  rmSync(join(legalworkDir, 'node_modules', 'better-sqlite3'), { recursive: true, force: true })
 }
 
-function validateBundledKunRuntime(context) {
+function validateBundledLegalworkRuntime(context) {
   const root = unpackedAppRoot(context)
-  for (const relativePath of KUN_RUNTIME_REQUIRED_PATHS) {
+  for (const relativePath of LEGALWORK_RUNTIME_REQUIRED_PATHS) {
     assertExists(join(root, relativePath), relativePath)
   }
   assertExists(
     join(root, 'node_modules', 'better-sqlite3', 'package.json'),
     'root better-sqlite3 dependency'
   )
+}
+
+function validateBundledDataComplianceRuntime(context) {
+  const root = unpackedAppRoot(context)
+  for (const relativePath of DATA_COMPLIANCE_REQUIRED_PATHS) {
+    assertExists(join(root, relativePath), relativePath)
+  }
+  for (const relativePath of DATA_COMPLIANCE_OPTIONAL_PATHS) {
+    const absolutePath = join(root, relativePath)
+    if (!existsSync(absolutePath)) {
+      console.warn(`[after-pack] Optional data compliance resource missing: ${relativePath}`)
+    }
+  }
 }
 
 function maybeAdhocSignMacApp(context) {
@@ -113,18 +140,22 @@ function maybeAdhocSignMacApp(context) {
 }
 
 async function afterPack(context) {
-  prunePackedKunDependencies(context)
-  validateBundledKunRuntime(context)
+  prunePackedLegalworkDependencies(context)
+  validateBundledLegalworkRuntime(context)
+  validateBundledDataComplianceRuntime(context)
   maybeAdhocSignMacApp(context)
 }
 
-exports.KUN_RUNTIME_REQUIRED_PATHS = KUN_RUNTIME_REQUIRED_PATHS
+exports.LEGALWORK_RUNTIME_REQUIRED_PATHS = LEGALWORK_RUNTIME_REQUIRED_PATHS
+exports.DATA_COMPLIANCE_REQUIRED_PATHS = DATA_COMPLIANCE_REQUIRED_PATHS
+exports.DATA_COMPLIANCE_OPTIONAL_PATHS = DATA_COMPLIANCE_OPTIONAL_PATHS
 exports._internals = {
   appBundlePath,
   packedResourcesDir,
   unpackedAppRoot,
   npmCommand,
-  prunePackedKunDependencies,
-  validateBundledKunRuntime
+  prunePackedLegalworkDependencies,
+  validateBundledLegalworkRuntime,
+  validateBundledDataComplianceRuntime
 }
 exports.default = afterPack

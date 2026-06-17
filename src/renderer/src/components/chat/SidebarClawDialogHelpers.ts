@@ -66,7 +66,7 @@ export function formatClawInstallError(
     (/OpenClaw Gateway/i.test(value) &&
     (/unavailable/i.test(value) ||
       /not configured/i.test(value) ||
-      /DEEPSEEK_GUI_OPENCLAW_GATEWAY_URL/.test(value) ||
+      /LEGALWORK_OPENCLAW_GATEWAY_URL/.test(value) ||
       /requires/i.test(value))) ||
     /^not found$/i.test(value) ||
     /fetch failed/i.test(value) ||
@@ -137,7 +137,7 @@ export const CLAW_AGENT_TABS: Array<{
   }
 ]
 
-export const DEFAULT_CLAW_WORKSPACE_ROOT = '~/.deepseekgui/claw'
+export const DEFAULT_CLAW_WORKSPACE_ROOT = '~/.legalwork/claw'
 
 export const CLAW_DIALOG_STEPS: Array<{
   id: ClawDialogStep

@@ -9,15 +9,15 @@ import {
   resolveClawScheduleMcpCommand,
   resolveClawScheduleMcpNodeEntryPath,
   resolveDeepseekConfigPath,
-  resolveKunConfigPath,
-  resolveKunMcpJsonPath,
+  resolveLegalworkConfigPath,
+  resolveLegalworkMcpJsonPath,
   syncClawScheduleMcpConfig,
   type ClawScheduleMcpLaunchConfig
 } from './claw-schedule-mcp-config'
 import {
   defaultClawSettings,
   defaultKeyboardShortcuts,
-  defaultKunRuntimeSettings,
+  defaultLegalworkRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultWriteSettings,
@@ -34,7 +34,7 @@ function createSettings(patch: Partial<AppSettingsV1['schedule']['internal']> = 
     uiFontScale: 'small',
     provider: defaultModelProviderSettings(),
     agents: {
-      kun: defaultKunRuntimeSettings()
+      legalwork: defaultLegalworkRuntimeSettings()
     },
     workspaceRoot: '/tmp/workspace',
     log: {
@@ -71,19 +71,19 @@ function createSettings(patch: Partial<AppSettingsV1['schedule']['internal']> = 
 }
 
 const launch: ClawScheduleMcpLaunchConfig = {
-  appPath: '/Applications/DeepSeek GUI.app',
-  execPath: '/Applications/DeepSeek GUI.app/Contents/MacOS/DeepSeek GUI',
+  appPath: '/Applications/legalwork.app',
+  execPath: '/Applications/legalwork.app/Contents/MacOS/legalwork',
   isPackaged: false
 }
 
 describe('claw schedule MCP config', () => {
-  it('uses Kun config files by default', () => {
-    expect(resolveKunConfigPath()).toBe(join(homedir(), '.kun', 'config.toml'))
-    expect(resolveKunMcpJsonPath()).toBe(join(homedir(), '.kun', 'mcp.json'))
-    expect(resolveDeepseekConfigPath()).toBe(resolveKunConfigPath())
+  it('uses Legalwork config files by default', () => {
+    expect(resolveLegalworkConfigPath()).toBe(join(homedir(), '.legalwork', 'config.toml'))
+    expect(resolveLegalworkMcpJsonPath()).toBe(join(homedir(), '.legalwork', 'mcp.json'))
+    expect(resolveDeepseekConfigPath()).toBe(resolveLegalworkConfigPath())
   })
 
-  it('writes the gui_schedule server to the Kun MCP JSON config shape', () => {
+  it('writes the legalwork_schedule server to the Legalwork MCP JSON config shape', () => {
     const settings = createSettings({ port: 9787, secret: 'top-secret' })
     const synced = buildSyncedClawScheduleMcpJson(
       {
@@ -105,7 +105,7 @@ describe('claw schedule MCP config', () => {
       context7: {
         command: 'npx'
       },
-      gui_schedule: {
+      legalwork_schedule: {
         command: resolveClawScheduleMcpCommand(launch),
         args: [
           resolveClawScheduleMcpNodeEntryPath(launch),
@@ -127,10 +127,10 @@ describe('claw schedule MCP config', () => {
 
   it('uses the macOS Electron helper for real app bundle paths', () => {
     expect(resolveClawScheduleMcpCommand(launch, 'darwin')).toBe(
-      '/Applications/DeepSeek GUI.app/Contents/Frameworks/DeepSeek GUI Helper.app/Contents/MacOS/DeepSeek GUI Helper'
+      '/Applications/legalwork.app/Contents/Frameworks/legalwork Helper.app/Contents/MacOS/legalwork Helper'
     )
     expect(resolveClawScheduleMcpCommand({
-      appPath: '/tmp/deepseek-gui-test-app',
+      appPath: '/tmp/legalwork-test-app',
       execPath: '/tmp/electron',
       isPackaged: false
     }, 'darwin')).toBe('/tmp/electron')
@@ -148,11 +148,11 @@ describe('claw schedule MCP config', () => {
         'command = "old"',
         'args = []',
         '',
-        '# DeepSeek GUI plugin:mcp:claw-schedule START',
+        '# legalwork plugin:mcp:claw-schedule START',
         '[mcp_servers.claw_schedule]',
         'command = "electron"',
         'args = []',
-        '# DeepSeek GUI plugin:mcp:claw-schedule END',
+        '# legalwork plugin:mcp:claw-schedule END',
         '',
         '[providers.deepseek]',
         'api_key = ""'
@@ -162,7 +162,7 @@ describe('claw schedule MCP config', () => {
     expect(cleaned).toContain('[mcp_servers.context7]')
     expect(cleaned).toContain('[providers.deepseek]')
     expect(cleaned).not.toContain('[mcp_servers.claw_schedule]')
-    expect(cleaned).not.toContain('DeepSeek GUI plugin:mcp:claw-schedule')
+    expect(cleaned).not.toContain('legalwork plugin:mcp:claw-schedule')
   })
 
   it('does not rewrite config.toml text when there is no legacy claw_schedule block', () => {
@@ -180,20 +180,20 @@ describe('claw schedule MCP config', () => {
 
   it('syncs mcp.json and cleans the old config.toml entry on disk', async () => {
     const root = await mkdtemp(join(tmpdir(), 'ds-gui-mcp-'))
-    const kunDir = join(root, '.kun')
-    const configTomlPath = join(kunDir, 'config.toml')
-    const mcpJsonPath = join(kunDir, 'mcp.json')
-    await mkdir(kunDir, { recursive: true })
+    const legalworkDir = join(root, '.legalwork')
+    const configTomlPath = join(legalworkDir, 'config.toml')
+    const mcpJsonPath = join(legalworkDir, 'mcp.json')
+    await mkdir(legalworkDir, { recursive: true })
     await writeFile(
       configTomlPath,
       [
         'provider = "deepseek"',
         '',
-        '# DeepSeek GUI plugin:mcp:claw-schedule START',
+        '# legalwork plugin:mcp:claw-schedule START',
         '[mcp_servers.claw_schedule]',
         'command = "electron"',
         'args = []',
-        '# DeepSeek GUI plugin:mcp:claw-schedule END',
+        '# legalwork plugin:mcp:claw-schedule END',
         ''
       ].join('\n'),
       'utf8'
@@ -224,7 +224,7 @@ describe('claw schedule MCP config', () => {
         existing: {
           command: '/bin/echo'
         },
-        gui_schedule: {
+        legalwork_schedule: {
           command: resolveClawScheduleMcpCommand(launch),
           args: [
             resolveClawScheduleMcpNodeEntryPath(launch),
@@ -240,7 +240,7 @@ describe('claw schedule MCP config', () => {
     })
   })
 
-  it('migrates old claw_schedule JSON entries to gui_schedule', () => {
+  it('migrates old claw_schedule JSON entries to legalwork_schedule', () => {
     const synced = buildSyncedClawScheduleMcpJson(
       {
         servers: {
@@ -256,7 +256,7 @@ describe('claw schedule MCP config', () => {
 
     expect((synced.servers as Record<string, unknown>).claw_schedule).toBeUndefined()
     expect(synced.servers).toMatchObject({
-      gui_schedule: {
+      legalwork_schedule: {
         command: resolveClawScheduleMcpCommand(launch),
         env: {
           ELECTRON_RUN_AS_NODE: '1'

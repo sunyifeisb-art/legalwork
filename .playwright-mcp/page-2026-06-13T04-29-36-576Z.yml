@@ -1,0 +1,21 @@
+- banner [ref=e2]:
+  - button "跳至内容" [ref=e3] [cursor=pointer]:
+    - generic [ref=e5]: 跳至内容
+  - button "辅助功能反馈" [ref=e6] [cursor=pointer]:
+    - generic [ref=e8]: 辅助功能反馈
+  - generic [ref=e9]:
+    - link "返回到必应搜索" [ref=e10] [cursor=pointer]:
+      - /url: /?FORM=Z9FD1
+      - heading "返回到必应搜索" [level=1] [ref=e11]
+    - search [ref=e12]:
+      - button "搜索" [ref=e15] [cursor=pointer]
+      - searchbox "在此处输入你的搜索 — 输入时会显示搜索建议" [ref=e16]: 被人打了 法律 site:chinalaw.gov.cn OR site:npc.gov.cn OR site:court.gov.cn
+      - button "使用图像搜索" [ref=e19] [cursor=pointer]
+  - complementary "帐户奖励和偏好设置" [ref=e21]:
+    - button "Microsoft Rewards" [ref=e22] [cursor=pointer]
+    - link "登录" [ref=e23] [cursor=pointer]:
+      - /url: javascript:void(0)
+      - generic "登录" [ref=e24]
+  - generic [ref=e25]:
+    - generic [ref=e26]: 最后一步
+    - generic [ref=e27]: 请解决以下难题以继续

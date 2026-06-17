@@ -7,9 +7,9 @@ function run(command, args) {
   })
 }
 
-require('./ensure-kun-install.cjs')
+require('./ensure-legalwork-install.cjs')
 
-const buildKun = run('npm', ['--prefix', 'kun', 'run', 'build'])
-if (buildKun.status !== 0) {
-  process.exit(buildKun.status || 1)
+const buildLegalwork = run('npm', ['--prefix', 'legalwork', 'run', 'build'])
+if (buildLegalwork.status !== 0) {
+  process.exit(buildLegalwork.status || 1)
 }

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>数律通设置</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell" style="max-width:480px;margin:0 auto;">
+      <div class="brand-row">
+        <a href="#" class="brand-logo">
+          <img src="./assets/brand-logo.png" alt="ComplianceAI" />
+        </a>
+      </div>
+
+      <section class="settings-card">
+        <div class="field-stack">
+          <label class="checkbox-field">
+            <input id="aiEnabled" type="checkbox" />
+            <span class="field-label" style="margin:0;padding:0;border:0;background:transparent;">AI 增强</span>
+          </label>
+          <p style="color:var(--faint);font-size:13px;margin-top:4px;">开启后，审查结果会补充改写建议。</p>
+        </div>
+        <div class="field-stack">
+          <label class="field-label" for="apiKey">DeepSeek API Key</label>
+          <input id="apiKey" class="field-input" placeholder="sk-..." />
+        </div>
+        <div class="field-stack">
+          <label class="field-label" for="baseUrl">Base URL</label>
+          <input id="baseUrl" class="field-input" placeholder="https://api.deepseek.com" />
+        </div>
+        <div class="field-stack">
+          <label class="field-label" for="model">模型名</label>
+          <input id="model" class="field-input" placeholder="deepseek-chat" />
+        </div>
+        <button id="saveSettingsButton" class="btn-primary">保存设置</button>
+        <div id="settingsStatus" class="status-box">可选：开启 AI 增强后，结果会补充改写建议。</div>
+      </section>
+    </div>
+
+    <script type="module" src="./ui/options.js"></script>
+  </body>
+</html>

@@ -1,4 +1,4 @@
-export const SDD_RELATIVE_DIR = '.kunsdd'
+export const SDD_RELATIVE_DIR = '.legalworksdd'
 export const SDD_DRAFT_RELATIVE_DIR = `${SDD_RELATIVE_DIR}/draft`
 export const SDD_IMAGE_RELATIVE_DIR = `${SDD_RELATIVE_DIR}/img`
 export const SDD_DRAFT_FILE_NAME = 'requirement.md'
@@ -18,7 +18,7 @@ export function isSddDraftRelativePath(value: string): boolean {
   const parts = normalized.split('/')
   return (
     parts.length === 4 &&
-    parts[0] === '.kunsdd' &&
+    parts[0] === '.legalworksdd' &&
     parts[1] === 'draft' &&
     UUID_LIKE.test(parts[2] ?? '') &&
     parts[3] === SDD_DRAFT_FILE_NAME

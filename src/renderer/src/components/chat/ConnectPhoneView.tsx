@@ -116,7 +116,7 @@ export function connectPhoneInstallRequestOptions(
 
 export function createConnectPhoneAgentProfile(): ClawImAgentProfileV1 {
   return {
-    name: 'kun',
+    name: 'legalwork',
     description: '',
     identity: '',
     personality: '',
@@ -546,7 +546,7 @@ export function ConnectPhoneView({
                 <div className="relative flex h-12 shrink-0 items-center justify-between border-b border-[#f0f1ef] px-4 text-[#111827]">
                   <ChevronLeft className="h-6 w-6" strokeWidth={1.8} />
                   <div className="absolute left-1/2 flex -translate-x-1/2 items-center gap-1.5 text-[14px] font-semibold">
-                    <span>kun</span>
+                    <span>legalwork</span>
                     <span className="rounded-[4px] bg-[#eee7ff] px-1.5 py-0.5 text-[10px] font-semibold text-[#8b5cf6]">AI</span>
                   </div>
                   <MoreHorizontal className="h-5 w-5" strokeWidth={2} />
@@ -566,7 +566,7 @@ export function ConnectPhoneView({
                     </span>
                     <div className="overflow-hidden rounded-[8px] border border-[#dfe6e9] bg-[#fffefa] text-left shadow-sm">
                       <div className="flex items-center gap-2 bg-[#d2f5db] px-3 py-2">
-                        <span className="text-[12px] font-semibold text-[#15803d]">kun</span>
+                        <span className="text-[12px] font-semibold text-[#15803d]">legalwork</span>
                         <span className="rounded-[4px] bg-[#bff0cf] px-1.5 py-0.5 text-[10px] font-semibold text-[#15803d]">
                           {t('connectPhonePreviewDone')}
                         </span>

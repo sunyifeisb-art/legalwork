@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "pack": {
+    "scenario_id": "cross_border_transfer_review",
+    "sections": [
+      {
+        "id": "transfer_subjects",
+        "title": "境外接收方与出境对象清单",
+        "required_items": [
+          "境外接收方名称/主体信息",
+          "联系方式",
+          "所在国家或地区",
+          "出境数据类型/字段范围",
+          "涉及业务场景"
+        ]
+      },
+      {
+        "id": "transfer_basis_and_necessity",
+        "title": "出境场景、必要性与法律基础核查",
+        "required_items": [
+          "出境场景说明",
+          "业务必要性论证",
+          "处理法律基础",
+          "是否涉及单独同意或其他专项条件"
+        ]
+      },
+      {
+        "id": "safeguard_mechanism",
+        "title": "保障机制与证明材料核查",
+        "required_items": [
+          "标准合同/安全评估/认证等路径",
+          "采取的技术与管理措施",
+          "内部审批或评估记录",
+          "相关证明材料是否齐备"
+        ]
+      },
+      {
+        "id": "rectification_actions",
+        "title": "专项整改动作",
+        "required_items": [
+          "需补接收方信息",
+          "需补出境场景或必要性说明",
+          "需补保障机制材料",
+          "需自动复核的高风险项"
+        ]
+      }
+    ]
+  }
+}

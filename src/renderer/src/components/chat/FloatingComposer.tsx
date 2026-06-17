@@ -68,6 +68,7 @@ import {
   useThreadUsageState
 } from '../../hooks/use-thread-usage'
 import { GitBranchPicker } from './GitBranchPicker'
+import { NewConversationProjectPicker } from './NewConversationProjectPicker'
 import {
   FloatingComposerModelPicker,
   type ComposerReasoningEffort
@@ -112,7 +113,7 @@ type Props = {
     name: string
     description?: string
     root?: string
-    scope?: 'project' | 'global'
+    scope?: 'project' | 'global' | 'builtin'
     legacy?: boolean
     triggers?: {
       commands?: string[]
@@ -138,6 +139,15 @@ type Props = {
    * Hide the `/btw` slash entry (e.g. inside a side conversation).
    */
   hideBtwCommand?: boolean
+  /**
+   * When provided, show a project/workspace picker in the footer next to the
+   * Git branch picker (used for the new-conversation empty state).
+   */
+  threads?: import('../../agent/types').NormalizedThread[]
+  workspaceRoots?: string[]
+  onSelectWorkspace?: (workspaceRoot: string) => void
+  onPickWorkspace?: () => void
+  onClearWorkspace?: () => void
 }
 
 type ComposerTransferItem = {
@@ -197,7 +207,7 @@ function isProjectSkillRoot(skillRoot: string | undefined, workspaceRoot: string
   return Boolean(root && workspace && (root === workspace || root.startsWith(`${workspace}/`)))
 }
 
-function isProjectSkill(skill: { root?: string; scope?: 'project' | 'global' }, workspaceRoot: string): boolean {
+function isProjectSkill(skill: { root?: string; scope?: 'project' | 'global' | 'builtin' }, workspaceRoot: string): boolean {
   return skill.scope === 'project' || (skill.scope !== 'global' && isProjectSkillRoot(skill.root, workspaceRoot))
 }
 
@@ -481,7 +491,12 @@ export function FloatingComposer({
   onPlanCommand,
   onReviewCommand,
   onBtwCommand,
-  hideBtwCommand = false
+  hideBtwCommand = false,
+  threads: projectPickerThreads = [],
+  workspaceRoots: projectPickerWorkspaceRoots = [],
+  onSelectWorkspace,
+  onPickWorkspace,
+  onClearWorkspace
 }: Props): ReactElement {
   const { t, i18n } = useTranslation('common')
   const route = useChatStore((s) => s.route)
@@ -1742,6 +1757,18 @@ export function FloatingComposer({
       {compact ? null : (
         <div className="ds-composer-footer mt-1 flex min-h-7 flex-wrap items-center justify-between gap-x-2.5 gap-y-1.5 px-3">
           <div className="ds-composer-footer-left flex min-w-0 flex-1 flex-wrap items-center gap-2">
+            {onSelectWorkspace ? (
+              <NewConversationProjectPicker
+                threads={projectPickerThreads}
+                workspaceRoot={effectiveWorkspaceRoot}
+                workspaceRoots={projectPickerWorkspaceRoots}
+                runtimeReady={runtimeReady}
+                onSelectWorkspace={onSelectWorkspace}
+                onPickWorkspace={onPickWorkspace ?? (() => {})}
+                onClearWorkspace={onClearWorkspace ?? (() => {})}
+                t={t}
+              />
+            ) : null}
             <GitBranchPicker workspaceRoot={effectiveWorkspaceRoot} />
             {showThreadUsageFooter ? (
               <div

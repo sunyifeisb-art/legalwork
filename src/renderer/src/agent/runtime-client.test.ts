@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   defaultClawSettings,
   defaultKeyboardShortcuts,
-  defaultKunRuntimeSettings,
+  defaultLegalworkRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultWriteSettings,
@@ -18,8 +18,8 @@ function settings(apiKey: string): AppSettingsV1 {
     uiFontScale: 'small',
     provider: defaultModelProviderSettings(),
     agents: {
-      kun: {
-        ...defaultKunRuntimeSettings(),
+      legalwork: {
+        ...defaultLegalworkRuntimeSettings(),
         apiKey
       }
     },
@@ -59,8 +59,8 @@ describe('rendererRuntimeClient', () => {
     const first = await rendererRuntimeClient.getSettings()
     const second = await rendererRuntimeClient.getSettings()
 
-    expect(first.agents.kun.apiKey).toBe('sk-1')
-    expect(second.agents.kun.apiKey).toBe('sk-1')
+    expect(first.agents.legalwork.apiKey).toBe('sk-1')
+    expect(second.agents.legalwork.apiKey).toBe('sk-1')
     expect(getSettings).toHaveBeenCalledTimes(1)
   })
 
@@ -84,8 +84,8 @@ describe('rendererRuntimeClient', () => {
     const next = await rendererRuntimeClient.setSettings({ workspaceRoot: '/tmp/next' })
     const cached = await rendererRuntimeClient.getSettings()
 
-    expect(next.agents.kun.apiKey).toBe('sk-2')
-    expect(cached.agents.kun.apiKey).toBe('sk-2')
+    expect(next.agents.legalwork.apiKey).toBe('sk-2')
+    expect(cached.agents.legalwork.apiKey).toBe('sk-2')
     expect(getSettings).toHaveBeenCalledTimes(1)
     expect(setSettings).toHaveBeenCalledTimes(1)
   })

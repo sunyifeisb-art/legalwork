@@ -1,0 +1,746 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e5] [cursor=pointer]: 黄浦区
+    - list [ref=e8]:
+      - listitem [ref=e9]:
+        - link "进入上海站" [ref=e10] [cursor=pointer]:
+          - /url: //www.66law.cn/shanghai/
+      - listitem [ref=e11]:
+        - link "首页" [ref=e12] [cursor=pointer]:
+          - /url: //www.66law.cn/
+      - listitem [ref=e13]:
+        - link "法律咨询" [ref=e14] [cursor=pointer]:
+          - /url: //www.66law.cn/question/
+      - listitem [ref=e15]:
+        - link "找律师" [ref=e16] [cursor=pointer]:
+          - /url: //www.66law.cn/findlawyers/
+      - listitem [ref=e17]:
+        - link "法律知识" [ref=e18] [cursor=pointer]:
+          - /url: //www.66law.cn/laws/
+    - generic [ref=e19]:
+      - generic [ref=e20]:
+        - link "登录" [ref=e21] [cursor=pointer]:
+          - /url: //login.66law.cn/
+        - link "免费注册" [ref=e22] [cursor=pointer]:
+          - /url: //login.66law.cn/register.aspx
+      - link "移动华律" [ref=e23] [cursor=pointer]:
+        - /url: //m.66law.cn
+        - text: 移动华律
+      - generic [ref=e25] [cursor=pointer]: 网站导航
+  - generic [ref=e28]:
+    - link [ref=e29] [cursor=pointer]:
+      - /url: /
+    - list [ref=e30]:
+      - listitem [ref=e31]:
+        - link "行政与行诉首页" [ref=e32] [cursor=pointer]:
+          - /url: /laws/xzyxs/
+      - listitem [ref=e33]:
+        - link "行政监察" [ref=e34] [cursor=pointer]:
+          - /url: /laws/xzyxs/xingzhengjiancha/
+      - listitem [ref=e35]:
+        - link "行政处罚法" [ref=e36] [cursor=pointer]:
+          - /url: /laws/xzyxs/xzcff/
+      - listitem [ref=e37]:
+        - link "行政许可法" [ref=e38] [cursor=pointer]:
+          - /url: /laws/xzyxs/xzxkf/
+      - listitem [ref=e39]:
+        - link "国家赔偿法" [ref=e40] [cursor=pointer]:
+          - /url: /laws/xzyxs/gjpcf/
+      - listitem [ref=e41]:
+        - link "更多" [ref=e42] [cursor=pointer]:
+          - /url: javascript:void(0)
+    - link "咨询" [ref=e44] [cursor=pointer]:
+      - /url: /question/add.aspx?t_code=PC_Laws2019_HEAD
+      - emphasis [ref=e45]
+      - text: 咨询
+  - generic [ref=e46]:
+    - generic [ref=e47]:
+      - text: 我的位置：
+      - link "首页" [ref=e48] [cursor=pointer]:
+        - /url: /
+      - text: ">"
+      - link "法律常识" [ref=e49] [cursor=pointer]:
+        - /url: /laws/
+      - text: ">"
+      - link "行政与行诉" [ref=e50] [cursor=pointer]:
+        - /url: /laws/xzyxs/
+      - text: ">"
+      - link "行政诉讼法" [ref=e51] [cursor=pointer]:
+        - /url: /laws/xzyxs/xzssf/
+      - text: ">"
+      - link "行政受案范围" [ref=e52] [cursor=pointer]:
+        - /url: /laws/xzyxs/xzssf/xzsafw/
+      - text: "> 行政诉讼二审撤诉可以吗"
+    - generic [ref=e53]:
+      - generic [ref=e54]:
+        - generic [ref=e55]:
+          - generic [ref=e56]:
+            - heading "行政诉讼二审撤诉可以吗" [level=1] [ref=e57]
+            - generic [ref=e58]:
+              - generic [ref=e59]:
+                - text: 来源：
+                - emphasis [ref=e60]: 华律网整理
+              - generic [ref=e61]: 2025-01-03
+              - generic [ref=e62]:
+                - emphasis [ref=e63]: "20090"
+                - text: 人看过
+          - generic [ref=e64]:
+            - text: 起诉和撤诉都是原告一方当事人的权利，如果要起诉的，是需要递交
+            - link "起诉状" [ref=e65] [cursor=pointer]:
+              - /url: //www.66law.cn/special/qsz/
+            - text: 的。如果要撤诉的，在一般情况下，需要在一审程序中提起。不过有的行政诉讼案件中，可能当事人会在二审中申请撤诉。那么，行政诉讼二审撤诉可以吗？下面，
+            - link "华律网" [ref=e66] [cursor=pointer]:
+              - /url: //www.66law.cn/
+            - text: 小编详细为您介绍具体内容。
+          - generic [ref=e67]:
+            - paragraph [ref=e68]:
+              - text: 在行政诉讼第二审期间,行政机关改变被诉具体行政行为,原审原告因行政机关在二审期间改变被诉行政行为而达成和解合意,提出申请撤回起诉,是可以的。撤回起诉的决定，需要由人民
+              - link "法院" [ref=e69] [cursor=pointer]:
+                - /url: //www.66law.cn/special/fayuan/
+              - text: 依法裁量。
+            - paragraph [ref=e70]: 撤诉的概念
+            - paragraph [ref=e71]:
+              - img "华律网" [ref=e72]
+            - paragraph [ref=e73]: 行政诉讼中的撤诉，是指原告或上诉人(或原审原告或原审上诉人)自立案至人民法院作出裁判前，向法院撤回自己的诉讼请求，不再要求人民法院对案件进行审理的行为。根据撤诉所处的审级不同，撤诉可分为撤回起诉、撤回上诉和撤回再审申请三类，其主体分别为原告、上诉人和原审原告或原审上诉人。
+            - paragraph [ref=e74]: 根据撤诉是否由当事人提出，可将撤诉分为申请撤诉和视为申请撤诉两类。前者指当事人主动向受诉人民法院提出撤诉申请，不再要求受诉人民法院对案件继续进行审理，是当事人对自己诉讼权利的积极处分；后者指当事人拒绝履行法定诉讼义务，视为其申请撤诉的情形，它是当事人对自己诉讼权利的消极处分。
+            - paragraph [ref=e75]: 行政诉讼中，二审法院对上诉案件如何处理?
+            - paragraph [ref=e76]: 1、原判决认定事实清楚，适用法律、法规正确的，判决驳回上诉，维持原判;
+            - paragraph [ref=e77]: 2、原判决认定事实清楚，但适用法律、法规错误的，依法改判;
+            - paragraph [ref=e78]: 3、原判决认定事实不清，证据不足，或者由于违反法定程序可能影响案件正确判决的，裁定撤销原判，发回原审人民法院重审，也可以查清事实后改判。当事人对重审案件的判决、裁定，可以上诉。
+            - paragraph [ref=e79]: 但是是否准许撤诉，就需要由人民法院自由裁量了。如果撤回起诉的话，当事人在一般情况下不能再次起诉。要是你还有什么不明白的地方，不妨向我们华律网的律师进行咨询。
+          - generic [ref=e80]:
+            - text: 声明：该作品是结合法律法规、政府官网及互联网相关知识所整合的内容。不代表任何平台立场，如若内容侵权或错误请通过
+            - link "投诉通道" [ref=e81] [cursor=pointer]:
+              - /url: https://www.66law.cn/help/safesurf.aspx
+            - text: 提交信息，我们将按照规定及时处理。
+          - generic [ref=e82]:
+            - generic [ref=e83]: 看完还有疑惑？27万注册律师在线为您解答！
+            - link "立即咨询" [ref=e84] [cursor=pointer]:
+              - /url: //www.66law.cn/question/add.aspx?t_code=PC_Question_laws
+            - generic [ref=e85]: 8344位用户正在咨询
+          - term [ref=e87]:
+            - text: 推荐律师：
+            - link "黄浦区律师在线为您解答" [ref=e89] [cursor=pointer]:
+              - /url: //www.66law.cn/huangpuqu/
+          - generic [ref=e90]:
+            - term [ref=e91]: 延伸阅读：
+            - definition [ref=e93]:
+              - link "行政诉讼不宜适用时效中断" [ref=e95] [cursor=pointer]:
+                - /url: https://www.66law.cn/laws/107845.aspx
+            - definition [ref=e96]:
+              - link "行政诉讼证据的法定种类有哪些" [ref=e98] [cursor=pointer]:
+                - /url: https://www.66law.cn/laws/101734.aspx
+            - definition [ref=e99]:
+              - link "最新中华人民共和国行政诉讼法全文" [ref=e101] [cursor=pointer]:
+                - /url: https://www.66law.cn/laws/124683.aspx
+        - generic [ref=e102]:
+          - generic [ref=e103]: 更多行政受案范围相关知识
+          - list [ref=e104]:
+            - listitem [ref=e105]:
+              - link [ref=e106] [cursor=pointer]:
+                - /url: /laws/1021546.aspx
+              - heading "公益行政诉讼是否有级别管辖" [level=3] [ref=e107]:
+                - link "公益行政诉讼是否有级别管辖" [ref=e108] [cursor=pointer]:
+                  - /url: /laws/1021546.aspx
+              - generic [ref=e109]:
+                - text: 2025-01-26
+                - generic [ref=e110]: 14349 人看过
+              - paragraph [ref=e112]: 在现实生活中侵害公民合法利益的行为是非常多的，如果被侵犯利益的公民是多数的，检察机关是可以为公民提起公益诉讼的，提起诉讼就有管辖权规定，依据我国相关法律的规定，第一审环境民事公益诉讼案件由污染环境、破坏生态行为发生地、损害结果地或者被告住所地的中级以上人民法院管辖。下面由华律网小编为读者进行相关知识的解答。
+            - listitem [ref=e113]:
+              - link [ref=e114] [cursor=pointer]:
+                - /url: /laws/356267.aspx
+              - heading "行政诉讼委托代理合同范本有哪些内容" [level=3] [ref=e115]:
+                - link "行政诉讼委托代理合同范本有哪些内容" [ref=e116] [cursor=pointer]:
+                  - /url: /laws/356267.aspx
+              - generic [ref=e117]:
+                - text: 2025-01-18
+                - generic [ref=e118]: 3028 人看过
+              - paragraph [ref=e120]: 行政诉讼委托代理合同范本内容有哪些甲方：乙方：根据《中华人民共和国律师法》、《中华人民共和国行政诉讼法》之规定，经甲乙双方协商，订立以下各条，共同遵照履行：一、甲方委托乙方并指定____________律师、____________律师为甲
+            - listitem [ref=e121]:
+              - link [ref=e122] [cursor=pointer]:
+                - /url: /laws/124683.aspx
+              - heading "中华人民共和国行政诉讼法全文内容是什么" [level=3] [ref=e123]:
+                - link "中华人民共和国行政诉讼法全文内容是什么" [ref=e124] [cursor=pointer]:
+                  - /url: /laws/124683.aspx
+              - generic [ref=e125]:
+                - text: 2025-01-16
+                - generic [ref=e126]: 475751 人看过
+              - paragraph [ref=e128]: 中华人民共和国行政诉讼法的全文内容将包含多个章节和条款，涉及行政诉讼的各个方面，从起诉权利、审理原则到具体程序等。以下是对该法律部分预期内容的概述：总则：阐......具体内容和华律网小编一起来看看吧。
+        - generic [ref=e129]:
+          - generic [ref=e130]: 热门律师推荐
+          - generic [ref=e131]:
+            - generic [ref=e132]: 城市直达：
+            - generic [ref=e133]:
+              - generic [ref=e135]:
+                - link "北京律师" [ref=e136] [cursor=pointer]:
+                  - /url: //www.66law.cn/beijing/
+                - link "上海律师" [ref=e137] [cursor=pointer]:
+                  - /url: //www.66law.cn/shanghai/
+                - link "天津律师" [ref=e138] [cursor=pointer]:
+                  - /url: //www.66law.cn/tianjin/
+                - link "重庆律师" [ref=e139] [cursor=pointer]:
+                  - /url: //www.66law.cn/chongqing/
+                - link "石家庄律师" [ref=e140] [cursor=pointer]:
+                  - /url: //www.66law.cn/shijiazhuang/
+                - link "太原律师" [ref=e141] [cursor=pointer]:
+                  - /url: //www.66law.cn/taiyuan/
+                - link "长春律师" [ref=e142] [cursor=pointer]:
+                  - /url: //www.66law.cn/changchun/
+                - link "哈尔滨律师" [ref=e143] [cursor=pointer]:
+                  - /url: //www.66law.cn/haerbin/
+                - link "南京律师" [ref=e144] [cursor=pointer]:
+                  - /url: //www.66law.cn/nanjing/
+                - link "福州律师" [ref=e145] [cursor=pointer]:
+                  - /url: //www.66law.cn/fuzhou/
+                - link "南昌律师" [ref=e146] [cursor=pointer]:
+                  - /url: //www.66law.cn/nanchang/
+                - link "济南律师" [ref=e147] [cursor=pointer]:
+                  - /url: //www.66law.cn/jinan/
+                - link "武汉律师" [ref=e148] [cursor=pointer]:
+                  - /url: //www.66law.cn/wuhan/
+                - link "长沙律师" [ref=e149] [cursor=pointer]:
+                  - /url: //www.66law.cn/changsha/
+                - link "海口律师" [ref=e150] [cursor=pointer]:
+                  - /url: //www.66law.cn/haikou/
+                - link "成都律师" [ref=e151] [cursor=pointer]:
+                  - /url: //www.66law.cn/chengdu/
+                - link "贵阳律师" [ref=e152] [cursor=pointer]:
+                  - /url: //www.66law.cn/guiyang/
+                - link "西安律师" [ref=e153] [cursor=pointer]:
+                  - /url: //www.66law.cn/xian/
+                - link "兰州律师" [ref=e154] [cursor=pointer]:
+                  - /url: //www.66law.cn/lanzhou/
+                - link "呼和浩特律师" [ref=e155] [cursor=pointer]:
+                  - /url: //www.66law.cn/huhehaote/
+                - link "沈阳律师" [ref=e156] [cursor=pointer]:
+                  - /url: //www.66law.cn/shenyang/
+                - link "杭州律师" [ref=e157] [cursor=pointer]:
+                  - /url: //www.66law.cn/hangzhou/
+                - link "合肥律师" [ref=e158] [cursor=pointer]:
+                  - /url: //www.66law.cn/hefei/
+                - link "郑州律师" [ref=e159] [cursor=pointer]:
+                  - /url: //www.66law.cn/zhengzhou/
+                - link "广州律师" [ref=e160] [cursor=pointer]:
+                  - /url: //www.66law.cn/guangzhou/
+                - link "南宁律师" [ref=e161] [cursor=pointer]:
+                  - /url: //www.66law.cn/nanning/
+                - link "昆明律师" [ref=e162] [cursor=pointer]:
+                  - /url: //www.66law.cn/kunming/
+                - link "拉萨律师" [ref=e163] [cursor=pointer]:
+                  - /url: //www.66law.cn/lasa/
+                - link "西宁律师" [ref=e164] [cursor=pointer]:
+                  - /url: //www.66law.cn/xining/
+                - link "银川律师" [ref=e165] [cursor=pointer]:
+                  - /url: //www.66law.cn/yinchuan/
+                - link "乌鲁木齐律师" [ref=e166] [cursor=pointer]:
+                  - /url: //www.66law.cn/wulumuqi/
+              - generic [ref=e167] [cursor=pointer]: 展开
+          - generic [ref=e169]:
+            - generic [ref=e170]: 热门城市：
+            - generic [ref=e171]:
+              - generic [ref=e173]:
+                - link "承德律师" [ref=e174] [cursor=pointer]:
+                  - /url: //www.66law.cn/chengde/
+                - link "晋城律师" [ref=e175] [cursor=pointer]:
+                  - /url: //www.66law.cn/jincheng/
+                - link "吉林律师" [ref=e176] [cursor=pointer]:
+                  - /url: //www.66law.cn/jilin/
+                - link "七台河律师" [ref=e177] [cursor=pointer]:
+                  - /url: //www.66law.cn/qitaihe/
+                - link "无锡律师" [ref=e178] [cursor=pointer]:
+                  - /url: //www.66law.cn/wuxi/
+                - link "福建律师" [ref=e179] [cursor=pointer]:
+                  - /url: //www.66law.cn/fujian/
+                - link "萍乡律师" [ref=e180] [cursor=pointer]:
+                  - /url: //www.66law.cn/pingxiang/
+                - link "泰安律师" [ref=e181] [cursor=pointer]:
+                  - /url: //www.66law.cn/taian/
+                - link "黄冈律师" [ref=e182] [cursor=pointer]:
+                  - /url: //www.66law.cn/huanggang/
+                - link "湘西律师" [ref=e183] [cursor=pointer]:
+                  - /url: //www.66law.cn/xiangxi/
+                - link "儋州市律师" [ref=e184] [cursor=pointer]:
+                  - /url: //www.66law.cn/zuozhoushi/
+                - link "遂宁律师" [ref=e185] [cursor=pointer]:
+                  - /url: //www.66law.cn/suining/
+                - link "六盘水律师" [ref=e186] [cursor=pointer]:
+                  - /url: //www.66law.cn/liupanshui/
+                - link "榆林律师" [ref=e187] [cursor=pointer]:
+                  - /url: //www.66law.cn/yulin/
+                - link "庆阳律师" [ref=e188] [cursor=pointer]:
+                  - /url: //www.66law.cn/qingyang/
+                - link "包头律师" [ref=e189] [cursor=pointer]:
+                  - /url: //www.66law.cn/baotou/
+                - link "抚顺律师" [ref=e190] [cursor=pointer]:
+                  - /url: //www.66law.cn/fushun/
+                - link "绍兴律师" [ref=e191] [cursor=pointer]:
+                  - /url: //www.66law.cn/shaoxing/
+                - link "宿州律师" [ref=e192] [cursor=pointer]:
+                  - /url: //www.66law.cn/suzhou1/
+                - link "开封律师" [ref=e193] [cursor=pointer]:
+                  - /url: //www.66law.cn/kaifeng/
+                - link "中山律师" [ref=e194] [cursor=pointer]:
+                  - /url: //www.66law.cn/zhongshan/
+                - link "桂林律师" [ref=e195] [cursor=pointer]:
+                  - /url: //www.66law.cn/guilin/
+                - link "红河律师" [ref=e196] [cursor=pointer]:
+                  - /url: //www.66law.cn/honghe/
+                - link "昌都律师" [ref=e197] [cursor=pointer]:
+                  - /url: //www.66law.cn/changdu/
+                - link "海北律师" [ref=e198] [cursor=pointer]:
+                  - /url: //www.66law.cn/haibei/
+                - link "中卫市律师" [ref=e199] [cursor=pointer]:
+                  - /url: //www.66law.cn/zhongweishi/
+                - link "北屯律师" [ref=e200] [cursor=pointer]:
+                  - /url: //www.66law.cn/beitun/
+              - generic [ref=e201] [cursor=pointer]: 展开
+          - generic [ref=e203]:
+            - generic [ref=e204]: 专业律师：
+            - generic [ref=e205]:
+              - generic [ref=e207]:
+                - link "上海行政诉讼律师" [ref=e208] [cursor=pointer]:
+                  - /url: //www.66law.cn/shanghai/xingzhengsusong/
+                - link "呼和浩特行政诉讼律师" [ref=e209] [cursor=pointer]:
+                  - /url: //www.66law.cn/huhehaote/xingzhengsusong/
+                - link "贵阳行政诉讼律师" [ref=e210] [cursor=pointer]:
+                  - /url: //www.66law.cn/guiyang/xingzhengsusong/
+                - link "昆明行政诉讼律师" [ref=e211] [cursor=pointer]:
+                  - /url: //www.66law.cn/kunming/xingzhengsusong/
+                - link "长春行政诉讼律师" [ref=e212] [cursor=pointer]:
+                  - /url: //www.66law.cn/changchun/xingzhengsusong/
+                - link "湘西行政诉讼律师" [ref=e213] [cursor=pointer]:
+                  - /url: //www.66law.cn/xiangxi/xingzhengsusong/
+                - link "北屯行政诉讼律师" [ref=e214] [cursor=pointer]:
+                  - /url: //www.66law.cn/beitun/xingzhengsusong/
+                - link "昌都行政诉讼律师" [ref=e215] [cursor=pointer]:
+                  - /url: //www.66law.cn/changdu/xingzhengsusong/
+                - link "无锡行政诉讼律师" [ref=e216] [cursor=pointer]:
+                  - /url: //www.66law.cn/wuxi/xingzhengsusong/
+                - link "包头行政诉讼律师" [ref=e217] [cursor=pointer]:
+                  - /url: //www.66law.cn/baotou/xingzhengsusong/
+                - link "丽江行政诉讼律师" [ref=e218] [cursor=pointer]:
+                  - /url: //www.66law.cn/lijiang/xingzhengsusong/
+                - link "焦作行政诉讼律师" [ref=e219] [cursor=pointer]:
+                  - /url: //www.66law.cn/jiaozuo/xingzhengsusong/
+                - link "淮北行政诉讼律师" [ref=e220] [cursor=pointer]:
+                  - /url: //www.66law.cn/huaibei/xingzhengsusong/
+                - link "朔州行政诉讼律师" [ref=e221] [cursor=pointer]:
+                  - /url: //www.66law.cn/shuzhoushi/xingzhengsusong/
+                - link "济南行政诉讼律师" [ref=e222] [cursor=pointer]:
+                  - /url: //www.66law.cn/jinan/xingzhengsusong/
+                - link "株洲行政诉讼律师" [ref=e223] [cursor=pointer]:
+                  - /url: //www.66law.cn/zhuzhou/xingzhengsusong/
+                - link "合川区行政诉讼律师" [ref=e224] [cursor=pointer]:
+                  - /url: //www.66law.cn/hechuan/xingzhengsusong/
+                - link "甘孜行政诉讼律师" [ref=e225] [cursor=pointer]:
+                  - /url: //www.66law.cn/ganzi/xingzhengsusong/
+                - link "武隆区行政诉讼律师" [ref=e226] [cursor=pointer]:
+                  - /url: //www.66law.cn/wulongxian/xingzhengsusong/
+                - link "邢台行政诉讼律师" [ref=e227] [cursor=pointer]:
+                  - /url: //www.66law.cn/xingtai/xingzhengsusong/
+                - link "十堰行政诉讼律师" [ref=e228] [cursor=pointer]:
+                  - /url: //www.66law.cn/shiyan/xingzhengsusong/
+                - link "北辰区行政诉讼律师" [ref=e229] [cursor=pointer]:
+                  - /url: //www.66law.cn/beichenqu/xingzhengsusong/
+                - link "佛山行政诉讼律师" [ref=e230] [cursor=pointer]:
+                  - /url: //www.66law.cn/foshan/xingzhengsusong/
+                - link "台州行政诉讼律师" [ref=e231] [cursor=pointer]:
+                  - /url: //www.66law.cn/taizhou1/xingzhengsusong/
+                - link "梁平区行政诉讼律师" [ref=e232] [cursor=pointer]:
+                  - /url: //www.66law.cn/liangpingxian/xingzhengsusong/
+                - link "保山行政诉讼律师" [ref=e233] [cursor=pointer]:
+                  - /url: //www.66law.cn/baoshan/xingzhengsusong/
+                - link "阜阳行政诉讼律师" [ref=e234] [cursor=pointer]:
+                  - /url: //www.66law.cn/fuyang/xingzhengsusong/
+                - link "扬州行政诉讼律师" [ref=e235] [cursor=pointer]:
+                  - /url: //www.66law.cn/yangzhou/xingzhengsusong/
+                - link "本溪行政诉讼律师" [ref=e236] [cursor=pointer]:
+                  - /url: //www.66law.cn/benxi/xingzhengsusong/
+                - link "贺州行政诉讼律师" [ref=e237] [cursor=pointer]:
+                  - /url: //www.66law.cn/hezhou/xingzhengsusong/
+              - generic [ref=e238] [cursor=pointer]: 展开
+          - generic [ref=e240]:
+            - generic [ref=e241]: 法律知识：
+            - generic [ref=e242]:
+              - generic [ref=e243]: 行政与行诉：
+              - link "行政诉讼律师" [ref=e247] [cursor=pointer]:
+                - /url: https://www.66law.cn/xingzhengsusong/
+            - generic [ref=e248]:
+              - generic [ref=e249]: 行政监察：
+              - link "双规" [ref=e253] [cursor=pointer]:
+                - /url: https://www.66law.cn/laws/481428.aspx
+            - generic [ref=e254]:
+              - generic [ref=e255]: 行政相关：
+              - generic [ref=e258]:
+                - link "人民警察法" [ref=e259] [cursor=pointer]:
+                  - /url: https://www.66law.cn/tiaoli/1074.aspx
+                - link "起诉状" [ref=e260] [cursor=pointer]:
+                  - /url: http://www.66law.cn/special/qsz/
+                - link "政府采购法" [ref=e261] [cursor=pointer]:
+                  - /url: https://www.66law.cn/laws/411650.aspx
+            - generic [ref=e262]:
+              - generic [ref=e263]: 行政许可法：
+              - generic [ref=e266]:
+                - link "行政管理" [ref=e267] [cursor=pointer]:
+                  - /url: https://www.66law.cn/topic2010/xzgl/
+                - link "净资产收益率计算公式" [ref=e268] [cursor=pointer]:
+                  - /url: https://www.66law.cn/laws/274132.aspx
+                - link "行政法" [ref=e269] [cursor=pointer]:
+                  - /url: https://www.66law.cn/tiaoli/liebiao_3.aspx
+                - link "安全生产许可证" [ref=e270] [cursor=pointer]:
+                  - /url: https://www.66law.cn/tiaoli/257.aspx
+                - link "行政许可法" [ref=e271] [cursor=pointer]:
+                  - /url: https://www.66law.cn/tiaoli/59.aspx
+                - link "反洗钱法" [ref=e272] [cursor=pointer]:
+                  - /url: https://www.66law.cn/laws/115487.aspx
+            - generic [ref=e273]:
+              - generic [ref=e274]: 行政处罚法：
+              - generic [ref=e275]:
+                - generic [ref=e277]:
+                  - link "生产安全事故报告和调查处理条例" [ref=e278] [cursor=pointer]:
+                    - /url: https://www.66law.cn/tiaoli/145.aspx
+                  - link "行政处罚的种类" [ref=e279] [cursor=pointer]:
+                    - /url: https://www.66law.cn/laws/346537.aspx
+                  - link "行政处罚决定书" [ref=e280] [cursor=pointer]:
+                    - /url: https://www.66law.cn/topic2010/xzcfjdsfb/
+                  - link "行政处罚法" [ref=e281] [cursor=pointer]:
+                    - /url: https://www.66law.cn/tiaoli/15.aspx
+                  - link "行政处罚" [ref=e282] [cursor=pointer]:
+                    - /url: https://www.66law.cn/special/xingzhengchufa/
+                - generic [ref=e283] [cursor=pointer]: 展开
+            - generic [ref=e285]:
+              - generic [ref=e286]: 行政强制法：
+              - link "被监察委留置后怎么办" [ref=e290] [cursor=pointer]:
+                - /url: https://www.66law.cn/laws/624688.aspx
+            - generic [ref=e291]:
+              - generic [ref=e292]: 治安管理处罚法：
+              - generic [ref=e295]:
+                - link "治安管理处罚法" [ref=e296] [cursor=pointer]:
+                  - /url: https://www.66law.cn/tiaoli/21.aspx
+                - link "嫖娼处罚" [ref=e297] [cursor=pointer]:
+                  - /url: https://www.66law.cn/special/piaochang/
+                - link "嫖娼" [ref=e298] [cursor=pointer]:
+                  - /url: http://www.66law.cn/special/piaochang/
+            - generic [ref=e299]:
+              - generic [ref=e300]: 国家赔偿法：
+              - link "国家赔偿法" [ref=e304] [cursor=pointer]:
+                - /url: https://www.66law.cn/tiaoli/35.aspx
+            - generic [ref=e305]:
+              - generic [ref=e306]: 行政复议法：
+              - generic [ref=e309]:
+                - link "行政拘留" [ref=e310] [cursor=pointer]:
+                  - /url: http://www.66law.cn/special/xingzhengjuliu/
+                - link "行政复议" [ref=e311] [cursor=pointer]:
+                  - /url: http://www.66law.cn/special/xzfy/
+                - link "行政复议法" [ref=e312] [cursor=pointer]:
+                  - /url: https://www.66law.cn/tiaoli/1990.aspx
+                - link "行政强制法" [ref=e313] [cursor=pointer]:
+                  - /url: http://www.66law.cn/special/xzqz/
+            - generic [ref=e314]:
+              - generic [ref=e315]: 行政诉讼法：
+              - link "行政诉讼法" [ref=e319] [cursor=pointer]:
+                - /url: https://www.66law.cn/laws/xzyxs/xzssf/
+          - generic [ref=e320]:
+            - generic [ref=e321]: 办事指南：
+            - generic [ref=e322]:
+              - generic [ref=e323]: 劳动监察机构：
+              - generic [ref=e326]:
+                - link "劳动监察大队电话" [ref=e327] [cursor=pointer]:
+                  - /url: https://www.66law.cn/laws/872702.aspx
+                - link "劳动监察大队受理流程" [ref=e328] [cursor=pointer]:
+                  - /url: https://www.66law.cn/laws/386738.aspx
+                - link "劳动监察大队受理范围" [ref=e329] [cursor=pointer]:
+                  - /url: https://www.66law.cn/laws/154633.aspx
+            - generic [ref=e330]:
+              - generic [ref=e331]: 健康证：
+              - generic [ref=e334]:
+                - link "健康证" [ref=e335] [cursor=pointer]:
+                  - /url: http://www.66law.cn/special/jiankangzheng/
+                - link "健康证在哪里办" [ref=e336] [cursor=pointer]:
+                  - /url: https://www.66law.cn/laws/747355.aspx
+                - link "办健康证多少钱" [ref=e337] [cursor=pointer]:
+                  - /url: https://www.66law.cn/laws/975890.aspx
+                - link "健康证体检项目" [ref=e338] [cursor=pointer]:
+                  - /url: https://www.66law.cn/laws/421233.aspx
+                - link "健康证办理" [ref=e339] [cursor=pointer]:
+                  - /url: https://www.66law.cn/special/jiankangzheng/
+            - generic [ref=e340]:
+              - generic [ref=e341]: 高温补贴：
+              - generic [ref=e344]:
+                - link "特殊工种有哪些" [ref=e345] [cursor=pointer]:
+                  - /url: https://www.66law.cn/laws/94861.aspx
+                - link "高温补贴规定" [ref=e346] [cursor=pointer]:
+                  - /url: https://www.66law.cn/laws/151231.aspx
+                - link "高温补贴是哪几个月" [ref=e347] [cursor=pointer]:
+                  - /url: https://www.66law.cn/laws/126984.aspx
+                - link "高温补贴发放标准" [ref=e348] [cursor=pointer]:
+                  - /url: https://www.66law.cn/laws/596822.aspx
+                - link "高温补贴" [ref=e349] [cursor=pointer]:
+                  - /url: https://www.66law.cn/special/gwbt/
+            - generic [ref=e350]:
+              - generic [ref=e351]: 政府补贴：
+              - generic [ref=e354]:
+                - link "五保户" [ref=e355] [cursor=pointer]:
+                  - /url: http://www.66law.cn/special/wbh/
+                - link "扶贫贴息贷款" [ref=e356] [cursor=pointer]:
+                  - /url: https://www.66law.cn/laws/996515.aspx
+                - link "政府补贴免息贷款" [ref=e357] [cursor=pointer]:
+                  - /url: https://www.66law.cn/laws/733381.aspx
+                - link "政府补贴形式" [ref=e358] [cursor=pointer]:
+                  - /url: https://www.66law.cn/laws/177663.aspx
+            - generic [ref=e359]:
+              - generic [ref=e360]: 政府办事服务：
+              - generic [ref=e363]:
+                - link "征地赔偿标准" [ref=e364] [cursor=pointer]:
+                  - /url: https://www.66law.cn/special/zdbchang/
+                - link "医疗救助" [ref=e365] [cursor=pointer]:
+                  - /url: https://www.66law.cn/laws/341462.aspx
+                - link "公证处公证费用" [ref=e366] [cursor=pointer]:
+                  - /url: https://www.66law.cn/laws/85461.aspx
+            - generic [ref=e367]:
+              - generic [ref=e368]: 证件办理：
+              - generic [ref=e371]:
+                - link "报到证" [ref=e372] [cursor=pointer]:
+                  - /url: http://www.66law.cn/special/bdz/
+                - link "就业证在哪里办" [ref=e373] [cursor=pointer]:
+                  - /url: https://www.66law.cn/laws/1007262.aspx
+                - link "老年优待证办理" [ref=e374] [cursor=pointer]:
+                  - /url: https://www.66law.cn/topic2012/lnydzzy/
+                - link "失业证办理" [ref=e375] [cursor=pointer]:
+                  - /url: https://www.66law.cn/laws/131734.aspx
+                - link "残疾证办理" [ref=e376] [cursor=pointer]:
+                  - /url: https://www.66law.cn/special/canjizheng/
+            - generic [ref=e377]:
+              - generic [ref=e378]: 政府职能部门：
+              - generic [ref=e381]:
+                - link "民政局的职责" [ref=e382] [cursor=pointer]:
+                  - /url: https://www.66law.cn/laws/537799.aspx
+                - link "司法部的主要职能" [ref=e383] [cursor=pointer]:
+                  - /url: https://www.66law.cn/laws/780139.aspx
+                - link "人社局职能" [ref=e384] [cursor=pointer]:
+                  - /url: https://www.66law.cn/laws/308452.aspx
+      - generic [ref=e385]:
+        - generic [ref=e386]:
+          - generic [ref=e387]: 行政与行诉导航
+          - generic [ref=e388]:
+            - link "行政监察" [ref=e389] [cursor=pointer]:
+              - /url: /laws/xzyxs/xingzhengjiancha/
+            - link "行政处罚法" [ref=e390] [cursor=pointer]:
+              - /url: /laws/xzyxs/xzcff/
+            - link "行政许可法" [ref=e391] [cursor=pointer]:
+              - /url: /laws/xzyxs/xzxkf/
+            - link "国家赔偿法" [ref=e392] [cursor=pointer]:
+              - /url: /laws/xzyxs/gjpcf/
+            - link "行政复议法" [ref=e393] [cursor=pointer]:
+              - /url: /laws/xzyxs/xzfyf/
+            - link "行政强制法" [ref=e394] [cursor=pointer]:
+              - /url: /laws/xzyxs/xzqzf/
+            - link "行政相关" [ref=e395] [cursor=pointer]:
+              - /url: /laws/xzyxs/xzzzf/
+            - link "治安管理处罚法" [ref=e396] [cursor=pointer]:
+              - /url: /laws/xzyxs/zaglcff/
+            - link "公证法" [ref=e397] [cursor=pointer]:
+              - /url: /laws/xzyxs/gzf/
+            - link "行政诉讼法" [ref=e398] [cursor=pointer]:
+              - /url: /laws/xzyxs/xzssf/
+        - generic [ref=e399]:
+          - generic [ref=e400]: 行政与行诉指南
+          - list [ref=e401]:
+            - listitem [ref=e402]:
+              - link "如何进行行政诉讼" [ref=e403] [cursor=pointer]:
+                - /url: //www.66law.cn/laws/316895.aspx
+            - listitem [ref=e404]:
+              - link "如何写行政诉讼状" [ref=e405] [cursor=pointer]:
+                - /url: //www.66law.cn/topic2012/rhxxzssz/
+            - listitem [ref=e406]:
+              - link "行政诉讼费用" [ref=e407] [cursor=pointer]:
+                - /url: //www.66law.cn/laws/349275.aspx
+            - listitem [ref=e408]:
+              - link "行政诉讼法院不受理怎么办" [ref=e409] [cursor=pointer]:
+                - /url: //www.66law.cn/laws/1683768.aspx
+            - listitem [ref=e410]:
+              - link "行政诉讼二审终审不服怎么办" [ref=e411] [cursor=pointer]:
+                - /url: //www.66law.cn/laws/155401.aspx
+        - generic [ref=e412]: 行政与行诉最新咨询
+        - generic [ref=e413]:
+          - generic [ref=e416]:
+            - generic [ref=e417]:
+              - heading "我6年前由于跟留学生一起家庭沙龙补英语，被派出所罚了5000，我已经顺利入编" [level=3] [ref=e419]:
+                - link "我6年前由于跟留学生一起家庭沙龙补英语，被派出所罚了5000，我已经顺利入编" [ref=e420] [cursor=pointer]:
+                  - /url: //www.66law.cn/question/55804587.aspx
+              - generic [ref=e421]:
+                - link [ref=e422] [cursor=pointer]:
+                  - /url: //mazheying.66law.cn/
+                - generic [ref=e423]:
+                  - link "马哲颖律师" [ref=e424] [cursor=pointer]:
+                    - /url: //mazheying.66law.cn/
+                  - text: 05/27/2026 07:54:05回复：
+                - paragraph [ref=e425]: 你确实违法了啊，单位有权对录用的人员设置准入条件
+            - generic [ref=e426]:
+              - heading "醉驾已两年了，还能拿回驾驶证吗" [level=3] [ref=e428]:
+                - link "醉驾已两年了，还能拿回驾驶证吗" [ref=e429] [cursor=pointer]:
+                  - /url: //www.66law.cn/question/55930755.aspx
+              - generic [ref=e430]:
+                - link [ref=e431] [cursor=pointer]:
+                  - /url: //liangxiaolanlvshi.66law.cn/
+                - generic [ref=e432]:
+                  - link "梁小兰律师" [ref=e433] [cursor=pointer]:
+                    - /url: //liangxiaolanlvshi.66law.cn/
+                  - text: 7分钟前回复：
+                - paragraph [ref=e434]: 不行，一般5年
+            - generic [ref=e435]:
+              - heading "异地处理违章" [level=3] [ref=e437]:
+                - link "异地处理违章" [ref=e438] [cursor=pointer]:
+                  - /url: //www.66law.cn/question/55930606.aspx
+              - generic [ref=e439]:
+                - link [ref=e440] [cursor=pointer]:
+                  - /url: //pangyalvshi.66law.cn/
+                - generic [ref=e441]:
+                  - link "庞亚律师" [ref=e442] [cursor=pointer]:
+                    - /url: //pangyalvshi.66law.cn/
+                  - text: 56分钟前回复：
+                - paragraph [ref=e443]: 请完善你的法律问题，需要根据问题具体情况具体分析。
+            - generic [ref=e444]:
+              - heading "支付被司法冻结的了，怎么申请解冻" [level=3] [ref=e446]:
+                - link "支付被司法冻结的了，怎么申请解冻" [ref=e447] [cursor=pointer]:
+                  - /url: //www.66law.cn/question/55930586.aspx
+              - generic [ref=e448]:
+                - link [ref=e449] [cursor=pointer]:
+                  - /url: //lvshizhangyan.66law.cn/
+                - generic [ref=e450]:
+                  - link "张妍律师" [ref=e451] [cursor=pointer]:
+                    - /url: //lvshizhangyan.66law.cn/
+                  - text: 57分钟前回复：
+                - paragraph [ref=e452]: 打电话问，因为什么原因冻结的
+            - generic [ref=e453]:
+              - heading "我有出租车驾驶员资格证，但现在有个酒驾12分满分。如果重新拿回暂扣的驾驶证后可以开营运车吗？" [level=3] [ref=e455]:
+                - link "我有出租车驾驶员资格证，但现在有个酒驾12分满分。如果重新拿回暂扣的驾驶证后可以开营运车吗？" [ref=e456] [cursor=pointer]:
+                  - /url: //www.66law.cn/question/55930578.aspx
+              - generic [ref=e457]:
+                - link [ref=e458] [cursor=pointer]:
+                  - /url: //chenkanlvshi.66law.cn/
+                - generic [ref=e459]:
+                  - link "陈侃律师" [ref=e460] [cursor=pointer]:
+                    - /url: //chenkanlvshi.66law.cn/
+                  - text: 58分钟前回复：
+                - paragraph [ref=e461]: 重新拿回暂扣的驾驶证后，**通常不可以**开营运车。 根据《出租汽车驾驶员从业资格管理规定》第三十九条规定，出租汽车驾驶员有饮酒后驾驶记录，或者最近连续3个记分周期内记满12分记录的，由发证机关撤销其从业资格证，并公告作废。你因酒驾被记12分，符合上述情形，从业资格证很可能已被撤销。 即使从业资格证未被撤销，从申请从业资格角度看，该规定第十条明确要求申请参加出租汽车驾驶员从业资格考试的人员，需无饮酒后驾驶记录，最近连续3个记分周期内没有记满12分记录。你有酒驾且记分满分情况，不满足从业资格申请条件，无法继续从事出租车营运工作。
+          - link "查看更多" [ref=e462] [cursor=pointer]:
+            - /url: //www.66law.cn/laws/xzyxs/question/
+        - generic [ref=e463]:
+          - generic [ref=e464]: 自助服务
+          - list [ref=e465]:
+            - listitem [ref=e466]:
+              - link "合同下载" [ref=e467] [cursor=pointer]:
+                - /url: https://www.66law.cn/contractmodel/
+                - paragraph [ref=e468]: 合同下载
+            - listitem [ref=e469]:
+              - link "请律师指南" [ref=e470] [cursor=pointer]:
+                - /url: //www.66law.cn/laws/9404.aspx
+                - paragraph [ref=e471]: 请律师指南
+            - listitem [ref=e472]:
+              - link "律师费计算器" [ref=e473] [cursor=pointer]:
+                - /url: //www.66law.cn/lvshishoufei/
+                - paragraph [ref=e474]: 律师费计算器
+            - listitem [ref=e475]:
+              - link "诉讼费计算器" [ref=e476] [cursor=pointer]:
+                - /url: //www.66law.cn/fangan/calc_susong.aspx
+                - paragraph [ref=e477]: 诉讼费计算器
+            - listitem [ref=e478]:
+              - link "行政诉讼时效" [ref=e479] [cursor=pointer]:
+                - /url: //www.66law.cn/special/xzsssx/
+                - paragraph [ref=e480]: 行政诉讼时效
+        - generic [ref=e481]: 行政与行诉条例
+        - list [ref=e482]:
+          - listitem [ref=e483]:
+            - link "最高人民法院关于正确确定县级以上地方人民政府行政诉讼被告资格若干问题的规定" [ref=e484] [cursor=pointer]:
+              - /url: /tiaoli/153120.aspx
+          - listitem [ref=e485]:
+            - link "全国人民代表大会常务委员会关于国家监察委员会制定监察法规的决定" [ref=e486] [cursor=pointer]:
+              - /url: /tiaoli/152714.aspx
+          - listitem [ref=e487]:
+            - link "古生物化石保护条例实施办法" [ref=e488] [cursor=pointer]:
+              - /url: /tiaoli/711.aspx
+          - listitem [ref=e489]:
+            - link "吉林省行政应诉办法" [ref=e490] [cursor=pointer]:
+              - /url: /tiaoli/11053.aspx
+          - listitem [ref=e491]:
+            - link "最高人民法院、最高人民检察院关于办理虚假诉讼刑事案件适用法律若干问题的解释" [ref=e492] [cursor=pointer]:
+              - /url: /tiaoli/10881.aspx
+        - link "查看更多" [ref=e493] [cursor=pointer]:
+          - /url: //www.66law.cn/tiaoli/
+  - generic [ref=e494]:
+    - generic [ref=e495]:
+      - term [ref=e496]: 分享到
+      - definition [ref=e497] [cursor=pointer]: 微博
+      - definition [ref=e500] [cursor=pointer]: QQ空间
+      - definition [ref=e503] [cursor=pointer]: 微信
+    - link "举报" [ref=e507] [cursor=pointer]:
+      - /url: https://www.66law.cn/help/report.aspx
+      - text: 举报
+  - generic [ref=e511]:
+    - generic [ref=e512]:
+      - link [ref=e514] [cursor=pointer]:
+        - /url: //www.66law.cn/
+        - img [ref=e515]
+      - generic [ref=e516]:
+        - paragraph [ref=e517]: 服务热线：（ 工作日 09:00-18:00 ）
+        - paragraph [ref=e518]: 400-6012-708
+        - generic [ref=e519]:
+          - link "在线客服" [ref=e520] [cursor=pointer]:
+            - /url: //wpa.qq.com/msgrd?v=3&uin=2355858781&site=qq&menu=yes
+          - link "在线客服" [ref=e521] [cursor=pointer]:
+            - /url: //wpa.qq.com/msgrd?v=3&uin=2355858778&site=qq&menu=yes
+        - paragraph [ref=e522]: 投诉举报：（ 2个工作日响应 ）
+        - paragraph [ref=e523]: fankui@66law.cn
+        - link "在线反馈" [ref=e525] [cursor=pointer]:
+          - /url: https://www.66law.cn/help/feedback.aspx
+      - generic [ref=e526]:
+        - paragraph [ref=e527]: 关于华律
+        - generic [ref=e528]:
+          - link "关于我们" [ref=e529] [cursor=pointer]:
+            - /url: //www.66law.cn/about/
+          - link "联系方式" [ref=e530] [cursor=pointer]:
+            - /url: //www.66law.cn/about/contact.aspx
+          - link "帮助中心" [ref=e531] [cursor=pointer]:
+            - /url: //www.66law.cn/help/
+          - link "法律声明" [ref=e532] [cursor=pointer]:
+            - /url: //www.66law.cn/help/disclaimers.aspx
+          - link "网站地图" [ref=e533] [cursor=pointer]:
+            - /url: //www.66law.cn/about/sitemap.aspx
+      - generic [ref=e534]:
+        - paragraph [ref=e535]: 合作加盟
+        - generic [ref=e536]:
+          - link "律师加盟" [ref=e537] [cursor=pointer]:
+            - /url: //www.66law.cn/yingxiao/
+          - link "市场合作" [ref=e538] [cursor=pointer]:
+            - /url: //www.66law.cn/yingxiao/cooperation/
+          - link "支付方式" [ref=e539] [cursor=pointer]:
+            - /url: //www.66law.cn/yingxiao/pay/
+      - generic [ref=e540]:
+        - term [ref=e541]: 关注我们
+        - definition [ref=e542]:
+          - generic [ref=e543]:
+            - img [ref=e544]
+            - paragraph [ref=e545]:
+              - text: 我是公众
+              - text: 免费咨询 随时追问
+          - generic [ref=e546]:
+            - img [ref=e547]
+            - paragraph [ref=e548]:
+              - text: 我是律师
+              - text: 案件接洽 合作加盟
+    - paragraph [ref=e549]:
+      - text: Copyright 2004-2026 66Law.cn 版权所有
+      - link "川公网安备 51019002000193号" [ref=e550] [cursor=pointer]:
+        - /url: http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=51019002000193
+      - link "蜀ICP备11014096号-1" [ref=e551] [cursor=pointer]:
+        - /url: https://beian.miit.gov.cn/
+      - link "营业执照" [ref=e552] [cursor=pointer]:
+        - /url: javascript:;
+      - text: 增值电信业务经营许可证(川B2-20211656)
+      - link "有害信息举报" [ref=e553] [cursor=pointer]:
+        - /url: //www.12377.cn/
+      - text: 地址：成都市高新西区西区大道99号伯雅科技园华律大楼
+      - link "来访路线" [ref=e554] [cursor=pointer]:
+        - /url: https://j.map.baidu.com/8EWjL
+        - text: 来访路线

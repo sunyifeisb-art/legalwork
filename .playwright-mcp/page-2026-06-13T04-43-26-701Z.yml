@@ -1,0 +1,482 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]:
+          - link "DuckDuckGo home" [ref=e7] [cursor=pointer]:
+            - /url: /?t=h_
+            - generic [ref=e9]: DuckDuckGo
+          - generic [ref=e15]:
+            - combobox "私密搜索" [ref=e17]: 行政诉讼 撤诉 二审 再审 视为撤诉 学术论文
+            - button "search" [ref=e19] [cursor=pointer]:
+              - img [ref=e20]
+        - generic [ref=e22]:
+          - generic [ref=e23]:
+            - generic [ref=e25]:
+              - banner [ref=e26]:
+                - img [ref=e27]
+                - paragraph [ref=e28]: 升级到我们的浏览器。
+              - generic [ref=e29]:
+                - generic [ref=e30]:
+                  - img [ref=e31]
+                  - generic [ref=e32]:
+                    - img [ref=e33]
+                    - img [ref=e34]
+                - paragraph [ref=e35]:
+                  - generic [ref=e36]:
+                    - text: 试用
+                    - strong [ref=e37]: DuckDuckGo 浏览器。
+                    - text: 快速。免费。私密。
+                - link "下载浏览器" [ref=e38] [cursor=pointer]:
+                  - /url: https://duckduckgo.com/mac?origin=funnel_browser_searchresults__popover
+                  - img [ref=e39]
+                  - generic [ref=e41]: 下载浏览器
+              - paragraph [ref=e44]:
+                - generic [ref=e45]: 免费
+            - button [ref=e47] [cursor=pointer]:
+              - img [ref=e48]
+          - button "打开菜单" [ref=e50] [cursor=pointer]:
+            - generic [ref=e51]: 打开菜单
+            - img [ref=e52]
+      - navigation [ref=e58]:
+        - list [ref=e59]:
+          - listitem [ref=e60]:
+            - link "全部" [ref=e61] [cursor=pointer]:
+              - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC+%E6%92%A4%E8%AF%89+%E4%BA%8C%E5%AE%A1+%E5%86%8D%E5%AE%A1+%E8%A7%86%E4%B8%BA%E6%92%A4%E8%AF%89+%E5%AD%A6%E6%9C%AF%E8%AE%BA%E6%96%87&t=h_&ia=web
+              - img [ref=e62]
+              - text: 全部
+          - listitem [ref=e64]:
+            - link "图片" [ref=e65] [cursor=pointer]:
+              - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC+%E6%92%A4%E8%AF%89+%E4%BA%8C%E5%AE%A1+%E5%86%8D%E5%AE%A1+%E8%A7%86%E4%B8%BA%E6%92%A4%E8%AF%89+%E5%AD%A6%E6%9C%AF%E8%AE%BA%E6%96%87&t=h_&ia=images&iax=images
+          - listitem [ref=e66]:
+            - link "视频" [ref=e67] [cursor=pointer]:
+              - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC+%E6%92%A4%E8%AF%89+%E4%BA%8C%E5%AE%A1+%E5%86%8D%E5%AE%A1+%E8%A7%86%E4%B8%BA%E6%92%A4%E8%AF%89+%E5%AD%A6%E6%9C%AF%E8%AE%BA%E6%96%87&t=h_&ia=videos&iax=videos
+          - listitem [ref=e68]:
+            - link "新闻" [ref=e69] [cursor=pointer]:
+              - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC+%E6%92%A4%E8%AF%89+%E4%BA%8C%E5%AE%A1+%E5%86%8D%E5%AE%A1+%E8%A7%86%E4%B8%BA%E6%92%A4%E8%AF%89+%E5%AD%A6%E6%9C%AF%E8%AE%BA%E6%96%87&t=h_&ia=news&iar=news
+          - listitem [ref=e70]:
+            - generic [ref=e71]:
+              - generic [ref=e72] [cursor=pointer]:
+                - generic [ref=e74]: 更多
+                - img [ref=e75]: ▼
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - link "地图":
+                          - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC+%E6%92%A4%E8%AF%89+%E4%BA%8C%E5%AE%A1+%E5%86%8D%E5%AE%A1+%E8%A7%86%E4%B8%BA%E6%92%A4%E8%AF%89+%E5%AD%A6%E6%9C%AF%E8%AE%BA%E6%96%87&t=h_&iaxm=maps
+                  - generic:
+                    - generic:
+                      - generic:
+                        - link "购物":
+                          - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC+%E6%92%A4%E8%AF%89+%E4%BA%8C%E5%AE%A1+%E5%86%8D%E5%AE%A1+%E8%A7%86%E4%B8%BA%E6%92%A4%E8%AF%89+%E5%AD%A6%E6%9C%AF%E8%AE%BA%E6%96%87&t=h_&ia=shopping&iax=shopping
+        - list [ref=e77]:
+          - listitem [ref=e78]:
+            - link "Duck.ai" [ref=e80] [cursor=pointer]:
+              - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC+%E6%92%A4%E8%AF%89+%E4%BA%8C%E5%AE%A1+%E5%86%8D%E5%AE%A1+%E8%A7%86%E4%B8%BA%E6%92%A4%E8%AF%89+%E5%AD%A6%E6%9C%AF%E8%AE%BA%E6%96%87&t=h_&ia=chat
+              - img [ref=e81]
+              - text: Duck.ai
+          - listitem [ref=e84]:
+            - button "搜索设置 ✀" [ref=e86] [cursor=pointer]:
+              - img [ref=e87]
+              - generic [ref=e89]: 搜索设置
+              - generic [ref=e92]: ✀
+    - generic [ref=e97]:
+      - navigation [ref=e99]:
+        - generic [ref=e102] [cursor=pointer]:
+          - generic [ref=e110]: 受保护
+          - img [ref=e111]: ▼
+        - generic [ref=e115] [cursor=pointer]:
+          - generic [ref=e118]:
+            - switch "✓" [ref=e119]: ✓
+            - generic [ref=e121]: 澳大利亚
+          - img [ref=e122]: ▼
+        - generic [ref=e126] [cursor=pointer]:
+          - generic [ref=e127]: 安全搜索： 适中
+          - img [ref=e128]: ▼
+        - generic [ref=e132] [cursor=pointer]:
+          - generic [ref=e133]: 不限时间
+          - img [ref=e134]: ▼
+      - generic [ref=e137]:
+        - list [ref=e138]:
+          - listitem [ref=e139]:
+            - article [ref=e140] [cursor=pointer]:
+              - button [ref=e142]:
+                - img [ref=e143]
+              - generic [ref=e147]:
+                - link "将结果来源限定为 gongbao.court.gov.cn" [ref=e149]:
+                  - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC%20%E6%92%A4%E8%AF%89%20%E4%BA%8C%E5%AE%A1%20%E5%86%8D%E5%AE%A1%20%E8%A7%86%E4%B8%BA%E6%92%A4%E8%AF%89%20%E5%AD%A6%E6%9C%AF%E8%AE%BA%E6%96%87+site:gongbao.court.gov.cn&t=h_
+                  - img [ref=e151]
+                - generic [ref=e152]:
+                  - paragraph [ref=e153]: 中华人民共和国最高人民法院公报
+                  - link "gongbao.court.gov.cn › Details › 3056972d5788942246941d5a6d9c79.html" [ref=e154]:
+                    - /url: http://gongbao.court.gov.cn/Details/3056972d5788942246941d5a6d9c79.html
+                    - paragraph [ref=e156]:
+                      - text: gongbao.court.gov.cn
+                      - generic [ref=e157]: › Details › 3056972d5788942246941d5a6d9c79.html
+              - heading "最高人民法院关于行政诉讼撤诉若干问题的规定 - 中华人民共和国最高人民法院公报" [level=2] [ref=e159]:
+                - link "最高人民法院关于行政诉讼撤诉若干问题的规定 - 中华人民共和国最高人民法院公报" [ref=e160]:
+                  - /url: http://gongbao.court.gov.cn/Details/3056972d5788942246941d5a6d9c79.html
+                  - generic [ref=e161]: 最高人民法院关于行政诉讼撤诉若干问题的规定 - 中华人民共和国最高人民法院公报
+              - generic [ref=e165]: 中华人民共和国最高人民法院 公 告 《最高人民法院关于行政诉讼撤诉若干问题的规定》已于2007年12月17日由最高人民法院审判委员会第1441次会议通过，现予公布，自2008年2月1日起施行。 2008年1月14日 最高人民法院 关于行政诉讼撤诉若干问题的规定 法释〔2008〕2号 为妥善化解行政争议，依法审查 ...
+              - list [ref=e168]:
+                - listitem [ref=e169]:
+                  - link "公报介绍 《最高人民法院公报》（以下简称《公报》）是最高人民法院的官方文献汇编，由最高人民法院办公厅主办，在国内及海外公开发行，是最高人民法院公开发布司法解释、司法文件、典型案例等各类重要司法信息的权威载体。《公报》创刊于1985年，月刊，栏目设置为：文献、法律选登、司法解释 ..." [ref=e170]:
+                    - /url: http://gongbao.court.gov.cn/SinglePage.html?result=introduction
+                    - heading "公报介绍" [level=3] [ref=e171]
+                    - paragraph [ref=e172]:
+                      - generic [ref=e173]: 《最高人民法院公报》（以下简称《公报》）是最高人民法院的官方文献汇编，由最高人民法院办公厅主办，在国内及海外公开发行，是最高人民法院公开发布司法解释、司法文件、典型案例等各类重要司法信息的权威载体。《公报》创刊于1985年，月刊，栏目设置为：文献、法律选登、司法解释 ...
+                - listitem [ref=e174]:
+                  - link "司法解释 最高人民法院 关于审理矿产资源纠纷案件适用法律若干问题的解释 2026年03期 最高人民法院 关于基本医疗保险基金先行支付申请条件法律适用问题的批复 2026年03期 最高人民法院关于部分民事案件管辖适用法律有关问题的批复 2026年02期 最高人民法院 关于互联网法院案件管辖的规定 2026年01期 最高 ..." [ref=e175]:
+                    - /url: http://gongbao.court.gov.cn/ArticleList.html?serial_no=sfjs
+                    - heading "司法解释" [level=3] [ref=e176]
+                    - paragraph [ref=e177]:
+                      - generic [ref=e178]: 最高人民法院 关于审理矿产资源纠纷案件适用法律若干问题的解释 2026年03期 最高人民法院 关于基本医疗保险基金先行支付申请条件法律适用问题的批复 2026年03期 最高人民法院关于部分民事案件管辖适用法律有关问题的批复 2026年02期 最高人民法院 关于互联网法院案件管辖的规定 2026年01期 最高 ...
+          - listitem [ref=e179]:
+            - article [ref=e180] [cursor=pointer]:
+              - button [ref=e182]:
+                - img [ref=e183]
+              - generic [ref=e187]:
+                - link "将结果来源限定为 ailegal.baidu.com" [ref=e189]:
+                  - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC%20%E6%92%A4%E8%AF%89%20%E4%BA%8C%E5%AE%A1%20%E5%86%8D%E5%AE%A1%20%E8%A7%86%E4%B8%BA%E6%92%A4%E8%AF%89%20%E5%AD%A6%E6%9C%AF%E8%AE%BA%E6%96%87+site:ailegal.baidu.com&t=h_
+                  - img [ref=e191]
+                - generic [ref=e192]:
+                  - paragraph [ref=e193]: ailegal.baidu.com
+                  - link "https://ailegal.baidu.com › legalarticle › qadetail?id=2258c79978c54e251012" [ref=e194]:
+                    - /url: https://ailegal.baidu.com/legalarticle/qadetail?id=2258c79978c54e251012
+                    - paragraph [ref=e196]:
+                      - generic [ref=e197]: https://ailegal.baidu.com
+                      - generic [ref=e198]: › legalarticle › qadetail?id=2258c79978c54e251012
+              - heading "行政案件一审二审再审均败诉 被告人可以撤诉吗" [level=2] [ref=e200]:
+                - link "行政案件一审二审再审均败诉 被告人可以撤诉吗" [ref=e201]:
+                  - /url: https://ailegal.baidu.com/legalarticle/qadetail?id=2258c79978c54e251012
+                  - generic [ref=e202]: 行政案件一审二审再审均败诉 被告人可以撤诉吗
+              - generic [ref=e206]: 5 天前·**在行政诉讼中，即使一审、二审及再审均败诉，被告人（行政机关）也不能直接撤诉。** 1. **撤诉权利的主体**：原告享有撤诉权，而被告不享有直接撤诉权。根据《中华人民共和国行政诉讼法》第六十二条，原告可在法院宣告判决或裁定前申请撤诉。2. **被告改变行政行为与撤诉的关系**：被告 ...
+          - listitem [ref=e207]:
+            - article [ref=e208] [cursor=pointer]:
+              - button [ref=e210]:
+                - img [ref=e211]
+              - generic [ref=e215]:
+                - link "将结果来源限定为 gongbao.court.gov.cn" [ref=e217]:
+                  - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC%20%E6%92%A4%E8%AF%89%20%E4%BA%8C%E5%AE%A1%20%E5%86%8D%E5%AE%A1%20%E8%A7%86%E4%B8%BA%E6%92%A4%E8%AF%89%20%E5%AD%A6%E6%9C%AF%E8%AE%BA%E6%96%87+site:gongbao.court.gov.cn&t=h_
+                  - img [ref=e219]
+                - generic [ref=e220]:
+                  - paragraph [ref=e221]: 中华人民共和国最高人民法院公报
+                  - link "gongbao.court.gov.cn › Details › baa887ee6aab579ce29d089d8a9310.html?sw=撤诉" [ref=e222]:
+                    - /url: http://gongbao.court.gov.cn/Details/baa887ee6aab579ce29d089d8a9310.html?sw=%E6%92%A4%E8%AF%89
+                    - paragraph [ref=e224]:
+                      - text: gongbao.court.gov.cn
+                      - generic [ref=e225]: › Details › baa887ee6aab579ce29d089d8a9310.html?sw=撤诉
+              - heading "最高人民法院关于认真贯彻执行《关于行政诉讼撤诉若干问题的规定》的通知 - 中华人民共和国最高人民法院公报" [level=2] [ref=e227]:
+                - link "最高人民法院关于认真贯彻执行《关于行政诉讼撤诉若干问题的规定》的通知 - 中华人民共和国最高人民法院公报" [ref=e228]:
+                  - /url: http://gongbao.court.gov.cn/Details/baa887ee6aab579ce29d089d8a9310.html?sw=%E6%92%A4%E8%AF%89
+                  - generic [ref=e229]: 最高人民法院关于认真贯彻执行《关于行政诉讼撤诉若干问题的规定》的通知 - 中华人民共和国最高人民法院公报
+              - generic [ref=e233]: 最高人民法院 关于认真贯彻执行《关于行政诉讼撤诉 若干问题的规定》的通知 法发〔2008〕9号 各省、自治区、直辖市高级人民法院，新疆维吾尔自治区高级人民法院生产建设兵团分院： 《最高人民法院关于行政诉讼撤诉若干问题的规定》（以下简称《撤诉规定》）已由最高人民法院审判委员会第 ...
+          - listitem [ref=e234]:
+            - article [ref=e235] [cursor=pointer]:
+              - button [ref=e237]:
+                - img [ref=e238]
+              - generic [ref=e242]:
+                - link "将结果来源限定为 publish.obsidian.md" [ref=e244]:
+                  - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC%20%E6%92%A4%E8%AF%89%20%E4%BA%8C%E5%AE%A1%20%E5%86%8D%E5%AE%A1%20%E8%A7%86%E4%B8%BA%E6%92%A4%E8%AF%89%20%E5%AD%A6%E6%9C%AF%E8%AE%BA%E6%96%87+site:publish.obsidian.md&t=h_
+                  - img [ref=e246]
+                - generic [ref=e247]:
+                  - paragraph [ref=e248]: Obsidian Publish
+                  - link "https://publish.obsidian.md › wanyulawyer › 1.+现行法律法规库 › 1.10+诉讼与非诉程序法 › 1.10.4+行政诉讼 › 最高人民法院关于行政诉讼撤诉若干问题的规定" [ref=e249]:
+                    - /url: https://publish.obsidian.md/wanyulawyer/1.+%E7%8E%B0%E8%A1%8C%E6%B3%95%E5%BE%8B%E6%B3%95%E8%A7%84%E5%BA%93/1.10+%E8%AF%89%E8%AE%BC%E4%B8%8E%E9%9D%9E%E8%AF%89%E7%A8%8B%E5%BA%8F%E6%B3%95/1.10.4+%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC/%E6%9C%80%E9%AB%98%E4%BA%BA%E6%B0%91%E6%B3%95%E9%99%A2%E5%85%B3%E4%BA%8E%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC%E6%92%A4%E8%AF%89%E8%8B%A5%E5%B9%B2%E9%97%AE%E9%A2%98%E7%9A%84%E8%A7%84%E5%AE%9A
+                    - paragraph [ref=e251]:
+                      - generic [ref=e252]: https://publish.obsidian.md
+                      - generic [ref=e253]: › wanyulawyer › 1.+现行法律法规库 › 1.10+诉讼与非诉程序法 › 1.10.4+行政诉讼 › 最高人民法院关于行政诉讼撤诉若干问题的规定
+              - heading "最高人民法院关于行政诉讼撤诉若干问题的规定 - Lawsight - Obsidian Publish" [level=2] [ref=e255]:
+                - link "最高人民法院关于行政诉讼撤诉若干问题的规定 - Lawsight - Obsidian Publish" [ref=e256]:
+                  - /url: https://publish.obsidian.md/wanyulawyer/1.+%E7%8E%B0%E8%A1%8C%E6%B3%95%E5%BE%8B%E6%B3%95%E8%A7%84%E5%BA%93/1.10+%E8%AF%89%E8%AE%BC%E4%B8%8E%E9%9D%9E%E8%AF%89%E7%A8%8B%E5%BA%8F%E6%B3%95/1.10.4+%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC/%E6%9C%80%E9%AB%98%E4%BA%BA%E6%B0%91%E6%B3%95%E9%99%A2%E5%85%B3%E4%BA%8E%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC%E6%92%A4%E8%AF%89%E8%8B%A5%E5%B9%B2%E9%97%AE%E9%A2%98%E7%9A%84%E8%A7%84%E5%AE%9A
+                  - generic [ref=e257]: 最高人民法院关于行政诉讼撤诉若干问题的规定 - Lawsight - Obsidian Publish
+              - generic [ref=e261]: "**第二条** 被告改变被诉具体行政行为，原告申请撤诉，符合下列条件的，人民法院应当裁定准许： （一）申请撤诉是当事人真实意思表示； （二）被告改变被诉具体行政行为，不违反法律、法规的禁止性规定，不超越或者放弃职权，不损害公共利益和他人合法权益； （三）被告已经改变或者决定 ..."
+          - listitem [ref=e262]:
+            - article [ref=e263] [cursor=pointer]:
+              - button [ref=e265]:
+                - img [ref=e266]
+              - generic [ref=e270]:
+                - link "将结果来源限定为 sohu.com" [ref=e272]:
+                  - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC%20%E6%92%A4%E8%AF%89%20%E4%BA%8C%E5%AE%A1%20%E5%86%8D%E5%AE%A1%20%E8%A7%86%E4%B8%BA%E6%92%A4%E8%AF%89%20%E5%AD%A6%E6%9C%AF%E8%AE%BA%E6%96%87+site:www.sohu.com&t=h_
+                  - img [ref=e274]
+                - generic [ref=e275]:
+                  - paragraph [ref=e276]: 搜狐
+                  - link "https://www.sohu.com › a › 946677767_122389575" [ref=e277]:
+                    - /url: https://www.sohu.com/a/946677767_122389575
+                    - paragraph [ref=e279]:
+                      - generic [ref=e280]: https://www.sohu.com
+                      - generic [ref=e281]: › a › 946677767_122389575
+              - heading "最高人民法院关于行政诉讼撤诉若干问题的规定_裁定_行为_被告" [level=2] [ref=e283]:
+                - link "最高人民法院关于行政诉讼撤诉若干问题的规定_裁定_行为_被告" [ref=e284]:
+                  - /url: https://www.sohu.com/a/946677767_122389575
+                  - generic [ref=e285]: 最高人民法院关于行政诉讼撤诉若干问题的规定_裁定_行为_被告
+              - generic [ref=e289]: 2025年10月23日·（法释〔2008〕2号 2008年1月14日） 为妥善化解行政争议，依法审查行政诉讼中行政机关改变被诉具体行政行为及当事人申请撤诉的行为，根据《中华人民共和国行政诉讼法》制定本规定。 第一条 人民法院经审查认为被诉具体行政行为违法或者不当，可以在宣告判决或者裁定前，建议被告改变其所作 ...
+          - listitem [ref=e290]:
+            - article [ref=e291] [cursor=pointer]:
+              - button [ref=e293]:
+                - img [ref=e294]
+              - generic [ref=e298]:
+                - link "将结果来源限定为 ailegal.baidu.com" [ref=e300]:
+                  - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC%20%E6%92%A4%E8%AF%89%20%E4%BA%8C%E5%AE%A1%20%E5%86%8D%E5%AE%A1%20%E8%A7%86%E4%B8%BA%E6%92%A4%E8%AF%89%20%E5%AD%A6%E6%9C%AF%E8%AE%BA%E6%96%87+site:ailegal.baidu.com&t=h_
+                  - img [ref=e302]
+                - generic [ref=e303]:
+                  - paragraph [ref=e304]: ailegal.baidu.com
+                  - link "https://ailegal.baidu.com › legalarticle › qadetail?id=54595749292848250126" [ref=e305]:
+                    - /url: https://ailegal.baidu.com/legalarticle/qadetail?id=54595749292848250126
+                    - paragraph [ref=e307]:
+                      - generic [ref=e308]: https://ailegal.baidu.com
+                      - generic [ref=e309]: › legalarticle › qadetail?id=54595749292848250126
+              - heading "最高院关于行政诉讼撤诉的规定 - ailegal.baidu.com" [level=2] [ref=e311]:
+                - link "最高院关于行政诉讼撤诉的规定 - ailegal.baidu.com" [ref=e312]:
+                  - /url: https://ailegal.baidu.com/legalarticle/qadetail?id=54595749292848250126
+                  - generic [ref=e313]: 最高院关于行政诉讼撤诉的规定 - ailegal.baidu.com
+              - generic [ref=e317]: 1 天前·关于行政诉讼撤诉的规定，主要依据《中华人民共和国行政诉讼法》。1、撤诉的基本规定：原告有权在判决或裁定前申请撤诉；被告改变行政行为，原告同意并申请撤诉的，由法院裁定；撤诉最终由人民法院裁定。2、撤诉的特殊情形：原告无正当理由拒不到庭或中途退庭，法院可按撤诉处理。3、与 ...
+          - listitem [ref=e318]:
+            - article [ref=e319] [cursor=pointer]:
+              - button [ref=e321]:
+                - img [ref=e322]
+              - generic [ref=e326]:
+                - link "将结果来源限定为 66law.cn" [ref=e328]:
+                  - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC%20%E6%92%A4%E8%AF%89%20%E4%BA%8C%E5%AE%A1%20%E5%86%8D%E5%AE%A1%20%E8%A7%86%E4%B8%BA%E6%92%A4%E8%AF%89%20%E5%AD%A6%E6%9C%AF%E8%AE%BA%E6%96%87+site:www.66law.cn&t=h_
+                  - img [ref=e330]
+                - generic [ref=e331]:
+                  - paragraph [ref=e332]: 华律网
+                  - link "https://www.66law.cn › laws › 402956.aspx" [ref=e333]:
+                    - /url: https://www.66law.cn/laws/402956.aspx
+                    - paragraph [ref=e335]:
+                      - generic [ref=e336]: https://www.66law.cn
+                      - generic [ref=e337]: › laws › 402956.aspx
+              - heading "行政诉讼二审撤诉可以吗-法律知识|华律网" [level=2] [ref=e339]:
+                - link "行政诉讼二审撤诉可以吗-法律知识|华律网" [ref=e340]:
+                  - /url: https://www.66law.cn/laws/402956.aspx
+                  - generic [ref=e341]: 行政诉讼二审撤诉可以吗-法律知识|华律网
+              - generic [ref=e345]: 2025年1月3日·在行政诉讼第二审期间,行政机关改变被诉具体行政行为,原审原告因行政机关在二审期间改变被诉行政行为而达成和解合意,提出申请撤回起诉,是可以的。撤回起诉的决定，需要由人民 法院 依法裁量。 撤诉的概念 行政诉讼中的撤诉，是指原告或上诉人 (或原审原告或原审上诉人)自立案至人民法院作 ...
+          - listitem [ref=e346]:
+            - article [ref=e347] [cursor=pointer]:
+              - button [ref=e349]:
+                - img [ref=e350]
+              - generic [ref=e354]:
+                - link "将结果来源限定为 law-lib.com" [ref=e356]:
+                  - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC%20%E6%92%A4%E8%AF%89%20%E4%BA%8C%E5%AE%A1%20%E5%86%8D%E5%AE%A1%20%E8%A7%86%E4%B8%BA%E6%92%A4%E8%AF%89%20%E5%AD%A6%E6%9C%AF%E8%AE%BA%E6%96%87+site:www.law-lib.com&t=h_
+                  - img [ref=e358]
+                - generic [ref=e359]:
+                  - paragraph [ref=e360]: 法律图书馆
+                  - link "www.law-lib.com › law › law_view.asp?id=279795" [ref=e361]:
+                    - /url: http://www.law-lib.com/law/law_view.asp?id=279795
+                    - paragraph [ref=e363]:
+                      - text: www.law-lib.com
+                      - generic [ref=e364]: › law › law_view.asp?id=279795
+              - heading "最高人民法院关于行政诉讼撤诉若干问题规定_全文" [level=2] [ref=e366]:
+                - link "最高人民法院关于行政诉讼撤诉若干问题规定_全文" [ref=e367]:
+                  - /url: http://www.law-lib.com/law/law_view.asp?id=279795
+                  - generic [ref=e368]: 最高人民法院关于行政诉讼撤诉若干问题规定_全文
+              - generic [ref=e372]: 最高人民法院关于行政诉讼撤诉若干问题规定 法释〔2008〕2号 《最高人民法院关于行政诉讼撤诉若干问题的规定》已于2007年12月17日由最高人民法院审判委员会第1441次会议通过，现予公布，自2008年2月1日起施行。 二 八年一月十四日 最高人民法院关于行政诉讼撤诉若干问题的规定 （2007年12月17日 ...
+          - listitem [ref=e373]:
+            - article [ref=e374] [cursor=pointer]:
+              - button [ref=e376]:
+                - img [ref=e377]
+              - generic [ref=e381]:
+                - link "将结果来源限定为 ruilaw.cn" [ref=e383]:
+                  - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC%20%E6%92%A4%E8%AF%89%20%E4%BA%8C%E5%AE%A1%20%E5%86%8D%E5%AE%A1%20%E8%A7%86%E4%B8%BA%E6%92%A4%E8%AF%89%20%E5%AD%A6%E6%9C%AF%E8%AE%BA%E6%96%87+site:www.ruilaw.cn&t=h_
+                  - img [ref=e385]
+                - generic [ref=e386]:
+                  - paragraph [ref=e387]: ruilaw.cn
+                  - link "https://www.ruilaw.cn › fagui › 17253292431104806.html" [ref=e388]:
+                    - /url: https://www.ruilaw.cn/fagui/17253292431104806.html
+                    - paragraph [ref=e390]:
+                      - generic [ref=e391]: https://www.ruilaw.cn
+                      - generic [ref=e392]: › fagui › 17253292431104806.html
+              - heading "2024年最高人民法院关于行政诉讼撤诉若干问题的规定最新版全文 - 瑞律网法律法规" [level=2] [ref=e394]:
+                - link "2024年最高人民法院关于行政诉讼撤诉若干问题的规定最新版全文 - 瑞律网法律法规" [ref=e395]:
+                  - /url: https://www.ruilaw.cn/fagui/17253292431104806.html
+                  - generic [ref=e396]: 2024年最高人民法院关于行政诉讼撤诉若干问题的规定最新版全文 - 瑞律网法律法规
+              - generic [ref=e400]: 为妥善化解行政争议，依法审查行政诉讼中行政机关改变被诉具体行政行为及当事人申请撤诉的行为，根据《中华人民共和国行政诉讼法》制定本规定。2024年最高人民法院关于行政诉讼撤诉若干问题的规定最新版全文
+          - listitem [ref=e401]:
+            - article [ref=e402] [cursor=pointer]:
+              - button [ref=e404]:
+                - img [ref=e405]
+              - generic [ref=e409]:
+                - link "将结果来源限定为 zh.wikisource.org" [ref=e411]:
+                  - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC%20%E6%92%A4%E8%AF%89%20%E4%BA%8C%E5%AE%A1%20%E5%86%8D%E5%AE%A1%20%E8%A7%86%E4%B8%BA%E6%92%A4%E8%AF%89%20%E5%AD%A6%E6%9C%AF%E8%AE%BA%E6%96%87+site:zh.wikisource.org&t=h_
+                  - img [ref=e413]
+                - generic [ref=e414]:
+                  - paragraph [ref=e415]: zh.wikisource.org
+                  - link "https://zh.wikisource.org › wiki › 最高人民法院关于行政诉讼撤诉若干问题的规定" [ref=e416]:
+                    - /url: https://zh.wikisource.org/wiki/%E6%9C%80%E9%AB%98%E4%BA%BA%E6%B0%91%E6%B3%95%E9%99%A2%E5%85%B3%E4%BA%8E%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC%E6%92%A4%E8%AF%89%E8%8B%A5%E5%B9%B2%E9%97%AE%E9%A2%98%E7%9A%84%E8%A7%84%E5%AE%9A
+                    - paragraph [ref=e418]:
+                      - generic [ref=e419]: https://zh.wikisource.org
+                      - generic [ref=e420]: › wiki › 最高人民法院关于行政诉讼撤诉若干问题的规定
+              - heading "最高人民法院关于行政诉讼撤诉若干问题的规定 - 维基文库,自由的图书馆" [level=2] [ref=e422]:
+                - link "最高人民法院关于行政诉讼撤诉若干问题的规定 - 维基文库,自由的图书馆" [ref=e423]:
+                  - /url: https://zh.wikisource.org/wiki/%E6%9C%80%E9%AB%98%E4%BA%BA%E6%B0%91%E6%B3%95%E9%99%A2%E5%85%B3%E4%BA%8E%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC%E6%92%A4%E8%AF%89%E8%8B%A5%E5%B9%B2%E9%97%AE%E9%A2%98%E7%9A%84%E8%A7%84%E5%AE%9A
+                  - generic [ref=e424]: 最高人民法院关于行政诉讼撤诉若干问题的规定 - 维基文库,自由的图书馆
+              - generic [ref=e428]: 第七条 申请撤诉不符合法定条件，或者被告改变被诉具体行政行为后当事人不撤诉的，人民法院应当及时作出裁判。 第八条 第二审或者再审期间行政机关改变被诉具体行政行为，当事人申请撤回上诉或者再审申请的，参照本规定。
+        - generic [ref=e429]:
+          - paragraph [ref=e430]:
+            - generic [ref=e431]: 找不到任何行政诉讼 撤诉 二审 再审 视为撤诉 学术论文的结果
+          - generic [ref=e432]:
+            - paragraph [ref=e433]: 搜索建议：
+            - list [ref=e434]:
+              - listitem [ref=e435]: 检查拼写
+              - listitem [ref=e436]: 尝试输入相关关键字
+          - generic [ref=e437]:
+            - paragraph [ref=e438]:
+              - generic [ref=e439]: 尝试询问我们的私密人工智能聊天服务 Duck.ai：
+            - generic [ref=e441]:
+              - textbox "询问 Duck.ai 任何问题" [ref=e442]: 行政诉讼 撤诉 二审 再审 视为撤诉 学术论文
+              - button "Submit to Duck.ai" [ref=e443] [cursor=pointer]:
+                - img [ref=e444]
+    - list [ref=e448]:
+      - button "关闭菜单" [ref=e449] [cursor=pointer]:
+        - generic [ref=e450]: 关闭菜单
+        - img [ref=e451]
+      - list [ref=e453]:
+        - listitem [ref=e454]: 搜索
+        - listitem [ref=e455]:
+          - link "主页" [ref=e456] [cursor=pointer]:
+            - /url: https://start.duckduckgo.com/
+        - listitem [ref=e457]:
+          - link "配色" [ref=e458] [cursor=pointer]:
+            - /url: /settings#appearance
+        - listitem [ref=e459]:
+          - link "设置" [ref=e460] [cursor=pointer]:
+            - /url: /settings
+      - list [ref=e461]:
+        - listitem [ref=e462]: 意见反馈
+        - listitem [ref=e463]:
+          - generic [ref=e466]:
+            - button "Positive feedback" [ref=e467] [cursor=pointer]:
+              - img [ref=e468]
+            - button "Negative feedback" [ref=e471] [cursor=pointer]:
+              - img [ref=e472]
+      - list [ref=e475]:
+        - listitem [ref=e476]: 下载
+        - listitem [ref=e477]:
+          - link "iOS 浏览器" [ref=e478] [cursor=pointer]:
+            - /url: https://apps.apple.com/app/duckduckgo-private-browser/id663592361?platform=iphone&pt=866401&mt=8&ct=serp-atb-serp
+        - listitem [ref=e479]:
+          - link "Android 浏览器" [ref=e480] [cursor=pointer]:
+            - /url: https://play.google.com/store/apps/details?id=com.duckduckgo.mobile.android&referrer=utm_campaign%3Dserp-atb-serp%26origin%3Dfunnel_playstore_searchresults
+        - listitem [ref=e481]:
+          - link "Mac 浏览器" [ref=e482] [cursor=pointer]:
+            - /url: /mac?origin=funnel_browser_searchresults
+        - listitem [ref=e483]:
+          - link "Windows 浏览器" [ref=e484] [cursor=pointer]:
+            - /url: /windows?origin=funnel_browser_searchresults
+        - listitem [ref=e485]: 浏览器扩展插件
+      - list [ref=e486]:
+        - listitem [ref=e487]: 更多 DuckDuckGo 产品和服务
+        - listitem [ref=e488]:
+          - generic [ref=e491]:
+            - button "关闭促销信息" [ref=e492] [cursor=pointer]:
+              - img [ref=e493]
+            - generic [ref=e495]:
+              - paragraph [ref=e497]:
+                - img [ref=e498]
+                - text: 升级到我们的私密浏览器
+              - paragraph [ref=e509]: 快速。安全。免费。
+            - link "安装 Mac 浏览器" [ref=e510] [cursor=pointer]:
+              - /url: /mac
+              - img [ref=e511]
+              - text: 安装 Mac 浏览器
+        - listitem [ref=e513]:
+          - link "Duck.ai" [ref=e514] [cursor=pointer]:
+            - /url: https://duck.ai
+        - listitem [ref=e515]:
+          - link "Email Protection" [ref=e516] [cursor=pointer]:
+            - /url: /email
+        - listitem [ref=e517]:
+          - link "简讯" [ref=e518] [cursor=pointer]:
+            - /url: /newsletter
+        - listitem [ref=e519]:
+          - link "博客" [ref=e520] [cursor=pointer]:
+            - /url: /blog
+        - listitem [ref=e521]:
+          - link "播客" [ref=e522] [cursor=pointer]:
+            - /url: https://insideduckduckgo.substack.com/?showWelcome=true
+        - listitem [ref=e523]:
+          - link "合作" [ref=e524] [cursor=pointer]:
+            - /url: /collaborations
+      - list [ref=e525]:
+        - listitem [ref=e526]: 详细了解
+        - listitem [ref=e527]:
+          - link "最新功能" [ref=e528] [cursor=pointer]:
+            - /url: /updates
+        - listitem [ref=e529]:
+          - link "隐私保护功能比较" [ref=e530] [cursor=pointer]:
+            - /url: /compare-privacy
+        - listitem [ref=e531]:
+          - link "关于我们的浏览器" [ref=e532] [cursor=pointer]:
+            - /url: /app
+        - listitem [ref=e533]:
+          - link "关于 DuckDuckGo" [ref=e534] [cursor=pointer]:
+            - /url: /about
+      - list [ref=e535]:
+        - listitem [ref=e536]: 其他资源
+        - listitem [ref=e537]:
+          - link "帮助" [ref=e538] [cursor=pointer]:
+            - /url: /duckduckgo-help-pages
+        - listitem [ref=e539]:
+          - link "社群" [ref=e540] [cursor=pointer]:
+            - /url: https://www.reddit.com/r/duckduckgo/
+        - listitem [ref=e541]:
+          - link "工作岗位" [ref=e542] [cursor=pointer]:
+            - /url: /careers
+        - listitem [ref=e543]:
+          - link "隐私协议" [ref=e544] [cursor=pointer]:
+            - /url: /privacy
+        - listitem [ref=e545]:
+          - link "服务条款" [ref=e546] [cursor=pointer]:
+            - /url: /terms
+        - listitem [ref=e547]:
+          - link "媒体资源" [ref=e548] [cursor=pointer]:
+            - /url: /press
+        - listitem [ref=e549]:
+          - link "在搜索时投放广告" [ref=e550] [cursor=pointer]:
+            - /url: /duckduckgo-help-pages/company/advertise-on-duckduckgo-search
+  - generic [ref=e554]:
+    - generic [ref=e556]:
+      - img [ref=e557]
+      - generic [ref=e573]:
+        - heading "下载我们的 Mac 浏览器" [level=3] [ref=e574]
+        - paragraph [ref=e575]: 在搜索、浏览和使用 AI 时保护你的数据。
+      - link "下载" [ref=e576] [cursor=pointer]:
+        - /url: https://duckduckgo.com/mac?origin=funnel_browser_searchresults__footercard
+        - img [ref=e577]
+        - text: 下载
+    - generic [ref=e580]:
+      - generic [ref=e581]:
+        - heading "详细了解" [level=3] [ref=e582]
+        - list [ref=e583]:
+          - listitem [ref=e584]:
+            - link "最新功能" [ref=e585] [cursor=pointer]:
+              - /url: https://duckduckgo.com/updates
+          - listitem [ref=e586]:
+            - link "浏览器简介" [ref=e587] [cursor=pointer]:
+              - /url: https://duckduckgo.com/app
+          - listitem [ref=e588]:
+            - link "隐私保护功能比较" [ref=e589] [cursor=pointer]:
+              - /url: https://duckduckgo.com/compare-privacy
+          - listitem [ref=e590]:
+            - link "帮助页面" [ref=e591] [cursor=pointer]:
+              - /url: https://duckduckgo.com/duckduckgo-help-pages/
+      - generic [ref=e592]:
+        - heading "获取更多信息" [level=3] [ref=e593]
+        - list [ref=e594]:
+          - listitem [ref=e595]:
+            - link "Email Protection" [ref=e596] [cursor=pointer]:
+              - /url: https://duckduckgo.com/email
+          - listitem [ref=e597]:
+            - generic [ref=e598]:
+              - link "播客" [ref=e600] [cursor=pointer]:
+                - /url: https://insideduckduckgo.substack.com/?showWelcome=true
+              - generic [ref=e601]:
+                - text: 和
+                - link "简讯" [ref=e602] [cursor=pointer]:
+                  - /url: https://duckduckgo.com/newsletter
+          - listitem [ref=e603]:
+            - link "合作" [ref=e604] [cursor=pointer]:
+              - /url: https://duckduckgo.com/collaborations
+  - button "意见反馈" [ref=e609] [cursor=pointer]

@@ -122,7 +122,7 @@ describe('MessageTimeline tool summaries', () => {
   })
 })
 
-describe('MessageTimeline Kun runtime metadata smoke', () => {
+describe('MessageTimeline Legalwork runtime metadata smoke', () => {
   beforeEach(() => {
     useChatStore.setState({
       route: 'chat',
@@ -174,7 +174,7 @@ describe('MessageTimeline Kun runtime metadata smoke', () => {
         '[Claw IM agent instructions]',
         '',
         '[Agent name]',
-        'kun',
+        'legalwork',
         '',
         '---',
         '[Current user request]',
@@ -207,8 +207,8 @@ describe('MessageTimeline Kun runtime metadata smoke', () => {
         },
         sources: [
           {
-            title: 'Kun docs',
-            url: 'https://example.com/kun'
+            title: 'Legalwork docs',
+            url: 'https://example.com/legalwork'
           }
         ]
       }
@@ -222,7 +222,7 @@ describe('MessageTimeline Kun runtime metadata smoke', () => {
     expect(html).toContain('Child agent')
     expect(html).toContain('research')
     expect(html).toContain('Sources 1')
-    expect(html).toContain('https://example.com/kun')
+    expect(html).toContain('https://example.com/legalwork')
   })
 
   it('renders the same runtime metadata on process timeline rows', () => {
@@ -238,8 +238,8 @@ describe('MessageTimeline Kun runtime metadata smoke', () => {
         },
         sources: [
           {
-            title: 'Kun docs',
-            url: 'https://example.com/kun'
+            title: 'Legalwork docs',
+            url: 'https://example.com/legalwork'
           }
         ]
       }

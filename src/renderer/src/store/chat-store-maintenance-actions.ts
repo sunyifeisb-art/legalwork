@@ -47,19 +47,6 @@ import {
   threadBelongsToWorkspace
 } from './chat-store-runtime-helpers'
 import {
-  WRITE_ASSISTANT_THREAD_TITLE,
-  activeWriteThreadForWorkspace,
-  forgetWriteThread,
-  hydrateWriteThreadRegistry,
-  isWriteThreadId,
-  markWriteThread,
-  pruneWriteThreadRegistry,
-  readWriteThreadRegistry,
-  saveWriteThreadRegistry,
-  writeThreadBelongsToWorkspace,
-  writeWorkspaceForThreadId
-} from '../write/write-thread-registry'
-import {
   clearBusyWatchdog,
   resetBusyRecoveryAttempts,
   scheduleStartupRuntimeProbe,
@@ -77,8 +64,6 @@ import {
   isCodeThread,
   latestThread,
   looksLikeActiveTurnError,
-  readActiveWriteWorkspace,
-  readWriteWorkspaceRoots,
   rememberPendingClawFeishuMirror,
   runtimeErrorDetail,
   runtimeStreamRecoveringMessage,
@@ -555,7 +540,6 @@ export function createMaintenanceActions(
     const deletingActive = activeThreadId === targetId
     try {
       await p.deleteThread(targetId)
-      saveWriteThreadRegistry(forgetWriteThread(targetId))
       saveThreadForkRegistry(forgetThreadFork(targetId))
       if (deletingActive) {
         sseAbortRef.current?.abort()

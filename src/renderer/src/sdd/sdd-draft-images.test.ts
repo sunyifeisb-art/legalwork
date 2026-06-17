@@ -5,7 +5,7 @@ import {
   resolveSddMarkdownImagePath
 } from './sdd-draft-images'
 
-const DRAFT_PATH = '.kunsdd/draft/draft-1/requirement.md'
+const DRAFT_PATH = '.legalworksdd/draft/draft-1/requirement.md'
 
 describe('sdd draft image parsing', () => {
   it('parses local Markdown image references with alt text', () => {
@@ -22,8 +22,8 @@ describe('sdd draft image parsing', () => {
   })
 
   it('resolves draft-relative image paths into workspace-relative SDD paths', () => {
-    expect(resolveSddMarkdownImagePath(DRAFT_PATH, '../../img/login.png')).toBe('.kunsdd/img/login.png')
-    expect(resolveSddMarkdownImagePath(DRAFT_PATH, '.kunsdd/img/direct.png')).toBe('.kunsdd/img/direct.png')
+    expect(resolveSddMarkdownImagePath(DRAFT_PATH, '../../img/login.png')).toBe('.legalworksdd/img/login.png')
+    expect(resolveSddMarkdownImagePath(DRAFT_PATH, '.legalworksdd/img/direct.png')).toBe('.legalworksdd/img/direct.png')
     expect(resolveSddMarkdownImagePath(DRAFT_PATH, '../../../../outside.png')).toBeNull()
     expect(resolveSddMarkdownImagePath(DRAFT_PATH, '/tmp/outside.png')).toBeNull()
   })
@@ -54,13 +54,13 @@ describe('collectSddDraftImages', () => {
     })
 
     expect(result.errors).toEqual([])
-    expect(readOrder).toEqual(['.kunsdd/img/a.png', '.kunsdd/img/b.png'])
+    expect(readOrder).toEqual(['.legalworksdd/img/a.png', '.legalworksdd/img/b.png'])
     expect(result.images).toMatchObject([
       {
         index: 1,
         alt: 'First',
         markdownPath: '../../img/a.png',
-        relativePath: '.kunsdd/img/a.png',
+        relativePath: '.legalworksdd/img/a.png',
         mimeType: 'image/png',
         width: 640,
         height: 480
@@ -69,7 +69,7 @@ describe('collectSddDraftImages', () => {
         index: 2,
         alt: 'Second',
         markdownPath: '../../img/b.png',
-        relativePath: '.kunsdd/img/b.png'
+        relativePath: '.legalworksdd/img/b.png'
       }
     ])
   })
@@ -91,11 +91,11 @@ describe('collectSddDraftImages', () => {
     expect(result.errors).toEqual([
       'Failed to read ../../img/missing.png: not found',
       'Image path is outside the workspace: ../../../../outside.png',
-      'SDD images must live under .kunsdd/img: ../../../img/write.png'
+      'SDD images must live under .legalworksdd/img: ../../../img/write.png'
     ])
   })
 
-  it('rejects workspace images outside .kunsdd/img', async () => {
+  it('rejects workspace images outside .legalworksdd/img', async () => {
     const result = await collectSddDraftImages({
       workspaceRoot: '/tmp/ws',
       draftRelativePath: DRAFT_PATH,
@@ -107,6 +107,6 @@ describe('collectSddDraftImages', () => {
     })
 
     expect(result.images).toEqual([])
-    expect(result.errors).toEqual(['SDD images must live under .kunsdd/img: ../not-img/wrong.png'])
+    expect(result.errors).toEqual(['SDD images must live under .legalworksdd/img: ../not-img/wrong.png'])
   })
 })

@@ -8,7 +8,7 @@ describe('buildMcpMarketplaceOverlay', () => {
       runtimeInfo: {
         host: '127.0.0.1',
         port: 8899,
-        dataDir: '/tmp/kun',
+        dataDir: '/tmp/legalwork',
         startedAt: '2026-06-03T00:00:00.000Z',
         capabilities: {
           contractVersion: 1,
@@ -113,7 +113,7 @@ describe('buildMcpMarketplaceOverlay', () => {
       runtimeInfo: {
         host: '127.0.0.1',
         port: 8899,
-        dataDir: '/tmp/kun',
+        dataDir: '/tmp/legalwork',
         startedAt: '2026-06-03T00:00:00.000Z',
         capabilities: {
           contractVersion: 1,
@@ -165,12 +165,12 @@ describe('buildMcpMarketplaceOverlay', () => {
 
   it('includes GUI-managed MCP servers before runtime diagnostics connect', () => {
     expect(buildMcpMarketplaceOverlay({
-      managedServers: [{ id: 'gui_schedule', toolCount: 4 }]
+      managedServers: [{ id: 'legalwork_schedule', toolCount: 4 }]
     })).toMatchObject({
       status: 'offline',
       configuredServers: 1,
       toolCount: 4,
-      serverIds: ['gui_schedule']
+      serverIds: ['legalwork_schedule']
     })
   })
 })

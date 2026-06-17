@@ -11,6 +11,7 @@ import { MessageBubble } from './message-timeline-bubbles'
 import { ReviewPlanCard, ReviewSummaryCard, TurnChangeSummary, WorkMetaRow } from './message-timeline-cards'
 import { ProcessSectionRow, groupProcessSections } from './message-timeline-process'
 import { AnimatedWorkLogo } from './AnimatedWorkLogo'
+import { brandForModel } from '../../lib/model-brand'
 import {
   groupTurns,
   splitThink,
@@ -71,8 +72,11 @@ export function MessageTimeline({
     turnDurationByUserId,
     turnReasoningFirstAtByUserId,
     turnReasoningLastAtByUserId,
-    activeThread
+    activeThread,
+    composerModel,
+    composerModelGroups
   } = useTimelineStores(activeThreadId)
+  const modelBrand = brandForModel(composerModel, composerModelGroups)
 
   const heroRoute: 'chat' | 'claw' = route === 'claw' ? 'claw' : 'chat'
   const hasContent = blocks.length > 0 || live || liveReasoning
@@ -128,6 +132,7 @@ export function MessageTimeline({
             onRetry={onRetryConnection}
             onOpenSettings={onOpenSettings}
             onSelectSuggestion={onSelectSuggestion}
+            modelBrand={modelBrand}
           />
         ) : null}
 
@@ -184,6 +189,7 @@ export function MessageTimeline({
                 onBuildPlan={onBuildPlan}
                 onOpenPlan={onOpenPlan}
                 viewportRef={containerRef}
+                modelBrand={modelBrand}
               />
             </Fragment>
           )
@@ -217,6 +223,7 @@ export function MessageTimeline({
             live={live}
             devPreviewCard={devPreviewCard}
             viewportRef={containerRef}
+            modelBrand={modelBrand}
             durationMs={
               currentTurnUserId && typeof turnStartedAtByUserId[currentTurnUserId] === 'number'
                 ? Math.max(0, tickNow - turnStartedAtByUserId[currentTurnUserId])
@@ -248,7 +255,8 @@ function MessageTurn({
   planActionsBusy,
   onBuildPlan,
   onOpenPlan,
-  viewportRef
+  viewportRef,
+  modelBrand
 }: {
   turn: Turn
   isProcessing: boolean
@@ -261,6 +269,7 @@ function MessageTurn({
   onBuildPlan?: () => void
   onOpenPlan?: () => void
   viewportRef: RefObject<HTMLDivElement | null>
+  modelBrand: ReturnType<typeof brandForModel>
 }): ReactElement {
   const workspaceRoot = useChatStore((s) => s.workspaceRoot)
   // Inline Review Plan card: surfaced under a turn that produced a
@@ -355,7 +364,7 @@ function MessageTurn({
         <ReviewSummaryCard key={review.id} review={review} />
       ))}
 
-      {isProcessing ? <LiveTurnProgressRow /> : null}
+      {isProcessing ? <LiveTurnProgressRow modelBrand={modelBrand} /> : null}
 
       {!isProcessing && devPreviewCard ? devPreviewCard : null}
 
@@ -376,13 +385,13 @@ function MessageTurn({
   )
 }
 
-function LiveTurnProgressRow(): ReactElement {
+function LiveTurnProgressRow({ modelBrand }: { modelBrand: ReturnType<typeof brandForModel> }): ReactElement {
   const { t } = useTranslation('common')
 
   return (
     <div className="flex w-fit max-w-full items-center gap-2 py-0.5 text-[14px] font-medium text-ds-muted">
       <span className="ds-work-logo-slot ds-work-logo-slot-sm mr-0.5">
-        <AnimatedWorkLogo active phase="trail" size="sm" />
+        <AnimatedWorkLogo active brand={modelBrand} phase="trail" size="sm" />
       </span>
       <span className="ds-shiny-text">{t('working')}</span>
     </div>

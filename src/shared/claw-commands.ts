@@ -27,5 +27,5 @@ export function parseClawCommand(text: string): ClawCommand | null {
   if (value === 'flash' || value === 'deepseek-v4-flash') {
     return { kind: 'model', model: 'deepseek-v4-flash' }
   }
-  return { kind: 'invalidModel' }
+  return { kind: 'model', model: (match[1] ?? '').trim() }
 }

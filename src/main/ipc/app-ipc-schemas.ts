@@ -1,31 +1,44 @@
 import { z } from 'zod'
 import {
-  KUN_APPROVAL_TEMPLATE,
-  KUN_ATTACHMENT_CONTENT_TEMPLATE,
-  KUN_ATTACHMENT_DIAGNOSTICS_TEMPLATE,
-  KUN_ATTACHMENTS_TEMPLATE,
-  KUN_ATTACHMENT_TEMPLATE,
-  KUN_HEALTH_TEMPLATE,
-  KUN_MEMORY_DIAGNOSTICS_TEMPLATE,
-  KUN_MEMORY_RECORD_TEMPLATE,
-  KUN_MEMORY_TEMPLATE,
-  KUN_RUNTIME_INFO_TEMPLATE,
-  KUN_RUNTIME_TOOLS_TEMPLATE,
-  KUN_SESSION_RESUME_TEMPLATE,
-  KUN_SKILLS_TEMPLATE,
-  KUN_THREADS_TEMPLATE,
-  KUN_THREAD_COMPACT_TEMPLATE,
-  KUN_THREAD_FORK_TEMPLATE,
-  KUN_THREAD_GOAL_TEMPLATE,
-  KUN_THREAD_REVIEW_TEMPLATE,
-  KUN_THREAD_TODOS_TEMPLATE,
-  KUN_THREAD_INTERRUPT_TEMPLATE,
-  KUN_THREAD_STEER_TEMPLATE,
-  KUN_THREAD_TURNS_TEMPLATE,
-  KUN_THREAD_TEMPLATE,
-  KUN_USER_INPUT_TEMPLATE,
-  KUN_USAGE_TEMPLATE
-} from '../../shared/kun-endpoints'
+  LEGALWORK_APPROVAL_TEMPLATE,
+  LEGALWORK_ATTACHMENT_CONTENT_TEMPLATE,
+  LEGALWORK_ATTACHMENT_DIAGNOSTICS_TEMPLATE,
+  LEGALWORK_ATTACHMENTS_TEMPLATE,
+  LEGALWORK_ATTACHMENT_TEMPLATE,
+  LEGALWORK_HEALTH_TEMPLATE,
+  LEGALWORK_MEMORY_DIAGNOSTICS_TEMPLATE,
+  LEGALWORK_KNOWLEDGE_AGENT_SOURCES_TEMPLATE,
+  LEGALWORK_KNOWLEDGE_CREATE_FOLDER_TEMPLATE,
+  LEGALWORK_KNOWLEDGE_DELETE_FILE_TEMPLATE,
+  LEGALWORK_KNOWLEDGE_DIAGNOSTICS_TEMPLATE,
+  LEGALWORK_KNOWLEDGE_MOVE_TEMPLATE,
+  LEGALWORK_KNOWLEDGE_READ_FILE_TEMPLATE,
+  LEGALWORK_KNOWLEDGE_EXTRACT_TEXT_TEMPLATE,
+  LEGALWORK_KNOWLEDGE_ABSOLUTE_PATH_TEMPLATE,
+  LEGALWORK_KNOWLEDGE_SEARCH_TEMPLATE,
+  LEGALWORK_KNOWLEDGE_SYNC_TEMPLATE,
+  LEGALWORK_KNOWLEDGE_TREE_TEMPLATE,
+  LEGALWORK_KNOWLEDGE_WRITE_FILE_TEMPLATE,
+  LEGALWORK_MEMORY_RECORD_TEMPLATE,
+  LEGALWORK_MEMORY_TEMPLATE,
+  LEGALWORK_RUNTIME_INFO_TEMPLATE,
+  LEGALWORK_RUNTIME_TOOLS_TEMPLATE,
+  LEGALWORK_SESSION_RESUME_TEMPLATE,
+  LEGALWORK_SKILLS_TEMPLATE,
+  LEGALWORK_THREADS_TEMPLATE,
+  LEGALWORK_THREAD_COMPACT_TEMPLATE,
+  LEGALWORK_THREAD_FORK_TEMPLATE,
+  LEGALWORK_THREAD_GOAL_TEMPLATE,
+  LEGALWORK_THREAD_REVIEW_TEMPLATE,
+  LEGALWORK_THREAD_TODOS_TEMPLATE,
+  LEGALWORK_THREAD_INTERRUPT_TEMPLATE,
+  LEGALWORK_THREAD_STEER_TEMPLATE,
+  LEGALWORK_THREAD_TURNS_TEMPLATE,
+  LEGALWORK_THREAD_TURN_TEMPLATE,
+  LEGALWORK_THREAD_TEMPLATE,
+  LEGALWORK_USER_INPUT_TEMPLATE,
+  LEGALWORK_USAGE_TEMPLATE
+} from '../../shared/legalwork-endpoints'
 import {
   CLAW_MODEL_IDS,
   SCHEDULE_MODEL_IDS,
@@ -50,6 +63,7 @@ const MAX_SKILL_FILE_BYTES = 1_000_000
 const MAX_CONFIG_FILE_BYTES = 2_000_000
 const MAX_DEVICE_CODE_LENGTH = 8_192
 const MAX_EDITOR_COMPLETION_TEXT = 200_000
+const MAX_DATA_COMPLIANCE_FILE_BYTES = 40 * 1024 * 1024
 
 const SAFE_OPEN_EXTERNAL_PROTOCOLS = new Set(['http:', 'https:', 'mailto:'])
 
@@ -95,31 +109,44 @@ function compileEndpoint(
 }
 
 const ENDPOINTS: readonly EndpointTemplate[] = [
-  compileEndpoint(KUN_HEALTH_TEMPLATE, ['GET']),
-  compileEndpoint(KUN_RUNTIME_INFO_TEMPLATE, ['GET']),
-  compileEndpoint(KUN_RUNTIME_TOOLS_TEMPLATE, ['GET']),
-  compileEndpoint(KUN_SKILLS_TEMPLATE, ['GET']),
-  compileEndpoint(KUN_ATTACHMENTS_TEMPLATE, ['POST']),
-  compileEndpoint(KUN_ATTACHMENT_DIAGNOSTICS_TEMPLATE, ['GET']),
-  compileEndpoint(KUN_ATTACHMENT_TEMPLATE, ['GET']),
-  compileEndpoint(KUN_ATTACHMENT_CONTENT_TEMPLATE, ['GET']),
-  compileEndpoint(KUN_MEMORY_TEMPLATE, ['GET', 'POST']),
-  compileEndpoint(KUN_MEMORY_DIAGNOSTICS_TEMPLATE, ['GET']),
-  compileEndpoint(KUN_MEMORY_RECORD_TEMPLATE, ['PATCH', 'DELETE']),
-  compileEndpoint(KUN_THREADS_TEMPLATE, ['GET', 'POST']),
-  compileEndpoint(KUN_THREAD_TEMPLATE, ['GET', 'PATCH', 'DELETE']),
-  compileEndpoint(KUN_THREAD_FORK_TEMPLATE, ['POST']),
-  compileEndpoint(KUN_THREAD_GOAL_TEMPLATE, ['GET', 'POST', 'DELETE']),
-  compileEndpoint(KUN_THREAD_TODOS_TEMPLATE, ['GET', 'POST', 'DELETE']),
-  compileEndpoint(KUN_THREAD_COMPACT_TEMPLATE, ['POST']),
-  compileEndpoint(KUN_THREAD_REVIEW_TEMPLATE, ['POST']),
-  compileEndpoint(KUN_THREAD_TURNS_TEMPLATE, ['POST']),
-  compileEndpoint(KUN_THREAD_STEER_TEMPLATE, ['POST']),
-  compileEndpoint(KUN_THREAD_INTERRUPT_TEMPLATE, ['POST']),
-  compileEndpoint(KUN_APPROVAL_TEMPLATE, ['POST']),
-  compileEndpoint(KUN_USER_INPUT_TEMPLATE, ['POST']),
-  compileEndpoint(KUN_SESSION_RESUME_TEMPLATE, ['POST']),
-  compileEndpoint(KUN_USAGE_TEMPLATE, ['GET'])
+  compileEndpoint(LEGALWORK_HEALTH_TEMPLATE, ['GET']),
+  compileEndpoint(LEGALWORK_RUNTIME_INFO_TEMPLATE, ['GET']),
+  compileEndpoint(LEGALWORK_RUNTIME_TOOLS_TEMPLATE, ['GET']),
+  compileEndpoint(LEGALWORK_SKILLS_TEMPLATE, ['GET']),
+  compileEndpoint(LEGALWORK_ATTACHMENTS_TEMPLATE, ['POST']),
+  compileEndpoint(LEGALWORK_ATTACHMENT_DIAGNOSTICS_TEMPLATE, ['GET']),
+  compileEndpoint(LEGALWORK_ATTACHMENT_TEMPLATE, ['GET']),
+  compileEndpoint(LEGALWORK_ATTACHMENT_CONTENT_TEMPLATE, ['GET']),
+  compileEndpoint(LEGALWORK_MEMORY_TEMPLATE, ['GET', 'POST']),
+  compileEndpoint(LEGALWORK_MEMORY_DIAGNOSTICS_TEMPLATE, ['GET']),
+  compileEndpoint(LEGALWORK_MEMORY_RECORD_TEMPLATE, ['PATCH', 'DELETE']),
+  compileEndpoint(LEGALWORK_KNOWLEDGE_SYNC_TEMPLATE, ['POST']),
+  compileEndpoint(LEGALWORK_KNOWLEDGE_SEARCH_TEMPLATE, ['GET']),
+  compileEndpoint(LEGALWORK_KNOWLEDGE_AGENT_SOURCES_TEMPLATE, ['GET']),
+  compileEndpoint(LEGALWORK_KNOWLEDGE_DIAGNOSTICS_TEMPLATE, ['GET']),
+  compileEndpoint(LEGALWORK_KNOWLEDGE_TREE_TEMPLATE, ['GET']),
+  compileEndpoint(LEGALWORK_KNOWLEDGE_CREATE_FOLDER_TEMPLATE, ['POST']),
+  compileEndpoint(LEGALWORK_KNOWLEDGE_WRITE_FILE_TEMPLATE, ['POST']),
+  compileEndpoint(LEGALWORK_KNOWLEDGE_READ_FILE_TEMPLATE, ['GET']),
+  compileEndpoint(LEGALWORK_KNOWLEDGE_EXTRACT_TEXT_TEMPLATE, ['GET']),
+  compileEndpoint(LEGALWORK_KNOWLEDGE_ABSOLUTE_PATH_TEMPLATE, ['GET']),
+  compileEndpoint(LEGALWORK_KNOWLEDGE_MOVE_TEMPLATE, ['POST']),
+  compileEndpoint(LEGALWORK_KNOWLEDGE_DELETE_FILE_TEMPLATE, ['DELETE']),
+  compileEndpoint(LEGALWORK_THREADS_TEMPLATE, ['GET', 'POST']),
+  compileEndpoint(LEGALWORK_THREAD_TEMPLATE, ['GET', 'PATCH', 'DELETE']),
+  compileEndpoint(LEGALWORK_THREAD_FORK_TEMPLATE, ['POST']),
+  compileEndpoint(LEGALWORK_THREAD_GOAL_TEMPLATE, ['GET', 'POST', 'DELETE']),
+  compileEndpoint(LEGALWORK_THREAD_TODOS_TEMPLATE, ['GET', 'POST', 'DELETE']),
+  compileEndpoint(LEGALWORK_THREAD_COMPACT_TEMPLATE, ['POST']),
+  compileEndpoint(LEGALWORK_THREAD_REVIEW_TEMPLATE, ['POST']),
+  compileEndpoint(LEGALWORK_THREAD_TURNS_TEMPLATE, ['POST']),
+  compileEndpoint(LEGALWORK_THREAD_TURN_TEMPLATE, ['GET']),
+  compileEndpoint(LEGALWORK_THREAD_STEER_TEMPLATE, ['POST']),
+  compileEndpoint(LEGALWORK_THREAD_INTERRUPT_TEMPLATE, ['POST']),
+  compileEndpoint(LEGALWORK_APPROVAL_TEMPLATE, ['POST']),
+  compileEndpoint(LEGALWORK_USER_INPUT_TEMPLATE, ['POST']),
+  compileEndpoint(LEGALWORK_SESSION_RESUME_TEMPLATE, ['POST']),
+  compileEndpoint(LEGALWORK_USAGE_TEMPLATE, ['GET'])
 ]
 
 function isAllowedRuntimeRequest(value: { path: string; method?: string }): boolean {
@@ -129,7 +156,7 @@ function isAllowedRuntimeRequest(value: { path: string; method?: string }): bool
     const method = value.method ?? 'GET'
     for (const endpoint of ENDPOINTS) {
       if (endpoint.match(path)) {
-        return endpoint.allowedMethods.includes(method)
+        if (endpoint.allowedMethods.includes(method)) return true
       }
     }
     return false
@@ -151,19 +178,80 @@ export const runtimeRequestPayloadSchema = z
   })
   .strict()
 
+export const dataComplianceRequestPayloadSchema = z
+  .object({
+    path: trimmedString(MAX_URL_LENGTH).transform((value) =>
+      value.startsWith('/') ? value : `/${value}`
+    ),
+    method: z.enum(['GET', 'POST', 'DELETE']).optional(),
+    body: z.string().max(MAX_BODY_BYTES).optional()
+  })
+  .refine((payload) => {
+    const method = payload.method ?? 'GET'
+    try {
+      const url = new URL(payload.path, 'http://localhost')
+      const path = url.pathname
+      // 新主 runtime 路径
+      if (path === '/data-compliance/tasks') return method === 'GET' || method === 'POST'
+      if (path === '/data-compliance/environment') return method === 'GET'
+      if (/^\/data-compliance\/tasks\/[A-Za-z0-9_-]+$/.test(path)) return method === 'GET' || method === 'DELETE'
+      if (/^\/data-compliance\/tasks\/[A-Za-z0-9_-]+\/files\/[A-Za-z0-9_-]+$/.test(path)) return method === 'GET'
+      if (/^\/data-compliance\/tasks\/[A-Za-z0-9_-]+\/progress$/.test(path)) return method === 'GET'
+      // 旧 Flask 路径兼容映射
+      if (path === '/api/history') return method === 'GET'
+      if (/^\/api\/history\/[A-Za-z0-9_-]+$/.test(path)) return method === 'DELETE'
+      if (/^\/api\/result\/[A-Za-z0-9_-]+$/.test(path)) return method === 'GET'
+      if (/^\/api\/progress\/[A-Za-z0-9_-]+$/.test(path)) return method === 'GET'
+      if (/^\/api\/download\/[A-Za-z0-9_-]+\/[A-Za-z0-9_-]+$/.test(path)) return method === 'GET'
+      if (/^\/api\/desensitize\/download\/[A-Za-z0-9_-]+\/[A-Za-z0-9_-]+$/.test(path)) return method === 'GET'
+      if (/^\/api\/save-download\/[A-Za-z0-9_-]+\/[A-Za-z0-9_-]+$/.test(path)) return method === 'POST'
+      if (/^\/api\/desensitize\/save-download\/[A-Za-z0-9_-]+\/[A-Za-z0-9_-]+$/.test(path)) return method === 'POST'
+      if (/^\/api\/task\/[A-Za-z0-9_-]+\/(?:locations|preview-full|preview-document)$/.test(path)) return method === 'GET'
+      if (/^\/api\/task\/[A-Za-z0-9_-]+\/preview-page\/\d+$/.test(path)) return method === 'GET'
+      if (/^\/api\/task\/[A-Za-z0-9_-]+\/preview-file$/.test(path)) return method === 'GET'
+      return false
+    } catch {
+      return false
+    }
+  }, {
+    message: 'data compliance request path is not allowed'
+  })
+  .strict()
+
+export const dataComplianceSubmitPayloadSchema = z.object({
+  mode: z.enum(['review', 'desensitize']),
+  documentName: z.string().trim().max(500).optional(),
+  inputText: z.string().max(MAX_BODY_BYTES).optional(),
+  reviewType: z.enum(['document', 'code']).optional(),
+  outputDir: z.string().trim().max(2000).optional(),
+  outputFormat: z.enum(['md', 'docx', 'txt']).optional(),
+  file: z.object({
+    name: z.string().trim().min(1).max(500),
+    type: z.string().trim().max(200).optional(),
+    dataBase64: z.string().max(Math.ceil(MAX_DATA_COMPLIANCE_FILE_BYTES * 1.4))
+  }).strict().optional()
+}).strict().refine((payload) => Boolean(payload.file || payload.inputText?.trim()), {
+  message: 'file or input text is required'
+})
+
+export const dataComplianceDownloadFilePayloadSchema = z.object({
+  taskId: z.string().trim().min(1).max(64),
+  fileKey: z.string().trim().min(1).max(100)
+}).strict()
+
 const localeSchema = z.enum(['en', 'zh'])
 const themeSchema = z.enum(['system', 'light', 'dark'])
 const uiFontScaleSchema = z.enum(['small', 'medium', 'large'])
 const approvalPolicySchema = z.enum(['on-request', 'untrusted', 'never', 'auto', 'suggest'])
 const sandboxModeSchema = z.enum(['read-only', 'workspace-write', 'danger-full-access', 'external-sandbox'])
 const mcpSearchModeSchema = z.enum(['direct', 'search', 'auto'])
-const kunStorageBackendSchema = z.enum(['hybrid', 'file'])
-const kunCompactionSummaryModeSchema = z.enum(['heuristic', 'model'])
+const legalworkStorageBackendSchema = z.enum(['hybrid', 'file'])
+const legalworkCompactionSummaryModeSchema = z.enum(['heuristic', 'model'])
 const clawRunModeSchema = z.enum(['agent', 'plan'])
 const clawImProviderSchema = z.enum(['feishu', 'weixin'])
 const clawScheduleKindSchema = z.enum(['manual', 'interval', 'daily', 'at'])
 const clawTaskStatusSchema = z.enum(['idle', 'running', 'success', 'error'])
-const clawModelSchema = z.enum(CLAW_MODEL_IDS)
+const clawModelSchema = z.union([z.enum(CLAW_MODEL_IDS), trimmedString(128)])
 const scheduleReasoningEffortSchema = z.enum(SCHEDULE_REASONING_EFFORT_IDS)
 const writeInlineCompletionModelSchema = z.union([
   z.enum(WRITE_INLINE_COMPLETION_MODEL_IDS),
@@ -182,12 +270,13 @@ const modelProviderPatchSchema = z.object({
   }).strict()).max(50).optional()
 }).strict()
 
-const kunRuntimePatchSchema = z.object({
+const legalworkRuntimePatchSchema = z.object({
   binaryPath: defaultPathSchema,
   port: z.number().int().min(1).max(65_535).optional(),
   autoStart: z.boolean().optional(),
   apiKey: z.string().max(MAX_BODY_BYTES).optional(),
   baseUrl: z.string().trim().max(MAX_URL_LENGTH).optional(),
+  endpointFormat: z.string().trim().max(64).optional(),
   providerId: z.string().trim().max(64).optional(),
   runtimeToken: z.string().max(MAX_BODY_BYTES).optional(),
   dataDir: defaultPathSchema,
@@ -219,13 +308,13 @@ const kunRuntimePatchSchema = z.object({
     minScore: z.number().nonnegative().optional()
   }).strict().optional(),
   storage: z.object({
-    backend: kunStorageBackendSchema.optional(),
+    backend: legalworkStorageBackendSchema.optional(),
     sqlitePath: defaultPathSchema
   }).strict().optional(),
   contextCompaction: z.object({
     defaultSoftThreshold: z.number().int().positive().optional(),
     defaultHardThreshold: z.number().int().positive().optional(),
-    summaryMode: kunCompactionSummaryModeSchema.optional(),
+    summaryMode: legalworkCompactionSummaryModeSchema.optional(),
     summaryTimeoutMs: z.number().int().positive().max(120_000).optional(),
     summaryMaxTokens: z.number().int().positive().max(16_000).optional(),
     summaryInputMaxBytes: z.number().int().positive().max(8 * 1024 * 1024).optional()
@@ -485,7 +574,7 @@ const settingsPatchObjectSchema = z.object({
   uiFontScale: uiFontScaleSchema.optional(),
   provider: modelProviderPatchSchema.optional(),
   agents: z.object({
-    kun: kunRuntimePatchSchema.optional()
+    legalwork: legalworkRuntimePatchSchema.optional()
   }).strict().optional(),
   workspaceRoot: defaultPathSchema,
   log: logPatchSchema.optional(),
@@ -721,6 +810,10 @@ export const shellOpenExternalUrlSchema = trimmedString(MAX_URL_LENGTH).refine(
   { message: 'Only http, https, and mailto URLs are allowed.' }
 )
 
+export const knowledgeOpenFilePayloadSchema = z.object({
+  path: trimmedString(MAX_PATH_LENGTH)
+}).strict()
+
 export const notificationPayloadSchema = z
   .object({
     threadId: optionalTrimmedString(MAX_ID_LENGTH),
@@ -783,4 +876,108 @@ export const sseStartPayloadSchema = z
   })
   .strict()
 
+export const documentGenerationPayloadSchema = z
+  .object({
+    templateName: z.string().min(1).max(200),
+    templateDescription: z.string().max(2000),
+    templateContent: z.string().max(50_000),
+    fields: z
+      .array(
+        z.object({
+          id: z.string().max(200),
+          label: z.string().max(200),
+          type: z.string().max(50),
+          value: z.string().max(10_000),
+          required: z.boolean().optional()
+        })
+      )
+      .max(200),
+    legalBasis: z.array(z.string().max(1000)).max(50).optional()
+  })
+  .strict()
+
 export const streamIdSchema = trimmedString(MAX_ID_LENGTH)
+
+export const userTemplateSchema = z
+  .object({
+    id: z.string().min(1).max(200),
+    name: z.string().min(1).max(200),
+    description: z.string().max(2000),
+    category: z.literal('custom'),
+    content: z.string().max(50_000),
+    fields: z
+      .array(
+        z.object({
+          id: z.string().min(1).max(200),
+          label: z.string().min(1).max(200),
+          type: z.enum(['text', 'textarea', 'date', 'select', 'array']),
+          placeholder: z.string().max(1000).optional(),
+          options: z.array(z.string().max(200)).max(100).optional(),
+          required: z.boolean().optional()
+        })
+      )
+      .max(200),
+    legalBasis: z.array(z.string().max(1000)).max(50).optional(),
+    sourceFile: z.string().max(1000).optional(),
+    createdAt: z.string(),
+    updatedAt: z.string()
+  })
+  .strict()
+
+export const templateLearningRequestSchema = z
+  .object({
+    fileContent: z.string().min(1).max(100_000),
+    fileName: z.string().min(1).max(500),
+    suggestedName: z.string().max(200).optional()
+  })
+  .strict()
+
+export const templateGenerateWithMaterialsRequestSchema = z
+  .object({
+    template: z.object({
+      id: z.string().max(200).optional(),
+      name: z.string().min(1).max(200),
+      description: z.string().max(2000),
+      content: z.string().min(1).max(50_000),
+      fields: z
+        .array(
+          z.object({
+            id: z.string().min(1).max(200),
+            label: z.string().min(1).max(200),
+            type: z.enum(['text', 'textarea', 'date', 'select', 'array']),
+            placeholder: z.string().max(1000).optional(),
+            options: z.array(z.string().max(200)).max(100).optional(),
+            required: z.boolean().optional()
+          })
+        )
+        .max(200),
+      legalBasis: z.array(z.string().max(1000)).max(50).optional()
+    }),
+    fieldValues: z.record(z.string(), z.string().max(50_000)),
+    materials: z
+      .array(
+        z.object({
+          fileName: z.string().max(500),
+          content: z.string().max(100_000)
+        })
+      )
+      .max(20)
+      .optional(),
+    instructions: z.string().max(5000).optional()
+  })
+  .strict()
+
+export const documentHistoryRecordSchema = z
+  .object({
+    id: z.string().min(1).max(200),
+    templateName: z.string().min(1).max(200),
+    templateCategory: z.string().max(50),
+    templateSource: z.enum(['builtin', 'custom']),
+    fieldValues: z.record(z.string(), z.string().max(50_000)),
+    materialFileNames: z.array(z.string().max(500)).max(50),
+    instructions: z.string().max(10_000),
+    generatedContent: z.string().min(1).max(200_000),
+    model: z.string().max(200).optional(),
+    createdAt: z.string()
+  })
+  .strict()

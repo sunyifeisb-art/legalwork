@@ -1,0 +1,286 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - button "跳至内容" [ref=e3] [cursor=pointer]:
+      - generic [ref=e5]: 跳至内容
+    - button "辅助功能反馈" [ref=e6] [cursor=pointer]:
+      - generic [ref=e8]: 辅助功能反馈
+    - generic [ref=e9]:
+      - link "返回到必应搜索" [ref=e10] [cursor=pointer]:
+        - /url: /?FORM=Z9FD1
+        - heading "返回到必应搜索" [level=1] [ref=e11]
+      - search [ref=e12]:
+        - button "搜索" [ref=e15] [cursor=pointer]
+        - searchbox "在此处输入你的搜索 — 输入时会显示搜索建议" [ref=e16]: 行政协议 政府违约 赔偿 律师实务 救济途径
+        - button "语音搜索" [ref=e20] [cursor=pointer]
+        - button "使用图像搜索" [ref=e23] [cursor=pointer]
+    - complementary "帐户奖励和偏好设置" [ref=e25]:
+      - button "Microsoft Rewards" [ref=e26] [cursor=pointer]:
+        - generic [ref=e28]:
+          - generic [ref=e29]: Rewards
+          - img [ref=e31]
+      - link "登录" [ref=e43] [cursor=pointer]:
+        - /url: javascript:void(0)
+        - generic "登录" [ref=e44]
+    - navigation "主菜单" [ref=e45]:
+      - list [ref=e46]:
+        - listitem [ref=e47]:
+          - link "全部" [ref=e48] [cursor=pointer]:
+            - /url: /?scope=web&FORM=HDRSC1
+        - listitem [ref=e49]:
+          - link "搜索" [ref=e50] [cursor=pointer]:
+            - /url: /copilotsearch?q=%e8%a1%8c%e6%94%bf%e5%8d%8f%e8%ae%ae+%e6%94%bf%e5%ba%9c%e8%bf%9d%e7%ba%a6+%e8%b5%94%e5%81%bf+%e5%be%8b%e5%b8%88%e5%ae%9e%e5%8a%a1+%e6%95%91%e6%b5%8e%e9%80%94%e5%be%84&FORM=CSSCOP
+            - img [ref=e51]
+            - text: 搜索
+        - listitem [ref=e53]:
+          - link "图片" [ref=e54] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=1dace06c57fa976cb3f2c472d668ea6bbeb51efddd08c545295651f184b1a2b3JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L2ltYWdlcy9zZWFyY2g_cT0lZTglYTElOGMlZTYlOTQlYmYlZTUlOGQlOGYlZTglYWUlYWUrJWU2JTk0JWJmJWU1JWJhJTljJWU4JWJmJTlkJWU3JWJhJWE2KyVlOCViNSU5NCVlNSU4MSViZislZTUlYmUlOGIlZTUlYjglODglZTUlYWUlOWUlZTUlOGElYTErJWU2JTk1JTkxJWU2JWI1JThlJWU5JTgwJTk0JWU1JWJlJTg0JkZPUk09SERSU0Mz&ntb=1
+        - listitem [ref=e55]:
+          - link "视频" [ref=e56] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=6eee5b8cdb91abf5cedfec67cfd0818c6e0be63467d501aabd9fda83cc0f01f2JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3ZpZGVvcy9zZWFyY2g_cT0lZTglYTElOGMlZTYlOTQlYmYlZTUlOGQlOGYlZTglYWUlYWUrJWU2JTk0JWJmJWU1JWJhJTljJWU4JWJmJTlkJWU3JWJhJWE2KyVlOCViNSU5NCVlNSU4MSViZislZTUlYmUlOGIlZTUlYjglODglZTUlYWUlOWUlZTUlOGElYTErJWU2JTk1JTkxJWU2JWI1JThlJWU5JTgwJTk0JWU1JWJlJTg0JkZPUk09SERSU0M0&ntb=1
+        - listitem [ref=e57]:
+          - link "地图" [ref=e58] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=95ddb0fcd67ff83e3b265788980503a6e708d9db08004933bdcb41cb2463811bJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L21hcHM_cT0lZTglYTElOGMlZTYlOTQlYmYlZTUlOGQlOGYlZTglYWUlYWUrJWU2JTk0JWJmJWU1JWJhJTljJWU4JWJmJTlkJWU3JWJhJWE2KyVlOCViNSU5NCVlNSU4MSViZislZTUlYmUlOGIlZTUlYjglODglZTUlYWUlOWUlZTUlOGElYTErJWU2JTk1JTkxJWU2JWI1JThlJWU5JTgwJTk0JWU1JWJlJTg0JkZPUk09SERSU0M2&ntb=1
+        - listitem [ref=e59]:
+          - link "资讯" [ref=e60] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=c535a765ee1f4a6e2f70283baf9b98903c5b54d60b35738e74f257027106a7e8JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L25ld3Mvc2VhcmNoP3E9JWU4JWExJThjJWU2JTk0JWJmJWU1JThkJThmJWU4JWFlJWFlKyVlNiU5NCViZiVlNSViYSU5YyVlOCViZiU5ZCVlNyViYSVhNislZTglYjUlOTQlZTUlODElYmYrJWU1JWJlJThiJWU1JWI4JTg4JWU1JWFlJTllJWU1JThhJWExKyVlNiU5NSU5MSVlNiViNSU4ZSVlOSU4MCU5NCVlNSViZSU4NCZGT1JNPUhEUlNDNw&ntb=1
+        - listitem [ref=e61]:
+          - link "Copilot" [ref=e62] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=e26f4a4720cf0965fc31bd52188d55bd41665f55598755b5ab08743b452b04f6JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L2NoYXQ_cHJvbXB0PSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSslZTYlOTQlYmYlZTUlYmElOWMlZTglYmYlOWQlZTclYmElYTYrJWU4JWI1JTk0JWU1JTgxJWJmKyVlNSViZSU4YiVlNSViOCU4OCVlNSVhZSU5ZSVlNSU4YSVhMSslZTYlOTUlOTElZTYlYjUlOGUlZTklODAlOTQlZTUlYmUlODQmc2VuZHF1ZXJ5PTEmRk9STT1TQ0NPRFg&ntb=1
+        - listitem [ref=e63]:
+          - button "更多" [ref=e64] [cursor=pointer]:
+            - img [ref=e66]
+            - text: 更多
+  - generic [ref=e68]:
+    - main "搜索结果" [ref=e69]:
+      - list [ref=e70]:
+        - listitem [ref=e71]:
+          - generic [ref=e75]:
+            - generic [ref=e77]:
+              - button "喜欢" [ref=e78]:
+                - img [ref=e79]
+              - button "不喜欢" [ref=e81]:
+                - img [ref=e82]
+            - tooltip "AI 免责声明" [ref=e84]:
+              - img [ref=e85]
+        - listitem [ref=e109]:
+          - link "知乎专栏" [ref=e111] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=0297bb0af2eae25dcef8f311716381c02d3ac3f2ded0b906c5246a75eb395be0JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly96aHVhbmxhbi56aGlodS5jb20vcC82NTQ1NDU0NDY&ntb=1
+            - generic [ref=e116]:
+              - generic [ref=e117]: 知乎专栏
+              - generic [ref=e120]: https://zhuanlan.zhihu.com
+          - heading "行政协议违约责任的赔偿标准及承担方式 - 知乎专栏" [level=2] [ref=e121]:
+            - link "行政协议违约责任的赔偿标准及承担方式 - 知乎专栏" [ref=e122] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=0297bb0af2eae25dcef8f311716381c02d3ac3f2ded0b906c5246a75eb395be0JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly96aHVhbmxhbi56aGlodS5jb20vcC82NTQ1NDU0NDY&ntb=1
+          - generic [ref=e125]:
+            - generic [ref=e127]:
+              - link "概览" [ref=e128] [cursor=pointer]:
+                - /url: https://www.bing.com/ck/a?!&&p=5560da316b6c7630b8d1aeca06b0ad34142efd38837ff9b743acc9d15ce89404JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly96aHVhbmxhbi56aGlodS5jb20vcC82NTQ1NDU0NDYjOn46dGV4dD3mnKzmlofkuLvml6jvvJrooYzmlL_ljY_orq7mnKrnuqblrprov53nuqbotKPku7vmmK_lkKbpnIDmib8&ntb=1
+              - generic [ref=e130]:
+                - generic [ref=e131]:
+                  - heading "概览" [level=2] [ref=e132]
+                  - img [ref=e135]
+                - paragraph [ref=e137]:
+                  - text: 本文主旨：行政协议未约定违约责任是否需承担违约赔偿责任？违约责任赔偿的标准是怎么样的？
+                  - text: 行政机关与行政相对人签订合同后，未履行或未全面履行约定义务即构成违约，应当承担违约责任，人民法院可以依据行政诉 …
+            - generic [ref=e139]:
+              - link "经典案例回顾：齐某诉黑龙江省大兴安岭地区某区人民政府未按照约定期限履行义务一案。" [ref=e140] [cursor=pointer]:
+                - /url: https://www.bing.com/ck/a?!&&p=bb234b48dbb0e5f2fd02d00621a02aaec10eb26ee6b79799028b654ca8a4e153JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly96aHVhbmxhbi56aGlodS5jb20vcC82NTQ1NDU0NDYjOn46dGV4dD0yMDAw5bm05Li65L-u5bu66Zi_5Yqg5YWs6Lev5Y-K6KW_5bCP5rKz5bel56iL6aG555uu&ntb=1
+              - generic [ref=e142]:
+                - generic [ref=e143]:
+                  - heading "经典案例回顾：齐某诉黑龙江省大兴安岭地区某区人民政府未按照约定期限履行义务一案。" [level=2] [ref=e144]
+                  - img [ref=e147]
+                - paragraph [ref=e149]:
+                  - text: 2000年为修建阿加公路及西小河工程项目，某区政府对齐某厂房590平米进行动迁，但未予以安置补偿。
+                  - text: 2014年10月23日，加格达奇地区城市建设办公室委托黑龙江某房地产估价公司对590平方米厂房进行估价，评估值3218450元。
+            - generic [ref=e151]:
+              - link "违约责任赔偿标准的认定：" [ref=e152] [cursor=pointer]:
+                - /url: https://www.bing.com/ck/a?!&&p=407481943872646d599c3bf0832d5333560c9af96b100b2fad8c12915821b104JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly96aHVhbmxhbi56aGlodS5jb20vcC82NTQ1NDU0NDYjOn46dGV4dD3lpoLmnpzljY_orq7kuK3mnInnuqblrprvvIzlupTmjInnhafnuqblrprnmoTmoIflh4borqHnrpfjgII&ntb=1
+              - generic [ref=e154]:
+                - generic [ref=e155]:
+                  - heading "违约责任赔偿标准的认定：" [level=2] [ref=e156]
+                  - img [ref=e159]
+                - paragraph [ref=e161]: 如果协议中有约定，应按照约定的标准计算。如果没有约定，原则上应当适用事民法律规范的规定。对于违约责任的赔偿范围，既包括直接损失，也包括可得利益损失。
+            - generic [ref=e163]:
+              - link "可得利益损失额认定四原则及计算公式：" [ref=e164] [cursor=pointer]:
+                - /url: https://www.bing.com/ck/a?!&&p=1f144cb27ad8694fee0ceb89d04d4d67a61eaef87267e06242ce19b687f5228aJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly96aHVhbmxhbi56aGlodS5jb20vcC82NTQ1NDU0NDYjOn46dGV4dD3orqHnrpflhazlvI_vvJrlj6_lvpfliKnnm4rmjZ_lpLHotZTlgb_pop095Y-v5b6X5Yip55uK5o2f&ntb=1
+              - generic [ref=e166]:
+                - generic [ref=e167]:
+                  - heading "可得利益损失额认定四原则及计算公式：" [level=2] [ref=e168]
+                  - img [ref=e171]
+                - paragraph [ref=e173]:
+                  - text: 计算公式：可得利益损失赔偿额=可得利益损失总额—行政机关不可预见的损失—因行政相对人未采取恰当措施扩大的损失—相对人因违约获得的利益及免于支付的费用—相对人为获得可得利益所支付必要的成本
+                  - text: 一是可预见规则：合同法规定规定了违约 …
+        - listitem [ref=e174]:
+          - link "baidu.com" [ref=e176] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=97bcf4cc1b56c339b444c5f760f4057e51746ea15a5322042e688d30b1ec0d40JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly9haWxlZ2FsLmJhaWR1LmNvbS9sZWdhbGFydGljbGUvcWFkZXRhaWw_aWQ9MDAyNzkxZTBiOWQ1MzYyNTAzMjk&ntb=1
+            - generic [ref=e181]:
+              - generic [ref=e182]: baidu.com
+              - generic [ref=e185]: https://ailegal.baidu.com › legalarticle › qadetail
+          - heading "行政协议相对人违约的救济 - ailegal.baidu.com" [level=2] [ref=e186]:
+            - link "行政协议相对人违约的救济 - ailegal.baidu.com" [ref=e187] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=97bcf4cc1b56c339b444c5f760f4057e51746ea15a5322042e688d30b1ec0d40JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly9haWxlZ2FsLmJhaWR1LmNvbS9sZWdhbGFydGljbGUvcWFkZXRhaWw_aWQ9MDAyNzkxZTBiOWQ1MzYyNTAzMjk&ntb=1
+          - paragraph [ref=e189]: 2026年5月6日 · <p>进一步地，《中华人民共和国民法典》第五百八十五条规定了违约金的支付与调整机制。 行政协议的双方可以约定一方违约时应当根据违约情况向对方支付一定数额的违约金，也可以 …
+        - listitem [ref=e190]:
+          - link "澎湃新闻" [ref=e192] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=1a98917b8be13dd936ec0e0d67802fff91a6c3b0500787b13c37445ce0b933aaJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly9tLnRoZXBhcGVyLmNuL2JhaWppYWhhb18yMzE4NTE1NQ&ntb=1
+            - generic [ref=e197]:
+              - generic [ref=e198]: 澎湃新闻
+              - generic [ref=e201]: https://m.thepaper.cn
+          - heading "行政协议案件中，行政机关如何承担违约责任？" [level=2] [ref=e202]:
+            - link "行政协议案件中，行政机关如何承担违约责任？" [ref=e203] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=1a98917b8be13dd936ec0e0d67802fff91a6c3b0500787b13c37445ce0b933aaJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly9tLnRoZXBhcGVyLmNuL2JhaWppYWhhb18yMzE4NTE1NQ&ntb=1
+          - paragraph [ref=e205]: 2023年5月22日 · 这主要是考虑： 第一，实践中，一些行政机关认为即使不履行行政协议，所引发的违约赔偿也是按照国家赔偿标准，仅对直接损失进行赔偿，因而随意变更、解除协议或者不履行行政协议 …
+        - listitem [ref=e206]:
+          - link "搜狐" [ref=e208] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=a79c8db55ea4d8c50c7113be437173c6ae0877ca0906ee8e4f9be1e12a46c635JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly93d3cuc29odS5jb20vYS81MTYxMTI4NjVfMTAwMDk4NTc4&ntb=1
+            - generic [ref=e213]:
+              - generic [ref=e214]: 搜狐
+              - generic [ref=e217]: https://www.sohu.com
+          - heading "最高法案例 ：行政协议违约责任的赔偿标准及承担方式" [level=2] [ref=e218]:
+            - link "最高法案例 ：行政协议违约责任的赔偿标准及承担方式" [ref=e219] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=a79c8db55ea4d8c50c7113be437173c6ae0877ca0906ee8e4f9be1e12a46c635JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly93d3cuc29odS5jb20vYS81MTYxMTI4NjVfMTAwMDk4NTc4&ntb=1
+          - paragraph [ref=e221]: 2022年1月12日 · 依据上述规定， 人民法院应当在查明案件事实的基础上，依法判令加区政府承担逾期安置期间的违约赔偿责任。 原审法院认定加区政府不承担违约责任，系适用法律错误，结论显有不 …
+        - listitem [ref=e222]:
+          - link "shengtinglaw.com" [ref=e224] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=5b139737522310f2b7b56080980a768cb45eae9c5a3e5cddfdf42315d286876fJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly9zaGVuZ3RpbmdsYXcuY29tL3poaWt1LXhpYW5ncWluZy00ODg5Lmh0bWw&ntb=1
+            - generic [ref=e229]:
+              - generic [ref=e230]: shengtinglaw.com
+              - generic [ref=e233]: https://shengtinglaw.com
+          - heading "最高法案例：行政机关不履行行政协议，导致直接损失和间接损失都要 …" [level=2] [ref=e234]:
+            - link "最高法案例：行政机关不履行行政协议，导致直接损失和间接损失都要 …":
+              - /url: https://www.bing.com/ck/a?!&&p=5b139737522310f2b7b56080980a768cb45eae9c5a3e5cddfdf42315d286876fJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly9zaGVuZ3RpbmdsYXcuY29tL3poaWt1LXhpYW5ncWluZy00ODg5Lmh0bWw&ntb=1
+          - paragraph [ref=e236]: 2021年11月15日 · 因此，人民法院应予支持。 另外，2020年1月1日起正式施行的《最高人民法院关于审理行政协议案件若干问题的规定》中也明确了，行政机关违约的，应当充分赔偿当事人的实际损失。 …
+        - listitem [ref=e237]:
+          - link "今日头条" [ref=e239] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=405e7d43a6fb3b38858dd5942f62f2ca850c9216a239113613d1efabe659e9feJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly93d3cudG91dGlhby5jb20vYXJ0aWNsZS83NjAwNjM4MjcyNjMyNjM1OTU4Lw&ntb=1
+            - generic [ref=e244]:
+              - generic [ref=e245]: 今日头条
+              - generic [ref=e248]: https://www.toutiao.com › article
+          - heading "行政协议非诉执行实务指南：从最高院典型案例到操作要点解析" [level=2] [ref=e249]:
+            - link "行政协议非诉执行实务指南：从最高院典型案例到操作要点解析":
+              - /url: https://www.bing.com/ck/a?!&&p=405e7d43a6fb3b38858dd5942f62f2ca850c9216a239113613d1efabe659e9feJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly93d3cudG91dGlhby5jb20vYXJ0aWNsZS83NjAwNjM4MjcyNjMyNjM1OTU4Lw&ntb=1
+          - paragraph [ref=e251]: 2026年1月29日 · 通过听证程序，行政相对人获得了充分表达意见的权利，相对削弱了行政机关的强势地位。 3.事后救济权利为主 被执行人获得国家赔偿、申请再审和抗诉的权利都属于事后救济权利，且 …
+        - listitem [ref=e252]:
+          - link "新浪" [ref=e254] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=3f1f4da4b735ecda2dbcaac584b535119a0d318fc7c772b014b3cd2df22486deJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly9rLnNpbmEuY29tLmNuL2FydGljbGVfMzU0NDY4ODA1NV9kMzQ3YTViNzAwMTAxNXY0MS5odG1s&ntb=1
+            - generic [ref=e259]:
+              - generic [ref=e260]: 新浪
+              - generic [ref=e263]: https://k.sina.com.cn
+          - heading "最高法院案例：行政协议违约责任的赔偿标准及承担方式|行政机关|加 …" [level=2] [ref=e264]:
+            - link "最高法院案例：行政协议违约责任的赔偿标准及承担方式|行政机关|加 …":
+              - /url: https://www.bing.com/ck/a?!&&p=3f1f4da4b735ecda2dbcaac584b535119a0d318fc7c772b014b3cd2df22486deJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly9rLnNpbmEuY29tLmNuL2FydGljbGVfMzU0NDY4ODA1NV9kMzQ3YTViNzAwMTAxNXY0MS5odG1s&ntb=1
+          - paragraph [ref=e266]: 2021年12月20日 · 对于加区政府需要承担的违约赔偿责任的计算，需要原审法院结合本案原告的诉讼请求进一步查清有关事实并作出认定。 综上，齐国、齐吉的再审申请符合《中华人民共和国行政诉讼法 …
+        - listitem [ref=e267]:
+          - link "华律网" [ref=e269] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=2de6548adbd1eec9cd0f601f518772c6bd9a2312c961488d8b8c4a8263bc5e55JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly93d3cuNjZsYXcuY24vbGF3cy8yMDYwMjAuYXNweA&ntb=1
+            - generic [ref=e274]:
+              - generic [ref=e275]: 华律网
+              - generic [ref=e278]: https://www.66law.cn › laws
+          - heading "行政机关不履行行政协议造成损失，该怎样赔偿-法律知识|华律网" [level=2] [ref=e279]:
+            - link "行政机关不履行行政协议造成损失，该怎样赔偿-法律知识|华律网":
+              - /url: https://www.bing.com/ck/a?!&&p=2de6548adbd1eec9cd0f601f518772c6bd9a2312c961488d8b8c4a8263bc5e55JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly93d3cuNjZsYXcuY24vbGF3cy8yMDYwMjAuYXNweA&ntb=1
+          - paragraph [ref=e281]: 如果行政机关不履行行政协议造成损失，行政相对人是可以向人民法院提起行政诉讼的，人民法院需要根据行政相对人的损失确定赔偿数额。 法院在审理行政协议案件中，在实体法方面，应当优先适用有 …
+        - listitem [ref=e282]:
+          - link "yuanrenlaw.com" [ref=e284] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=90673cf8d3048c7abfc9afa8952b7c8b9d381ddeb5526968138038babd12e902JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly93d3cueXVhbnJlbmxhdy5jb20vY24vZGV0YWlscy8wNS9jOTRhM2YyYzc3YzA3MWRm&ntb=1
+            - generic [ref=e289]:
+              - generic [ref=e290]: yuanrenlaw.com
+              - generic [ref=e293]: https://www.yuanrenlaw.com › cn › details
+          - heading "政府与公共法律服务 | 行政相对方不履行行政协议时行政机关救济路径 …" [level=2] [ref=e294]:
+            - link "政府与公共法律服务 | 行政相对方不履行行政协议时行政机关救济路径 …":
+              - /url: https://www.bing.com/ck/a?!&&p=90673cf8d3048c7abfc9afa8952b7c8b9d381ddeb5526968138038babd12e902JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly93d3cueXVhbnJlbmxhdy5jb20vY24vZGV0YWlscy8wNS9jOTRhM2YyYzc3YzA3MWRm&ntb=1
+          - paragraph [ref=e296]: 2023年7月4日 · 《中华人民共和国行政诉讼法》第十二条将行政机关不依法履行、未按约定履行或者违法变更、解除政府特许经营协议、土地房屋征收补偿协议等情形列入当事人提起行政诉讼的范畴。
+        - listitem [ref=e297]:
+          - link "网易" [ref=e299] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=8d21a11712f3485708ba84511ddd87147084bab759656aa6484e239866dc986aJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly93d3cuMTYzLmNvbS9keS9hcnRpY2xlL0swSjI2TzE5MDU1MU0yR0MuaHRtbA&ntb=1
+            - generic [ref=e304]:
+              - generic [ref=e305]: 网易
+              - generic [ref=e308]: https://www.163.com › dy › article
+          - heading "行政协议违约致损千万？法院如何认定行政机关全责|约定|赔偿|单方|违 …" [level=2] [ref=e309]:
+            - link "行政协议违约致损千万？法院如何认定行政机关全责|约定|赔偿|单方|违 …":
+              - /url: https://www.bing.com/ck/a?!&&p=8d21a11712f3485708ba84511ddd87147084bab759656aa6484e239866dc986aJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly93d3cuMTYzLmNvbS9keS9hcnRpY2xlL0swSjI2TzE5MDU1MU0yR0MuaHRtbA&ntb=1
+          - paragraph [ref=e311]: 法院认定行政机关构成根本违约，判赔1997万元。 本案的胜诉关键是以下几点：1. 优益权滥用，行政机关单方变更规划且未补偿。 法律焦点：行政协议虽赋予行政机关单方变更权（优益权），但行使须 …
+        - listitem [ref=e312]:
+          - generic [ref=e313]:
+            - heading "深入了解 行政协议 政府违约 赔偿 律师实务 救济途径" [level=2] [ref=e314]:
+              - text: 深入了解
+              - strong [ref=e315]: 行政协议 政府违约 赔偿 律师实务 救济途径
+            - list [ref=e316]:
+              - listitem [ref=e317]:
+                - link "加区政府违约赔偿计算" [ref=e318] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=138bceaec17967050d3bef7978003ab46bfb865015759e4c5f03a1755f6434cdJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlNSU4YSVhMCVlNSU4YyViYSVlNiU5NCViZiVlNSViYSU5YyVlOCViZiU5ZCVlNyViYSVhNiVlOCViNSU5NCVlNSU4MSViZiVlOCVhZSVhMSVlNyVhZSU5NyZGT1JNPVFTUkUx&ntb=1
+                  - strong [ref=e321]: 加区政府违约赔偿计算
+              - listitem [ref=e322]:
+                - link "行政协议违约责任怎么承担" [ref=e323] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=677003b436d4a75ec56797a2ab38200c74d9f42c2481ad0fa0ce66fa96f92ef4JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlOCViZiU5ZCVlNyViYSVhNiVlOCViNCVhMyVlNCViYiViYiVlNiU4MCU4ZSVlNCViOSU4OCVlNiU4OSViZiVlNiU4YiU4NSZGT1JNPVFTUkUy&ntb=1
+                  - strong [ref=e326]: 行政协议违约责任怎么承担
+              - listitem [ref=e327]:
+                - link "行政协议违约责任案例" [ref=e328] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=d1740d5af689d3932e5a0635c05cde899469f35c1bc6ba12f72b1501ddb143e4JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlOCViZiU5ZCVlNyViYSVhNiVlOCViNCVhMyVlNCViYiViYiVlNiVhMSU4OCVlNCViZSU4YiZGT1JNPVFTUkUz&ntb=1
+                  - strong [ref=e331]: 行政协议违约责任案例
+              - listitem [ref=e332]:
+                - link "行政协议违约的法律规定" [ref=e333] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=9c5f7692a86b8cbc8c0c4fa14841fc5d7e93f2c0734f631dc639dfbdcf8bafd2JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlOCViZiU5ZCVlNyViYSVhNiVlNyU5YSU4NCVlNiViMyU5NSVlNSViZSU4YiVlOCVhNyU4NCVlNSVhZSU5YSZGT1JNPVFTUkU0&ntb=1
+                  - strong [ref=e336]: 行政协议违约的法律规定
+              - listitem [ref=e337]:
+                - link "行政合同违约责任案例" [ref=e338] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=fa85cf28f87d5a4bf0df180d81e5a40d9183471be018e8b70ef56c70147218f3JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSU5MCU4OCVlNSU5MCU4YyVlOCViZiU5ZCVlNyViYSVhNiVlOCViNCVhMyVlNCViYiViYiVlNiVhMSU4OCVlNCViZSU4YiZGT1JNPVFTUkU1&ntb=1
+                  - strong [ref=e341]: 行政合同违约责任案例
+              - listitem [ref=e342]:
+                - link "行政协议违约的司法解释" [ref=e343] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=9b84169f646758ccae9e7ee6b3c7013d597405065a658c5fd92ebf950d99e272JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlOCViZiU5ZCVlNyViYSVhNiVlNyU5YSU4NCVlNSU4ZiViOCVlNiViMyU5NSVlOCVhNyVhMyVlOSU4NyU4YSZGT1JNPVFTUkU2&ntb=1
+                  - strong [ref=e346]: 行政协议违约的司法解释
+              - listitem [ref=e347]:
+                - link "加区政府违约赔偿" [ref=e348] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=8cd66fcf4502c491c39f96a2a9c4ee7e2289c5609eb1b2f082e5dd37398e907cJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlNSU4YSVhMCVlNSU4YyViYSVlNiU5NCViZiVlNSViYSU5YyVlOCViZiU5ZCVlNyViYSVhNiVlOCViNSU5NCVlNSU4MSViZiZGT1JNPVFTUkU3&ntb=1
+                  - strong [ref=e351]: 加区政府违约赔偿
+              - listitem [ref=e352]:
+                - link "行政合同违约责任" [ref=e353] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=e705295090e93f985c16b818c9fd75ae7778e27a292ea3cee21d6509b1fc3d2fJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSU5MCU4OCVlNSU5MCU4YyVlOCViZiU5ZCVlNyViYSVhNiVlOCViNCVhMyVlNCViYiViYiZGT1JNPVFTUkU4&ntb=1
+                  - strong [ref=e356]: 行政合同违约责任
+        - listitem [ref=e357]:
+          - link "某些结果已被删除" [ref=e359] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=7ee39faff3db2c8896d70043c7abb33cfcefe9b2ef73d7fb947b5933a50ac272JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cDovL2dvLm1pY3Jvc29mdC5jb20vZndsaW5rLz9MaW5rSUQ9NjE3MzUw&ntb=1
+    - complementary "更多结果" [ref=e360]:
+      - list [ref=e361]:
+        - listitem [ref=e362]:
+          - generic "相关搜索" [ref=e363]:
+            - generic [ref=e365]:
+              - heading "深入了解 行政协议 政府违约 赔偿 律师实务 救济途径" [level=2] [ref=e367]:
+                - text: 深入了解
+                - strong [ref=e368]: 行政协议 政府违约 赔偿 律师实务 救济途径
+              - generic [ref=e369]:
+                - link "加区政府违约赔偿计算" [ref=e371] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=821216374ef86763abe9e4ac7aefaef2e619219bf60780cc74f119140317ae9fJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlNSU4YSVhMCVlNSU4YyViYSVlNiU5NCViZiVlNSViYSU5YyVlOCViZiU5ZCVlNyViYSVhNiVlOCViNSU5NCVlNSU4MSViZiVlOCVhZSVhMSVlNyVhZSU5NyZGT1JNPVI1RkQ&ntb=1
+                  - strong [ref=e374]: 加区政府违约赔偿计算
+                - link "行政协议违约责任怎么承担" [ref=e376] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=39754be0b54de94dbc0564bd416a3ec1e69042c20c763c3d1987a055b1ae7b37JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlOCViZiU5ZCVlNyViYSVhNiVlOCViNCVhMyVlNCViYiViYiVlNiU4MCU4ZSVlNCViOSU4OCVlNiU4OSViZiVlNiU4YiU4NSZGT1JNPVI1RkQx&ntb=1
+                  - strong [ref=e379]: 行政协议违约责任怎么承担
+                - link "行政协议违约责任案例" [ref=e381] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=4672a5c134690eafa66855299c2962f551b39fe721d06fcda3599444e9d9f8d4JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlOCViZiU5ZCVlNyViYSVhNiVlOCViNCVhMyVlNCViYiViYiVlNiVhMSU4OCVlNCViZSU4YiZGT1JNPVI1RkQy&ntb=1
+                  - strong [ref=e384]: 行政协议违约责任案例
+                - link "行政协议违约的法律规定" [ref=e386] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=6d680935f8943a1e8b16c69eaa3953ee0f98b5413205a2ab8e2caaffb0c4b6c3JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlOCViZiU5ZCVlNyViYSVhNiVlNyU5YSU4NCVlNiViMyU5NSVlNSViZSU4YiVlOCVhNyU4NCVlNSVhZSU5YSZGT1JNPVI1RkQz&ntb=1
+                  - strong [ref=e389]: 行政协议违约的法律规定
+                - link "行政合同违约责任案例" [ref=e391] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=0ebaecc20ebee4f53134eef1ebcda1e9ac5ec381f4e1053e1f81f024255193f9JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSU5MCU4OCVlNSU5MCU4YyVlOCViZiU5ZCVlNyViYSVhNiVlOCViNCVhMyVlNCViYiViYiVlNiVhMSU4OCVlNCViZSU4YiZGT1JNPVI1RkQ0&ntb=1
+                  - strong [ref=e394]: 行政合同违约责任案例
+                - link "行政协议违约的司法解释" [ref=e396] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=28b5e7380fc770ec4ff037b26d4c9888343a6f84ce4ac3644842f97a48e5a99dJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlOCViZiU5ZCVlNyViYSVhNiVlNyU5YSU4NCVlNSU4ZiViOCVlNiViMyU5NSVlOCVhNyVhMyVlOSU4NyU4YSZGT1JNPVI1RkQ1&ntb=1
+                  - strong [ref=e399]: 行政协议违约的司法解释
+                - link "加区政府违约赔偿" [ref=e401] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=ef01ce7cfe1a2bf7560566667fec0b2aecc1bcb0dac03b9f2336d83e695a77b0JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlNSU4YSVhMCVlNSU4YyViYSVlNiU5NCViZiVlNSViYSU5YyVlOCViZiU5ZCVlNyViYSVhNiVlOCViNSU5NCVlNSU4MSViZiZGT1JNPVI1RkQ2&ntb=1
+                  - strong [ref=e404]: 加区政府违约赔偿
+                - link "行政合同违约责任" [ref=e406] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=2abf7febfa61f27a19f89d014ac2c4b72caeb1931272ff96ae4f79b6327fe794JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSU5MCU4OCVlNSU5MCU4YyVlOCViZiU5ZCVlNyViYSVhNiVlOCViNCVhMyVlNCViYiViYiZGT1JNPVI1RkQ3&ntb=1
+                  - strong [ref=e409]: 行政合同违约责任
+  - contentinfo [ref=e410]:
+    - generic [ref=e411]:
+      - list:
+        - listitem [ref=e412]:
+          - link "隐私" [ref=e413] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=b6ae5025ca05a9355701d8c46fef00b8e81042e9b0f4924d2f294e7af12e03edJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cDovL2dvLm1pY3Jvc29mdC5jb20vZndsaW5rLz9MaW5rSWQ9NTIxODM5&ntb=1
+        - listitem [ref=e414]:
+          - link "条款" [ref=e415] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=c61bca14e329b196e6ce6120d01882f38123084d1fda1ef2680551364c4c6728JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cDovL2dvLm1pY3Jvc29mdC5jb20vZndsaW5rLz9MaW5rSUQ9MjQ2MzM4&ntb=1
+  - dialog "Quick Search"

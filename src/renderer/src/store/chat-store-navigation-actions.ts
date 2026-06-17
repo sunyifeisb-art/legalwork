@@ -21,7 +21,7 @@ import {
 } from '../lib/thread-fork-registry'
 import { workspaceLabelFromPath } from '../lib/workspace-label'
 import { isInternalTemporaryWorkspace, normalizeWorkspaceRoot } from '../lib/workspace-path'
-import { buildClawRuntimePrompt, getActiveAgentApiKey } from '@shared/app-settings'
+import { buildClawRuntimePrompt, getActiveAgentApiKey, resolveModelProviderApiKey } from '@shared/app-settings'
 import type { ChatState, ChatStoreGet, ChatStoreSet } from './chat-store-types'
 import {
   activeClawChannel,
@@ -46,19 +46,6 @@ import {
   threadBelongsToWorkspace
 } from './chat-store-runtime-helpers'
 import {
-  WRITE_ASSISTANT_THREAD_TITLE,
-  activeWriteThreadForWorkspace,
-  forgetWriteThread,
-  hydrateWriteThreadRegistry,
-  isWriteThreadId,
-  markWriteThread,
-  pruneWriteThreadRegistry,
-  readWriteThreadRegistry,
-  saveWriteThreadRegistry,
-  writeThreadBelongsToWorkspace,
-  writeWorkspaceForThreadId
-} from '../write/write-thread-registry'
-import {
   isSddAssistantThread,
   readSddThreadRegistry
 } from '../sdd/sdd-thread-registry'
@@ -80,8 +67,6 @@ import {
   isCodeThread,
   latestThread,
   looksLikeActiveTurnError,
-  readActiveWriteWorkspace,
-  readWriteWorkspaceRoots,
   rememberPendingClawFeishuMirror,
   runtimeErrorDetail,
   runtimeStreamRecoveringMessage,
@@ -103,7 +88,7 @@ let clawChannelActivityUnsubscribe: (() => void) | null = null
 
 export function createNavigationActions(
   { set, get, sseAbortRef }: StoreActionContext
-): Pick<ChatState, 'openCode' | 'openWrite' | 'ensureWriteThreadForWorkspace' | 'createWriteThread' | 'selectWriteThread' | 'probeRuntime' | 'boot' | 'chooseWorkspace' | 'clearWorkspace' | 'deleteWorkspace' | 'refreshThreads' | 'setThreadSearch' | 'setShowArchivedThreads'> {
+): Pick<ChatState, 'openCode' | 'probeRuntime' | 'boot' | 'chooseWorkspace' | 'setWorkspaceRoot' | 'clearWorkspace' | 'deleteWorkspace' | 'refreshThreads' | 'setThreadSearch' | 'setShowArchivedThreads'> {
   return {
   openCode: async () => {
     const state = get()
@@ -143,144 +128,6 @@ export function createNavigationActions(
     syncTurnCompletionPoll(set, get)
   },
 
-  openWrite: async () => {
-    const state = get()
-    const selectedWorkspace = await readActiveWriteWorkspace(state.workspaceRoot)
-    const writeWorkspaceRoots = await readWriteWorkspaceRoots()
-    const registry = hydrateWriteThreadRegistry(
-      state.threads,
-      selectedWorkspace ? [selectedWorkspace, ...writeWorkspaceRoots] : writeWorkspaceRoots,
-      pruneWriteThreadRegistry(state.threads, readWriteThreadRegistry())
-    )
-    saveWriteThreadRegistry(registry)
-    const activeThread = state.activeThreadId
-      ? state.threads.find((thread) => thread.id === state.activeThreadId) ?? null
-      : null
-    if (
-      activeThread &&
-      activeThread.archived !== true &&
-      selectedWorkspace &&
-      writeThreadBelongsToWorkspace(activeThread, selectedWorkspace, registry)
-    ) {
-      set({ route: 'write' })
-      return
-    }
-
-    const target = activeWriteThreadForWorkspace(
-      selectedWorkspace,
-      state.threads.filter((thread) => thread.archived !== true),
-      registry
-    )
-
-    set({ route: 'write' })
-    if (target && state.runtimeConnection === 'ready') {
-      await get().selectThread(target.id)
-      return
-    }
-
-    sseAbortRef.current?.abort()
-    sseAbortRef.current = null
-    clearBusyWatchdog()
-    const nextWatch = { ...state.watchTurnCompletion }
-    if (state.activeThreadId && state.busy) {
-      nextWatch[state.activeThreadId] = true
-      watchTurnCompletionNotification(state.activeThreadId)
-    }
-    set({
-      ...clearedThreadSelection(),
-      route: 'write',
-      watchTurnCompletion: nextWatch
-    })
-    syncTurnCompletionPoll(set, get)
-  },
-
-  ensureWriteThreadForWorkspace: async (workspaceRoot) => {
-    const state = get()
-    const targetWorkspace = normalizeWorkspaceRoot(workspaceRoot) || (await readActiveWriteWorkspace(state.workspaceRoot))
-    if (!targetWorkspace) {
-      set({ error: i18n.t('common:workspaceRequiredToCreateThread') })
-      return null
-    }
-    if (state.runtimeConnection !== 'ready') {
-      set({ error: i18n.t('common:runtimeActionNeedsConnection') })
-      return null
-    }
-
-    const registry = hydrateWriteThreadRegistry(
-      state.threads,
-      [targetWorkspace],
-      pruneWriteThreadRegistry(state.threads, readWriteThreadRegistry())
-    )
-    saveWriteThreadRegistry(registry)
-    const activeThread = state.activeThreadId
-      ? state.threads.find((thread) => thread.id === state.activeThreadId) ?? null
-      : null
-    if (activeThread && writeThreadBelongsToWorkspace(activeThread, targetWorkspace, registry)) {
-      set({ route: 'write', error: null })
-      return activeThread.id
-    }
-
-    const existing = activeWriteThreadForWorkspace(targetWorkspace, state.threads, registry)
-    if (existing) {
-      set({ route: 'write' })
-      await get().selectThread(existing.id)
-      return existing.id
-    }
-
-    return get().createWriteThread(targetWorkspace)
-  },
-
-  createWriteThread: async (workspaceRoot) => {
-    const targetWorkspace = normalizeWorkspaceRoot(workspaceRoot) || (await readActiveWriteWorkspace(get().workspaceRoot))
-    if (!targetWorkspace) {
-      set({ error: i18n.t('common:workspaceRequiredToCreateThread') })
-      return null
-    }
-    if (get().runtimeConnection !== 'ready') {
-      set({ error: i18n.t('common:runtimeActionNeedsConnection') })
-      return null
-    }
-    try {
-      const p = getProvider()
-      const thread = await p.createThread({
-        workspace: targetWorkspace,
-        title: WRITE_ASSISTANT_THREAD_TITLE,
-        mode: 'agent'
-      })
-      saveWriteThreadRegistry(markWriteThread(targetWorkspace, thread.id))
-      set((s) => ({
-        route: 'write',
-        threads: s.threads.some((item) => item.id === thread.id) ? s.threads : [thread, ...s.threads],
-        error: null
-      }))
-      await get().refreshThreads()
-      await get().selectThread(thread.id)
-      return thread.id
-    } catch (e) {
-      set({
-        error: formatRuntimeError(e),
-        ...(shouldOpenSettingsForError(e)
-          ? { route: 'settings' as const, settingsSection: 'agents' as const }
-          : {})
-      })
-      return null
-    }
-  },
-
-  selectWriteThread: async (threadId, workspaceRoot) => {
-    const targetId = threadId.trim()
-    if (!targetId) return
-    const thread = get().threads.find((item) => item.id === targetId)
-    const targetWorkspace = normalizeWorkspaceRoot(workspaceRoot) ||
-      normalizeWorkspaceRoot(thread?.workspace) ||
-      (await readActiveWriteWorkspace(get().workspaceRoot))
-    if (targetWorkspace) {
-      saveWriteThreadRegistry(markWriteThread(targetWorkspace, targetId))
-    }
-    set({ route: 'write' })
-    await get().selectThread(targetId)
-  },
-
   probeRuntime: async (mode = 'user') => {
     const prev = get().runtimeConnection
     if (mode === 'user') set({ runtimeConnection: 'checking' })
@@ -290,7 +137,9 @@ export function createNavigationActions(
           'Preload bridge missing (window.dsGui). Restart the app or check BrowserWindow preload path.'
         )
       }
-      const settings = await rendererRuntimeClient.getSettings({ forceRefresh: true })
+      const settings = mode === 'user'
+        ? await rendererRuntimeClient.reconnectRuntime()
+        : await rendererRuntimeClient.getSettings({ forceRefresh: true })
       const p = getProvider()
       await p.connect()
       set({ runtimeConnection: 'ready', error: null, runtimeErrorDetail: null })
@@ -349,7 +198,8 @@ export function createNavigationActions(
         const settings = await rendererRuntimeClient.getSettings({ forceRefresh: true })
         const workspaceRoot = normalizeWorkspaceRoot(settings.workspaceRoot)
         const codeWorkspaceRoots = rememberCodeWorkspaceRoots(readCodeWorkspaceRoots(), [workspaceRoot])
-        const needsInitialSetup = !getActiveAgentApiKey(settings).trim()
+        const needsInitialSetup =
+          !getActiveAgentApiKey(settings).trim() && !resolveModelProviderApiKey(settings).trim()
         applyTheme(settings.theme)
         applyUiFontScale(settings.uiFontScale)
         await get().applyI18nFromSettings(settings.locale)
@@ -417,7 +267,6 @@ export function createNavigationActions(
 
   chooseWorkspace: async ({ createThreadAfter = false, selectThreadAfter = true } = {}) => {
     try {
-      const wasWriteRoute = get().route === 'write'
       if (typeof window.dsGui === 'undefined' || typeof window.dsGui.pickWorkspaceDirectory !== 'function') {
         throw new Error(i18n.t('common:workspacePickerUnavailable'))
       }
@@ -440,10 +289,6 @@ export function createNavigationActions(
       await get().refreshThreads()
       if (workspaceRoot) {
         if (!selectThreadAfter) return workspaceRoot
-        if (wasWriteRoute) {
-          await get().openWrite()
-          return workspaceRoot
-        }
         const workspaceThreads = get().threads
           .filter((thread) => isCodeThread(thread, get().clawChannels))
           .filter((thread) => threadBelongsToWorkspace(thread, workspaceRoot))
@@ -458,6 +303,28 @@ export function createNavigationActions(
           }
         }
       }
+      return workspaceRoot
+    } catch (e) {
+      set({
+        error: formatWorkspacePickerError(e)
+      })
+      return null
+    }
+  },
+
+  setWorkspaceRoot: async (rawWorkspaceRoot) => {
+    const requestedWorkspaceRoot = normalizeWorkspaceRoot(rawWorkspaceRoot)
+    try {
+      const next = await rendererRuntimeClient.setSettings({ workspaceRoot: requestedWorkspaceRoot })
+      const workspaceRoot = normalizeWorkspaceRoot(next.workspaceRoot)
+      const codeWorkspaceRoots = rememberCodeWorkspaceRoots(get().codeWorkspaceRoots, [workspaceRoot])
+      set({
+        workspaceRoot,
+        codeWorkspaceRoots,
+        workspaceLabel: workspaceLabelFromPath(workspaceRoot),
+        error: null
+      })
+      await get().refreshThreads()
       return workspaceRoot
     } catch (e) {
       set({
@@ -581,7 +448,7 @@ export function createNavigationActions(
       const forkRegistry = hydrateThreadForkRegistry(sidebarThreads, readThreadForkRegistry())
       saveThreadForkRegistry(forkRegistry)
       const enrichedThreads = enrichThreadsWithForkInfo(sidebarThreads, forkRegistry)
-      // Preserve the active Kun thread when it is not in the listing yet.
+      // Preserve the active Legalwork thread when it is not in the listing yet.
       // A brand-new thread can be absent from `listThreads` until the first
       // message is written. Without this, the optimistic thread would be wiped
       // from the sidebar and its live turn aborted by the selection clearing
@@ -621,17 +488,6 @@ export function createNavigationActions(
       ) {
         displayThreads = [preservedSddActiveThread, ...displayThreads]
       }
-      const writeWorkspaceRoots = await readWriteWorkspaceRoots()
-      const writeRegistry = hydrateWriteThreadRegistry(
-        displayThreads,
-        writeWorkspaceRoots,
-        pruneWriteThreadRegistry(displayThreads, readWriteThreadRegistry())
-      )
-      saveWriteThreadRegistry(writeRegistry)
-      displayThreads = displayThreads.map((thread) => {
-        const writeWorkspace = writeWorkspaceForThreadId(thread.id, writeRegistry)
-        return writeWorkspace ? { ...thread, workspace: writeWorkspace } : thread
-      })
       const activeThreadId = get().activeThreadId
       const activeThread = activeThreadId
         ? displayThreads.find((thread) => thread.id === activeThreadId) ?? null
@@ -639,8 +495,7 @@ export function createNavigationActions(
       const activeThreadIsManagedInCodeRoute =
         get().route === 'chat' &&
         activeThread != null &&
-        (isWriteThreadId(activeThread.id, writeRegistry) ||
-          isClawThread(activeThread, get().clawChannels))
+        isClawThread(activeThread, get().clawChannels)
       const shouldClearSelection =
         activeThreadId != null && !displayThreads.some((thread) => thread.id === activeThreadId)
       if (shouldClearSelection) {

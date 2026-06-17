@@ -16,7 +16,7 @@ describe('write recent edits', () => {
       filePath: '/tmp/workspace/draft.md',
       from: 30,
       to: 42,
-      deletedText: 'DeepSeek GUI',
+      deletedText: 'legalwork',
       insertedText: 'Write mode',
       beforeContext: 'The name ',
       afterContext: ' appears twice.'
@@ -33,7 +33,7 @@ describe('write recent edits', () => {
     expect(context[0]).toMatchObject({
       source: 'user',
       ageMs: 1_000,
-      deletedText: 'DeepSeek GUI',
+      deletedText: 'legalwork',
       insertedText: 'Write mode'
     })
     vi.restoreAllMocks()

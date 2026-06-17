@@ -38,8 +38,8 @@ beforeEach(() => {
   vi.doMock('electron', () => ({
     app: {
       isPackaged: true,
-      getAppPath: () => '/tmp/deepseek-gui-updater-test-app',
-      getPath: () => '/tmp/deepseek-gui-updater-test-user-data',
+      getAppPath: () => '/tmp/legalwork-updater-test-app',
+      getPath: () => '/tmp/legalwork-updater-test-user-data',
       getVersion: () => '0.1.0'
     },
     autoUpdater: nativeUpdater,

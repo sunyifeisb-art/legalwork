@@ -17,6 +17,7 @@ export function GitBranchPicker({ workspaceRoot }: Props): ReactElement | null {
   const [actingBranch, setActingBranch] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const wrapRef = useRef<HTMLDivElement | null>(null)
+  const menuRef = useRef<HTMLDivElement | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
 
   const load = useCallback(async (): Promise<void> => {
@@ -59,8 +60,37 @@ export function GitBranchPicker({ workspaceRoot }: Props): ReactElement | null {
       if (target instanceof Node && wrapRef.current?.contains(target)) return
       setOpen(false)
     }
-    window.addEventListener('pointerdown', onPointerDown)
-    return () => window.removeEventListener('pointerdown', onPointerDown)
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        setOpen(false)
+        return
+      }
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault()
+        const items = Array.from(
+          menuRef.current?.querySelectorAll('button:not([disabled])') ?? []
+        )
+        if (items.length === 0) return
+        const active = document.activeElement
+        let index = items.indexOf(active as Element)
+        if (index === -1) {
+          index = event.key === 'ArrowDown' ? -1 : items.length
+        }
+        const nextIndex =
+          event.key === 'ArrowDown'
+            ? (index + 1) % items.length
+            : (index - 1 + items.length) % items.length
+        const next = items[nextIndex] as HTMLElement | undefined
+        next?.focus()
+      }
+    }
+    window.addEventListener('pointerdown', onPointerDown, true)
+    window.addEventListener('keydown', onKeyDown)
+    return () => {
+      window.removeEventListener('pointerdown', onPointerDown, true)
+      window.removeEventListener('keydown', onKeyDown)
+    }
   }, [open])
 
   const branches = useMemo(() => (result?.ok ? result.branches : []), [result])
@@ -125,7 +155,7 @@ export function GitBranchPicker({ workspaceRoot }: Props): ReactElement | null {
     <div ref={wrapRef} className="ds-git-branch-picker ds-no-drag relative min-w-0">
       <button
         type="button"
-        className="flex h-8 max-w-[320px] min-w-0 items-center gap-2 rounded-lg px-2 text-[14px] font-medium text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink"
+        className="flex h-8 max-w-[320px] min-w-0 items-center gap-2 rounded-lg px-2 text-[14px] font-medium text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink focus-visible:ring-2 focus-visible:ring-accent/25 focus-visible:outline-none"
         onClick={() => setOpen((v) => !v)}
         title={t('gitBranch')}
       >
@@ -139,7 +169,7 @@ export function GitBranchPicker({ workspaceRoot }: Props): ReactElement | null {
       </button>
 
       {open ? (
-        <div className="absolute bottom-[calc(100%+8px)] left-0 z-50 w-[min(420px,calc(100vw-48px))] overflow-hidden rounded-xl border border-ds-border bg-ds-elevated shadow-[0_24px_70px_rgba(44,55,78,0.18)] backdrop-blur-xl dark:shadow-[0_30px_80px_rgba(0,0,0,0.42)]">
+        <div ref={menuRef} className="absolute bottom-[calc(100%+8px)] left-0 z-50 w-[min(420px,calc(100vw-48px))] overflow-hidden rounded-xl border border-ds-border bg-ds-elevated shadow-[0_24px_70px_rgba(44,55,78,0.18)] backdrop-blur-xl dark:shadow-[0_30px_80px_rgba(0,0,0,0.42)]">
           <div className="flex items-center gap-2 border-b border-ds-border-muted px-4 py-3">
             <Search className="h-4 w-4 shrink-0 text-ds-faint" strokeWidth={1.8} />
             <input
@@ -184,7 +214,7 @@ export function GitBranchPicker({ workspaceRoot }: Props): ReactElement | null {
               <button
                 key={branch.name}
                 type="button"
-                className="flex w-full items-start gap-3 rounded-lg px-1 py-2.5 text-left text-ds-ink transition hover:bg-ds-hover"
+                className="flex w-full items-start gap-3 rounded-lg px-1 py-2.5 text-left text-ds-ink transition hover:bg-ds-hover focus:bg-ds-hover focus-visible:bg-ds-hover focus-visible:outline-none"
                 onClick={() => void switchBranch(branch.name)}
                 disabled={actingBranch != null}
               >
@@ -214,7 +244,7 @@ export function GitBranchPicker({ workspaceRoot }: Props): ReactElement | null {
             <button
               type="button"
               disabled={!canCreate || actingBranch != null}
-              className="flex w-full items-center gap-3 rounded-lg px-1 py-2 text-left text-[14px] font-medium text-ds-ink transition hover:bg-ds-hover disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:bg-transparent"
+              className="flex w-full items-center gap-3 rounded-lg px-1 py-2 text-left text-[14px] font-medium text-ds-ink transition hover:bg-ds-hover focus:bg-ds-hover focus-visible:bg-ds-hover focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:bg-transparent"
               onClick={() => void createBranch()}
             >
               {actingBranch === query.trim() ? (

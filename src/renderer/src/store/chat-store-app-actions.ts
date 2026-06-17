@@ -25,11 +25,13 @@ export function createAppActions(options: CreateAppActionsOptions): Pick<
   | 'setComposerModel'
   | 'loadComposerModels'
   | 'setRoute'
-  | 'openWrite'
   | 'openSettings'
   | 'openPlugins'
   | 'openClaw'
   | 'openSchedule'
+  | 'openDocumentWriting'
+  | 'openLegalResearch'
+  | 'openKnowledgeBase'
   | 'openInitialSetup'
   | 'closeInitialSetup'
   | 'selectInspectorItem'
@@ -86,10 +88,6 @@ export function createAppActions(options: CreateAppActionsOptions): Pick<
 
     setRoute: (route) => set({ route }),
 
-    openWrite: async () => {
-      set({ route: 'write' })
-    },
-
     openSettings: (section: SettingsRouteSection = 'general') =>
       set((state) => ({
         route: 'settings',
@@ -110,6 +108,18 @@ export function createAppActions(options: CreateAppActionsOptions): Pick<
 
     openSchedule: () => {
       set({ route: 'schedule' })
+    },
+
+    openDocumentWriting: () => {
+      set({ route: 'documentWriting' })
+    },
+
+    openLegalResearch: () => {
+      set({ route: 'legalResearch' })
+    },
+
+    openKnowledgeBase: () => {
+      set({ route: 'knowledgeBase' })
     },
 
     openInitialSetup: (mode: InitialSetupMode = 'required') =>

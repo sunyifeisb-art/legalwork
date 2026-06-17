@@ -20,7 +20,8 @@ set -euo pipefail
 # Speed knobs:
 #   MAC_RELEASE_PARALLEL=force      force parallel arm64/x64 builds even when signing
 #   RELEASE_UPLOAD_CONCURRENCY=4    GitHub/R2 upload concurrency
-#   DEEPSEEK_GUI_RUNTIME_CACHE=0    disable bundled runtime cache
+#   LEGALWORK_RUNTIME_CACHE=0   disable bundled runtime cache
+#   DEEPSEEK_GUI_RUNTIME_CACHE=0    disable bundled runtime cache (legacy)
 #
 # After this completes, run on Windows (same version):
 #   ./scripts/release-win.sh --tag v<RELEASE_VERSION from output> --r2 --r2-promote --publish
@@ -82,9 +83,11 @@ build_mac_arch() {
 
   mkdir -p "${output_dir}" "$(dirname "${log_file}")"
   cyan "  ${arch}: building dmg + zip -> ${output_dir}"
+  LEGALWORK_DIST_DIR="${output_dir}" \
   DEEPSEEK_GUI_DIST_DIR="${output_dir}" \
     npx --yes electron-builder@26.8.1 --config electron-builder.config.cjs --publish never --mac dmg "--${arch}" \
     >"${log_file}" 2>&1
+  LEGALWORK_DIST_DIR="${output_dir}" \
   DEEPSEEK_GUI_DIST_DIR="${output_dir}" \
     node "${ROOT}/scripts/zip-mac-app.cjs" "${arch}" \
     >>"${log_file}" 2>&1
@@ -96,7 +99,7 @@ copy_mac_arch_artifacts() {
   local files=()
 
   shopt -s nullglob
-  files=("${output_dir}"/DeepSeek-GUI-*-mac-"${arch}".*)
+  files=("${output_dir}"/legalwork-*-mac-"${arch}".*)
   shopt -u nullglob
 
   [[ ${#files[@]} -gt 0 ]] || die "No macOS ${arch} artifacts found in ${output_dir}"
@@ -247,12 +250,13 @@ collect_optional() {
   done
 }
 
-# artifactName: ${productName}-${version}-mac-${arch}.dmg|zip
-collect "macOS arm64 dmg" "dist/DeepSeek-GUI-*-mac-arm64.dmg"
-collect "macOS x64 dmg" "dist/DeepSeek-GUI-*-mac-x64.dmg"
-collect "macOS arm64 zip" "dist/DeepSeek-GUI-*-mac-arm64.zip"
-collect "macOS x64 zip" "dist/DeepSeek-GUI-*-mac-x64.zip"
-collect_optional "macOS blockmap" "dist/DeepSeek-GUI-*-mac-*.zip.blockmap"
+# artifactName: legalwork-${version}-mac-${arch}.dmg|zip
+collect "macOS arm64 dmg" "dist/legalwork-*-mac-arm64.dmg"
+collect "macOS x64 dmg" "dist/legalwork-*-mac-x64.dmg"
+collect "macOS arm64 zip" "dist/legalwork-*-mac-arm64.zip"
+collect "macOS x64 zip" "dist/legalwork-*-mac-x64.zip"
+collect_optional "macOS blockmap" "dist/legalwork-*-mac-*.zip.blockmap"
+collect "macOS update metadata" "dist/latest-mac.yml"
 
 upload_github_assets() {
   local tag="$1"
@@ -308,7 +312,7 @@ This is an unsigned build. macOS Gatekeeper will block first launch.
 Run this after downloading:
 
 ```sh
-xattr -cr "DeepSeek GUI.app"
+xattr -cr "LegalWork.app"
 # or
 npm run mac:unquarantine
 ```
@@ -357,4 +361,4 @@ green "macOS release ${TAG_NAME} ready (draft)."
 cyan "  Meta: dist/.release-meta.env"
 cyan "  Channel: ${RELEASE_CHANNEL}"
 cyan "  Next on Windows: ./scripts/release-win.sh --tag ${TAG_NAME} --channel ${RELEASE_CHANNEL}"
-cyan "  https://github.com/XingYu-Zhong/DeepSeek-GUI/releases/tag/${TAG_NAME}"
+cyan "  https://github.com/XingYu-Zhong/LegalWork/releases/tag/${TAG_NAME}"

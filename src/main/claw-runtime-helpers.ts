@@ -125,7 +125,7 @@ export function formatFeishuMirrorText(text: string, direction: 'user' | 'assist
   const trimmed = text.trim()
   if (direction === 'user') {
     return {
-      markdown: `**From DeepSeek GUI**\n\n> ${trimmed.replace(/\n/g, '\n> ')}`
+      markdown: `**From legalwork**\n\n> ${trimmed.replace(/\n/g, '\n> ')}`
     }
   }
   return { markdown: trimmed || '(empty reply)' }

@@ -1,18 +1,18 @@
 import type { GuiUpdateChannel } from './gui-update'
 import type { KeyboardShortcutsConfigV1 } from './keyboard-shortcuts'
-import type { ApprovalPolicy, SandboxMode } from '../../kun/src/contracts/policy.js'
+import type { ApprovalPolicy, SandboxMode } from '../../legalwork/src/contracts/policy.js'
 export { DEFAULT_GUI_UPDATE_CHANNEL, normalizeGuiUpdateChannel, type GuiUpdateChannel } from './gui-update'
 export {
   DEFAULT_APPROVAL_POLICY,
   DEFAULT_SANDBOX_MODE,
   type ApprovalPolicy,
   type SandboxMode
-} from '../../kun/src/contracts/policy.js'
+} from '../../legalwork/src/contracts/policy.js'
 export type UiFontScale = 'small' | 'medium' | 'large'
 export type ScheduleRunMode = 'agent' | 'plan'
 export type ScheduleKind = 'manual' | 'interval' | 'daily' | 'at'
 export type ScheduleTaskStatus = 'idle' | 'running' | 'success' | 'error'
-export type ScheduleModel = 'auto' | 'deepseek-v4-pro' | 'deepseek-v4-flash'
+export type ScheduleModel = string
 export type ScheduleReasoningEffort = 'off' | 'low' | 'medium' | 'high' | 'max'
 export type ClawRunMode = ScheduleRunMode
 export type ClawImProvider = 'feishu' | 'weixin'
@@ -28,9 +28,9 @@ export const SCHEDULE_MODEL_IDS = CLAW_MODEL_IDS
 export const DEFAULT_SCHEDULE_REASONING_EFFORT = 'medium'
 export const SCHEDULE_REASONING_EFFORT_IDS = ['off', 'low', 'medium', 'high', 'max'] as const
 export const DEFAULT_SCHEDULE_INTERNAL_PORT = 8788
-export const DEFAULT_WRITE_WORKSPACE_ROOT = '~/.deepseekgui/write_workspace'
-export const DEFAULT_KUN_DATA_DIR = '~/.deepseekgui/kun'
-export const DEFAULT_KUN_MODEL = 'deepseek-v4-pro'
+export const DEFAULT_WRITE_WORKSPACE_ROOT = '~/.legalwork/write_workspace'
+export const DEFAULT_LEGALWORK_DATA_DIR = '~/.legalwork/legalwork'
+export const DEFAULT_LEGALWORK_MODEL = 'deepseek-v4-pro'
 export const DEFAULT_WRITE_INLINE_COMPLETION_BASE_URL = 'https://api.deepseek.com/beta'
 export const DEFAULT_WRITE_INLINE_COMPLETION_MODEL = 'deepseek-v4-flash'
 export const WRITE_INLINE_COMPLETION_MODEL_IDS = ['deepseek-v4-pro', 'deepseek-v4-flash'] as const
@@ -40,7 +40,7 @@ export const DEFAULT_WRITE_INLINE_COMPLETION_MAX_TOKENS = 96
 export const DEFAULT_WRITE_INLINE_LONG_COMPLETION_DEBOUNCE_MS = 2_800
 export const DEFAULT_WRITE_INLINE_LONG_COMPLETION_MIN_ACCEPT_SCORE = 0.36
 export const DEFAULT_WRITE_INLINE_LONG_COMPLETION_MAX_TOKENS = 256
-export const DEFAULT_KUN_PORT = 8899
+export const DEFAULT_LEGALWORK_PORT = 8899
 export const DEFAULT_WEIXIN_BRIDGE_RPC_URL = 'http://127.0.0.1:18790/api/v1/admin/rpc'
 export const DEFAULT_MODEL_PROVIDER_ID = 'deepseek'
 export type ModelProviderProfileV1 = {
@@ -63,7 +63,7 @@ export type ModelProviderSettingsPatchV1 = Partial<
   providers?: ModelProviderProfilePatchV1[]
 }
 
-export type KunRuntimeSettingsV1 = {
+export type LegalworkRuntimeSettingsV1 = {
   binaryPath: string
   port: number
   autoStart: boolean
@@ -71,6 +71,8 @@ export type KunRuntimeSettingsV1 = {
   apiKey: string
   /** Optional override. Leave empty to inherit the General model provider Base URL. */
   baseUrl: string
+  /** Compatible request/response protocol. Defaults to chat_completions. */
+  endpointFormat: string
   /** Selected General model provider profile. Empty or missing means the default provider. */
   providerId: string
   runtimeToken: string
@@ -80,41 +82,41 @@ export type KunRuntimeSettingsV1 = {
   sandboxMode: SandboxMode
   /** Compress safe tool context before each model call. */
   tokenEconomyMode: boolean
-  /** Detailed token-saving behavior used when building Kun model requests. */
-  tokenEconomy: KunTokenEconomySettingsV1
+  /** Detailed token-saving behavior used when building Legalwork model requests. */
+  tokenEconomy: LegalworkTokenEconomySettingsV1
   /** When true, the runtime skips bearer-token auth. Local dev only. */
   insecure: boolean
-  /** GUI-managed MCP progressive discovery/search settings written into Kun config.json. */
-  mcpSearch: KunMcpSearchSettingsV1
-  /** Persistent store backend used by Kun. */
-  storage: KunStorageSettingsV1
-  /** Fallback compaction thresholds and summary behavior. Per-model thresholds live in Kun config models.profiles. */
-  contextCompaction: KunContextCompactionSettingsV1
+  /** GUI-managed MCP progressive discovery/search settings written into Legalwork config.json. */
+  mcpSearch: LegalworkMcpSearchSettingsV1
+  /** Persistent store backend used by Legalwork. */
+  storage: LegalworkStorageSettingsV1
+  /** Fallback compaction thresholds and summary behavior. Per-model thresholds live in Legalwork config models.profiles. */
+  contextCompaction: LegalworkContextCompactionSettingsV1
   /** Low-level loop guards and model argument repair tuning. */
-  runtimeTuning: KunRuntimeTuningSettingsV1
+  runtimeTuning: LegalworkRuntimeTuningSettingsV1
 }
 
-export type KunMcpSearchMode = 'direct' | 'search' | 'auto'
+export type LegalworkMcpSearchMode = 'direct' | 'search' | 'auto'
 
-export type KunMcpSearchSettingsV1 = {
+export type LegalworkMcpSearchSettingsV1 = {
   enabled: boolean
-  mode: KunMcpSearchMode
+  mode: LegalworkMcpSearchMode
   autoThresholdToolCount: number
   topKDefault: number
   topKMax: number
   minScore: number
 }
 
-export type KunStorageBackend = 'hybrid' | 'file'
+export type LegalworkStorageBackend = 'hybrid' | 'file'
 
-export type KunStorageSettingsV1 = {
-  backend: KunStorageBackend
+export type LegalworkStorageSettingsV1 = {
+  backend: LegalworkStorageBackend
   sqlitePath: string
 }
 
-export type KunCompactionSummaryMode = 'heuristic' | 'model'
+export type LegalworkCompactionSummaryMode = 'heuristic' | 'model'
 
-export type KunHistoryHygieneSettingsV1 = {
+export type LegalworkHistoryHygieneSettingsV1 = {
   maxToolResultLines: number
   maxToolResultBytes: number
   maxToolResultTokens: number
@@ -123,76 +125,76 @@ export type KunHistoryHygieneSettingsV1 = {
   maxArrayItems: number
 }
 
-export type KunTokenEconomySettingsV1 = {
+export type LegalworkTokenEconomySettingsV1 = {
   enabled: boolean
   compressToolDescriptions: boolean
   compressToolResults: boolean
   conciseResponses: boolean
-  historyHygiene: KunHistoryHygieneSettingsV1
+  historyHygiene: LegalworkHistoryHygieneSettingsV1
 }
 
-export type KunContextCompactionSettingsV1 = {
+export type LegalworkContextCompactionSettingsV1 = {
   defaultSoftThreshold: number
   defaultHardThreshold: number
-  summaryMode: KunCompactionSummaryMode
+  summaryMode: LegalworkCompactionSummaryMode
   summaryTimeoutMs: number
   summaryMaxTokens: number
   summaryInputMaxBytes: number
 }
 
-export type KunToolStormSettingsV1 = {
+export type LegalworkToolStormSettingsV1 = {
   enabled: boolean
   windowSize: number
   threshold: number
 }
 
-export type KunToolArgumentRepairSettingsV1 = {
+export type LegalworkToolArgumentRepairSettingsV1 = {
   maxStringBytes: number
 }
 
-export type KunRuntimeTuningSettingsV1 = {
-  toolStorm: KunToolStormSettingsV1
-  toolArgumentRepair: KunToolArgumentRepairSettingsV1
+export type LegalworkRuntimeTuningSettingsV1 = {
+  toolStorm: LegalworkToolStormSettingsV1
+  toolArgumentRepair: LegalworkToolArgumentRepairSettingsV1
 }
 
 /**
  * Compatibility shell kept because persisted settings still use the
- * `agents.kun` envelope. Prefer operating on the contained
- * `KunRuntimeSettingsV1` directly in new code.
+ * `agents.legalwork` envelope. Prefer operating on the contained
+ * `LegalworkRuntimeSettingsV1` directly in new code.
  */
-export type KunSettingsEnvelopeV1 = {
-  kun: KunRuntimeSettingsV1
+export type LegalworkSettingsEnvelopeV1 = {
+  legalwork: LegalworkRuntimeSettingsV1
 }
 
-/** @deprecated Use `KunSettingsEnvelopeV1`. */
-export type AgentRuntimeSettingsMapV1 = KunSettingsEnvelopeV1
+/** @deprecated Use `LegalworkSettingsEnvelopeV1`. */
+export type AgentRuntimeSettingsMapV1 = LegalworkSettingsEnvelopeV1
 
-export type KunRuntimeTuningSettingsPatchV1 = {
-  toolStorm?: Partial<KunToolStormSettingsV1>
-  toolArgumentRepair?: Partial<KunToolArgumentRepairSettingsV1>
+export type LegalworkRuntimeTuningSettingsPatchV1 = {
+  toolStorm?: Partial<LegalworkToolStormSettingsV1>
+  toolArgumentRepair?: Partial<LegalworkToolArgumentRepairSettingsV1>
 }
 
-export type KunTokenEconomySettingsPatchV1 = Partial<
-  Omit<KunTokenEconomySettingsV1, 'historyHygiene'>
+export type LegalworkTokenEconomySettingsPatchV1 = Partial<
+  Omit<LegalworkTokenEconomySettingsV1, 'historyHygiene'>
 > & {
-  historyHygiene?: Partial<KunHistoryHygieneSettingsV1>
+  historyHygiene?: Partial<LegalworkHistoryHygieneSettingsV1>
 }
 
-export type KunRuntimeSettingsPatchV1 = Partial<
+export type LegalworkRuntimeSettingsPatchV1 = Partial<
   Omit<
-    KunRuntimeSettingsV1,
+    LegalworkRuntimeSettingsV1,
     'mcpSearch' | 'storage' | 'contextCompaction' | 'runtimeTuning' | 'tokenEconomy'
   >
 > & {
-  mcpSearch?: Partial<KunMcpSearchSettingsV1>
-  tokenEconomy?: KunTokenEconomySettingsPatchV1
-  storage?: Partial<KunStorageSettingsV1>
-  contextCompaction?: Partial<KunContextCompactionSettingsV1>
-  runtimeTuning?: KunRuntimeTuningSettingsPatchV1
+  mcpSearch?: Partial<LegalworkMcpSearchSettingsV1>
+  tokenEconomy?: LegalworkTokenEconomySettingsPatchV1
+  storage?: Partial<LegalworkStorageSettingsV1>
+  contextCompaction?: Partial<LegalworkContextCompactionSettingsV1>
+  runtimeTuning?: LegalworkRuntimeTuningSettingsPatchV1
 }
 
-export type KunSettingsEnvelopePatchV1 = {
-  kun?: KunRuntimeSettingsPatchV1
+export type LegalworkSettingsEnvelopePatchV1 = {
+  legalwork?: LegalworkRuntimeSettingsPatchV1
 }
 
 export type LogConfigV1 = {
@@ -330,7 +332,7 @@ export type ClawImConversationV1 = {
   latestMessageId: string
   senderId: string
   senderName: string
-  /** Kun thread id this conversation maps to. */
+  /** Legalwork thread id this conversation maps to. */
   localThreadId: string
   workspaceRoot: string
   createdAt: string
@@ -343,7 +345,7 @@ export type ClawImChannelV1 = {
   label: string
   enabled: boolean
   model: string
-  /** Kun thread id this channel maps to. */
+  /** Legalwork thread id this channel maps to. */
   threadId: string
   workspaceRoot: string
   agentProfile: ClawImAgentProfileV1
@@ -368,7 +370,7 @@ export type WriteInlineCompletionSettingsV1 = {
   longCompletionEnabled: boolean
   apiKey: string
   baseUrl: string
-  /** When true, Write inherits Kun's runtime model instead of using `model` as an override. */
+  /** When true, Write inherits Legalwork's runtime model instead of using `model` as an override. */
   inheritModel: boolean
   model: string
   debounceMs: number
@@ -447,7 +449,7 @@ export type AppSettingsV1 = {
   theme: 'system' | 'light' | 'dark'
   uiFontScale: UiFontScale
   provider: ModelProviderSettingsV1
-  agents: KunSettingsEnvelopeV1
+  agents: LegalworkSettingsEnvelopeV1
   workspaceRoot: string
   log: LogConfigV1
   notifications: NotificationConfigV1
@@ -463,7 +465,7 @@ export type AppSettingsPatch = Partial<
   Omit<AppSettingsV1, 'provider' | 'agents' | 'log' | 'notifications' | 'appBehavior' | 'keyboardShortcuts' | 'write' | 'claw' | 'schedule' | 'guiUpdate'>
 > & {
   provider?: ModelProviderSettingsPatchV1
-  agents?: KunSettingsEnvelopePatchV1
+  agents?: LegalworkSettingsEnvelopePatchV1
   log?: Partial<LogConfigV1>
   notifications?: Partial<NotificationConfigV1>
   appBehavior?: Partial<AppBehaviorConfigV1>

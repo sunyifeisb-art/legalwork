@@ -60,19 +60,6 @@ import {
   threadBelongsToWorkspace
 } from './chat-store-runtime-helpers'
 import {
-  WRITE_ASSISTANT_THREAD_TITLE,
-  activeWriteThreadForWorkspace,
-  forgetWriteThread,
-  hydrateWriteThreadRegistry,
-  isWriteThreadId,
-  markWriteThread,
-  pruneWriteThreadRegistry,
-  readWriteThreadRegistry,
-  saveWriteThreadRegistry,
-  writeThreadBelongsToWorkspace,
-  writeWorkspaceForThreadId
-} from '../write/write-thread-registry'
-import {
   clearBusyWatchdog,
   resetBusyRecoveryAttempts,
   scheduleStartupRuntimeProbe,
@@ -90,8 +77,6 @@ import {
   isCodeThread,
   latestThread,
   looksLikeActiveTurnError,
-  readActiveWriteWorkspace,
-  readWriteWorkspaceRoots,
   rememberPendingClawFeishuMirror,
   runtimeErrorDetail,
   runtimeStreamRecoveringMessage,

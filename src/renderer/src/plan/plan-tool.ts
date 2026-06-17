@@ -2,7 +2,7 @@ import type { ChatBlock } from '../agent/types'
 import { GUI_PLAN_CREATE_PLAN_TOOL_NAME } from '@shared/gui-plan'
 
 /**
- * Native Kun plan tool names the Workbench recognises. The set is
+ * Native Legalwork plan tool names the Workbench recognises. The set is
  * intentionally small: any tool other than the native `create_plan` is
  * treated as unrelated to the GUI plan workflow.
  */

@@ -31,7 +31,7 @@ export type QueuedUserMessage = {
   attachmentIds?: string[]
   attachments?: AttachmentReference[]
   /**
-   * Optional GUI plan context forwarded to Kun. The renderer
+   * Optional GUI plan context forwarded to Legalwork. The renderer
    * attaches it for plan/refine turns so the runtime can advertise
    * the native `create_plan` tool and gate the write to the reserved
    * plan artifact.
@@ -48,7 +48,7 @@ export type QueuedUserMessage = {
 
 /**
  * GUI plan context attached to a send-message call. Mirrors the
- * Kun `GuiPlanContextSchema` and is forwarded to the runtime
+ * Legalwork `GuiPlanContextSchema` and is forwarded to the runtime
  * request body so plan/refine turns are scoped to a reserved path.
  */
 export type GuiPlanMessageContext = {
@@ -72,8 +72,18 @@ export type SendMessageOverrides = {
 }
 
 export type InitialSetupMode = 'required' | 'preview'
-export type SettingsRouteSection = 'general' | 'write' | 'agents' | 'skill' | 'mcp' | 'shortcuts' | 'claw'
-export type AppRoute = 'chat' | 'write' | 'settings' | 'plugins' | 'claw' | 'schedule'
+export type SettingsRouteSection = 'general' | 'agents' | 'skill' | 'mcp' | 'claw' | 'shortcuts' | 'guiUpdate'
+export type AppRoute =
+  | 'chat'
+  | 'dataCompliance'
+  | 'desensitize'
+  | 'settings'
+  | 'plugins'
+  | 'claw'
+  | 'schedule'
+  | 'documentWriting'
+  | 'legalResearch'
+  | 'knowledgeBase'
 export type PluginHostRoute = 'chat' | 'claw'
 
 /**
@@ -161,15 +171,14 @@ export type ChatState = {
   setComposerModel: (modelId: string) => void
   loadComposerModels: () => Promise<void>
   setRoute: (r: AppRoute) => void
-  openWrite: () => Promise<void>
   openCode: () => Promise<void>
-  ensureWriteThreadForWorkspace: (workspaceRoot?: string) => Promise<string | null>
-  createWriteThread: (workspaceRoot?: string) => Promise<string | null>
-  selectWriteThread: (threadId: string, workspaceRoot?: string) => Promise<void>
   openSettings: (section?: SettingsRouteSection) => void
   openPlugins: (host?: PluginHostRoute) => void
   openClaw: () => void
   openSchedule: () => void
+  openDocumentWriting: () => void
+  openLegalResearch: () => void
+  openKnowledgeBase: () => void
   refreshClawChannels: () => Promise<void>
   addClawChannel: (
     provider: ClawImProvider,
@@ -194,6 +203,7 @@ export type ChatState = {
   boot: () => Promise<void>
   probeRuntime: (mode?: 'user' | 'background') => Promise<void>
   chooseWorkspace: (options?: { createThreadAfter?: boolean; selectThreadAfter?: boolean }) => Promise<string | null>
+  setWorkspaceRoot: (workspaceRoot: string) => Promise<string | null>
   clearWorkspace: () => Promise<void>
   deleteWorkspace: (workspacePath: string) => Promise<void>
   refreshThreads: () => Promise<void>

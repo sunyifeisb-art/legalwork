@@ -42,7 +42,7 @@ function clawChannel(): ClawImChannelV1 {
     label: 'Feishu Agent',
     enabled: true,
     model: 'auto',
-    threadId: 'kun-channel',
+    threadId: 'legalwork-channel',
     workspaceRoot: '/Users/zxy/project',
     agentProfile: {
       name: '',
@@ -60,7 +60,7 @@ function clawChannel(): ClawImChannelV1 {
         latestMessageId: 'message-1',
         senderId: 'sender-1',
         senderName: 'Alex',
-        localThreadId: 'kun-conversation',
+        localThreadId: 'legalwork-conversation',
         workspaceRoot: '/Users/zxy/project',
         createdAt: now,
         updatedAt: now
@@ -129,8 +129,8 @@ describe('chat-store Claw helpers', () => {
   it('collects channel and conversation thread ids for Claw sessions', () => {
     const ids = clawThreadIdsFromChannels([clawChannel()])
 
-    expect(ids.has('kun-channel')).toBe(true)
-    expect(ids.has('kun-conversation')).toBe(true)
+    expect(ids.has('legalwork-channel')).toBe(true)
+    expect(ids.has('legalwork-conversation')).toBe(true)
   })
 
   it('uses product default agent names for new Claw channels', () => {
@@ -145,15 +145,15 @@ describe('chat-store Claw helpers', () => {
 
   it('recognizes Claw managed prompt summaries as Claw sessions', () => {
     expect(
-      clawThreadTitleLooksManaged(`${CLAW_MANAGED_INSTRUCTIONS_HEADING} DeepSeek GUI scheduled-task tools`)
+      clawThreadTitleLooksManaged(`${CLAW_MANAGED_INSTRUCTIONS_HEADING} legalwork scheduled-task tools`)
     ).toBe(true)
-    expect(isClawThread({ id: 'kun-leaked', title: '[Claw:Feishu Agent]' })).toBe(true)
+    expect(isClawThread({ id: 'legalwork-leaked', title: '[Claw:Feishu Agent]' })).toBe(true)
   })
 
   it('recognizes Claw sessions by registered thread id', () => {
     expect(
       isClawThread(
-        { id: 'kun-conversation', title: 'hi' },
+        { id: 'legalwork-conversation', title: 'hi' },
         [clawChannel()]
       )
     ).toBe(true)

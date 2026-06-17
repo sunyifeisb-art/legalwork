@@ -5,7 +5,7 @@ export function composeSddAssistantPrompt(options: {
   workspaceRoot: string
 }): string {
   return [
-    'You are helping clarify and improve an SDD requirement draft inside DeepSeek GUI.',
+    'You are helping clarify and improve an SDD requirement draft inside legalwork.',
     `Workspace: ${options.workspaceRoot}`,
     `Draft file: ${options.draftRelativePath}`,
     '',

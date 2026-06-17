@@ -1,5 +1,4 @@
 import type { ChatBlock, NormalizedThread } from '../agent/types'
-import { DEFAULT_COMPOSER_MODEL_IDS } from '@shared/default-composer-models'
 import {
   CLAW_MANAGED_INSTRUCTIONS_HEADING,
   CLAW_MODEL_IDS,
@@ -18,9 +17,9 @@ import {
 } from '../lib/workspace-path'
 import { readBrowserStorageItem, writeBrowserStorageItem } from '../lib/browser-storage'
 
-const COMPOSER_MODEL_STORAGE_KEY = 'deepseekgui.composerModel'
-const TURN_MODEL_STORAGE_KEY = 'deepseekgui.turnModelLabel'
-const CODE_WORKSPACE_ROOTS_STORAGE_KEY = 'deepseekgui.codeWorkspaceRoots.v1'
+const COMPOSER_MODEL_STORAGE_KEY = 'legalwork.composerModel'
+const TURN_MODEL_STORAGE_KEY = 'legalwork.turnModelLabel'
+const CODE_WORKSPACE_ROOTS_STORAGE_KEY = 'legalwork.codeWorkspaceRoots.v1'
 export const MAX_CODE_WORKSPACE_ROOTS = 30
 export const MAX_TURN_MODEL_LABELS = 500
 
@@ -99,9 +98,6 @@ export function forgetCodeWorkspaceRoot(
 export function mergeComposerPickList(upstreamOk: boolean, upstreamIds: string[]): string[] {
   const ordered = new Set<string>()
   ordered.add('auto')
-  for (const id of DEFAULT_COMPOSER_MODEL_IDS) {
-    if (id !== 'auto') ordered.add(id)
-  }
   if (upstreamOk) {
     for (const id of upstreamIds) {
       if (id.trim()) ordered.add(id.trim())
@@ -185,6 +181,15 @@ export function isClawThread(
   channels: ClawImChannelV1[] = []
 ): boolean {
   return clawThreadTitleLooksManaged(thread.title) || clawThreadIdsFromChannels(channels).has(thread.id)
+}
+
+const LEGAL_RESEARCH_TITLE_PREFIX = '法律调研:'
+
+export function isLegalResearchThread(
+  thread: Pick<NormalizedThread, 'title'>
+): boolean {
+  const trimmed = thread.title?.trim() ?? ''
+  return trimmed.startsWith(LEGAL_RESEARCH_TITLE_PREFIX)
 }
 
 export function optimisticUserModelLabel(

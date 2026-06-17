@@ -5,7 +5,7 @@ import { weixinBridgeRuntimeInternals } from './weixin-bridge-runtime'
 vi.mock('electron', () => ({
   app: {
     isPackaged: false,
-    getPath: () => '/tmp/deepseek-gui-test-user-data',
+    getPath: () => '/tmp/legalwork-test-user-data',
     getVersion: () => '0.2.0-test'
   }
 }))

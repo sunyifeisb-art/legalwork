@@ -1,0 +1,241 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - button "跳至内容" [ref=e3] [cursor=pointer]:
+      - generic [ref=e5]: 跳至内容
+    - button "辅助功能反馈" [ref=e6] [cursor=pointer]:
+      - generic [ref=e8]: 辅助功能反馈
+    - generic [ref=e9]:
+      - link "返回到必应搜索" [ref=e10] [cursor=pointer]:
+        - /url: /?FORM=Z9FD1
+        - heading "返回到必应搜索" [level=1] [ref=e11]
+      - search [ref=e12]:
+        - button "搜索" [ref=e15] [cursor=pointer]
+        - searchbox "在此处输入你的搜索 — 输入时会显示搜索建议" [ref=e16]: 行政协议 政府违约 学术论文 救济 审查
+        - button "使用图像搜索" [ref=e22] [cursor=pointer]
+    - complementary "帐户奖励和偏好设置" [ref=e24]:
+      - button "Microsoft Rewards" [ref=e25] [cursor=pointer]:
+        - generic [ref=e27]:
+          - generic [ref=e28]: Rewards
+          - img [ref=e30]
+      - link "登录" [ref=e42] [cursor=pointer]:
+        - /url: javascript:void(0)
+        - generic "登录" [ref=e43]
+    - navigation "主菜单" [ref=e44]:
+      - list [ref=e45]:
+        - listitem [ref=e46]:
+          - link "全部" [ref=e47] [cursor=pointer]:
+            - /url: /?scope=web&FORM=HDRSC1
+        - listitem [ref=e48]:
+          - link "搜索" [ref=e49] [cursor=pointer]:
+            - /url: /copilotsearch?q=%e8%a1%8c%e6%94%bf%e5%8d%8f%e8%ae%ae+%e6%94%bf%e5%ba%9c%e8%bf%9d%e7%ba%a6+%e5%ad%a6%e6%9c%af%e8%ae%ba%e6%96%87+%e6%95%91%e6%b5%8e+%e5%ae%a1%e6%9f%a5&FORM=CSSCOP
+            - img [ref=e50]
+            - text: 搜索
+        - listitem [ref=e52]:
+          - link "图片" [ref=e53] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=fc20d06f1e9cd366b4a82f7047bb6d88463bd3baae286858f8d776713027f305JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L2ltYWdlcy9zZWFyY2g_cT0lZTglYTElOGMlZTYlOTQlYmYlZTUlOGQlOGYlZTglYWUlYWUrJWU2JTk0JWJmJWU1JWJhJTljJWU4JWJmJTlkJWU3JWJhJWE2KyVlNSVhZCVhNiVlNiU5YyVhZiVlOCVhZSViYSVlNiU5NiU4NyslZTYlOTUlOTElZTYlYjUlOGUrJWU1JWFlJWExJWU2JTlmJWE1JkZPUk09SERSU0Mz&ntb=1
+        - listitem [ref=e54]:
+          - link "视频" [ref=e55] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=02b015cb7e7cb43544c3794e6c1c0226b448bde0222034c8f45c506f7c0d922aJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3ZpZGVvcy9zZWFyY2g_cT0lZTglYTElOGMlZTYlOTQlYmYlZTUlOGQlOGYlZTglYWUlYWUrJWU2JTk0JWJmJWU1JWJhJTljJWU4JWJmJTlkJWU3JWJhJWE2KyVlNSVhZCVhNiVlNiU5YyVhZiVlOCVhZSViYSVlNiU5NiU4NyslZTYlOTUlOTElZTYlYjUlOGUrJWU1JWFlJWExJWU2JTlmJWE1JkZPUk09SERSU0M0&ntb=1
+        - listitem [ref=e56]:
+          - link "地图" [ref=e57] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=37bbd199015b7466947ad1640e05113a9a8325477543de8bc1ada4a7cedd66a0JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L21hcHM_cT0lZTglYTElOGMlZTYlOTQlYmYlZTUlOGQlOGYlZTglYWUlYWUrJWU2JTk0JWJmJWU1JWJhJTljJWU4JWJmJTlkJWU3JWJhJWE2KyVlNSVhZCVhNiVlNiU5YyVhZiVlOCVhZSViYSVlNiU5NiU4NyslZTYlOTUlOTElZTYlYjUlOGUrJWU1JWFlJWExJWU2JTlmJWE1JkZPUk09SERSU0M2&ntb=1
+        - listitem [ref=e58]:
+          - link "资讯" [ref=e59] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=7d4e19311c9e6df2a05434cb96ffc632dcfdabb0b10235ab1478eb740ab83c62JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L25ld3Mvc2VhcmNoP3E9JWU4JWExJThjJWU2JTk0JWJmJWU1JThkJThmJWU4JWFlJWFlKyVlNiU5NCViZiVlNSViYSU5YyVlOCViZiU5ZCVlNyViYSVhNislZTUlYWQlYTYlZTYlOWMlYWYlZTglYWUlYmElZTYlOTYlODcrJWU2JTk1JTkxJWU2JWI1JThlKyVlNSVhZSVhMSVlNiU5ZiVhNSZGT1JNPUhEUlNDNw&ntb=1
+        - listitem [ref=e60]:
+          - link "Copilot" [ref=e61] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=f48416fde926078058ca7cf2e84b84f8f0aab1226ed65556ec52803ac42afef5JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L2NoYXQ_cHJvbXB0PSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSslZTYlOTQlYmYlZTUlYmElOWMlZTglYmYlOWQlZTclYmElYTYrJWU1JWFkJWE2JWU2JTljJWFmJWU4JWFlJWJhJWU2JTk2JTg3KyVlNiU5NSU5MSVlNiViNSU4ZSslZTUlYWUlYTElZTYlOWYlYTUmc2VuZHF1ZXJ5PTEmRk9STT1TQ0NPRFg&ntb=1
+        - listitem [ref=e62]:
+          - button "更多" [ref=e63] [cursor=pointer]:
+            - img [ref=e65]
+            - text: 更多
+  - generic [ref=e67]:
+    - main "搜索结果" [ref=e68]:
+      - list [ref=e69]:
+        - listitem [ref=e70]:
+          - link "hanspub.org" [ref=e72] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=4ac11dd948552aba2402f80591c766385385327a986f2c3060d09b5e4f5ae86bJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly9wZGYuaGFuc3B1Yi5vcmcvT0pMUzIwMjAwNDAwMDAwXzgwNDUwOTQ1LnBkZg&ntb=1
+            - generic [ref=e77]:
+              - generic [ref=e78]: hanspub.org
+              - generic [ref=e80]:
+                - generic [ref=e81]: https://pdf.hanspub.org
+                - text: · PDF 文件
+          - heading "行政协议范围及救济程序问题探究 - hanspub.org" [level=2] [ref=e82]:
+            - link "行政协议范围及救济程序问题探究 - hanspub.org" [ref=e83] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=4ac11dd948552aba2402f80591c766385385327a986f2c3060d09b5e4f5ae86bJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly9wZGYuaGFuc3B1Yi5vcmcvT0pMUzIwMjAwNDAwMDAwXzgwNDUwOTQ1LnBkZg&ntb=1
+          - paragraph [ref=e85]: 除此以外,该《规定》完善了行政机关的救济程序,通过赋予行政机关申请法院强制执行这一途径,保证行政协议的履行,平衡协议双方的利益,以达到协议双方当事人的相对平等。
+        - listitem [ref=e86]:
+          - link "上海市司法局" [ref=e88] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=91d9fd5049199995aa4758ad2964bca93b44aaf0779e4a6f432590fd0ca1a9c8JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly9zZmouc2guZ292LmNuL3p0emxfeHNxay8yMDIxMDcyMS9lMWEyNDc4MjU3ODM0OGIyYWI4YjU5YzgxYmNiNTFkMy5odG1s&ntb=1
+            - generic [ref=e93]:
+              - generic [ref=e94]: 上海市司法局
+              - generic [ref=e97]: https://sfj.sh.gov.cn › ztzl_xsqk
+          - heading "行政协议的救济制度研究_学术期刊（已归档）_上海市司法局" [level=2] [ref=e98]:
+            - link "行政协议的救济制度研究_学术期刊（已归档）_上海市司法局" [ref=e99] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=91d9fd5049199995aa4758ad2964bca93b44aaf0779e4a6f432590fd0ca1a9c8JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly9zZmouc2guZ292LmNuL3p0emxfeHNxay8yMDIxMDcyMS9lMWEyNDc4MjU3ODM0OGIyYWI4YjU5YzgxYmNiNTFkMy5odG1s&ntb=1
+          - paragraph [ref=e101]: 2021年7月21日 · 因行政协议的特殊性，一般情况下，协议的合法与有效是并存的，协议合法往往意味着协议有效，协议无效亦可能是因为协议不具有合法性所导致的。 但两者之间亦有差别。 首先是两者 …
+        - listitem [ref=e102]:
+          - link "万方数据知识服务平台" [ref=e104] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=202bbca17dd39745b68c48b16c38d6eb1dcf866376ae393b79a6e8811d38aa9bJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly9kLndhbmZhbmdkYXRhLmNvbS5jbi90aGVzaXMvQ2hoVWFHVnphWE5PWlhkVE1qQXlOREE1TWpBeE5URTNNalVTQ0Zrek9UUXlPVFU0R2dneGRuWnFibXgzY0ElM0QlM0Q&ntb=1
+            - generic [ref=e109]:
+              - generic [ref=e110]: 万方数据知识服务平台
+              - generic [ref=e113]: https://d.wanfangdata.com.cn › thesis...
+          - heading "行政协议中行政主体的权利救济研究-学位-万方数据知识服务平台" [level=2] [ref=e114]:
+            - link "行政协议中行政主体的权利救济研究-学位-万方数据知识服务平台" [ref=e115] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=202bbca17dd39745b68c48b16c38d6eb1dcf866376ae393b79a6e8811d38aa9bJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly9kLndhbmZhbmdkYXRhLmNvbS5jbi90aGVzaXMvQ2hoVWFHVnphWE5PWlhkVE1qQXlOREE1TWpBeE5URTNNalVTQ0Zrek9UUXlPVFU0R2dneGRuWnFibXgzY0ElM0QlM0Q&ntb=1
+          - paragraph [ref=e117]: 修订后的《行政诉讼法》自2017年颁布实施以来，公民、法人和其他组织在面对行政争议时的救济途径得到进一步规范和明确。 与之相对应的则是行政主体权利救济困境愈加突出，在面临行政协议相对人 …
+        - listitem [ref=e118]:
+          - link "清华大学法学院" [ref=e120] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=0feb34d1ade986b84983516721d0132519e10a64b68b9034293ca17434bfbe53JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly93d3cubGF3LnRzaW5naHVhLmVkdS5jbi9fX2xvY2FsLzcvRTQvMjQvQUQ4MjFGMDg3QTM2RUI4NTQ1MzYyM0M5MDYyXzY3QjFDMTZFXzFCNkRFNy5wZGY&ntb=1
+            - generic [ref=e125]:
+              - generic [ref=e126]: 清华大学法学院
+              - generic [ref=e128]:
+                - generic [ref=e129]: https://www.law.tsinghua.edu.cn › __local
+                - text: · PDF 文件
+          - heading "论行政协议的司法审查 - Tsinghua University" [level=2] [ref=e130]:
+            - link "论行政协议的司法审查 - Tsinghua University" [ref=e131] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=0feb34d1ade986b84983516721d0132519e10a64b68b9034293ca17434bfbe53JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly93d3cubGF3LnRzaW5naHVhLmVkdS5jbi9fX2xvY2FsLzcvRTQvMjQvQUQ4MjFGMDg3QTM2RUI4NTQ1MzYyM0M5MDYyXzY3QjFDMTZFXzFCNkRFNy5wZGY&ntb=1
+          - paragraph [ref=e133]: 《最高人民法院关于审理行政协议案件若干问题的规定》(2019年)进一步规定行政协议的判断标准;胪列若干有名行政协议;列举与行政协议有利害关系的具体情形;照抄民事诉讼上的“协议管辖”,为行政协议当 …
+        - listitem [ref=e134]:
+          - link "教育论文网" [ref=e136] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=ceafd21dc750cb2f2ff089d9d91f6a3ea15aaf29aba63419867a25265bc00424JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cDovL20uNTFwYXBlcnMuY29tL2x3LzY5LzIvd3o0MDAxODQwLmh0bQ&ntb=1
+            - generic [ref=e141]:
+              - generic [ref=e142]: 教育论文网
+              - generic [ref=e145]: http://m.51papers.com › lw
+          - heading "行政协议执行司法救济研究 - m.51papers.com" [level=2] [ref=e146]:
+            - link "行政协议执行司法救济研究 - m.51papers.com" [ref=e147] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=ceafd21dc750cb2f2ff089d9d91f6a3ea15aaf29aba63419867a25265bc00424JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cDovL20uNTFwYXBlcnMuY29tL2x3LzY5LzIvd3o0MDAxODQwLmh0bQ&ntb=1
+          - paragraph [ref=e149]: 硕士博士毕业论文—行政协议执行司法救济研究
+        - listitem [ref=e150]:
+          - link "知乎专栏" [ref=e152] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=eb52c476ed506e0f06ddc3c41018b889f6db1bcf3d304afa48dbd517ce750efaJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly96aHVhbmxhbi56aGlodS5jb20vcC82MzA3NDc4ODk&ntb=1
+            - generic [ref=e157]:
+              - generic [ref=e158]: 知乎专栏
+              - generic [ref=e161]: https://zhuanlan.zhihu.com
+          - heading "行政协议司法救济法律问题探讨 - 知乎" [level=2] [ref=e162]:
+            - link "行政协议司法救济法律问题探讨 - 知乎" [ref=e163] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=eb52c476ed506e0f06ddc3c41018b889f6db1bcf3d304afa48dbd517ce750efaJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly96aHVhbmxhbi56aGlodS5jb20vcC82MzA3NDc4ODk&ntb=1
+          - paragraph [ref=e165]: 2023年5月19日 · 本文来源：论文堡本文是一篇法律论文，本文从从行政协议法律条文具有缺陷、司法救济存在制度缺位、无名行政协议无法被有效识别这三个层面出发，提出了相应的解决对策，希望对下 …
+        - listitem [ref=e166]:
+          - link "中国社会科学院大学法学院" [ref=e168] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=2a2c1426fd42fab598f6c3518503ef36a2bfd70a566e364097138e4fb96324aaJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly9sYXcudWNhc3MuZWR1LmNuL2luZm8vMTk4NS84NDU2Lmh0bQ&ntb=1
+            - generic [ref=e173]:
+              - generic [ref=e174]: 中国社会科学院大学法学院
+              - generic [ref=e177]: https://law.ucass.edu.cn › info
+          - heading "蔡睿：政府合同的合法性审查——合同与行政行为区分审查模式的提出 …" [level=2] [ref=e178]:
+            - link "蔡睿：政府合同的合法性审查——合同与行政行为区分审查模式的提出 …" [ref=e179] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=2a2c1426fd42fab598f6c3518503ef36a2bfd70a566e364097138e4fb96324aaJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly9sYXcudWNhc3MuZWR1LmNuL2luZm8vMTk4NS84NDU2Lmh0bQ&ntb=1
+          - paragraph [ref=e181]: 2026年2月4日 · 摘要：将政府合同分割为“行政协议”与“民事合同”，对前者比照行政行为进行合法性审查，不仅引发同案不同判的担忧，亦造成司法审查进退失据而陷入自相矛盾的境地。 “行政协议”不是行 …
+        - listitem [ref=e182]:
+          - link "百度学术" [ref=e184] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=d98f62bd2ec3b3ecec6fca87a56dcbf6d73db7ec1770784cdb9e801f5e34681cJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly94dWVzaHUuYmFpZHUuY29tL3VzZXJjZW50ZXIvcGFwZXIvc2hvdz9wYXBlcmlkPTFlM3gwZzMwbjMzNTA0NzBmcDFxMGdzMGhhNjExMjAx&ntb=1
+            - generic [ref=e189]:
+              - generic [ref=e190]: 百度学术
+              - generic [ref=e193]: https://xueshu.baidu.com › usercenter › paper › show
+          - heading "行政协议相对人违约纠纷的解决路径 - 百度学术" [level=2] [ref=e194]:
+            - link "行政协议相对人违约纠纷的解决路径 - 百度学术" [ref=e195] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=d98f62bd2ec3b3ecec6fca87a56dcbf6d73db7ec1770784cdb9e801f5e34681cJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly94dWVzaHUuYmFpZHUuY29tL3VzZXJjZW50ZXIvcGFwZXIvc2hvdz9wYXBlcmlkPTFlM3gwZzMwbjMzNTA0NzBmcDFxMGdzMGhhNjExMjAx&ntb=1
+          - paragraph [ref=e197]: 行政协议在新《行政诉讼法》中被纳入行政诉讼的范畴,这种具有柔性的社会治理方式被越来越广泛地使用.但是,行政法律的原则是对行政机关公权力的约束,对于这种新颖的具有协商性的行为,即行政协议,却 …
+        - listitem [ref=e198]:
+          - link "搜狐" [ref=e200] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=e92b1317abaf47b657194c941ce148c2f6413d52de69a9d97ffbdb5fb76eb8daJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly93d3cuc29odS5jb20vYS80NDUxNjUwOThfNzE4MDUz&ntb=1
+            - generic [ref=e205]:
+              - generic [ref=e206]: 搜狐
+              - generic [ref=e209]: https://www.sohu.com
+          - heading "法学∣陈天昊：行政协议合法性审查机制的构建_职权" [level=2] [ref=e210]:
+            - link "法学∣陈天昊：行政协议合法性审查机制的构建_职权" [ref=e211] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=e92b1317abaf47b657194c941ce148c2f6413d52de69a9d97ffbdb5fb76eb8daJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cHM6Ly93d3cuc29odS5jb20vYS80NDUxNjUwOThfNzE4MDUz&ntb=1
+          - paragraph [ref=e213]: 2021年1月18日 · 为了避免针对行政协议的合法性审查对合同关系安定性造成过度冲击，还应当引入更为丰富的效力判决类型，并在实施合法性审查时嵌入利益衡量，以在作出效力判决时把握规范维度与结 …
+        - listitem [ref=e214]:
+          - link "西南政法大学" [ref=e216] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=c5ebf882637a605072a607d2badc0a8d9d2c870ce6b0b4c47f5e63f9b8a210aeJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cDovL2lyLnN3dXBsLmVkdS5jbjo4MDgwL3huemZkeC9pdGVtL2l0ZW1EZXRhaWwvNjc1NDkuc2h0bWw&ntb=1
+            - generic [ref=e221]:
+              - generic [ref=e222]: 西南政法大学
+              - generic [ref=e225]: http://ir.swupl.edu.cn:8080 › xnzfdx › item › itemDetail
+          - heading "西南政法大学机构知识库" [level=2] [ref=e226]:
+            - link "西南政法大学机构知识库" [ref=e227] [cursor=pointer]:
+              - /url: https://www.bing.com/ck/a?!&&p=c5ebf882637a605072a607d2badc0a8d9d2c870ce6b0b4c47f5e63f9b8a210aeJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cDovL2lyLnN3dXBsLmVkdS5jbjo4MDgwL3huemZkeC9pdGVtL2l0ZW1EZXRhaWwvNjc1NDkuc2h0bWw&ntb=1
+          - paragraph [ref=e229]: 尽管在审查方式、规则上行政协议司法审查更多地呈现出与民事审理规则交融、或进而发展至特有独属的某些特质；但究其根本，行政行为的合法性原则或许始终将是行政协议行为司法审查的根本遵循。
+        - listitem [ref=e230]:
+          - generic [ref=e231]:
+            - heading "深入了解 行政协议 政府违约 学术论文 救济 审查" [level=2] [ref=e232]:
+              - text: 深入了解
+              - strong [ref=e233]: 行政协议 政府违约 学术论文 救济 审查
+            - list [ref=e234]:
+              - listitem [ref=e235]:
+                - link "行政协议司法解释2019" [ref=e236] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=c2cef9f74a040038b7625bcd0941df09a18d2f2f0c0b57f7ef743b4ab155a6bdJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlNSU4ZiViOCVlNiViMyU5NSVlOCVhNyVhMyVlOSU4NyU4YTIwMTkmRk9STT1RU1JFMQ&ntb=1
+                  - strong [ref=e239]: 行政协议司法解释2019
+              - listitem [ref=e240]:
+                - link "行政协议的救济制度研究" [ref=e241] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=a86e58c35c4345f4ff7f9f83cf0f10e5a7d5367d243f0b3c04aadc26d8c63e2eJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlNyU5YSU4NCVlNiU5NSU5MSVlNiViNSU4ZSVlNSU4OCViNiVlNSViYSVhNiVlNyVhMCU5NCVlNyVhOSViNiZGT1JNPVFTUkUy&ntb=1
+                  - strong [ref=e244]: 行政协议的救济制度研究
+              - listitem [ref=e245]:
+                - link "行政复议法救济办法" [ref=e246] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=f60b13577b024f30b973c722dd77c46224801d63b4eb0e18a924cee69ee78017JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSVhNCU4ZCVlOCVhZSVhZSVlNiViMyU5NSVlNiU5NSU5MSVlNiViNSU4ZSVlNSU4YSU5ZSVlNiViMyU5NSZGT1JNPVFTUkUz&ntb=1
+                  - strong [ref=e249]: 行政复议法救济办法
+              - listitem [ref=e250]:
+                - link "行政复议的救济机制" [ref=e251] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=ba7d37bd2cda833a3dfe44ea7b81f8f3da1f03163ab9acfcfbcf54e377e2e8efJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSVhNCU4ZCVlOCVhZSVhZSVlNyU5YSU4NCVlNiU5NSU5MSVlNiViNSU4ZSVlNiU5YyViYSVlNSU4OCViNiZGT1JNPVFTUkU0&ntb=1
+                  - strong [ref=e254]: 行政复议的救济机制
+              - listitem [ref=e255]:
+                - link "行政契约的司法审查" [ref=e256] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=e25cc18ade791f279a7be30987c358c77bb0c455e8fb3d6593077b80a8e0d113JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSVhNSU5MSVlNyViYSVhNiVlNyU5YSU4NCVlNSU4ZiViOCVlNiViMyU5NSVlNSVhZSVhMSVlNiU5ZiVhNSZGT1JNPVFTUkU1&ntb=1
+                  - strong [ref=e259]: 行政契约的司法审查
+              - listitem [ref=e260]:
+                - link "行政协议司法解释期刊" [ref=e261] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=5a38c61810ab3538d53d3d55278c007efcfdb2e74dbe08c8991b6b417e1035cbJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlNSU4ZiViOCVlNiViMyU5NSVlOCVhNyVhMyVlOSU4NyU4YSVlNiU5YyU5ZiVlNSU4OCU4YSZGT1JNPVFTUkU2&ntb=1
+                  - strong [ref=e264]: 行政协议司法解释期刊
+              - listitem [ref=e265]:
+                - link "行政协议和行政复议" [ref=e266] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=1de38cfa0a7332fab007e9e2f0ce7bd319bd5dfd960cbbe940b30505cfd19fe0JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlNSU5MiU4YyVlOCVhMSU4YyVlNiU5NCViZiVlNSVhNCU4ZCVlOCVhZSVhZSZGT1JNPVFTUkU3&ntb=1
+                  - strong [ref=e269]: 行政协议和行政复议
+              - listitem [ref=e270]:
+                - link "行政协议的救济" [ref=e271] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=eaf42332ee9baa5d6a81b32c6b91dbf22af723359b1eb78c1447c9e8132336d3JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlNyU5YSU4NCVlNiU5NSU5MSVlNiViNSU4ZSZGT1JNPVFTUkU4&ntb=1
+                  - strong [ref=e274]: 行政协议的救济
+        - listitem [ref=e275]:
+          - link "某些结果已被删除" [ref=e277] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=7ee39faff3db2c8896d70043c7abb33cfcefe9b2ef73d7fb947b5933a50ac272JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cDovL2dvLm1pY3Jvc29mdC5jb20vZndsaW5rLz9MaW5rSUQ9NjE3MzUw&ntb=1
+    - complementary "更多结果" [ref=e278]:
+      - list [ref=e279]:
+        - listitem [ref=e280]:
+          - generic "相关搜索" [ref=e281]:
+            - generic [ref=e283]:
+              - heading "深入了解 行政协议 政府违约 学术论文 救济 审查" [level=2] [ref=e285]:
+                - text: 深入了解
+                - strong [ref=e286]: 行政协议 政府违约 学术论文 救济 审查
+              - generic [ref=e287]:
+                - link "行政协议司法解释2019" [ref=e289] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=fb6a0eedb8f29c92b589ab4ac3af605193c70ac0219f3e09465d8c1b9818054bJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlNSU4ZiViOCVlNiViMyU5NSVlOCVhNyVhMyVlOSU4NyU4YTIwMTkmRk9STT1SNUZE&ntb=1
+                  - strong [ref=e292]: 行政协议司法解释2019
+                - link "行政协议的救济制度研究" [ref=e294] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=84c5cfbd17d128e84ac70e712b9eda780e6710128c595c9fe2f768b9d6f16598JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlNyU5YSU4NCVlNiU5NSU5MSVlNiViNSU4ZSVlNSU4OCViNiVlNSViYSVhNiVlNyVhMCU5NCVlNyVhOSViNiZGT1JNPVI1RkQx&ntb=1
+                  - strong [ref=e297]: 行政协议的救济制度研究
+                - link "行政复议法救济办法" [ref=e299] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=12d3cb703dd14998b859f444d9eb67340ea9d0740d528531442659deb0850c52JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSVhNCU4ZCVlOCVhZSVhZSVlNiViMyU5NSVlNiU5NSU5MSVlNiViNSU4ZSVlNSU4YSU5ZSVlNiViMyU5NSZGT1JNPVI1RkQy&ntb=1
+                  - strong [ref=e302]: 行政复议法救济办法
+                - link "行政复议的救济机制" [ref=e304] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=6075101f1290ff33fe18e3a7c3f2d16ca05c0ca0a8803c42949f814b898b4c60JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSVhNCU4ZCVlOCVhZSVhZSVlNyU5YSU4NCVlNiU5NSU5MSVlNiViNSU4ZSVlNiU5YyViYSVlNSU4OCViNiZGT1JNPVI1RkQz&ntb=1
+                  - strong [ref=e307]: 行政复议的救济机制
+                - link "行政契约的司法审查" [ref=e309] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=27dcfcf2c542ed5ce52554e5c1928112ff6bb9fabad641c502251fa64e5c62feJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSVhNSU5MSVlNyViYSVhNiVlNyU5YSU4NCVlNSU4ZiViOCVlNiViMyU5NSVlNSVhZSVhMSVlNiU5ZiVhNSZGT1JNPVI1RkQ0&ntb=1
+                  - strong [ref=e312]: 行政契约的司法审查
+                - link "行政协议司法解释期刊" [ref=e314] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=807089d621fbdc12d9915eb1c9eb47c0f2ec097b99a5828fdce85d9566e938a3JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlNSU4ZiViOCVlNiViMyU5NSVlOCVhNyVhMyVlOSU4NyU4YSVlNiU5YyU5ZiVlNSU4OCU4YSZGT1JNPVI1RkQ1&ntb=1
+                  - strong [ref=e317]: 行政协议司法解释期刊
+                - link "行政协议和行政复议" [ref=e319] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=73bb69b9d24021062757235e9aa2ed38d80785f9bff36042d6920cd49ff5029cJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlNSU5MiU4YyVlOCVhMSU4YyVlNiU5NCViZiVlNSVhNCU4ZCVlOCVhZSVhZSZGT1JNPVI1RkQ2&ntb=1
+                  - strong [ref=e322]: 行政协议和行政复议
+                - link "行政协议的救济" [ref=e324] [cursor=pointer]:
+                  - /url: https://www.bing.com/ck/a?!&&p=5457e0cc181b59ceab2778da4350a211537929582eb9b119f731854868c7dc5dJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1L3NlYXJjaD9xPSVlOCVhMSU4YyVlNiU5NCViZiVlNSU4ZCU4ZiVlOCVhZSVhZSVlNyU5YSU4NCVlNiU5NSU5MSVlNiViNSU4ZSZGT1JNPVI1RkQ3&ntb=1
+                  - strong [ref=e327]: 行政协议的救济
+  - contentinfo [ref=e328]:
+    - generic [ref=e329]:
+      - list:
+        - listitem [ref=e330]:
+          - link "隐私" [ref=e331] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=b6ae5025ca05a9355701d8c46fef00b8e81042e9b0f4924d2f294e7af12e03edJmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cDovL2dvLm1pY3Jvc29mdC5jb20vZndsaW5rLz9MaW5rSWQ9NTIxODM5&ntb=1
+        - listitem [ref=e332]:
+          - link "条款" [ref=e333] [cursor=pointer]:
+            - /url: https://www.bing.com/ck/a?!&&p=c61bca14e329b196e6ce6120d01882f38123084d1fda1ef2680551364c4c6728JmltdHM9MTc4MTIyMjQwMA&ptn=3&ver=2&hsh=4&fclid=30b484b0-7a98-6aec-3886-93c77bc76b45&u=a1aHR0cDovL2dvLm1pY3Jvc29mdC5jb20vZndsaW5rLz9MaW5rSUQ9MjQ2MzM4&ntb=1

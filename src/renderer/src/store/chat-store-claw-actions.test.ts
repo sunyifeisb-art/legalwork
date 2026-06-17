@@ -67,17 +67,17 @@ describe('chat-store Claw actions helpers', () => {
   })
 
   it('uses the channel threadId when the latest conversation has none', () => {
-    const item = channel({ threadId: 'kun-channel-thread' })
+    const item = channel({ threadId: 'legalwork-channel-thread' })
     const conversation = { ...item.conversations[0], localThreadId: '' }
-    expect(clawThreadIdForProvider(item, conversation)).toBe('kun-channel-thread')
+    expect(clawThreadIdForProvider(item, conversation)).toBe('legalwork-channel-thread')
   })
 
-  it('recovers an unmapped Claw managed Kun session before creating a new empty one', () => {
+  it('recovers an unmapped Claw managed Legalwork session before creating a new empty one', () => {
     const item = channel()
     const recovered = findRecoverableClawThread(
       [
         thread('empty-claw-thread', '[Claw:Feishu Agent01]', '2026-06-01T00:02:00.000Z'),
-        thread('old-content-thread', `${CLAW_MANAGED_INSTRUCTIONS_HEADING} DeepSeek GUI scheduled-task tools`, '2026-06-01T00:01:00.000Z')
+        thread('old-content-thread', `${CLAW_MANAGED_INSTRUCTIONS_HEADING} legalwork scheduled-task tools`, '2026-06-01T00:01:00.000Z')
       ],
       [item],
       item
@@ -88,10 +88,10 @@ describe('chat-store Claw actions helpers', () => {
 
   it('writes recovered provider thread ids back to both channel and conversation', () => {
     const now = '2026-06-01T00:03:00.000Z'
-    const next = channelWithClawThreadMapping(channel(), 'kun-thread', now, 'conversation-1')
+    const next = channelWithClawThreadMapping(channel(), 'legalwork-thread', now, 'conversation-1')
 
-    expect(next.threadId).toBe('kun-thread')
-    expect(next.conversations[0]?.localThreadId).toBe('kun-thread')
+    expect(next.threadId).toBe('legalwork-thread')
+    expect(next.conversations[0]?.localThreadId).toBe('legalwork-thread')
   })
 
   it('drops stale configured thread ids and falls back to a recovered thread', () => {

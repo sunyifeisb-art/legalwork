@@ -1,0 +1,8 @@
+{
+  "risk_order": {
+    "高风险": 3,
+    "中风险": 2,
+    "建议优化": 1
+  },
+  "summary_template": "共汇总 {count} 个风险/优化项，其中高风险 {high} 个、中风险 {medium} 个、建议优化 {low} 个。"
+}

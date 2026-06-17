@@ -2,13 +2,18 @@ import type { ReactElement } from 'react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
+  BookOpen,
   Clock3,
+  Database,
   FileQuestion,
+  FileText,
   LayoutGrid,
   Plus,
+  Scale,
   Settings,
   Smartphone
 } from 'lucide-react'
+import { GuiUpdateBadge } from '../sidebar/GuiUpdateBadge'
 import type { NormalizedThread } from '../../agent/types'
 import { useChatStore, type SettingsRouteSection } from '../../store/chat-store'
 import type {
@@ -26,16 +31,29 @@ import {
   SidebarCommandRow,
   SidebarFrame
 } from '../sidebar/SidebarPrimitives'
+import {
+  DataComplianceSidebarNav,
+  DesensitizeSidebarNav,
+  type DataComplianceSection,
+  type DesensitizeSection
+} from '../data-compliance/DataCompliancePanel'
+import { LegalResearchSidebar } from '../legal-research/LegalResearchSidebar'
+import type { ResearchRecord } from '../legal-research/useLegalResearch'
 
 type Props = {
   threads: NormalizedThread[]
   activeThreadId: string | null
-  activeView: 'chat' | 'write' | 'claw' | 'schedule'
+  activeView: 'chat' | 'dataCompliance' | 'desensitize' | 'claw' | 'schedule' | 'documentWriting' | 'legalResearch' | 'knowledgeBase'
+  dataComplianceSection: DataComplianceSection
+  desensitizeSection: DesensitizeSection
   connectPhoneSidebarOpen: boolean
   pluginsActive: boolean
+  knowledgePanelOpen: boolean
   runtimeReady: boolean
   threadSearch: string
   showArchivedThreads: boolean
+  legalResearchRecords: ResearchRecord[]
+  activeLegalResearchRecordId: string | null
   onThreadSearchChange: (query: string) => void
   onShowArchivedThreadsChange: (show: boolean) => void
   onSelectThread: (id: string) => void
@@ -50,8 +68,18 @@ type Props = {
   onOpenPlugins: () => void
   onToggleConnectPhone: () => void
   onCodeOpen: () => void
-  onWriteOpen: () => void
+  onDesensitizeOpen: () => void
+  onDesensitizeSectionChange: (section: DesensitizeSection) => void
+  onDataComplianceOpen: () => void
+  onDataComplianceSectionChange: (section: DataComplianceSection) => void
   onScheduleOpen: () => void
+  onDocumentWritingOpen: () => void
+  onLegalResearchOpen: () => void
+  onKnowledgeOpen: () => void
+  onSelectLegalResearchRecord: (id: string) => void
+  onDeleteLegalResearchRecord: (id: string) => void
+  onClearLegalResearchHistory: () => void
+  onStopLegalResearch: () => void
   onToggleSidebar: () => void
 }
 
@@ -59,11 +87,16 @@ export function Sidebar({
   threads,
   activeThreadId,
   activeView,
+  dataComplianceSection,
+  desensitizeSection,
   connectPhoneSidebarOpen,
   pluginsActive,
+  knowledgePanelOpen,
   runtimeReady,
   threadSearch,
   showArchivedThreads,
+  legalResearchRecords,
+  activeLegalResearchRecordId,
   onThreadSearchChange,
   onShowArchivedThreadsChange,
   onSelectThread,
@@ -78,8 +111,18 @@ export function Sidebar({
   onOpenPlugins,
   onToggleConnectPhone,
   onCodeOpen,
-  onWriteOpen,
+  onDesensitizeOpen,
+  onDesensitizeSectionChange,
+  onDataComplianceOpen,
+  onDataComplianceSectionChange,
   onScheduleOpen,
+  onDocumentWritingOpen,
+  onLegalResearchOpen,
+  onKnowledgeOpen,
+  onSelectLegalResearchRecord,
+  onDeleteLegalResearchRecord,
+  onClearLegalResearchHistory,
+  onStopLegalResearch,
   onToggleSidebar
 }: Props): ReactElement {
   const { t, i18n } = useTranslation('common')
@@ -111,6 +154,7 @@ export function Sidebar({
       onCollapse={onToggleSidebar}
       footer={
         <div className="space-y-1">
+          <GuiUpdateBadge />
           <SidebarCommandRow
             icon={<Smartphone className="h-4 w-4" strokeWidth={1.75} />}
             label={t('claw')}
@@ -129,12 +173,13 @@ export function Sidebar({
     >
       <div className="ds-no-drag flex flex-col px-1">
         <WorkspaceModeTabs
-          activeView={activeView}
+          activeView={activeView === 'knowledgeBase' ? 'chat' : activeView}
           onCodeOpen={onCodeOpen}
-          onWriteOpen={onWriteOpen}
+          onDesensitizeOpen={onDesensitizeOpen}
+          onDataComplianceOpen={onDataComplianceOpen}
         />
 
-        {activeView !== 'claw' && activeView !== 'schedule' ? (
+        {activeView === 'chat' || activeView === 'knowledgeBase' ? (
           <>
             <SidebarCommandRow
               icon={<Plus className="h-4 w-4" strokeWidth={2} />}
@@ -152,20 +197,38 @@ export function Sidebar({
               disabledHint={t('runtimeActionNeedsConnection')}
               variant="accent"
             />
+            <SidebarCommandRow
+              icon={<FileText className="h-4 w-4" strokeWidth={1.75} />}
+              label={t('documentWriting')}
+              onClick={onDocumentWritingOpen}
+              active={false}
+            />
+            <SidebarCommandRow
+              icon={<Scale className="h-4 w-4" strokeWidth={1.75} />}
+              label={t('legalResearch')}
+              onClick={onLegalResearchOpen}
+              active={false}
+            />
+            <SidebarCommandRow
+              icon={<Database className="h-4 w-4" strokeWidth={1.75} />}
+              label={t('knowledgeBase')}
+              onClick={onKnowledgeOpen}
+              active={knowledgePanelOpen}
+            />
+            <SidebarCommandRow
+              icon={<LayoutGrid className="h-4 w-4" strokeWidth={1.75} />}
+              label={t('plugins')}
+              onClick={onOpenPlugins}
+              active={pluginsActive}
+            />
+            <SidebarCommandRow
+              icon={<Clock3 className="h-4 w-4" strokeWidth={1.75} />}
+              label={t('schedule')}
+              onClick={onScheduleOpen}
+              active={false}
+            />
           </>
         ) : null}
-        <SidebarCommandRow
-          icon={<LayoutGrid className="h-4 w-4" strokeWidth={1.75} />}
-          label={t('plugins')}
-          onClick={onOpenPlugins}
-          active={pluginsActive}
-        />
-        <SidebarCommandRow
-          icon={<Clock3 className="h-4 w-4" strokeWidth={1.75} />}
-          label={t('schedule')}
-          onClick={onScheduleOpen}
-          active={activeView === 'schedule'}
-        />
       </div>
 
       <div className="ds-no-drag mx-1 my-3" />
@@ -192,16 +255,47 @@ export function Sidebar({
           onOpenSettings={() => setImDialogMode('edit')}
           t={t}
         />
+      ) : activeView === 'documentWriting' ? (
+        <div className="ds-no-drag flex min-h-0 flex-1 flex-col px-2 pt-1">
+          <div className="px-1 text-[15px] font-normal text-ds-faint">
+            {t('documentWriting')}
+          </div>
+        </div>
+      ) : activeView === 'legalResearch' ? (
+        <LegalResearchSidebar
+          records={legalResearchRecords}
+          activeRecordId={activeLegalResearchRecordId}
+          onSelectRecord={onSelectLegalResearchRecord}
+          onDeleteRecord={onDeleteLegalResearchRecord}
+          onClearHistory={onClearLegalResearchHistory}
+          onStopResearch={onStopLegalResearch}
+        />
       ) : activeView === 'schedule' ? (
         <div className="ds-no-drag flex min-h-0 flex-1 flex-col px-2 pt-1">
-          <div className="px-1 text-[13px] font-normal text-ds-faint">
+          <div className="px-1 text-[15px] font-normal text-ds-faint">
             {t('schedule')}
           </div>
         </div>
+      ) : activeView === 'knowledgeBase' ? (
+        <div className="ds-no-drag flex min-h-0 flex-1 flex-col px-2 pt-1">
+          <div className="px-1 text-[15px] font-normal text-ds-faint">
+            {t('knowledgeBase')}
+          </div>
+        </div>
+      ) : activeView === 'desensitize' ? (
+        <DesensitizeSidebarNav
+          activeSection={desensitizeSection}
+          onSectionChange={onDesensitizeSectionChange}
+        />
+      ) : activeView === 'dataCompliance' ? (
+        <DataComplianceSidebarNav
+          activeSection={dataComplianceSection}
+          onSectionChange={onDataComplianceSectionChange}
+        />
       ) : (
       <SidebarProjectsSection
         threads={threads}
-        activeView={activeView === 'write' ? 'write' : 'chat'}
+        activeView="chat"
         activeThreadId={activeThreadId}
         runtimeReady={runtimeReady}
         searchQuery={threadSearch}

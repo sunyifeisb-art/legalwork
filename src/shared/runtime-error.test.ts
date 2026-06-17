@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { parseRuntimeErrorBody, runtimeErrorToError } from './runtime-error'
 
 describe('runtime error parsing', () => {
-  it('parses Kun code, message, and details payloads', () => {
+  it('parses Legalwork code, message, and details payloads', () => {
     const parsed = parseRuntimeErrorBody(
       JSON.stringify({
         code: 'attachment_validation_failed',

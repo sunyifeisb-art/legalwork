@@ -1,5 +1,7 @@
 import { app, dialog, ipcMain, shell, type BrowserWindow, type WebContents } from 'electron'
 import { watch, type FSWatcher } from 'node:fs'
+import { existsSync, mkdirSync } from 'node:fs'
+import { spawn } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import { dirname, join } from 'node:path'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
@@ -12,12 +14,17 @@ import {
   type ClawRuntimeStatus,
   type ScheduleRunResult,
   type ScheduleRuntimeStatus,
-  type ScheduleTaskFromTextResult
+  type ScheduleTaskFromTextResult,
+  resolveLegalworkRuntimeSettings
 } from '../../shared/app-settings'
 import type {
   ClawImInstallPollResult,
   ClawImInstallQrResult,
   DesktopCommand,
+  DataComplianceInstallProgress,
+  DataComplianceRequestResult,
+  DataComplianceStatus,
+  DataComplianceSubmitPayload,
   RuntimeRequestResult,
   SystemNotificationResult,
   TurnCompleteNotificationPayload,
@@ -29,11 +36,15 @@ import {
   clawMirrorPayloadSchema,
   clawImInstallPollPayloadSchema,
   clawTaskFromTextPayloadSchema,
+  dataComplianceDownloadFilePayloadSchema,
+  dataComplianceRequestPayloadSchema,
+  dataComplianceSubmitPayloadSchema,
   deepseekConfigContentSchema,
   desktopCommandSchema,
   defaultPathSchema,
   gitBranchPayloadSchema,
   guiUpdateChannelSchema,
+  knowledgeOpenFilePayloadSchema,
   logErrorPayloadSchema,
   notificationPayloadSchema,
   openEditorPathPayloadSchema,
@@ -57,11 +68,21 @@ import {
   writeExportPayloadSchema,
   writeRichClipboardPayloadSchema,
   writeInlineCompletionPayloadSchema,
-  workspaceRootSchema
+  documentGenerationPayloadSchema,
+  workspaceRootSchema,
+  userTemplateSchema,
+  templateLearningRequestSchema,
+  templateGenerateWithMaterialsRequestSchema,
+  documentHistoryRecordSchema
 } from './app-ipc-schemas'
 import type { JsonSettingsStore } from '../settings-store'
 import type { ClawRuntime } from '../claw-runtime'
 import type { ScheduleRuntime } from '../schedule-runtime'
+import {
+  getRuntimeBaseUrlForSettings,
+  runtimeAuthHeaders
+} from '../runtime/legalwork-adapter'
+import { resolveLegalworkDataDir } from '../legalwork-process'
 import { createAndSwitchGitBranch, getGitBranches, switchGitBranch } from '../services/git-service'
 import {
   createWorkspaceDirectory,
@@ -86,6 +107,23 @@ import {
   listWriteInlineCompletionDebugEntries,
   requestWriteInlineCompletion
 } from '../services/write-inline-completion-service'
+import { generateDocument } from '../services/document-generation-service'
+import { learnTemplate } from '../services/template-learning-service'
+import { generateFromTemplate } from '../services/template-generation-service'
+import {
+  listTemplates,
+  saveTemplate,
+  deleteTemplate,
+  setTemplatesBaseDir
+} from '../services/template-store-service'
+import {
+  listHistory,
+  getHistoryRecord,
+  saveHistoryRecord,
+  deleteHistoryRecord,
+  clearHistory,
+  setHistoryBaseDir
+} from '../services/document-history-service'
 import { copyWriteDocumentAsRichText, exportWriteDocument } from '../services/write-export-service'
 import { listGuiSkills } from '../services/skill-service'
 
@@ -108,6 +146,7 @@ type RegisterAppIpcHandlersOptions = {
     method?: string,
     body?: string
   ) => Promise<RuntimeRequestResult>
+  reconnectRuntime: () => Promise<AppSettingsV1>
   fetchUpstreamModels: () => Promise<UpstreamModelsResult>
   getClawRuntime: () => ClawRuntime | null
   getScheduleRuntime: () => ScheduleRuntime | null
@@ -115,8 +154,8 @@ type RegisterAppIpcHandlersOptions = {
   pollFeishuInstall: (deviceCode: string) => Promise<ClawImInstallPollResult>
   startWeixinInstallQrcode: (weixinBridgeUrl?: string) => Promise<ClawImInstallQrResult>
   pollWeixinInstall: (deviceCode: string, weixinBridgeUrl?: string) => Promise<ClawImInstallPollResult>
-  resolveKunConfigPath: () => string
-  onKunMcpConfigWritten?: (path: string, content: string) => Promise<void> | void
+  resolveLegalworkConfigPath: () => string
+  onLegalworkMcpConfigWritten?: (path: string, content: string) => Promise<void> | void
   showTurnCompleteNotification: (
     payload: TurnCompleteNotificationPayload
   ) => Promise<SystemNotificationResult>
@@ -217,6 +256,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     getMainWindow,
     applySettingsPatch,
     runtimeRequest,
+    reconnectRuntime,
     fetchUpstreamModels,
     getClawRuntime,
     getScheduleRuntime,
@@ -224,8 +264,8 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     pollFeishuInstall,
     startWeixinInstallQrcode,
     pollWeixinInstall,
-    resolveKunConfigPath,
-    onKunMcpConfigWritten,
+    resolveLegalworkConfigPath,
+    onLegalworkMcpConfigWritten,
     showTurnCompleteNotification,
     getAppVersion,
     readGuiUpdateState,
@@ -328,8 +368,392 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     const request = parseIpcPayload('runtime:request', runtimeRequestPayloadSchema, payload)
     return runtimeRequest(request.path, request.method, request.body)
   })
+  ipcMain.handle('runtime:reconnect', async () => reconnectRuntime())
 
   ipcMain.handle('upstream:models', async () => fetchUpstreamModels())
+
+  // 将旧 Flask API 路径映射到主 LegalWork runtime 的 /data-compliance 路径。
+  // 这样前端在过渡期可以继续使用 /api/history、/api/result/:id 等旧路径。
+  function translateDataCompliancePath(path: string): string {
+    // /api/history/:id (DELETE) -> /data-compliance/tasks/:id
+    const historyDeleteMatch = /^\/api\/history\/([^/]+)$/.exec(path)
+    if (historyDeleteMatch) {
+      return `/data-compliance/tasks/${encodeURIComponent(historyDeleteMatch[1])}`
+    }
+    // /api/history -> /data-compliance/tasks
+    if (path === '/api/history') return '/data-compliance/tasks'
+    // /api/result/:id -> /data-compliance/tasks/:id
+    const resultMatch = /^\/api\/result\/([^/]+)$/.exec(path)
+    if (resultMatch) {
+      return `/data-compliance/tasks/${encodeURIComponent(resultMatch[1])}`
+    }
+    // /api/download/:id/:fileType 和 /api/desensitize/download/:id/:fileType -> /data-compliance/tasks/:id/files/:fileKey
+    const downloadMatch = /^\/api(?:\/desensitize)?\/download\/([^/]+)\/([^/]+)$/.exec(path)
+    if (downloadMatch) {
+      return `/data-compliance/tasks/${encodeURIComponent(downloadMatch[1])}/files/${encodeURIComponent(downloadMatch[2])}`
+    }
+    // 已经使用新路径的直接放行
+    if (path.startsWith('/data-compliance/')) return path
+    return path
+  }
+
+  // Inline data-compliance path helpers so the main process installs the venv
+  // and requirements into the exact same locations the runtime service uses.
+  function resolveDataComplianceVenvDir(dataDir: string): string {
+    return join(dataDir, 'data-compliance', 'python-venv')
+  }
+
+  function resolveDataComplianceVenvPython(venvDir: string): string {
+    return process.platform === 'win32'
+      ? join(venvDir, 'Scripts', 'python.exe')
+      : join(venvDir, 'bin', 'python')
+  }
+
+  function resolveDataComplianceWebRootCandidates(): string[] {
+    const appRoot = app.isPackaged
+      ? app.getAppPath().replace(/app\.asar$/, 'app.asar.unpacked')
+      : app.getAppPath()
+    const bundleRoot = 'vendor/data-compliance-review-codex/data-compliance-web'
+    return [
+      join(appRoot, 'app.asar.unpacked', bundleRoot),
+      join(appRoot, bundleRoot),
+      join(appRoot, '..', bundleRoot),
+      join(process.cwd(), bundleRoot)
+    ]
+  }
+
+  let dataComplianceInstalling = false
+
+  async function installDataComplianceEnvironment(
+    event: Electron.IpcMainInvokeEvent,
+    getInstallingFlag: () => boolean
+  ): Promise<boolean> {
+    const setInstalling = (value: boolean): void => {
+      dataComplianceInstalling = value
+    }
+
+    const sendProgress = (progress: DataComplianceInstallProgress): void => {
+      const win = getMainWindow()
+      const contents = win && !win.isDestroyed() ? win.webContents : event.sender
+      if (!contents.isDestroyed()) {
+        contents.send('data-compliance:install-progress', progress)
+      }
+    }
+
+    if (getInstallingFlag()) return true
+    setInstalling(true)
+
+    try {
+      // Resolve paths using the same logic as the runtime service.
+      const settings = await store.load()
+      const runtime = resolveLegalworkRuntimeSettings(settings)
+      const dataDir = resolveLegalworkDataDir(runtime)
+      const venvDir = resolveDataComplianceVenvDir(dataDir)
+      const venvPython = resolveDataComplianceVenvPython(venvDir)
+      const webRoot = resolveDataComplianceWebRootCandidates()
+        .find((candidate) => existsSync(join(candidate, 'requirements.txt'))) ??
+        resolveDataComplianceWebRootCandidates()[0]
+      const requirementsPath = join(webRoot, 'requirements.txt')
+
+      // 1. Detect Python
+      sendProgress({ step: 'detecting', percent: 5, message: '正在检测 Python 环境…' })
+      let pythonCmd = await resolvePythonForCompliance()
+
+      // Windows: auto-download and install Python if not found.
+      if (!pythonCmd && process.platform === 'win32') {
+        pythonCmd = await downloadAndInstallPythonWindows(sendProgress)
+      }
+
+      if (!pythonCmd) {
+        sendProgress({
+          step: 'error',
+          percent: 0,
+          message: process.platform === 'win32'
+            ? '未找到 Python 3，自动安装失败。请手动安装 Python 3 并确保其在 PATH 中。'
+            : '未找到 Python 3，请先安装 Python 3 并确保其在 PATH 中。'
+        })
+        return false
+      }
+
+      // 2. Create venv if needed
+      if (!existsSync(venvPython)) {
+        sendProgress({ step: 'venv', percent: 35, message: '正在创建 Python 虚拟环境…' })
+        mkdirSync(venvDir, { recursive: true })
+        const venvResult = await runCommand(pythonCmd, ['-m', 'venv', venvDir])
+        if (venvResult.exitCode !== 0) {
+          sendProgress({
+            step: 'error',
+            percent: 0,
+            message: `创建 venv 失败: ${venvResult.stderr || venvResult.stdout || '未知错误'}`
+          })
+          return false
+        }
+      }
+
+      // 3. Install dependencies via pip
+      if (existsSync(requirementsPath)) {
+        sendProgress({ step: 'installing', percent: 60, message: '正在安装 Python 依赖包（这可能需要几分钟）…' })
+        const installResult = await runCommand(
+          venvPython,
+          ['-m', 'pip', 'install', '-r', requirementsPath],
+          { cwd: webRoot, timeout: 600_000 }
+        )
+        if (installResult.exitCode !== 0) {
+          sendProgress({
+            step: 'error',
+            percent: 0,
+            message: `安装 Python 依赖失败: ${installResult.stderr || installResult.stdout || '未知错误'}`
+          })
+          return false
+        }
+      }
+
+      // 4. Done
+      sendProgress({ step: 'done', percent: 100, message: 'Python 环境安装完成' })
+
+      // Recheck backend environment.
+      try {
+        await runtimeRequest('/data-compliance/environment', 'GET')
+      } catch {
+        // ignore
+      }
+
+      return true
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      sendProgress({ step: 'error', percent: 0, message: `环境安装异常: ${message}` })
+      return false
+    } finally {
+      setInstalling(false)
+    }
+  }
+
+  async function downloadAndInstallPythonWindows(
+    sendProgress: (progress: DataComplianceInstallProgress) => void
+  ): Promise<string | null> {
+    const https = await import('node:https')
+    const { createWriteStream } = await import('node:fs')
+    const { pipeline } = await import('node:stream/promises')
+    const tmpDir = join(app.getPath('userData'), 'data-compliance', 'tmp')
+    mkdirSync(tmpDir, { recursive: true })
+
+    const pythonVersion = '3.11.9'
+    const installerName = 'python-3.11.9-amd64.exe'
+    const installerPath = join(tmpDir, installerName)
+    const url = `https://www.python.org/ftp/python/${pythonVersion}/${installerName}`
+
+    // Download installer if not cached.
+    if (!existsSync(installerPath)) {
+      sendProgress({ step: 'detecting', percent: 10, message: '未找到 Python，正在下载安装器…' })
+      await new Promise<void>((resolve, reject) => {
+        const file = createWriteStream(installerPath)
+        https
+          .get(url, (response) => {
+            if (response.statusCode !== 200) {
+              reject(new Error(`下载失败: HTTP ${response.statusCode}`))
+              return
+            }
+            const total = parseInt(response.headers['content-length'] || '0', 10)
+            let downloaded = 0
+            response.on('data', (chunk: Buffer) => {
+              downloaded += chunk.length
+              if (total > 0) {
+                const percent = Math.round((downloaded / total) * 20) // 10-30%
+                sendProgress({
+                  step: 'detecting',
+                  percent,
+                  message: `正在下载 Python 安装器 (${Math.round(downloaded / 1024 / 1024)}MB / ${Math.round(total / 1024 / 1024)}MB)…`
+                })
+              }
+            })
+            response.pipe(file)
+            file.on('finish', () => {
+              file.close()
+              resolve()
+            })
+            file.on('error', reject)
+          })
+          .on('error', reject)
+      })
+    }
+
+    // Silent install.
+    sendProgress({ step: 'detecting', percent: 32, message: '正在安装 Python（可能需要管理员权限）…' })
+    const installResult = await runCommand(installerPath, [
+      '/quiet',
+      'InstallAllUsers=0',
+      'PrependPath=1',
+      'Include_pip=1',
+      'Include_test=0'
+    ], { timeout: 300_000 })
+    if (installResult.exitCode !== 0) {
+      throw new Error(`Python 安装失败: ${installResult.stderr || installResult.stdout || `exit code ${installResult.exitCode}`}`)
+    }
+
+    // Verify installation by looking in common locations and refreshed PATH.
+    sendProgress({ step: 'detecting', percent: 33, message: '正在验证 Python 安装…' })
+
+    const userProfile = process.env.USERPROFILE
+    const localAppData = process.env.LOCALAPPDATA
+    const programFiles = process.env.PROGRAMFILES
+    const programFilesX86 = process.env['PROGRAMFILES(X86)']
+
+    const possiblePaths = [
+      join(localAppData || '', 'Programs', 'Python', 'Python311', 'python.exe'),
+      join(programFiles || '', 'Python311', 'python.exe'),
+      join(programFilesX86 || '', 'Python311', 'python.exe'),
+      join(userProfile || '', 'AppData', 'Local', 'Programs', 'Python', 'Python311', 'python.exe')
+    ]
+
+    for (const p of possiblePaths) {
+      if (existsSync(p)) return p
+    }
+
+    // Try refreshed PATH via cmd.exe.
+    const pathResult = await runCommand('cmd.exe', ['/c', 'echo %PATH%'])
+    if (pathResult.exitCode === 0) {
+      const updatedPath = pathResult.stdout.trim()
+      const env = { ...process.env, Path: updatedPath, PATH: updatedPath }
+      for (const cmd of ['python', 'python3', 'py']) {
+        try {
+          const r = await runCommand(cmd, ['--version'], { env })
+          if (r.exitCode === 0 && r.stdout.includes('Python 3')) return cmd
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    throw new Error('Python 安装后未能找到 python.exe，请重启应用后重试。')
+  }
+
+  ipcMain.handle('data-compliance:status', async (event): Promise<DataComplianceStatus> => {
+    try {
+      const result = await runtimeRequest('/data-compliance/environment', 'GET')
+      if (!result.ok) {
+        const parsed = JSON.parse(result.body || '{}') as { error?: string; fix?: string }
+        // Auto-trigger silent install on Windows whenever the environment is not ready.
+        // The install function itself will skip already-completed steps (Python, venv, deps).
+        if (process.platform === 'win32' && !dataComplianceInstalling) {
+          void installDataComplianceEnvironment(event, () => dataComplianceInstalling)
+            .then((ok) => {
+              if (!ok) {
+                console.error('[data-compliance:status] auto-install failed')
+              }
+            })
+            .catch((error) => {
+              console.error('[data-compliance:status] auto-install error:', error)
+            })
+          return {
+            ok: false,
+            running: false,
+            installing: true,
+            baseUrl: '',
+            message: parsed.error || '正在自动安装 Python 环境，请稍候…'
+          }
+        }
+        return {
+          ok: false,
+          running: false,
+          installing: dataComplianceInstalling,
+          baseUrl: '',
+          message: parsed.error || '数据合规服务不可用'
+        }
+      }
+      const parsed = JSON.parse(result.body || '{}') as { python?: string }
+      return {
+        ok: true,
+        running: true,
+        installing: false,
+        baseUrl: '',
+        message: parsed.python ? `Python: ${parsed.python}` : undefined
+      }
+    } catch (error) {
+      return {
+        ok: false,
+        running: false,
+        installing: dataComplianceInstalling,
+        baseUrl: '',
+        message: error instanceof Error ? error.message : String(error)
+      }
+    }
+  })
+
+  ipcMain.handle('data-compliance:install', async (event): Promise<boolean> => {
+    if (dataComplianceInstalling) return true
+    return installDataComplianceEnvironment(event, () => dataComplianceInstalling)
+  })
+
+  ipcMain.handle('data-compliance:request', async (_, payload: unknown): Promise<DataComplianceRequestResult> => {
+    const request = parseIpcPayload('data-compliance:request', dataComplianceRequestPayloadSchema, payload)
+    const translatedPath = translateDataCompliancePath(request.path)
+    try {
+      return await runtimeRequest(translatedPath, request.method, request.body)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      return {
+        ok: false,
+        status: 503,
+        body: JSON.stringify({ error: message }),
+        contentType: 'application/json'
+      }
+    }
+  })
+
+  ipcMain.handle('data-compliance:submit', async (_, payload: unknown): Promise<DataComplianceRequestResult> => {
+    const request = parseIpcPayload(
+      'data-compliance:submit',
+      dataComplianceSubmitPayloadSchema,
+      payload
+    ) as DataComplianceSubmitPayload
+    try {
+      return await runtimeRequest('/data-compliance/tasks', 'POST', JSON.stringify(request))
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      return {
+        ok: false,
+        status: 503,
+        body: JSON.stringify({ error: message }),
+        contentType: 'application/json'
+      }
+    }
+  })
+
+  ipcMain.handle('data-compliance:download-file', async (_, payload: unknown) => {
+    const request = parseIpcPayload(
+      'data-compliance:download-file',
+      dataComplianceDownloadFilePayloadSchema,
+      payload
+    )
+    try {
+      await reconnectRuntime()
+      const settings = await store.load()
+      const base = getRuntimeBaseUrlForSettings(settings)
+      const headers = runtimeAuthHeaders(settings)
+      const url = `${base}/data-compliance/tasks/${encodeURIComponent(request.taskId)}/files/${encodeURIComponent(request.fileKey)}`
+      const res = await fetch(url, { headers, signal: AbortSignal.timeout(30_000) })
+      if (!res.ok) {
+        const text = await res.text().catch(() => '')
+        return { ok: false as const, message: text || `HTTP ${res.status}` }
+      }
+      const buffer = Buffer.from(await res.arrayBuffer())
+      const contentDisposition = res.headers.get('content-disposition') || ''
+      const filenameMatch = /filename="([^"]+)"/.exec(contentDisposition)
+      const filename = filenameMatch ? decodeURIComponent(filenameMatch[1]) : `${request.taskId}_${request.fileKey}`
+      const contentType = res.headers.get('content-type') || 'application/octet-stream'
+      return {
+        ok: true as const,
+        dataBase64: buffer.toString('base64'),
+        filename,
+        contentType
+      }
+    } catch (error) {
+      return {
+        ok: false as const,
+        message: error instanceof Error ? error.message : String(error)
+      }
+    }
+  })
 
   ipcMain.handle('claw:status', async (): Promise<ClawRuntimeStatus> =>
     getClawRuntime()?.status() ?? {
@@ -525,7 +949,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
   })
 
   ipcMain.handle('deepseek:config:read', async () => {
-    const path = resolveKunConfigPath()
+    const path = resolveLegalworkConfigPath()
     try {
       const content = await readFile(path, 'utf8')
       return { path, content, exists: true as const }
@@ -543,12 +967,12 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
       deepseekConfigContentSchema,
       content
     )
-    const path = resolveKunConfigPath()
     validateMcpConfigContent(validatedContent)
+    const path = resolveLegalworkConfigPath()
     await mkdir(dirname(path), { recursive: true })
     await writeFile(path, validatedContent, 'utf8')
     try {
-      await onKunMcpConfigWritten?.(path, validatedContent)
+      await onLegalworkMcpConfigWritten?.(path, validatedContent)
     } catch (error: unknown) {
       logError('mcp-config', 'Failed to apply MCP config change after write', {
         path,
@@ -560,7 +984,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
 
   ipcMain.handle('deepseek:config:open-dir', async () => {
     try {
-      const path = resolveKunConfigPath()
+      const path = resolveLegalworkConfigPath()
       const dirPath = dirname(path)
       await mkdir(dirPath, { recursive: true })
       return openPathWithShell(dirPath)
@@ -718,6 +1142,49 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
       parseIpcPayload('write:copy-rich-text', writeRichClipboardPayloadSchema, payload)
     )
   )
+  ipcMain.handle('legal-research:export-word', async (_, payload: unknown) => {
+    try {
+      const { html, defaultName } = parseIpcPayload(
+        'legal-research:export-word',
+        z.object({ html: z.string(), defaultName: z.string().max(200) }).strict(),
+        payload
+      )
+      const result = await dialog.showSaveDialog({
+        title: '导出调研结果',
+        defaultPath: `${defaultName.replace(/[<>:"/\\|?*]/g, '_')}.docx`,
+        filters: [{ name: 'Word 文档', extensions: ['docx'] }]
+      })
+      if (result.canceled || !result.filePath) {
+        return { ok: false, canceled: true }
+      }
+      const { createRequire } = await import('node:module')
+      const require = createRequire(import.meta.url)
+      const htmlToDocx = require('html-to-docx') as (
+        htmlString: string,
+        headerHtmlString?: string | null,
+        documentOptions?: Record<string, unknown> | null
+      ) => Promise<ArrayBuffer | Blob>
+      const docx = await htmlToDocx(html, null, {
+        title: defaultName,
+        creator: 'legalwork',
+        keywords: ['legal research', '法律调研'],
+        description: `法律调研报告：${defaultName}`,
+        font: 'SimSun',
+        fontSize: 24
+      })
+      const buffer = Buffer.from(
+        docx instanceof ArrayBuffer ? new Uint8Array(docx) : Buffer.from(await docx.arrayBuffer())
+      )
+      await writeFile(result.filePath, buffer)
+      return { ok: true, path: result.filePath }
+    } catch (error) {
+      return {
+        ok: false,
+        canceled: false,
+        message: error instanceof Error ? error.message : String(error)
+      }
+    }
+  })
   ipcMain.handle('write:inline-completion', async (_, payload: unknown) =>
     requestWriteInlineCompletion(
       await store.load(),
@@ -729,6 +1196,74 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     clearWriteInlineCompletionDebugEntries()
     return true
   })
+  ipcMain.handle('document:generate', async (_, payload: unknown) =>
+    generateDocument(
+      await store.load(),
+      parseIpcPayload('document:generate', documentGenerationPayloadSchema, payload)
+    )
+  )
+
+  // ── User Templates (我的模板) ──────────────────────────────────────────
+  // Initialize template store with userData path
+  setTemplatesBaseDir(app.getPath('userData'))
+
+  ipcMain.handle('templates:list', async () => {
+    return listTemplates()
+  })
+
+  ipcMain.handle('templates:save', async (_, payload: unknown) => {
+    const template = parseIpcPayload('templates:save', userTemplateSchema, payload)
+    return saveTemplate(template)
+  })
+
+  ipcMain.handle('templates:delete', async (_, id: unknown) => {
+    const validatedId = parseIpcPayload(
+      'templates:delete',
+      z.string().min(1).max(200),
+      id
+    )
+    return deleteTemplate(validatedId)
+  })
+
+  ipcMain.handle('templates:learn', async (_, payload: unknown) => {
+    const request = parseIpcPayload('templates:learn', templateLearningRequestSchema, payload)
+    return learnTemplate(await store.load(), request)
+  })
+
+  ipcMain.handle('templates:generate', async (_, payload: unknown) => {
+    const request = parseIpcPayload(
+      'templates:generate',
+      templateGenerateWithMaterialsRequestSchema,
+      payload
+    )
+    return generateFromTemplate(await store.load(), request)
+  })
+
+  // ── Document History ──────────────────────────────────────────────
+  setHistoryBaseDir(app.getPath('userData'))
+
+  ipcMain.handle('history:list', async () => {
+    return listHistory()
+  })
+
+  ipcMain.handle('history:get', async (_, id: unknown) => {
+    const validatedId = parseIpcPayload('history:get', z.string().min(1).max(200), id)
+    return getHistoryRecord(validatedId)
+  })
+
+  ipcMain.handle('history:save', async (_, payload: unknown) => {
+    const record = parseIpcPayload('history:save', documentHistoryRecordSchema, payload)
+    return saveHistoryRecord(record)
+  })
+
+  ipcMain.handle('history:delete', async (_, id: unknown) => {
+    const validatedId = parseIpcPayload('history:delete', z.string().min(1).max(200), id)
+    return deleteHistoryRecord(validatedId)
+  })
+
+  ipcMain.handle('history:clear', async () => {
+    return clearHistory()
+  })
   ipcMain.handle('desktop:command', async (event, command: unknown) => {
     runDesktopCommand(
       parseIpcPayload('desktop:command', desktopCommandSchema, command),
@@ -739,6 +1274,28 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
   ipcMain.handle('shell:open-external', async (_, url: unknown) => {
     const validatedUrl = parseIpcPayload('shell:open-external', shellOpenExternalUrlSchema, url)
     await shell.openExternal(validatedUrl)
+  })
+  ipcMain.handle('knowledge:open-file', async (_, payload: unknown) => {
+    const { path } = parseIpcPayload('knowledge:open-file', knowledgeOpenFilePayloadSchema, payload)
+    try {
+      const result = await runtimeRequest(
+        `/v1/knowledge/file/absolute-path?path=${encodeURIComponent(path)}`,
+        'GET'
+      )
+      if (!result.ok) {
+        return { ok: false as const, message: result.body || `请求失败：${result.status}` }
+      }
+      const parsed = JSON.parse(result.body) as { absolute?: string }
+      if (!parsed.absolute) {
+        return { ok: false as const, message: '无法解析文件路径' }
+      }
+      return openPathWithShell(parsed.absolute)
+    } catch (error) {
+      return {
+        ok: false as const,
+        message: error instanceof Error ? error.message : String(error)
+      }
+    }
   })
   ipcMain.handle('notification:turn-complete', async (_, payload: unknown) =>
     showTurnCompleteNotification(
@@ -788,5 +1345,58 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     const error = await shell.openPath(dir)
     if (error) return { ok: false, message: error }
     return { ok: true }
+  })
+}
+
+/** Resolve a Python 3 executable available on the system for data compliance */
+async function resolvePythonForCompliance(env?: NodeJS.ProcessEnv): Promise<string | null> {
+  const candidates = process.platform === 'win32'
+    ? ['python', 'python3', 'py']
+    : ['python3', 'python']
+
+  for (const candidate of candidates) {
+    try {
+      const result = await runCommand(candidate, ['--version'], { env })
+      if (result.exitCode === 0 && result.stdout?.includes('Python 3')) {
+        return candidate
+      }
+    } catch {
+      continue
+    }
+  }
+  return null
+}
+
+/** Run a command and return exit code + stdout + stderr */
+function runCommand(
+  command: string,
+  args: string[],
+  options?: { cwd?: string; timeout?: number; env?: NodeJS.ProcessEnv }
+): Promise<{ exitCode: number | null; stdout: string; stderr: string }> {
+  return new Promise((resolvePromise) => {
+    const child = spawn(command, args, {
+      stdio: ['ignore', 'pipe', 'pipe'],
+      cwd: options?.cwd,
+      env: options?.env,
+      timeout: options?.timeout ?? 120_000 // 2 min default
+    })
+    const stdout: Buffer[] = []
+    const stderr: Buffer[] = []
+    child.stdout?.on('data', (chunk: Buffer) => stdout.push(chunk))
+    child.stderr?.on('data', (chunk: Buffer) => stderr.push(chunk))
+    child.on('close', (exitCode) => {
+      resolvePromise({
+        exitCode,
+        stdout: Buffer.concat(stdout).toString('utf8').trim(),
+        stderr: Buffer.concat(stderr).toString('utf8').trim()
+      })
+    })
+    child.on('error', (error) => {
+      resolvePromise({
+        exitCode: -1,
+        stdout: '',
+        stderr: error.message
+      })
+    })
   })
 }

@@ -349,7 +349,7 @@ describe('FloatingComposer capability controls', () => {
         busy: false,
         runtimeReady: true,
         hasActiveThread: false,
-        workspaceRootOverride: '/workspace/deepseek-gui',
+        workspaceRootOverride: '/workspace/legalwork',
         composerModel: '',
         composerPickList: [],
         onComposerModelChange: () => undefined,
@@ -384,7 +384,7 @@ describe('FloatingComposer capability controls', () => {
         busy: false,
         runtimeReady: true,
         hasActiveThread: false,
-        workspaceRootOverride: '/workspace/deepseek-gui',
+        workspaceRootOverride: '/workspace/legalwork',
         composerModel: '',
         composerPickList: [],
         onComposerModelChange: () => undefined,
@@ -408,7 +408,7 @@ describe('FloatingComposer capability controls', () => {
       activeThreadId: 'thr_1',
       activeThreadGoal: null,
       route: 'chat',
-      workspaceRoot: '/workspace/deepseek-gui',
+      workspaceRoot: '/workspace/legalwork',
       threads: []
     })
 
@@ -416,7 +416,7 @@ describe('FloatingComposer capability controls', () => {
       createElement(FloatingComposer, {
         input: '/openspec',
         setInput: () => undefined,
-        workspaceRootOverride: '/workspace/deepseek-gui',
+        workspaceRootOverride: '/workspace/legalwork',
         mode: 'agent',
         setMode: () => undefined,
         busy: false,
@@ -435,7 +435,7 @@ describe('FloatingComposer capability controls', () => {
           id: 'openspec-apply-change',
           name: 'Openspec Apply Change',
           description: 'Implement tasks from an OpenSpec change',
-          root: '/workspace/deepseek-gui/.codex/skills/openspec-apply-change'
+          root: '/workspace/legalwork/.codex/skills/openspec-apply-change'
         }]
       })
     )
@@ -711,7 +711,7 @@ describe('FloatingComposer capability controls', () => {
         onInterrupt: () => undefined,
         fileReferenceEnabled: true,
         fileReferences: [{
-          path: '/workspace/deepseek-gui/src/App.tsx',
+          path: '/workspace/legalwork/src/App.tsx',
           relativePath: 'src/App.tsx',
           name: 'App.tsx'
         }],

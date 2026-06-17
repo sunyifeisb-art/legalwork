@@ -5,9 +5,9 @@ import {
   readRememberedSddDraft,
   useSddDraftStore
 } from './sdd-draft-store'
-import { saveActiveSddDraftToDisk, syncActiveSddDraftFromDisk } from './sdd-draft-actions'
+import { saveActiveSddDraftToDisk } from './sdd-draft-actions'
 
-const SDD_DRAFT_REGISTRY_STORAGE_KEY = 'deepseekgui.sdd.draft.registry.v1'
+const SDD_DRAFT_REGISTRY_STORAGE_KEY = 'legalwork.sdd.draft.registry.v1'
 
 function createMemoryStorage(): Storage {
   const items = new Map<string, string>()
@@ -54,7 +54,7 @@ describe('sdd-draft-store', () => {
 
     useSddDraftStore.getState().setActiveDraft(draft, '# Requirement')
 
-    expect(draft.id).toBe('/tmp/app:.kunsdd/draft/123e4567-e89b-12d3-a456-426614174000/requirement.md')
+    expect(draft.id).toBe('/tmp/app:.legalworksdd/draft/123e4567-e89b-12d3-a456-426614174000/requirement.md')
     expect(readRememberedSddDraft('/tmp/app')?.id).toBe(draft.id)
     expect(readRememberedSddDraft('/tmp/other')).toBeNull()
   })
@@ -107,7 +107,7 @@ describe('sdd-draft-store', () => {
       drafts: {
         valid: {
           workspaceRoot: '/tmp/valid/',
-          relativePath: '.kunsdd/draft/123e4567-e89b-12d3-a456-426614174000/requirement.md',
+          relativePath: '.legalworksdd/draft/123e4567-e89b-12d3-a456-426614174000/requirement.md',
           createdAt: '2026-01-01T00:00:00.000Z'
         },
         invalid: {
@@ -121,7 +121,7 @@ describe('sdd-draft-store', () => {
     expect(readRememberedSddDraft('/tmp/valid')).toMatchObject({
       id: 'valid',
       workspaceRoot: '/tmp/valid',
-      relativePath: '.kunsdd/draft/123e4567-e89b-12d3-a456-426614174000/requirement.md',
+      relativePath: '.legalworksdd/draft/123e4567-e89b-12d3-a456-426614174000/requirement.md',
       updatedAt: '2026-01-01T00:00:00.000Z'
     })
     expect(readRememberedSddDraft('/tmp/missing')).toBeNull()
@@ -152,7 +152,7 @@ describe('sdd-draft-store', () => {
   it('saves the active draft to disk and updates clean state', async () => {
     const writeWorkspaceFile = vi.fn().mockResolvedValue({
       ok: true,
-      path: '/tmp/app/.kunsdd/draft/123e4567-e89b-12d3-a456-426614174000/requirement.md',
+      path: '/tmp/app/.legalworksdd/draft/123e4567-e89b-12d3-a456-426614174000/requirement.md',
       savedAt: '2026-01-01T00:00:00.000Z'
     })
     window.dsGui.writeWorkspaceFile = writeWorkspaceFile
@@ -168,7 +168,7 @@ describe('sdd-draft-store', () => {
 
     expect(writeWorkspaceFile).toHaveBeenCalledWith({
       workspaceRoot: '/tmp/app',
-      path: '.kunsdd/draft/123e4567-e89b-12d3-a456-426614174000/requirement.md',
+      path: '.legalworksdd/draft/123e4567-e89b-12d3-a456-426614174000/requirement.md',
       content: '# Draft updated'
     })
     expect(useSddDraftStore.getState()).toMatchObject({

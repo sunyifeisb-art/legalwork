@@ -5,11 +5,11 @@ import { join } from 'node:path'
 import {
   mergeScheduleSettings,
   defaultClawSettings,
-  defaultKeyboardShortcuts,
-  defaultKunRuntimeSettings,
+  defaultLegalworkRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultWriteSettings,
+  defaultKeyboardShortcuts,
   type AppSettingsPatch,
   type AppSettingsV1
 } from '../../shared/app-settings'
@@ -18,6 +18,7 @@ const handlers = new Map<string, (event: unknown, payload?: unknown) => Promise<
 
 vi.mock('electron', () => ({
   app: {
+    getPath: vi.fn(() => '/tmp/legalwork-test-user-data'),
     quit: vi.fn()
   },
   dialog: {},
@@ -37,7 +38,7 @@ function settings(): AppSettingsV1 {
     uiFontScale: 'small',
     provider: defaultModelProviderSettings(),
     agents: {
-      kun: defaultKunRuntimeSettings()
+      legalwork: defaultLegalworkRuntimeSettings()
     },
     workspaceRoot: '/tmp/workspace',
     log: { enabled: false, retentionDays: 7 },
@@ -58,6 +59,7 @@ function registerOptions(overrides: Partial<Parameters<typeof import('./register
     getMainWindow: () => null,
     applySettingsPatch,
     runtimeRequest: vi.fn() as never,
+    reconnectRuntime: vi.fn(async () => settings()),
     fetchUpstreamModels: vi.fn() as never,
     getClawRuntime: () => null,
     getScheduleRuntime: () => null,
@@ -65,7 +67,7 @@ function registerOptions(overrides: Partial<Parameters<typeof import('./register
     pollFeishuInstall: vi.fn() as never,
     startWeixinInstallQrcode: vi.fn() as never,
     pollWeixinInstall: vi.fn() as never,
-    resolveKunConfigPath: () => '/tmp/kun.json',
+    resolveLegalworkConfigPath: () => '/tmp/legalwork.json',
     showTurnCompleteNotification: vi.fn() as never,
     getAppVersion: () => '0.1.0',
     readGuiUpdateState: vi.fn() as never,
@@ -90,7 +92,7 @@ describe('registerAppIpcHandlers', () => {
     const handler = handlers.get('settings:set')
     expect(handler).toBeTypeOf('function')
     await expect(
-      handler?.({}, { agents: { kun: { mysteryFlag: true } } })
+      handler?.({}, { agents: { legalwork: { mysteryFlag: true } } })
     ).rejects.toThrow(/Invalid payload for settings:set/)
     expect(applySettingsPatch).not.toHaveBeenCalled()
   })
@@ -104,7 +106,7 @@ describe('registerAppIpcHandlers', () => {
     const payload = {
       theme: 'dark' as const,
       agents: {
-        kun: {
+        legalwork: {
           port: 9000
         }
       }
@@ -112,6 +114,18 @@ describe('registerAppIpcHandlers', () => {
     const handler = handlers.get('settings:set')
     await expect(handler?.({}, payload)).resolves.toEqual(settings())
     expect(applySettingsPatch).toHaveBeenCalledWith(payload)
+  })
+
+  it('routes runtime reconnect IPC to the recovery handler', async () => {
+    const { registerAppIpcHandlers } = await import('./register-app-ipc-handlers')
+    const reconnectRuntime = vi.fn(async () => settings())
+
+    registerAppIpcHandlers(registerOptions({ reconnectRuntime }))
+
+    const handler = handlers.get('runtime:reconnect')
+    expect(handler).toBeTypeOf('function')
+    await expect(handler?.({})).resolves.toEqual(settings())
+    expect(reconnectRuntime).toHaveBeenCalledTimes(1)
   })
 
   it('accepts the full settings snapshot emitted by SettingsView auto-apply', async () => {
@@ -163,7 +177,7 @@ describe('registerAppIpcHandlers', () => {
     const { registerAppIpcHandlers } = await import('./register-app-ipc-handlers')
     const tempRoot = mkdtempSync(join(tmpdir(), 'deepseek-gui-ipc-'))
     const configPath = join(tempRoot, 'mcp.json')
-    const onKunMcpConfigWritten = vi.fn(async () => undefined)
+    const onLegalworkMcpConfigWritten = vi.fn(async () => undefined)
     const content = `${JSON.stringify({
       servers: {
         filesystem: {
@@ -175,8 +189,8 @@ describe('registerAppIpcHandlers', () => {
 
     try {
       registerAppIpcHandlers(registerOptions({
-        resolveKunConfigPath: () => configPath,
-        onKunMcpConfigWritten
+        resolveLegalworkConfigPath: () => configPath,
+        onLegalworkMcpConfigWritten
       }))
 
       await expect(handlers.get('deepseek:config:write')?.({}, content)).resolves.toEqual({
@@ -184,7 +198,7 @@ describe('registerAppIpcHandlers', () => {
         path: configPath
       })
       expect(readFileSync(configPath, 'utf8')).toBe(content)
-      expect(onKunMcpConfigWritten).toHaveBeenCalledWith(configPath, content)
+      expect(onLegalworkMcpConfigWritten).toHaveBeenCalledWith(configPath, content)
     } finally {
       rmSync(tempRoot, { recursive: true, force: true })
     }
@@ -194,12 +208,12 @@ describe('registerAppIpcHandlers', () => {
     const { registerAppIpcHandlers } = await import('./register-app-ipc-handlers')
     const tempRoot = mkdtempSync(join(tmpdir(), 'deepseek-gui-ipc-'))
     const configPath = join(tempRoot, 'mcp.json')
-    const onKunMcpConfigWritten = vi.fn(async () => undefined)
+    const onLegalworkMcpConfigWritten = vi.fn(async () => undefined)
 
     try {
       registerAppIpcHandlers(registerOptions({
-        resolveKunConfigPath: () => configPath,
-        onKunMcpConfigWritten
+        resolveLegalworkConfigPath: () => configPath,
+        onLegalworkMcpConfigWritten
       }))
 
       await expect(handlers.get('deepseek:config:write')?.({}, '{')).rejects.toThrow(
@@ -209,7 +223,7 @@ describe('registerAppIpcHandlers', () => {
         /MCP config must be a JSON object/
       )
       expect(existsSync(configPath)).toBe(false)
-      expect(onKunMcpConfigWritten).not.toHaveBeenCalled()
+      expect(onLegalworkMcpConfigWritten).not.toHaveBeenCalled()
     } finally {
       rmSync(tempRoot, { recursive: true, force: true })
     }

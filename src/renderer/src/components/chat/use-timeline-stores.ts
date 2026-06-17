@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useChatStore } from '../../store/chat-store'
 import type { ClawImChannelV1 } from '@shared/app-settings'
+import type { ModelProviderModelGroup } from '@shared/ds-gui-api'
 import type { NormalizedThread } from '../../agent/types'
 import type { AppRoute } from '../../store/chat-store-types'
 
@@ -22,6 +23,8 @@ export type TimelineStores = {
   turnReasoningFirstAtByUserId: Record<string, number>
   turnReasoningLastAtByUserId: Record<string, number>
   activeThread: NormalizedThread | null
+  composerModel: string
+  composerModelGroups: ModelProviderModelGroup[]
 }
 
 export function useTimelineStores(activeThreadId: string | null): TimelineStores {
@@ -39,6 +42,8 @@ export function useTimelineStores(activeThreadId: string | null): TimelineStores
   const activeThread = useChatStore((s) =>
     activeThreadId ? s.threads.find((thread) => thread.id === activeThreadId) ?? null : null
   )
+  const composerModel = useChatStore((s) => s.composerModel)
+  const composerModelGroups = useChatStore((s) => s.composerModelGroups)
   const activeClawChannel = useMemo(
     () => clawChannels.find((channel) => channel.id === activeClawChannelId) ?? null,
     [activeClawChannelId, clawChannels]
@@ -56,6 +61,8 @@ export function useTimelineStores(activeThreadId: string | null): TimelineStores
     turnDurationByUserId,
     turnReasoningFirstAtByUserId,
     turnReasoningLastAtByUserId,
-    activeThread
+    activeThread,
+    composerModel,
+    composerModelGroups
   }
 }

@@ -5,14 +5,14 @@ import { mkdtempSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import {
   defaultClawSettings,
-  defaultKeyboardShortcuts,
-  defaultKunRuntimeSettings,
+  defaultLegalworkRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultWriteSettings,
+  defaultKeyboardShortcuts,
   type AppSettingsV1
 } from '../shared/app-settings'
-import { fetchUpstreamModelIds, readConfiguredKunModelIds } from './upstream-models'
+import { fetchUpstreamModelIds, readConfiguredLegalworkModelIds } from './upstream-models'
 
 function settings(dataDir: string, model = 'settings-model'): AppSettingsV1 {
   const provider = defaultModelProviderSettings()
@@ -35,8 +35,8 @@ function settings(dataDir: string, model = 'settings-model'): AppSettingsV1 {
       ]
     },
     agents: {
-      kun: {
-        ...defaultKunRuntimeSettings(),
+      legalwork: {
+        ...defaultLegalworkRuntimeSettings(),
         dataDir,
         model,
         providerId: 'custom-provider'
@@ -55,8 +55,8 @@ function settings(dataDir: string, model = 'settings-model'): AppSettingsV1 {
 }
 
 describe('upstream model picker list', () => {
-  it('includes Kun config model profiles, aliases, and the configured agent model', async () => {
-    const dataDir = mkdtempSync(join(tmpdir(), 'deepseek-gui-models-'))
+  it('includes Legalwork config model profiles, aliases, and the configured agent model', async () => {
+    const dataDir = mkdtempSync(join(tmpdir(), 'legalwork-models-'))
     await mkdir(dataDir, { recursive: true })
     await writeFile(
       join(dataDir, 'config.json'),
@@ -77,7 +77,7 @@ describe('upstream model picker list', () => {
       'utf8'
     )
 
-    const ids = await readConfiguredKunModelIds(settings(dataDir))
+    const ids = await readConfiguredLegalworkModelIds(settings(dataDir))
 
     expect(ids).toEqual(expect.arrayContaining([
       'auto',
@@ -91,7 +91,7 @@ describe('upstream model picker list', () => {
   })
 
   it('falls back to configured model ids when upstream cannot be queried', async () => {
-    const dataDir = mkdtempSync(join(tmpdir(), 'deepseek-gui-models-'))
+    const dataDir = mkdtempSync(join(tmpdir(), 'legalwork-models-'))
     await mkdir(dataDir, { recursive: true })
     await writeFile(
       join(dataDir, 'config.json'),
@@ -112,6 +112,8 @@ describe('upstream model picker list', () => {
     if (result.ok) {
       expect(result.modelIds).toContain('local-only-model')
       expect(result.modelIds).toContain('custom-provider-model')
+      expect(result.modelIds).not.toContain('deepseek-v4-pro')
+      expect(result.modelIds).not.toContain('gpt-4o')
       expect(result.modelGroups).toEqual(expect.arrayContaining([
         expect.objectContaining({
           providerId: 'custom-provider',

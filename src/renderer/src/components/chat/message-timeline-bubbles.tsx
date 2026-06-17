@@ -8,11 +8,10 @@ import type { AttachmentReference, ChatBlock, RuntimeDisclosureMetadata, ToolBlo
 import { extractUnifiedDiffText } from '../../lib/diff-stats'
 import { useChatStore } from '../../store/chat-store'
 import { getProvider } from '../../agent/registry'
-import { parseWritePromptForDisplay } from '../../write/quoted-selection'
 import { parseClawUserPromptForDisplay, type ClawUserPromptDisplay } from '@shared/app-settings'
 import { DiffView } from '../DiffView'
 import { AssistantMarkdown } from './AssistantMarkdown'
-import { ModelMetaTag, WritePromptMetaDisclosure } from './message-timeline-cards'
+import { ModelMetaTag } from './message-timeline-cards'
 import { readNumber, formatDuration, formatToolTitle } from './message-timeline-tools'
 
 const COPY_FEEDBACK_RESET_MS = 1600
@@ -34,13 +33,7 @@ function UserMessageBubble({
   const rewindAndResend = useChatStore((s) => s.rewindAndResend)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(block.text)
-  const [writeMetaOpen, setWriteMetaOpen] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const parsedWritePrompt = useMemo(() => {
-    if (route !== 'write') return null
-    const parsed = parseWritePromptForDisplay(block.text)
-    return parsed?.userInput.trim() ? parsed : null
-  }, [block.text, route])
   const parsedClawPrompt = useMemo(() => {
     const parsed = parseClawUserPromptForDisplay(block.text)
     if (!parsed.managed && !parsed.inbound && block.managedBy !== 'claw' && route !== 'claw') return null
@@ -50,7 +43,7 @@ function UserMessageBubble({
     typeof block.meta?.displayText === 'string' && block.meta.displayText.trim()
       ? block.meta.displayText.trim()
       : null
-  const displayText = metaDisplayText ?? parsedWritePrompt?.userInput ?? parsedClawPrompt?.text ?? block.text
+  const displayText = metaDisplayText ?? parsedClawPrompt?.text ?? block.text
   const canEdit = !metaDisplayText
   const showClawInboundCard = route === 'claw' && parsedClawPrompt?.inbound === true
 
@@ -65,10 +58,6 @@ function UserMessageBubble({
     el.style.height = 'auto'
     el.style.height = `${Math.min(el.scrollHeight, 360)}px`
   }, [editing])
-
-  useEffect(() => {
-    setWriteMetaOpen(false)
-  }, [block.id])
 
   const startEdit = (): void => {
     if (busy || !canEdit) return
@@ -152,13 +141,6 @@ function UserMessageBubble({
           <div className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-left">
             {displayText}
           </div>
-          {parsedWritePrompt ? (
-            <WritePromptMetaDisclosure
-              display={parsedWritePrompt}
-              expanded={writeMetaOpen}
-              onToggle={() => setWriteMetaOpen((value) => !value)}
-            />
-          ) : null}
           <RuntimeMetaChips meta={block.meta} align="right" hideAttachments />
         </div>
       )}

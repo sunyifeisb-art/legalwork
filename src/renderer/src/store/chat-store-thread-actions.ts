@@ -46,19 +46,6 @@ import {
   threadBelongsToWorkspace
 } from './chat-store-runtime-helpers'
 import {
-  WRITE_ASSISTANT_THREAD_TITLE,
-  activeWriteThreadForWorkspace,
-  forgetWriteThread,
-  hydrateWriteThreadRegistry,
-  isWriteThreadId,
-  markWriteThread,
-  pruneWriteThreadRegistry,
-  readWriteThreadRegistry,
-  saveWriteThreadRegistry,
-  writeThreadBelongsToWorkspace,
-  writeWorkspaceForThreadId
-} from '../write/write-thread-registry'
-import {
   clearBusyWatchdog,
   resetBusyRecoveryAttempts,
   scheduleStartupRuntimeProbe,
@@ -76,8 +63,6 @@ import {
   isCodeThread,
   latestThread,
   looksLikeActiveTurnError,
-  readActiveWriteWorkspace,
-  readWriteWorkspaceRoots,
   rememberPendingClawFeishuMirror,
   runtimeErrorDetail,
   runtimeStreamRecoveringMessage,
@@ -163,7 +148,7 @@ export function createThreadActions(
         mode: 'agent'
       })
       // Register + activate optimistically before refreshing. A freshly created
-      // Kun thread may not be listed until the first message is written.
+      // Legalwork thread may not be listed until the first message is written.
       // Setting it active first lets refreshThreads preserve it in the sidebar.
       set((s) => ({
         activeThreadId: t.id,
@@ -355,10 +340,6 @@ export function createThreadActions(
       return false
     }
     const p = getProvider()
-    if (get().route === 'write') {
-      const writeThreadId = await get().ensureWriteThreadForWorkspace()
-      if (!writeThreadId) return false
-    }
     const hasPendingActiveTurn = get().blocks.some(hasPendingRuntimeWork)
     if (get().busy || hasPendingActiveTurn) {
       const now = Date.now()

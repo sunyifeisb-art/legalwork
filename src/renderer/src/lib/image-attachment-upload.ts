@@ -1,4 +1,4 @@
-import type { CoreAttachmentTextFallbackJson } from '../agent/kun-contract'
+import type { CoreAttachmentTextFallbackJson } from '../agent/legalwork-contract'
 
 export const DEFAULT_ATTACHMENT_TEXT_FALLBACK_MAX_BASE64_BYTES = 512 * 1024
 export const DEFAULT_ATTACHMENT_TEXT_FALLBACK_MAX_IMAGE_DIMENSION = 1280

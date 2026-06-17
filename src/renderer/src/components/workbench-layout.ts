@@ -10,10 +10,10 @@ import {
 import { WORKSPACE_FILE_PREVIEW_EVENT, type WorkspaceFilePreviewDetail } from '../lib/workspace-file-preview'
 import type { RightPanelMode } from './chat/WorkbenchTopBar'
 
-const LEFT_PANEL_WIDTH_KEY = 'deepseekgui.layout.leftSidebarWidth'
-const LEFT_PANEL_COLLAPSED_KEY = 'deepseekgui.layout.leftSidebarCollapsed'
-const RIGHT_PANEL_WIDTH_KEY = 'deepseekgui.layout.rightInspectorWidth'
-const RIGHT_PANEL_MODE_KEY = 'deepseekgui.layout.rightPanelMode'
+const LEFT_PANEL_WIDTH_KEY = 'legalwork.layout.leftSidebarWidth'
+const LEFT_PANEL_COLLAPSED_KEY = 'legalwork.layout.leftSidebarCollapsed'
+const RIGHT_PANEL_WIDTH_KEY = 'legalwork.layout.rightInspectorWidth'
+const RIGHT_PANEL_MODE_KEY = 'legalwork.layout.rightPanelMode'
 const LEFT_PANEL_DEFAULT = 304
 const RIGHT_PANEL_DEFAULT = 360
 export const CODE_PANEL_PREFERRED = 560
@@ -148,15 +148,13 @@ export function useWorkbenchLayout({
   latestAutoOpenDevPreviewUrl,
   latestDevPreviewUrl,
   route,
-  workspaceRoot,
-  writeAssistantOpen
+  workspaceRoot
 }: {
   activeThreadId: string | null
   latestAutoOpenDevPreviewUrl: string | null
   latestDevPreviewUrl: string | null
   route: AppRoute
   workspaceRoot: string
-  writeAssistantOpen: boolean
 }) {
   const [rightPanelMode, setRightPanelMode] = useState<RightPanelMode>(readStoredRightPanelMode)
   const [filePreviewTarget, setFilePreviewTarget] = useState<WorkspaceFileTarget | null>(null)
@@ -172,7 +170,7 @@ export function useWorkbenchLayout({
   const shellRef = useRef<HTMLDivElement | null>(null)
   const previewThreadId = useRef<string | null>(activeThreadId)
   const autoOpenedPreviewUrlRef = useRef<string | null>(null)
-  const rightPanelVisible = route === 'write' ? writeAssistantOpen : rightPanelMode !== null
+  const rightPanelVisible = rightPanelMode !== null
 
   useEffect(() => {
     persistWidth(LEFT_PANEL_WIDTH_KEY, leftSidebarWidth)
@@ -223,11 +221,6 @@ export function useWorkbenchLayout({
     autoOpenedPreviewUrlRef.current = latestAutoOpenDevPreviewUrl
     setRightPanelMode('browser')
   }, [latestAutoOpenDevPreviewUrl, route])
-
-  useEffect(() => {
-    if (route !== 'write') return
-    if (rightPanelMode !== null) setRightPanelMode(null)
-  }, [route, rightPanelMode])
 
   useLayoutEffect(() => {
     const sync = (): void => {

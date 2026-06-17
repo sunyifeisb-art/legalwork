@@ -3,7 +3,7 @@ import {
   createSideActions,
   teardownAllSideSubscriptions
 } from './chat-store-side-actions'
-import { DEFAULT_KUN_MODEL } from '@shared/app-settings'
+import { DEFAULT_LEGALWORK_MODEL } from '@shared/app-settings'
 import type { ChatState } from './chat-store-types'
 import type { AgentProvider, NormalizedThread, ThreadEventSink } from '../agent/types'
 
@@ -16,7 +16,7 @@ type Harness = {
 }
 
 class FakeProvider implements AgentProvider {
-  readonly id = 'kun' as const
+  readonly id = 'legalwork' as const
   readonly displayName = 'Fake'
   forkMock = vi.fn()
   sendMock = vi.fn()
@@ -308,7 +308,7 @@ describe('chat-store-side-actions', () => {
     )
   })
 
-  it('uses the Kun default model when side creation has no parent or composer model to inherit', async () => {
+  it('uses the Legalwork default model when side creation has no parent or composer model to inherit', async () => {
     const { actions, state } = buildHarness({
       threads: [],
       activeThreadId: 'thr_missing',
@@ -319,7 +319,7 @@ describe('chat-store-side-actions', () => {
     const id = await actions.spawnSideConversation()
 
     expect(id).toBe('side_thr_missing')
-    expect(state.sideConversations[id!].model).toBe(DEFAULT_KUN_MODEL)
+    expect(state.sideConversations[id!].model).toBe(DEFAULT_LEGALWORK_MODEL)
   })
 
   it('a side turn updates only its own blocks/busy and tears down its subscription on close', async () => {

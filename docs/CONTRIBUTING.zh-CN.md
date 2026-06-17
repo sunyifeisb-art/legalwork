@@ -180,7 +180,7 @@ npm run dev
 
 - 操作系统及版本
 - DeepSeek GUI 版本（可在设置页或关于对话框查看）
-- 内置的 `kun` 版本（如可用，在同目录下执行 `kun --version`）
+- 内置的 `legalwork` 版本（如可用，在同目录下执行 `legalwork --version`）
 - 复现步骤
 - 预期行为与实际行为
 - 相关错误信息、日志或截图

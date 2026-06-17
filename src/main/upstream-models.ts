@@ -5,7 +5,7 @@ import {
   getModelProviderProfile,
   getModelProviderSettings,
   listModelProviderModelIds,
-  resolveKunRuntimeSettings,
+  resolveLegalworkRuntimeSettings,
   type AppSettingsV1
 } from '../shared/app-settings'
 import { DEFAULT_COMPOSER_MODEL_IDS } from '../shared/default-composer-models'
@@ -19,20 +19,20 @@ export type FetchUpstreamModelsResult =
 const UPSTREAM_MODELS_TIMEOUT_MS = 8_000
 
 export function fallbackModelIds(): string[] {
-  return sortComposerModelIds(DEFAULT_COMPOSER_MODEL_IDS)
+  return ['auto']
 }
 
 export async function fetchUpstreamModelIds(
   settings: AppSettingsV1,
   apiKey: string
 ): Promise<FetchUpstreamModelsResult> {
-  const configuredModelIds = await readConfiguredKunModelIds(settings)
+  const configuredModelIds = await readConfiguredLegalworkModelIds(settings)
   const configuredGroups = await readConfiguredModelGroups(settings)
   const key = apiKey.trim()
   if (!key) {
     return modelListOrError(configuredModelIds, configuredGroups, 'Missing API key; cannot query upstream /v1/models.')
   }
-  const runtime = resolveKunRuntimeSettings(settings)
+  const runtime = resolveLegalworkRuntimeSettings(settings)
   const activeProvider = getModelProviderProfile(settings, runtime.providerId)
   const url = upstreamOpenAiModelsUrl(runtime.baseUrl)
   try {
@@ -69,7 +69,7 @@ export async function fetchUpstreamModelIds(
         if (id) ids.add(id)
       }
     }
-    const sorted = mergeModelIds([...ids, ...configuredModelIds])
+    const sorted = sortComposerModelIds(['auto', ...ids])
     if (sorted.length === 0) {
       return { ok: false, message: 'Upstream returned an empty model list.' }
     }
@@ -77,7 +77,6 @@ export async function fetchUpstreamModelIds(
       ok: true,
       modelIds: sorted,
       modelGroups: mergeModelGroups([
-        ...configuredGroups,
         {
           providerId: activeProvider.id,
           label: activeProvider.name,
@@ -91,8 +90,8 @@ export async function fetchUpstreamModelIds(
   }
 }
 
-export async function readConfiguredKunModelIds(settings: AppSettingsV1): Promise<string[]> {
-  const runtime = resolveKunRuntimeSettings(settings)
+export async function readConfiguredLegalworkModelIds(settings: AppSettingsV1): Promise<string[]> {
+  const runtime = resolveLegalworkRuntimeSettings(settings)
   const configPath = join(expandHome(runtime.dataDir), 'config.json')
   const ids = [runtime.model, ...listModelProviderModelIds(settings)]
   let parsed: unknown
@@ -116,8 +115,13 @@ function modelListOrError(
   groups: readonly ModelProviderModelGroup[],
   message: string
 ): FetchUpstreamModelsResult {
-  return hasCustomModelId(ids)
-    ? { ok: true, modelIds: mergeModelIds(ids), modelGroups: mergeModelGroups(groups) }
+  const customIds = customModelIds(ids)
+  return customIds.length > 0
+    ? {
+        ok: true,
+        modelIds: sortComposerModelIds(['auto', ...customIds]),
+        modelGroups: mergeModelGroups(filterGroupsToCustomModels(groups))
+      }
     : { ok: false, message }
 }
 
@@ -177,7 +181,7 @@ async function readConfiguredProfileAliasGroups(
   settings: AppSettingsV1,
   providerGroups: readonly ModelProviderModelGroup[]
 ): Promise<ModelProviderModelGroup[]> {
-  const runtime = resolveKunRuntimeSettings(settings)
+  const runtime = resolveLegalworkRuntimeSettings(settings)
   const configPath = join(expandHome(runtime.dataDir), 'config.json')
   let parsed: unknown
   try {
@@ -231,12 +235,23 @@ function mergeModelIds(ids: readonly string[]): string[] {
   return sortComposerModelIds([...DEFAULT_COMPOSER_MODEL_IDS, ...ids])
 }
 
-function hasCustomModelId(ids: readonly string[]): boolean {
+function customModelIds(ids: readonly string[]): string[] {
   const defaults = new Set<string>(DEFAULT_COMPOSER_MODEL_IDS)
-  return ids.some((id) => {
+  return ids.filter((id) => {
     const trimmed = id.trim()
     return trimmed !== '' && !defaults.has(trimmed as typeof DEFAULT_COMPOSER_MODEL_IDS[number])
   })
+}
+
+function filterGroupsToCustomModels(groups: readonly ModelProviderModelGroup[]): ModelProviderModelGroup[] {
+  const defaults = new Set<string>(DEFAULT_COMPOSER_MODEL_IDS)
+  return groups.map((group) => ({
+    ...group,
+    modelIds: group.modelIds.filter((id) => {
+      const trimmed = id.trim()
+      return trimmed !== '' && !defaults.has(trimmed as typeof DEFAULT_COMPOSER_MODEL_IDS[number])
+    })
+  }))
 }
 
 function sortComposerModelIds(ids: readonly string[]): string[] {

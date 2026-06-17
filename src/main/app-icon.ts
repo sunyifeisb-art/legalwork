@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { dirname, isAbsolute, join } from 'node:path'
+import { dirname, isAbsolute, join, win32 } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { nativeImage } from 'electron'
 
@@ -10,8 +10,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
  *
  * electron-vite 的 main config 用 Rollup 处理资源 —— 跟 renderer 不同,
  * main 的 `?url` import 在 dev 和打包后都返回 *相对于 main bundle* 的路径
- * (形如 `'chunks/deepseek-XXXX.png'`)。main bundle 输出在 `out/main/`,所以
- * 运行时 `__dirname = out/main/`,asset 在 `out/main/chunks/deepseek-XXXX.png`。
+ * (形如 `'chunks/legalwork-XXXX.png'`)。main bundle 输出在 `out/main/`,所以
+ * 运行时 `__dirname = out/main/`,asset 在 `out/main/chunks/legalwork-XXXX.png`。
  *
  * 打包后 `__dirname` 在 `app.asar` 内,但 Node 的 `fs.readFileSync` 能透明地
  * 读 asar,所以不需要 `asarUnpack`。这条路径在 dev 和 prod 都成立,不需要
@@ -22,13 +22,16 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
  */
 export function resolveAppIconPath(source: string, baseDir: string = __dirname): string {
   if (source.startsWith('data:')) return source
-  // Vite ?url import 在 dev 模式下会返回带前导斜杠的路径(例如 '/chunks/...')。
-  // 在 Windows 上 path.isAbsolute('/foo') === true(Node 把 /foo 解释成"当前盘根下的 foo"),
-  // 但实际文件并不在 d:\chunks\...,而是在 main bundle 输出目录里。必须先把
-  // 前导斜杠剥掉,再判断 absoluteness。Windows 风格的真绝对路径(带盘符或 UNC)
-  // 不以斜杠开头,原样透传。
+  if (source.startsWith('/chunks/')) {
+    return join(baseDir, source.replace(/^\/+/, ''))
+  }
+  if (win32.isAbsolute(source) || (isAbsolute(source) && !source.startsWith('/chunks/'))) {
+    return source
+  }
+  // Vite ?url import 在 dev 模式下会返回带前导斜杠的 bundle-relative path,
+  // 例如 '/chunks/...'; 这类路径仍然要相对 main bundle 输出目录解析。
   const normalized = source.replace(/^\/+/, '')
-  return isAbsolute(normalized) ? normalized : join(baseDir, normalized)
+  return join(baseDir, normalized)
 }
 
 /**
@@ -54,7 +57,7 @@ export function createAppIcon(source: string): Electron.NativeImage {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     console.warn(
-      '[deepseek-gui] failed to load app icon from',
+      '[legalwork] failed to load app icon from',
       absolute,
       '-',
       message

@@ -88,7 +88,7 @@ export function resolveSddMarkdownImagePath(
   const raw = markdownPath.trim().replaceAll('\\', '/')
   if (!raw || raw.startsWith('/')) return null
   const direct = normalizeSddRelativePath(raw)
-  if (direct.startsWith('.kunsdd/')) return normalizeRelativeParts(direct.split('/'))
+  if (direct.startsWith('.legalworksdd/')) return normalizeRelativeParts(direct.split('/'))
   return normalizeRelativeParts([...dirname(draftRelativePath).split('/'), ...raw.split('/')])
 }
 
@@ -132,7 +132,7 @@ export async function collectSddDraftImages(input: {
     }
     const normalizedPath = normalizeSddRelativePath(relativePath)
     if (!isSddImageRelativePath(normalizedPath)) {
-      errors.push(`SDD images must live under .kunsdd/img: ${parsed.markdownPath}`)
+      errors.push(`SDD images must live under .legalworksdd/img: ${parsed.markdownPath}`)
       continue
     }
     if (seen.has(normalizedPath)) continue

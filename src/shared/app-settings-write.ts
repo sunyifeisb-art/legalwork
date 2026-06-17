@@ -13,7 +13,7 @@ import {
   type WriteSettingsPatchV1,
   type WriteSettingsV1
 } from './app-settings-types'
-import { getActiveAgentApiKey, getKunRuntimeSettings } from './app-settings-kun'
+import { getActiveAgentApiKey, getLegalworkRuntimeSettings } from './app-settings-legalwork'
 import { resolveModelProviderBaseUrl } from './app-settings-provider'
 import { compactStrings } from './app-settings-normalizers'
 
@@ -130,7 +130,7 @@ export function resolveWriteInlineCompletionModel(
   if (!configuredSettings.inheritModel) {
     return normalizeWriteInlineCompletionModel(configured)
   }
-  const runtimeModel = getKunRuntimeSettings(settings).model?.trim() ?? ''
+  const runtimeModel = getLegalworkRuntimeSettings(settings).model?.trim() ?? ''
   if (runtimeModel) return runtimeModel
   return normalizeWriteInlineCompletionModel(configured)
 }

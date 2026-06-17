@@ -1,0 +1,19 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - paragraph [ref=e4]: 法律路途漫漫，难免迷路，好在法律快车伴你相随
+      - paragraph [ref=e5]:
+        - text: 经法律专家仔细研究结果如下：
+        - text: 1、您输入的地址可能有误 2、您要找的网页已失效
+    - generic [ref=e6]:
+      - link "问律师" [ref=e7] [cursor=pointer]:
+        - /url: https://www.lawtime.cn/ask/
+      - link "找律师" [ref=e8] [cursor=pointer]:
+        - /url: https://www.lawtime.cn/lawyer/
+      - link "看知识" [ref=e9] [cursor=pointer]:
+        - /url: https://www.lawtime.cn/zhishi/
+      - link "返回首页" [ref=e10] [cursor=pointer]:
+        - /url: https://www.lawtime.cn/
+  - generic [ref=e11]:
+    - text: 法律快车 版权所有 2004-2022 粤ICP备18072297号增值电信业务经营许可证(ICP证)粤B2-20100586
+    - text: 客服QQ：800111064 (注：此客服QQ不进行法律咨询！)

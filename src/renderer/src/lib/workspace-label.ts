@@ -1,6 +1,7 @@
 import i18n from '../i18n'
 
-const DEFAULT_WORKSPACE_PATH_SUFFIX = '/.deepseekgui/default_workspace'
+const DEFAULT_WORKSPACE_PATH_SUFFIX = '/.legalwork/default_workspace'
+const LEGACY_DEFAULT_WORKSPACE_PATH_SUFFIX = '/.deepseekgui/default_workspace'
 const DEFAULT_WORKSPACE_LABEL = 'default'
 
 function normalizePathForMatch(path: string): string {
@@ -10,8 +11,10 @@ function normalizePathForMatch(path: string): string {
 function isDefaultWorkspacePath(path: string): boolean {
   const normalized = normalizePathForMatch(path)
   return (
-    normalized === '~/.deepseekgui/default_workspace'
+    normalized === '~/.legalwork/default_workspace'
+    || normalized === '~/.deepseekgui/default_workspace'
     || normalized.endsWith(DEFAULT_WORKSPACE_PATH_SUFFIX)
+    || normalized.endsWith(LEGACY_DEFAULT_WORKSPACE_PATH_SUFFIX)
   )
 }
 

@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import {
   defaultClawSettings,
   defaultKeyboardShortcuts,
-  defaultKunRuntimeSettings,
+  defaultLegalworkRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultWriteSettings,
@@ -105,7 +105,7 @@ describe('skill-service', () => {
       theme: 'system',
       uiFontScale: 'small',
       provider: defaultModelProviderSettings(),
-      agents: { kun: defaultKunRuntimeSettings() },
+      agents: { legalwork: defaultLegalworkRuntimeSettings() },
       workspaceRoot,
       log: { enabled: false, retentionDays: 7 },
       notifications: { turnComplete: true },

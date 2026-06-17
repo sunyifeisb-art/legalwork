@@ -3,9 +3,9 @@
   --ds-window-controls-safe-inset: 0px;
   --ds-write-titlebar-extra-inset: 0px;
   --ds-ui-scale: 1;
-  --bg-app: #f5f7fa;
-  --bg-sidebar: #f4f7fb;
-  --bg-canvas: #fbfcfe;
+  --bg-app: #f8f9fa;
+  --bg-sidebar: #f7f8fa;
+  --bg-canvas: #fcfcfd;
   --surface-1: rgba(255, 255, 255, 0.9);
   --surface-2: rgba(255, 255, 255, 0.98);
   --surface-3: #ffffff;
@@ -21,7 +21,7 @@
   --ds-bg-canvas: var(--bg-canvas);
   --ds-surface-card: var(--surface-1);
   --ds-surface-elevated: var(--surface-2);
-  --ds-surface-subtle: #eef2f7;
+  --ds-surface-subtle: #f0f2f5;
   --ds-surface-hover: rgba(15, 23, 42, 0.055);
   --ds-border: var(--border-soft);
   --ds-border-muted: rgba(15, 23, 42, 0.08);
@@ -55,7 +55,7 @@
     0 16px 42px rgba(15, 23, 42, 0.05),
     inset 0 1px 0 rgba(255, 255, 255, 0.64);
   --ds-sidebar-gradient:
-    linear-gradient(180deg, rgba(248, 251, 254, 0.98) 0%, rgba(242, 247, 252, 0.98) 100%);
+    linear-gradient(180deg, rgba(250, 251, 252, 0.98) 0%, rgba(245, 247, 250, 0.98) 100%);
   --ds-sidebar-haze:
     linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0) 30%);
   --ds-sidebar-border: rgba(128, 148, 170, 0.2);
@@ -63,7 +63,7 @@
   --ds-sidebar-row-hover: rgba(124, 148, 174, 0.08);
   --ds-sidebar-row-active: rgba(230, 237, 245, 0.82);
   --ds-sidebar-row-ring: rgba(129, 149, 171, 0.16);
-  --ds-sidebar-field-bg: rgba(247, 250, 253, 0.78);
+  --ds-sidebar-field-bg: rgba(250, 251, 253, 0.78);
   --ds-sidebar-field-focus: rgba(255, 255, 255, 0.92);
   --ds-sidebar-divider: rgba(128, 148, 170, 0.18);
   --ds-card-soft: rgba(255, 255, 255, 0.8);
@@ -506,7 +506,7 @@ body::before {
   position: fixed;
   inset: 0;
   z-index: -2;
-  background: linear-gradient(180deg, #f8fafc 0%, #f3f6fa 100%);
+  background: linear-gradient(180deg, #fafbfc 0%, #f5f6f8 100%);
 }
 
 body::after {
@@ -967,6 +967,86 @@ pre {
   transform: translateZ(0);
 }
 
+.ds-work-logo-brand-kimi {
+  --work-logo-water: rgba(36, 180, 168, 0.28);
+  --work-logo-water-soft: rgba(36, 180, 168, 0.13);
+  --work-logo-water-glint: rgba(12, 89, 87, 0.16);
+  --work-logo-wave-crest: rgba(36, 180, 168, 0.3);
+  --work-logo-splash-strong: rgba(36, 180, 168, 0.5);
+  --work-logo-shadow-color: rgba(36, 180, 168, 0.22);
+  --work-logo-glow: rgba(36, 180, 168, 0.28);
+}
+
+.ds-work-logo-brand-openai {
+  --work-logo-water: rgba(16, 163, 127, 0.28);
+  --work-logo-water-soft: rgba(16, 163, 127, 0.13);
+  --work-logo-water-glint: rgba(103, 232, 249, 0.16);
+  --work-logo-wave-crest: rgba(16, 163, 127, 0.3);
+  --work-logo-splash-strong: rgba(16, 163, 127, 0.5);
+  --work-logo-shadow-color: rgba(16, 163, 127, 0.22);
+  --work-logo-glow: rgba(16, 163, 127, 0.28);
+}
+
+.ds-work-logo-brand-claude {
+  --work-logo-water: rgba(186, 116, 78, 0.3);
+  --work-logo-water-soft: rgba(186, 116, 78, 0.14);
+  --work-logo-water-glint: rgba(244, 196, 150, 0.18);
+  --work-logo-wave-crest: rgba(186, 116, 78, 0.32);
+  --work-logo-splash-strong: rgba(186, 116, 78, 0.54);
+  --work-logo-shadow-color: rgba(186, 116, 78, 0.22);
+  --work-logo-glow: rgba(186, 116, 78, 0.28);
+}
+
+.ds-work-logo-brand-glm {
+  --work-logo-water: rgba(74, 103, 245, 0.3);
+  --work-logo-water-soft: rgba(74, 103, 245, 0.14);
+  --work-logo-water-glint: rgba(168, 85, 247, 0.18);
+  --work-logo-wave-crest: rgba(74, 103, 245, 0.32);
+  --work-logo-splash-strong: rgba(74, 103, 245, 0.54);
+  --work-logo-shadow-color: rgba(74, 103, 245, 0.22);
+  --work-logo-glow: rgba(74, 103, 245, 0.3);
+}
+
+.ds-work-logo-brand-minimax {
+  --work-logo-water: rgba(238, 80, 75, 0.28);
+  --work-logo-water-soft: rgba(238, 80, 75, 0.13);
+  --work-logo-water-glint: rgba(250, 204, 21, 0.16);
+  --work-logo-wave-crest: rgba(238, 80, 75, 0.3);
+  --work-logo-splash-strong: rgba(238, 80, 75, 0.5);
+  --work-logo-shadow-color: rgba(238, 80, 75, 0.22);
+  --work-logo-glow: rgba(238, 80, 75, 0.28);
+}
+
+.ds-work-logo-brand-qwen {
+  --work-logo-water: rgba(46, 111, 255, 0.3);
+  --work-logo-water-soft: rgba(46, 111, 255, 0.14);
+  --work-logo-water-glint: rgba(20, 184, 166, 0.16);
+  --work-logo-wave-crest: rgba(46, 111, 255, 0.32);
+  --work-logo-splash-strong: rgba(46, 111, 255, 0.54);
+  --work-logo-shadow-color: rgba(46, 111, 255, 0.22);
+  --work-logo-glow: rgba(46, 111, 255, 0.28);
+}
+
+.ds-work-logo-brand-doubao {
+  --work-logo-water: rgba(59, 130, 246, 0.28);
+  --work-logo-water-soft: rgba(59, 130, 246, 0.13);
+  --work-logo-water-glint: rgba(236, 72, 153, 0.16);
+  --work-logo-wave-crest: rgba(59, 130, 246, 0.3);
+  --work-logo-splash-strong: rgba(59, 130, 246, 0.5);
+  --work-logo-shadow-color: rgba(59, 130, 246, 0.22);
+  --work-logo-glow: rgba(59, 130, 246, 0.28);
+}
+
+.ds-work-logo-brand-custom {
+  --work-logo-water: rgba(100, 116, 139, 0.28);
+  --work-logo-water-soft: rgba(100, 116, 139, 0.13);
+  --work-logo-water-glint: rgba(14, 165, 233, 0.16);
+  --work-logo-wave-crest: rgba(100, 116, 139, 0.3);
+  --work-logo-splash-strong: rgba(100, 116, 139, 0.5);
+  --work-logo-shadow-color: rgba(100, 116, 139, 0.22);
+  --work-logo-glow: rgba(100, 116, 139, 0.28);
+}
+
 .ds-work-logo-sm {
   --work-logo-path-start: 1.5px, 0.58px;
   --work-logo-path-rise: 0.35px, -0.95px;
@@ -1013,6 +1093,67 @@ pre {
   --work-logo-ripple-end: 10.4px, 0;
   height: 18px;
   width: 26px;
+}
+
+.ds-model-brand-dot {
+  align-items: center;
+  background:
+    radial-gradient(circle at 34% 24%, rgba(255, 255, 255, 0.72), transparent 34%),
+    linear-gradient(135deg, #4d6bfe, #14b8a6);
+  border: 1px solid rgba(255, 255, 255, 0.54);
+  border-radius: 999px;
+  box-shadow: 0 5px 14px rgba(77, 107, 254, 0.16);
+  color: white;
+  display: inline-flex;
+  font-size: 9px;
+  font-weight: 800;
+  height: 20px;
+  justify-content: center;
+  letter-spacing: 0;
+  line-height: 1;
+  min-width: 20px;
+  padding: 0 5px;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.2);
+}
+
+img.ds-model-brand-dot {
+  background: rgba(255, 255, 255, 0.92);
+  display: inline-flex;
+  object-fit: contain;
+  padding: 3px;
+  text-shadow: none;
+}
+
+.ds-model-brand-kimi {
+  background: linear-gradient(135deg, #0f766e, #2dd4bf);
+}
+
+.ds-model-brand-openai {
+  background: linear-gradient(135deg, #059669, #67e8f9);
+}
+
+.ds-model-brand-claude {
+  background: linear-gradient(135deg, #a16207, #d97706);
+}
+
+.ds-model-brand-glm {
+  background: linear-gradient(135deg, #4f46e5, #a855f7);
+}
+
+.ds-model-brand-minimax {
+  background: linear-gradient(135deg, #dc2626, #f59e0b);
+}
+
+.ds-model-brand-qwen {
+  background: linear-gradient(135deg, #2563eb, #14b8a6);
+}
+
+.ds-model-brand-doubao {
+  background: linear-gradient(135deg, #2563eb, #db2777);
+}
+
+.ds-model-brand-custom {
+  background: linear-gradient(135deg, #475569, #0ea5e9);
 }
 
 .ds-work-logo-phase-trail {
@@ -1392,6 +1533,10 @@ pre {
   user-select: none;
 }
 
+.ds-work-logo:not(.ds-work-logo-brand-deepseek) .ds-work-logo-echo {
+  display: none;
+}
+
 .ds-work-logo-image {
   display: block;
   height: 100%;
@@ -1401,6 +1546,42 @@ pre {
   backface-visibility: hidden;
   pointer-events: none;
   user-select: none;
+}
+
+.ds-work-logo-symbol {
+  align-items: center;
+  background:
+    radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.72), transparent 34%),
+    linear-gradient(135deg, var(--work-logo-water), var(--work-logo-splash-strong));
+  border: 1px solid color-mix(in srgb, var(--work-logo-splash-strong) 42%, transparent);
+  border-radius: 42%;
+  box-shadow:
+    0 5px 12px var(--work-logo-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.54);
+  color: white;
+  display: flex;
+  font-size: 8px;
+  font-weight: 800;
+  height: 100%;
+  justify-content: center;
+  letter-spacing: 0;
+  line-height: 1;
+  min-width: 100%;
+  overflow: hidden;
+  padding: 2px;
+  text-shadow: 0 1px 3px rgba(15, 23, 42, 0.24);
+}
+
+.ds-work-logo-symbol-image {
+  display: block;
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
+  transform: scale(1.06);
+}
+
+.ds-work-logo-md .ds-work-logo-symbol {
+  font-size: 9px;
 }
 
 .ds-work-logo.is-active .ds-work-logo-image {
@@ -2508,6 +2689,8 @@ pre {
 }
 
 .ds-runtime-wake-stage {
+  --runtime-brand-a: rgba(0, 136, 255, 0.16);
+  --runtime-brand-b: rgba(18, 138, 74, 0.14);
   display: grid;
   height: 236px;
   margin-bottom: 1.35rem;
@@ -2515,10 +2698,50 @@ pre {
   width: min(560px, 100%);
 }
 
+.ds-runtime-wake-brand-kimi {
+  --runtime-brand-a: rgba(36, 180, 168, 0.18);
+  --runtime-brand-b: rgba(12, 89, 87, 0.14);
+}
+
+.ds-runtime-wake-brand-openai {
+  --runtime-brand-a: rgba(16, 163, 127, 0.18);
+  --runtime-brand-b: rgba(103, 232, 249, 0.14);
+}
+
+.ds-runtime-wake-brand-claude {
+  --runtime-brand-a: rgba(186, 116, 78, 0.2);
+  --runtime-brand-b: rgba(244, 196, 150, 0.16);
+}
+
+.ds-runtime-wake-brand-glm {
+  --runtime-brand-a: rgba(74, 103, 245, 0.2);
+  --runtime-brand-b: rgba(168, 85, 247, 0.15);
+}
+
+.ds-runtime-wake-brand-minimax {
+  --runtime-brand-a: rgba(238, 80, 75, 0.19);
+  --runtime-brand-b: rgba(250, 204, 21, 0.14);
+}
+
+.ds-runtime-wake-brand-qwen {
+  --runtime-brand-a: rgba(46, 111, 255, 0.2);
+  --runtime-brand-b: rgba(20, 184, 166, 0.14);
+}
+
+.ds-runtime-wake-brand-doubao {
+  --runtime-brand-a: rgba(59, 130, 246, 0.2);
+  --runtime-brand-b: rgba(236, 72, 153, 0.14);
+}
+
+.ds-runtime-wake-brand-custom {
+  --runtime-brand-a: rgba(100, 116, 139, 0.18);
+  --runtime-brand-b: rgba(14, 165, 233, 0.14);
+}
+
 .ds-runtime-wake-shell {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 251, 253, 0.9)),
-    linear-gradient(120deg, rgba(0, 136, 255, 0.08), transparent 42%, rgba(18, 138, 74, 0.08));
+    linear-gradient(120deg, var(--runtime-brand-a), transparent 42%, var(--runtime-brand-b));
   border: 1px solid color-mix(in srgb, var(--ds-border) 78%, transparent);
   border-radius: 28px;
   box-shadow:
@@ -2536,8 +2759,8 @@ pre {
     112deg,
     transparent 0%,
     transparent 34%,
-    rgba(0, 136, 255, 0.16) 45%,
-    rgba(18, 138, 74, 0.14) 53%,
+    var(--runtime-brand-a) 45%,
+    var(--runtime-brand-b) 53%,
     transparent 66%,
     transparent 100%
   );
@@ -2824,7 +3047,7 @@ pre {
 [data-theme='dark'] .ds-runtime-wake-shell {
   background:
     linear-gradient(180deg, rgba(32, 32, 32, 0.94), rgba(24, 24, 24, 0.9)),
-    linear-gradient(120deg, rgba(51, 156, 255, 0.1), transparent 42%, rgba(64, 201, 119, 0.09));
+    linear-gradient(120deg, var(--runtime-brand-a), transparent 42%, var(--runtime-brand-b));
   box-shadow:
     0 24px 70px rgba(0, 0, 0, 0.36),
     inset 0 1px 0 rgba(255, 255, 255, 0.07);

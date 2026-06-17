@@ -41,7 +41,7 @@ function thread(id: string, goal: ThreadGoal | null = null): NormalizedThread {
     updatedAt: '2026-06-04T00:00:00.000Z',
     model: 'deepseek-v4-pro',
     mode: 'agent',
-    workspace: '/workspace/deepseek-gui',
+    workspace: '/workspace/legalwork',
     status: 'idle',
     goal
   }

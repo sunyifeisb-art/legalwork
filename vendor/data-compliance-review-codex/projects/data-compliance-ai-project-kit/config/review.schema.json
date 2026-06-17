@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HumanReviewRecord",
+  "type": "object",
+  "required": ["reviewer", "review_time", "report_ref", "decision", "items"],
+  "properties": {
+    "reviewer": {"type": "string"},
+    "review_time": {"type": "string"},
+    "report_ref": {"type": "string"},
+    "decision": {"type": "string", "enum": ["保持原判断", "调整判断", "需进一步研究"]},
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["topic", "ai_conclusion", "human_comment", "needs_rule_fix"],
+        "properties": {
+          "topic": {"type": "string"},
+          "ai_conclusion": {"type": "string"},
+          "human_comment": {"type": "string"},
+          "needs_rule_fix": {"type": "boolean"}
+        }
+      }
+    }
+  }
+}

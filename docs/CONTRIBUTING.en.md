@@ -180,7 +180,7 @@ When reporting issues, please include:
 
 - Operating system and version
 - DeepSeek GUI version (from Settings or the About dialog)
-- Bundled `kun` version (`kun --version` in the same directory, if available)
+- Bundled `legalwork` version (`legalwork --version` in the same directory, if available)
 - Steps to reproduce the issue
 - Expected vs actual behavior
 - Relevant error messages, logs, or screenshots

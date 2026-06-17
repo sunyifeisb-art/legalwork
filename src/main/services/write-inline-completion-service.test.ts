@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import {
   defaultClawSettings,
   defaultKeyboardShortcuts,
-  defaultKunRuntimeSettings,
+  defaultLegalworkRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultWriteSettings,
@@ -30,8 +30,8 @@ function createSettings(patch: Partial<AppSettingsV1['write']['inlineCompletion'
     uiFontScale: 'small',
     provider: defaultModelProviderSettings(),
     agents: {
-      kun: {
-        ...defaultKunRuntimeSettings(),
+      legalwork: {
+        ...defaultLegalworkRuntimeSettings(),
         apiKey: 'sk-test'
       }
     },
@@ -144,7 +144,7 @@ describe('requestWriteInlineCompletion', () => {
       suffix: ' a test.',
       max_tokens: 64
     })
-    expect(body.prompt).toContain('DeepSeek GUI inline completion')
+    expect(body.prompt).toContain('legalwork inline completion')
     expect(body.prompt).toContain('Return only the text to insert at the cursor')
     expect(body.prompt).not.toContain('<<<SHORT')
     expect(body.prompt).toContain('<<<PREFIX')
@@ -182,7 +182,7 @@ describe('requestWriteInlineCompletion', () => {
     const fetchMock = vi.fn()
     vi.stubGlobal('fetch', fetchMock)
     const settings = createSettings()
-    settings.agents.kun.apiKey = ''
+    settings.agents.legalwork.apiKey = ''
 
     const result = await requestWriteInlineCompletion(settings, createRequest())
 
@@ -197,7 +197,7 @@ describe('requestWriteInlineCompletion', () => {
       suffix: ' a test.',
       responseChars: 0
     })
-    expect(debugEntries[0].prompt).toContain('DeepSeek GUI inline completion')
+    expect(debugEntries[0].prompt).toContain('legalwork inline completion')
     expect(debugEntries[0].prompt.endsWith('# Draft\n\nThis is')).toBe(true)
   })
 
@@ -226,7 +226,7 @@ describe('requestWriteInlineCompletion', () => {
     })
   })
 
-  it('falls back to the General baseUrl and Kun model when write keeps defaults', async () => {
+  it('falls back to the General baseUrl and Legalwork model when write keeps defaults', async () => {
     const fetchMock = vi.fn(async () =>
       new Response(JSON.stringify({ choices: [{ text: ' fallback text' }] }), {
         status: 200,
@@ -237,7 +237,7 @@ describe('requestWriteInlineCompletion', () => {
 
     const settings = createSettings()
     settings.provider.baseUrl = 'https://general.example/v1'
-    settings.agents.kun.model = 'deepseek-chat'
+    settings.agents.legalwork.model = 'deepseek-chat'
     settings.write.inlineCompletion.baseUrl = 'https://api.deepseek.com/beta'
     settings.write.inlineCompletion.model = 'deepseek-v4-flash'
 
@@ -272,7 +272,7 @@ describe('requestWriteInlineCompletion', () => {
       model: 'deepseek-v4-flash'
     })
     settings.provider.baseUrl = 'https://general.example/v1'
-    settings.agents.kun.model = 'deepseek-chat'
+    settings.agents.legalwork.model = 'deepseek-chat'
 
     const result = await requestWriteInlineCompletion(settings, {
       ...createRequest(),
@@ -435,7 +435,7 @@ describe('requestWriteInlineCompletion', () => {
         startColumn: 1,
         endLine: 3,
         endColumn: 38,
-        original: 'DeepSeek GUI keeps text editing local.'
+        original: 'legalwork keeps text editing local.'
       },
       recentEdits: [{
         source: 'user' as const,
@@ -443,7 +443,7 @@ describe('requestWriteInlineCompletion', () => {
         filePath: '/tmp/workspace/draft.md',
         from: 9,
         to: 21,
-        deletedText: 'DeepSeek GUI',
+        deletedText: 'legalwork',
         insertedText: 'Write mode',
         beforeContext: '',
         afterContext: ' keeps text editing local.'
@@ -460,7 +460,7 @@ describe('requestWriteInlineCompletion', () => {
         replacement: 'Write mode keeps text editing local.',
         from: 9,
         to: 47,
-        original: 'DeepSeek GUI keeps text editing local.',
+        original: 'legalwork keeps text editing local.',
         scopeKind: 'paragraph'
       }
     })
@@ -508,7 +508,7 @@ describe('requestWriteInlineCompletion', () => {
         startColumn: 1,
         endLine: 3,
         endColumn: 38,
-        original: 'DeepSeek GUI keeps text editing local.'
+        original: 'legalwork keeps text editing local.'
       }
     }
 
@@ -560,7 +560,7 @@ describe('requestWriteInlineCompletion', () => {
         startColumn: 1,
         endLine: 3,
         endColumn: 38,
-        original: 'DeepSeek GUI keeps text editing local.'
+        original: 'legalwork keeps text editing local.'
       }
     }
 
@@ -580,7 +580,7 @@ describe('requestWriteInlineCompletion', () => {
     const request = createRequest()
 
     const prompt = buildWriteInlineCompletionPrompt(request, null)
-    expect(prompt).toContain('DeepSeek GUI inline completion')
+    expect(prompt).toContain('legalwork inline completion')
     expect(prompt).toContain('<<<PREFIX')
     expect(prompt).toContain('<<<SUFFIX')
     expect(prompt).not.toContain('<<<SHORT')
@@ -603,7 +603,7 @@ describe('parseWriteInlineAction', () => {
       editTarget: {
         from: 9,
         to: 21,
-        original: 'DeepSeek GUI',
+        original: 'legalwork',
         scopeKind: 'selection'
       }
     })).toEqual({
@@ -611,7 +611,7 @@ describe('parseWriteInlineAction', () => {
       replacement: 'Write mode',
       from: 9,
       to: 21,
-      original: 'DeepSeek GUI',
+      original: 'legalwork',
       scopeKind: 'selection'
     })
   })

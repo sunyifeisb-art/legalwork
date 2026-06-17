@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   defaultClawSettings,
   defaultKeyboardShortcuts,
-  defaultKunRuntimeSettings,
+  defaultLegalworkRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultWriteSettings,
@@ -58,7 +58,7 @@ function buildSettings(): AppSettingsV1 {
     theme: 'system',
     uiFontScale: 'medium',
     provider: defaultModelProviderSettings(),
-    agents: { kun: defaultKunRuntimeSettings() },
+    agents: { legalwork: defaultLegalworkRuntimeSettings() },
     workspaceRoot: '/tmp/workspace',
     log: { enabled: true, retentionDays: 7 },
     notifications: { turnComplete: true },

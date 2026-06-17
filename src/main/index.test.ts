@@ -53,21 +53,21 @@ describe('app icon loader', () => {
 
   describe('resolveAppIconPath', () => {
     it('joins a relative source with the provided baseDir', () => {
-      const resolved = mod.resolveAppIconPath('chunks/deepseek-XXXX.png', '/app/bundle')
+      const resolved = mod.resolveAppIconPath('chunks/legalwork-XXXX.png', '/app/bundle')
       // 路径分隔符因平台而异(Windows 是 \,其它是 /),用 toMatch 避免硬编码
-      expect(resolved.replace(/\\/g, '/')).toBe('/app/bundle/chunks/deepseek-XXXX.png')
+      expect(resolved.replace(/\\/g, '/')).toBe('/app/bundle/chunks/legalwork-XXXX.png')
     })
 
     it('strips a leading slash before joining with baseDir (dev mode quirk)', () => {
       // Vite ?url import 在 dev 模式下会返回 '/chunks/deepseek-XXXX.png'(带前导斜杠)。
       // 在 Windows 上 path.isAbsolute('/foo') === true,但实际文件并不在当前盘根下,
       // 而是在 main bundle 输出目录里 —— 必须把前导斜杠剥掉,当作相对路径 join。
-      const resolved = mod.resolveAppIconPath('/chunks/deepseek-XXXX.png', 'd:\\app\\bundle')
-      expect(resolved.replace(/\\/g, '/')).toBe('d:/app/bundle/chunks/deepseek-XXXX.png')
+      const resolved = mod.resolveAppIconPath('/chunks/legalwork-XXXX.png', 'd:\\app\\bundle')
+      expect(resolved.replace(/\\/g, '/')).toBe('d:/app/bundle/chunks/legalwork-XXXX.png')
     })
 
     it('passes an absolute source through unchanged', () => {
-      const absolute = 'C:\\Users\\me\\app.asar\\deepseek.png'
+      const absolute = '/Users/me/app.asar/legalwork.png'
       expect(mod.resolveAppIconPath(absolute, '/ignored')).toBe(absolute)
     })
 
@@ -92,7 +92,7 @@ describe('app icon loader', () => {
       const pngBytes = Buffer.concat([PNG_MAGIC, Buffer.alloc(2048, 0xab)])
       fsMock.readFileSync.mockReturnValue(pngBytes)
 
-      const icon = mod.createAppIcon('chunks/deepseek-XXXX.png')
+      const icon = mod.createAppIcon('chunks/legalwork-XXXX.png')
 
       // 关键的反向断言:createFromPath 永远不应被调用 ——
       // 旧实现 (createFromPath) 既读不了 dev server URL,也读不了 asar,
@@ -100,7 +100,7 @@ describe('app icon loader', () => {
       expect(createFromPath).not.toHaveBeenCalled()
       expect(fsMock.readFileSync).toHaveBeenCalledTimes(1)
       const [calledPath] = fsMock.readFileSync.mock.calls[0] as [string]
-      expect(calledPath.replace(/\\/g, '/')).toContain('chunks/deepseek-XXXX.png')
+      expect(calledPath.replace(/\\/g, '/')).toContain('chunks/legalwork-XXXX.png')
 
       expect(createFromBuffer).toHaveBeenCalledTimes(1)
       const buffer = createFromBuffer.mock.calls[0]?.[0] as Buffer

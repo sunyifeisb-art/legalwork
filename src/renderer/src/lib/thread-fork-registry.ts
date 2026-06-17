@@ -16,7 +16,7 @@ export type ThreadForkRegistry = {
 
 export const MAX_THREAD_FORK_REGISTRY_ENTRIES = 500
 
-const THREAD_FORK_REGISTRY_KEY = 'deepseekgui.threadForks.v1'
+const THREAD_FORK_REGISTRY_KEY = 'legalwork.threadForks.v1'
 
 export function emptyThreadForkRegistry(): ThreadForkRegistry {
   return { version: 1, forks: {} }

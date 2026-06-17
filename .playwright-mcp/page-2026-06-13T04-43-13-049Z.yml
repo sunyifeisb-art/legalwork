@@ -1,0 +1,524 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]:
+          - link "DuckDuckGo home" [ref=e7] [cursor=pointer]:
+            - /url: /?t=h_
+            - generic [ref=e9]: DuckDuckGo
+          - generic [ref=e15]:
+            - combobox "私密搜索" [ref=e17]: 行政诉讼 撤诉 典型案例 裁判
+            - button "search" [ref=e19] [cursor=pointer]:
+              - img [ref=e20]
+        - generic [ref=e22]:
+          - generic [ref=e23]:
+            - generic [ref=e25]:
+              - banner [ref=e26]:
+                - img [ref=e27]
+                - paragraph [ref=e28]: 升级到我们的浏览器。
+              - generic [ref=e29]:
+                - generic [ref=e30]:
+                  - img [ref=e31]
+                  - generic [ref=e32]:
+                    - img [ref=e33]
+                    - img [ref=e34]
+                - paragraph [ref=e35]:
+                  - generic [ref=e36]:
+                    - text: 试用
+                    - strong [ref=e37]: DuckDuckGo 浏览器。
+                    - text: 快速。免费。私密。
+                - link "下载浏览器" [ref=e38] [cursor=pointer]:
+                  - /url: https://duckduckgo.com/mac?origin=funnel_browser_searchresults__popover
+                  - img [ref=e39]
+                  - generic [ref=e41]: 下载浏览器
+              - paragraph [ref=e44]:
+                - generic [ref=e45]: 免费
+            - button [ref=e47] [cursor=pointer]:
+              - img [ref=e48]
+          - button "打开菜单" [ref=e50] [cursor=pointer]:
+            - generic [ref=e51]: 打开菜单
+            - img [ref=e52]
+      - navigation [ref=e58]:
+        - list [ref=e59]:
+          - listitem [ref=e60]:
+            - link "全部" [ref=e61] [cursor=pointer]:
+              - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC+%E6%92%A4%E8%AF%89+%E5%85%B8%E5%9E%8B%E6%A1%88%E4%BE%8B+%E8%A3%81%E5%88%A4&t=h_&ia=web
+              - img [ref=e62]
+              - text: 全部
+          - listitem [ref=e64]:
+            - link "图片" [ref=e65] [cursor=pointer]:
+              - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC+%E6%92%A4%E8%AF%89+%E5%85%B8%E5%9E%8B%E6%A1%88%E4%BE%8B+%E8%A3%81%E5%88%A4&t=h_&ia=images&iax=images
+          - listitem [ref=e66]:
+            - link "视频" [ref=e67] [cursor=pointer]:
+              - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC+%E6%92%A4%E8%AF%89+%E5%85%B8%E5%9E%8B%E6%A1%88%E4%BE%8B+%E8%A3%81%E5%88%A4&t=h_&ia=videos&iax=videos
+          - listitem [ref=e68]:
+            - link "新闻" [ref=e69] [cursor=pointer]:
+              - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC+%E6%92%A4%E8%AF%89+%E5%85%B8%E5%9E%8B%E6%A1%88%E4%BE%8B+%E8%A3%81%E5%88%A4&t=h_&ia=news&iar=news
+          - listitem [ref=e70]:
+            - generic [ref=e71]:
+              - generic [ref=e72] [cursor=pointer]:
+                - generic [ref=e74]: 更多
+                - img [ref=e75]: ▼
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - link "地图":
+                          - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC+%E6%92%A4%E8%AF%89+%E5%85%B8%E5%9E%8B%E6%A1%88%E4%BE%8B+%E8%A3%81%E5%88%A4&t=h_&iaxm=maps
+                  - generic:
+                    - generic:
+                      - generic:
+                        - link "购物":
+                          - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC+%E6%92%A4%E8%AF%89+%E5%85%B8%E5%9E%8B%E6%A1%88%E4%BE%8B+%E8%A3%81%E5%88%A4&t=h_&ia=shopping&iax=shopping
+        - list [ref=e77]:
+          - listitem [ref=e78]:
+            - link "Duck.ai" [ref=e80] [cursor=pointer]:
+              - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC+%E6%92%A4%E8%AF%89+%E5%85%B8%E5%9E%8B%E6%A1%88%E4%BE%8B+%E8%A3%81%E5%88%A4&t=h_&ia=chat
+              - img [ref=e81]
+              - text: Duck.ai
+          - listitem [ref=e84]:
+            - button "搜索设置 ✀" [ref=e86] [cursor=pointer]:
+              - img [ref=e87]
+              - generic [ref=e89]: 搜索设置
+              - generic [ref=e92]: ✀
+    - generic [ref=e97]:
+      - navigation [ref=e99]:
+        - generic [ref=e102] [cursor=pointer]:
+          - generic [ref=e110]: 受保护
+          - img [ref=e111]: ▼
+        - generic [ref=e115] [cursor=pointer]:
+          - generic [ref=e118]:
+            - switch "✓" [ref=e119]: ✓
+            - generic [ref=e121]: 澳大利亚
+          - img [ref=e122]: ▼
+        - generic [ref=e126] [cursor=pointer]:
+          - generic [ref=e127]: 安全搜索： 适中
+          - img [ref=e128]: ▼
+        - generic [ref=e132] [cursor=pointer]:
+          - generic [ref=e133]: 不限时间
+          - img [ref=e134]: ▼
+      - generic [ref=e137]:
+        - list [ref=e138]:
+          - listitem [ref=e139]:
+            - article [ref=e140] [cursor=pointer]:
+              - button [ref=e142]:
+                - img [ref=e143]
+              - generic [ref=e147]:
+                - link "将结果来源限定为 court.gov.cn" [ref=e149]:
+                  - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC%20%E6%92%A4%E8%AF%89%20%E5%85%B8%E5%9E%8B%E6%A1%88%E4%BE%8B%20%E8%A3%81%E5%88%A4+site:www.court.gov.cn&t=h_
+                  - img [ref=e151]
+                - generic [ref=e152]:
+                  - paragraph [ref=e153]: 最高人民法院
+                  - link "https://www.court.gov.cn › zixun › xiangqing › 478981.html" [ref=e154]:
+                    - /url: https://www.court.gov.cn/zixun/xiangqing/478981.html
+                    - paragraph [ref=e156]:
+                      - generic [ref=e157]: https://www.court.gov.cn
+                      - generic [ref=e158]: › zixun › xiangqing › 478981.html
+              - heading "以案结事了促政通人和 最高人民法院发布行政诉讼法修正施行十周年典型案例 - 中华人民共和国最高人民法院" [level=2] [ref=e160]:
+                - link "以案结事了促政通人和 最高人民法院发布行政诉讼法修正施行十周年典型案例 - 中华人民共和国最高人民法院" [ref=e161]:
+                  - /url: https://www.court.gov.cn/zixun/xiangqing/478981.html
+                  - generic [ref=e162]: 以案结事了促政通人和 最高人民法院发布行政诉讼法修正施行十周年典型案例 - 中华人民共和国最高人民法院
+              - generic [ref=e166]: 2015年5月1日《中华人民共和国行政诉讼法》修正施行，2017年7月1日该法第二次修正施行。十年来，人民法院深入学习贯彻习近平法治思想，认真落实新修正行政诉讼法的精神和要求，坚持以人民为中心的发展思想，公正高效审理行政案件，行政审判工作变化可喜、成效显著。2015年5月至2025年6月 ...
+          - listitem [ref=e167]:
+            - article [ref=e168] [cursor=pointer]:
+              - button [ref=e170]:
+                - img [ref=e171]
+              - generic [ref=e175]:
+                - link "将结果来源限定为 wenshu.court.gov.cn" [ref=e177]:
+                  - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC%20%E6%92%A4%E8%AF%89%20%E5%85%B8%E5%9E%8B%E6%A1%88%E4%BE%8B%20%E8%A3%81%E5%88%A4+site:wenshu.court.gov.cn&t=h_
+                  - img [ref=e179]
+                - generic [ref=e180]:
+                  - paragraph [ref=e181]: 裁判文书网
+                  - link "https://wenshu.court.gov.cn" [ref=e182]:
+                    - /url: https://wenshu.court.gov.cn/
+                    - paragraph [ref=e184]:
+                      - generic [ref=e185]: https://wenshu.court.gov.cn
+              - heading "中国裁判文书网 - 首页" [level=2] [ref=e187]:
+                - link "中国裁判文书网 - 首页" [ref=e188]:
+                  - /url: https://wenshu.court.gov.cn/
+                  - generic [ref=e189]: 中国裁判文书网 - 首页
+              - generic [ref=e193]: 地址：北京市东城区东交民巷27号 邮编：100745 总机：010-67550114 中华人民共和国最高人民法院 版权所有 京ICP备05023036号
+          - listitem [ref=e194]:
+            - article [ref=e195] [cursor=pointer]:
+              - button [ref=e197]:
+                - img [ref=e198]
+              - generic [ref=e202]:
+                - link "将结果来源限定为 gdzf.org.cn" [ref=e204]:
+                  - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC%20%E6%92%A4%E8%AF%89%20%E5%85%B8%E5%9E%8B%E6%A1%88%E4%BE%8B%20%E8%A3%81%E5%88%A4+site:www.gdzf.org.cn&t=h_
+                  - img [ref=e206]
+                - generic [ref=e207]:
+                  - paragraph [ref=e208]: 广东政法网
+                  - link "https://www.gdzf.org.cn › zwgd › content › post_188100.html" [ref=e209]:
+                    - /url: https://www.gdzf.org.cn/zwgd/content/post_188100.html
+                    - paragraph [ref=e211]:
+                      - generic [ref=e212]: https://www.gdzf.org.cn
+                      - generic [ref=e213]: › zwgd › content › post_188100.html
+              - heading "行政诉讼法修正施行十周年典型案例_广东政法网" [level=2] [ref=e215]:
+                - link "行政诉讼法修正施行十周年典型案例_广东政法网" [ref=e216]:
+                  - /url: https://www.gdzf.org.cn/zwgd/content/post_188100.html
+                  - generic [ref=e217]: 行政诉讼法修正施行十周年典型案例_广东政法网
+              - generic [ref=e221]: 2025年10月20日·在行政诉讼法修正施行十周年之际，最高人民法院遴选发布7件行政诉讼法修正施行十周年典型案例，集中展现十年来人民法院在解决行政争议、保护公民权利、监督依法行政方面取得的积极成效。
+          - listitem [ref=e222]:
+            - article [ref=e223] [cursor=pointer]:
+              - button [ref=e225]:
+                - img [ref=e226]
+              - generic [ref=e230]:
+                - link "将结果来源限定为 baike.baidu.com" [ref=e232]:
+                  - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC%20%E6%92%A4%E8%AF%89%20%E5%85%B8%E5%9E%8B%E6%A1%88%E4%BE%8B%20%E8%A3%81%E5%88%A4+site:baike.baidu.com&t=h_
+                  - img [ref=e234]
+                - generic [ref=e235]:
+                  - paragraph [ref=e236]: 百度百科
+                  - link "https://baike.baidu.com › item › 行政诉讼法修正施行十周年典型案例 › 66912958" [ref=e237]:
+                    - /url: https://baike.baidu.com/item/%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC%E6%B3%95%E4%BF%AE%E6%AD%A3%E6%96%BD%E8%A1%8C%E5%8D%81%E5%91%A8%E5%B9%B4%E5%85%B8%E5%9E%8B%E6%A1%88%E4%BE%8B/66912958
+                    - paragraph [ref=e239]:
+                      - generic [ref=e240]: https://baike.baidu.com
+                      - generic [ref=e241]: › item › 行政诉讼法修正施行十周年典型案例 › 66912958
+              - heading "行政诉讼法修正施行十周年典型案例_百度百科" [level=2] [ref=e243]:
+                - link "行政诉讼法修正施行十周年典型案例_百度百科" [ref=e244]:
+                  - /url: https://baike.baidu.com/item/%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC%E6%B3%95%E4%BF%AE%E6%AD%A3%E6%96%BD%E8%A1%8C%E5%8D%81%E5%91%A8%E5%B9%B4%E5%85%B8%E5%9E%8B%E6%A1%88%E4%BE%8B/66912958
+                  - generic [ref=e245]: 行政诉讼法修正施行十周年典型案例_百度百科
+              - generic [ref=e249]: 《行政诉讼法修正施行十周年典型案例》是最高人民法院从行政审判指导性案例、人民法院案例库参考案例、典型案例及其他有影响力的案例中，遴选出7件既能体现修正后行政诉讼法精神要求，又具有裁判规则意义的典型案例于2025年10月予以发布的案例。
+          - listitem [ref=e250]:
+            - article [ref=e251] [cursor=pointer]:
+              - button [ref=e253]:
+                - img [ref=e254]
+              - generic [ref=e258]:
+                - link "将结果来源限定为 news.cctv.com" [ref=e260]:
+                  - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC%20%E6%92%A4%E8%AF%89%20%E5%85%B8%E5%9E%8B%E6%A1%88%E4%BE%8B%20%E8%A3%81%E5%88%A4+site:news.cctv.com&t=h_
+                  - img [ref=e262]
+                - generic [ref=e263]:
+                  - paragraph [ref=e264]: 央视网
+                  - link "https://news.cctv.com › 2025 › 10 › 18 › ARTI81fVxcMPjVrXg0OxLV5m251018.shtml" [ref=e265]:
+                    - /url: https://news.cctv.com/2025/10/18/ARTI81fVxcMPjVrXg0OxLV5m251018.shtml
+                    - paragraph [ref=e267]:
+                      - generic [ref=e268]: https://news.cctv.com
+                      - generic [ref=e269]: › 2025 › 10 › 18 › ARTI81fVxcMPjVrXg0OxLV5m251018.shtml
+              - heading "最高法发布行政诉讼法修正施行十周年典型案例_新闻频道_央视网 (cctv.com)" [level=2] [ref=e271]:
+                - link "最高法发布行政诉讼法修正施行十周年典型案例_新闻频道_央视网 (cctv.com)" [ref=e272]:
+                  - /url: https://news.cctv.com/2025/10/18/ARTI81fVxcMPjVrXg0OxLV5m251018.shtml
+                  - generic [ref=e273]: 最高法发布行政诉讼法修正施行十周年典型案例_新闻频道_央视网 (cctv.com)
+              - generic [ref=e277]: 2025年10月18日·行政诉讼法于2015年5月1日修正施行，2017年7月1日该法第二次修正施行。今年是行政诉讼法修正施行十周年，10月17日，最高人民法院发布7件行政诉讼法修正施行十周年典型案例。本批典型案例既体现修正后行政诉讼法精神要求，又具有裁判规则意义，还聚焦服务保障高质量发展，选取了依法平等保护 ...
+          - listitem [ref=e278]:
+            - generic [ref=e280]:
+              - generic [ref=e282]:
+                - heading "行政诉讼 撤诉 典型案例 裁判图像" [level=2] [ref=e283]:
+                  - link "行政诉讼 撤诉 典型案例 裁判图像" [ref=e284] [cursor=pointer]:
+                    - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC+%E6%92%A4%E8%AF%89+%E5%85%B8%E5%9E%8B%E6%A1%88%E4%BE%8B+%E8%A3%81%E5%88%A4&t=h_&ia=images&iax=images
+                    - img [ref=e285]
+                    - generic [ref=e289]: 行政诉讼 撤诉 典型案例 裁判图像
+                - generic [ref=e291] [cursor=pointer]:
+                  - generic [ref=e292]: AI 图像： 显示
+                  - img [ref=e293]: ▼
+              - list [ref=e296]:
+                - listitem [ref=e297]:
+                  - list [ref=e298]:
+                    - listitem [ref=e299]:
+                      - link "最高人民法院关于行政诉讼撤诉若干问题的规定 - 司法解释 - 律科网" [ref=e300] [cursor=pointer]:
+                        - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC+%E6%92%A4%E8%AF%89+%E5%85%B8%E5%9E%8B%E6%A1%88%E4%BE%8B+%E8%A3%81%E5%88%A4&t=h_&ia=images&iax=images&iai=https%3A%2F%2Fimg.66laws.com%2Fuploadfile%2F2025%2F0220%2F8ec4ac1cf807835.jpg
+                        - img "最高人民法院关于行政诉讼撤诉若干问题的规定 - 司法解释 - 律科网" [ref=e301]
+                      - link "最高人民法院关于行政诉讼撤诉若干问题的规定 - 司法解释 - 律科网 66laws.com menu" [ref=e303] [cursor=pointer]:
+                        - /url: https://www.66laws.com/fagui/18615.html
+                        - heading "最高人民法院关于行政诉讼撤诉若干问题的规定 - 司法解释 - 律科网" [level=3] [ref=e304]
+                        - generic [ref=e305]:
+                          - paragraph [ref=e307]: 66laws.com
+                          - button "menu" [ref=e309]:
+                            - img [ref=e310]
+                    - listitem [ref=e313]:
+                      - link "最高法发布示范文本应用典型案例（第三批）-法治要闻-深圳市福田区人民法院" [ref=e314] [cursor=pointer]:
+                        - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC+%E6%92%A4%E8%AF%89+%E5%85%B8%E5%9E%8B%E6%A1%88%E4%BE%8B+%E8%A3%81%E5%88%A4&t=h_&ia=images&iax=images&iai=https%3A%2F%2Fwww.ftcourt.gov.cn%2Fweb2024%2Fbanner750-2.png
+                        - img "最高法发布示范文本应用典型案例（第三批）-法治要闻-深圳市福田区人民法院" [ref=e315]
+                      - link "最高法发布示范文本应用典型案例（第三批）-法治要闻-深圳市福田区人民法院 ftcourt.gov.cn menu" [ref=e317] [cursor=pointer]:
+                        - /url: https://www.ftcourt.gov.cn/xwzx/fzyw/content/post_1637524.html
+                        - heading "最高法发布示范文本应用典型案例（第三批）-法治要闻-深圳市福田区人民法院" [level=3] [ref=e318]
+                        - generic [ref=e319]:
+                          - paragraph [ref=e321]: ftcourt.gov.cn
+                          - button "menu" [ref=e323]:
+                            - img [ref=e324]
+                - listitem [ref=e327]:
+                  - list [ref=e328]:
+                    - listitem [ref=e329]:
+                      - link "📚揭秘2024新书!《从典型案例看行政机关在行政诉讼中败诉风险的防范》第二版震撼来袭!👑-司法案例/实务解析-淘宝好物网" [ref=e330] [cursor=pointer]:
+                        - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC+%E6%92%A4%E8%AF%89+%E5%85%B8%E5%9E%8B%E6%A1%88%E4%BE%8B+%E8%A3%81%E5%88%A4&t=h_&ia=images&iax=images&iai=https%3A%2F%2Fimg.alicdn.com%2Fimgextra%2Fi1%2F2337524260%2FO1CN01zHHwoi1hL8CA413HO_%21%210-item_pic.jpg
+                        - img "📚揭秘2024新书!《从典型案例看行政机关在行政诉讼中败诉风险的防范》第二版震撼来袭!👑-司法案例/实务解析-淘宝好物网" [ref=e331]
+                      - link "📚揭秘2024新书!《从典型案例看行政机关在行政诉讼中败诉风险的防范》第二版震撼来袭!👑-司法案例/实务解析-淘宝好物网 goods.taobao.com menu" [ref=e333] [cursor=pointer]:
+                        - /url: https://goods.taobao.com/t/sifaanli_925/a6a7c6749499e38f88d8ecd6a992290b.html
+                        - heading "📚揭秘2024新书!《从典型案例看行政机关在行政诉讼中败诉风险的防范》第二版震撼来袭!👑-司法案例/实务解析-淘宝好物网" [level=3] [ref=e334]
+                        - generic [ref=e335]:
+                          - paragraph [ref=e337]: goods.taobao.com
+                          - button "menu" [ref=e339]:
+                            - img [ref=e340]
+                    - listitem [ref=e343]:
+                      - link "最高法、司法部联合发布规范涉企执法司法行政复议、行政诉讼典型案例-指导性案例-深圳市福田区人民法院" [ref=e344] [cursor=pointer]:
+                        - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC+%E6%92%A4%E8%AF%89+%E5%85%B8%E5%9E%8B%E6%A1%88%E4%BE%8B+%E8%A3%81%E5%88%A4&t=h_&ia=images&iax=images&iai=https%3A%2F%2Fwww.ftcourt.gov.cn%2Fweb2024%2Fbanner750-1.png
+                        - img "最高法、司法部联合发布规范涉企执法司法行政复议、行政诉讼典型案例-指导性案例-深圳市福田区人民法院" [ref=e345]
+                      - link "最高法、司法部联合发布规范涉企执法司法行政复议、行政诉讼典型案例-指导性案例-深圳市福田区人民法院 ftcourt.gov.cn menu" [ref=e347] [cursor=pointer]:
+                        - /url: https://www.ftcourt.gov.cn/swgk/zdxal/content/post_1608009.html
+                        - heading "最高法、司法部联合发布规范涉企执法司法行政复议、行政诉讼典型案例-指导性案例-深圳市福田区人民法院" [level=3] [ref=e348]
+                        - generic [ref=e349]:
+                          - paragraph [ref=e351]: ftcourt.gov.cn
+                          - button "menu" [ref=e353]:
+                            - img [ref=e354]
+              - link "更多图片" [ref=e359] [cursor=pointer]:
+                - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC+%E6%92%A4%E8%AF%89+%E5%85%B8%E5%9E%8B%E6%A1%88%E4%BE%8B+%E8%A3%81%E5%88%A4&t=h_&ia=images&iax=images
+                - generic [ref=e360]: 更多图片
+                - img [ref=e361]
+              - generic [ref=e367]:
+                - text: 这有帮助吗？
+                - button "Positive feedback" [ref=e368] [cursor=pointer]:
+                  - img [ref=e369]
+                - button "Negative feedback" [ref=e372] [cursor=pointer]:
+                  - img [ref=e373]
+          - listitem [ref=e376]:
+            - article [ref=e377] [cursor=pointer]:
+              - button [ref=e379]:
+                - img [ref=e380]
+              - generic [ref=e384]:
+                - link "将结果来源限定为 gszfw.gov.cn" [ref=e386]:
+                  - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC%20%E6%92%A4%E8%AF%89%20%E5%85%B8%E5%9E%8B%E6%A1%88%E4%BE%8B%20%E8%A3%81%E5%88%A4+site:www.gszfw.gov.cn&t=h_
+                  - img [ref=e388]
+                - generic [ref=e389]:
+                  - paragraph [ref=e390]: 甘肃政法网
+                  - link "https://www.gszfw.gov.cn › Show › 452918" [ref=e391]:
+                    - /url: https://www.gszfw.gov.cn/Show/452918
+                    - paragraph [ref=e393]:
+                      - generic [ref=e394]: https://www.gszfw.gov.cn
+                      - generic [ref=e395]: › Show › 452918
+              - heading "最高法发布行政诉讼法修正施行十周年典型案例 - 甘肃政法网" [level=2] [ref=e397]:
+                - link "最高法发布行政诉讼法修正施行十周年典型案例 - 甘肃政法网" [ref=e398]:
+                  - /url: https://www.gszfw.gov.cn/Show/452918
+                  - generic [ref=e399]: 最高法发布行政诉讼法修正施行十周年典型案例 - 甘肃政法网
+              - generic [ref=e403]: 2025年10月17日·值此行政诉讼法修正施行十周年之际，10月17日，最高人民法院从行政审判指导性案例、人民法院案例库参考案例、典型案例及其他有影响力的案例中，遴选出7件既能体现修正后行政诉讼法精神要求，又具有裁判规则意义的典型案例予以发布。
+          - listitem [ref=e404]:
+            - article [ref=e405] [cursor=pointer]:
+              - button [ref=e407]:
+                - img [ref=e408]
+              - generic [ref=e412]:
+                - link "将结果来源限定为 sohu.com" [ref=e414]:
+                  - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC%20%E6%92%A4%E8%AF%89%20%E5%85%B8%E5%9E%8B%E6%A1%88%E4%BE%8B%20%E8%A3%81%E5%88%A4+site:www.sohu.com&t=h_
+                  - img [ref=e416]
+                - generic [ref=e417]:
+                  - paragraph [ref=e418]: 搜狐
+                  - link "https://www.sohu.com › a › 887274592_528351" [ref=e419]:
+                    - /url: https://www.sohu.com/a/887274592_528351
+                    - paragraph [ref=e421]:
+                      - generic [ref=e422]: https://www.sohu.com
+                      - generic [ref=e423]: › a › 887274592_528351
+              - heading "研究丨行政诉讼避坑指南:精选案例详解17种行政机关败诉原因" [level=2] [ref=e425]:
+                - link "研究丨行政诉讼避坑指南:精选案例详解17种行政机关败诉原因" [ref=e426]:
+                  - /url: https://www.sohu.com/a/887274592_528351
+                  - generic [ref=e427]: 研究丨行政诉讼避坑指南:精选案例详解17种行政机关败诉原因
+              - generic [ref=e431]: 2025年4月21日·根据最高人民法院官方公众号发布的数据，2023年，全国法院以撤销、变更、责令履行、责令赔偿、确认违法、确认无效等形式判决行政机关败诉的共5.2万件，占判决结案的34.5%（ 🔗 ；而2024年，这两个数据分别为36833件和23.7%（ 🔗 ）。 为了提升行政机关的依法行政与应诉能力，我们从案例出发 ...
+          - listitem [ref=e432]:
+            - article [ref=e433] [cursor=pointer]:
+              - button [ref=e435]:
+                - img [ref=e436]
+              - generic [ref=e440]:
+                - link "将结果来源限定为 rmdbw.cn" [ref=e442]:
+                  - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC%20%E6%92%A4%E8%AF%89%20%E5%85%B8%E5%9E%8B%E6%A1%88%E4%BE%8B%20%E8%A3%81%E5%88%A4+site:www.rmdbw.cn&t=h_
+                  - img [ref=e444]
+                - generic [ref=e445]:
+                  - paragraph [ref=e446]: rmdbw.cn
+                  - link "https://www.rmdbw.cn › content › 2025-10 › 21 › content_70551.html" [ref=e447]:
+                    - /url: https://www.rmdbw.cn/content/2025-10/21/content_70551.html
+                    - paragraph [ref=e449]:
+                      - generic [ref=e450]: https://www.rmdbw.cn
+                      - generic [ref=e451]: › content › 2025-10 › 21 › content_70551.html
+              - heading "最高法发布行政诉讼法修正施行十周年典型案例 - rmdbw.cn" [level=2] [ref=e453]:
+                - link "最高法发布行政诉讼法修正施行十周年典型案例 - rmdbw.cn" [ref=e454]:
+                  - /url: https://www.rmdbw.cn/content/2025-10/21/content_70551.html
+                  - generic [ref=e455]: 最高法发布行政诉讼法修正施行十周年典型案例 - rmdbw.cn
+              - generic [ref=e459]: 2025年10月21日·2015年5月1日《中华人民共和国行政诉讼法》修正施行，2017年7月1日该法第二次修正施行。 在行政诉讼法修正施行十周年之际，最高人民法院遴选出七件既能体现修正后行政诉讼法精神要求，又具有裁判规则意义的典型案例予以发布。
+          - listitem [ref=e460]:
+            - article [ref=e461] [cursor=pointer]:
+              - button [ref=e463]:
+                - img [ref=e464]
+              - generic [ref=e468]:
+                - link "将结果来源限定为 m.legaldaily.com.cn" [ref=e470]:
+                  - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC%20%E6%92%A4%E8%AF%89%20%E5%85%B8%E5%9E%8B%E6%A1%88%E4%BE%8B%20%E8%A3%81%E5%88%A4+site:m.legaldaily.com.cn&t=h_
+                  - img [ref=e472]
+                - generic [ref=e473]:
+                  - paragraph [ref=e474]: 法治网
+                  - link "m.legaldaily.com.cn › judicial › content › 2025-10 › 17 › content_9272567.htm" [ref=e475]:
+                    - /url: http://m.legaldaily.com.cn/judicial/content/2025-10/17/content_9272567.htm
+                    - paragraph [ref=e477]:
+                      - text: m.legaldaily.com.cn
+                      - generic [ref=e478]: › judicial › content › 2025-10 › 17 › content_9272567.htm
+              - heading "最高法发布行政诉讼法修正施行十周年典型案例" [level=2] [ref=e480]:
+                - link "最高法发布行政诉讼法修正施行十周年典型案例" [ref=e481]:
+                  - /url: http://m.legaldaily.com.cn/judicial/content/2025-10/17/content_9272567.htm
+                  - generic [ref=e482]: 最高法发布行政诉讼法修正施行十周年典型案例
+              - generic [ref=e486]: 2025年10月17日·值此行政诉讼法修正施行十周年之际，10月17日，最高人民法院从行政审判指导性案例、人民法院案例库参考案例、典型案例及其他有影响力的案例中，遴选出7件既能体现修正后行政诉讼法精神要求，又具有裁判规则意义的典型案例予以发布。
+          - listitem [ref=e487]:
+            - article [ref=e488] [cursor=pointer]:
+              - button [ref=e490]:
+                - img [ref=e491]
+              - generic [ref=e495]:
+                - link "将结果来源限定为 legaldaily.com.cn" [ref=e497]:
+                  - /url: /?q=%E8%A1%8C%E6%94%BF%E8%AF%89%E8%AE%BC%20%E6%92%A4%E8%AF%89%20%E5%85%B8%E5%9E%8B%E6%A1%88%E4%BE%8B%20%E8%A3%81%E5%88%A4+site:www.legaldaily.com.cn&t=h_
+                  - img [ref=e499]
+                - generic [ref=e500]:
+                  - paragraph [ref=e501]: 法治网
+                  - link "www.legaldaily.com.cn › index › content › 2025-10 › 17 › content_9272313.html" [ref=e502]:
+                    - /url: http://www.legaldaily.com.cn/index/content/2025-10/17/content_9272313.html
+                    - paragraph [ref=e504]:
+                      - text: www.legaldaily.com.cn
+                      - generic [ref=e505]: › index › content › 2025-10 › 17 › content_9272313.html
+              - heading "最高法发布行政诉讼法修正施行十周年典型案例 - 法治网" [level=2] [ref=e507]:
+                - link "最高法发布行政诉讼法修正施行十周年典型案例 - 法治网" [ref=e508]:
+                  - /url: http://www.legaldaily.com.cn/index/content/2025-10/17/content_9272313.html
+                  - generic [ref=e509]: 最高法发布行政诉讼法修正施行十周年典型案例 - 法治网
+              - generic [ref=e513]: 2025年10月17日·值此行政诉讼法修正施行十周年之际，10月17日，最高人民法院从行政审判指导性案例、人民法院案例库参考案例、典型案例及其他有影响力的案例中 ...
+        - button "更多结果" [ref=e516] [cursor=pointer]
+    - list [ref=e519]:
+      - button "关闭菜单" [ref=e520] [cursor=pointer]:
+        - generic [ref=e521]: 关闭菜单
+        - img [ref=e522]
+      - list [ref=e524]:
+        - listitem [ref=e525]: 搜索
+        - listitem [ref=e526]:
+          - link "主页" [ref=e527] [cursor=pointer]:
+            - /url: https://start.duckduckgo.com/
+        - listitem [ref=e528]:
+          - link "配色" [ref=e529] [cursor=pointer]:
+            - /url: /settings#appearance
+        - listitem [ref=e530]:
+          - link "设置" [ref=e531] [cursor=pointer]:
+            - /url: /settings
+      - list [ref=e532]:
+        - listitem [ref=e533]: 意见反馈
+        - listitem [ref=e534]:
+          - generic [ref=e537]:
+            - button "Positive feedback" [ref=e538] [cursor=pointer]:
+              - img [ref=e539]
+            - button "Negative feedback" [ref=e542] [cursor=pointer]:
+              - img [ref=e543]
+      - list [ref=e546]:
+        - listitem [ref=e547]: 下载
+        - listitem [ref=e548]:
+          - link "iOS 浏览器" [ref=e549] [cursor=pointer]:
+            - /url: https://apps.apple.com/app/duckduckgo-private-browser/id663592361?platform=iphone&pt=866401&mt=8&ct=serp-atb-serp
+        - listitem [ref=e550]:
+          - link "Android 浏览器" [ref=e551] [cursor=pointer]:
+            - /url: https://play.google.com/store/apps/details?id=com.duckduckgo.mobile.android&referrer=utm_campaign%3Dserp-atb-serp%26origin%3Dfunnel_playstore_searchresults
+        - listitem [ref=e552]:
+          - link "Mac 浏览器" [ref=e553] [cursor=pointer]:
+            - /url: /mac?origin=funnel_browser_searchresults
+        - listitem [ref=e554]:
+          - link "Windows 浏览器" [ref=e555] [cursor=pointer]:
+            - /url: /windows?origin=funnel_browser_searchresults
+        - listitem [ref=e556]: 浏览器扩展插件
+      - list [ref=e557]:
+        - listitem [ref=e558]: 更多 DuckDuckGo 产品和服务
+        - listitem [ref=e559]:
+          - generic [ref=e562]:
+            - button "关闭促销信息" [ref=e563] [cursor=pointer]:
+              - img [ref=e564]
+            - generic [ref=e566]:
+              - paragraph [ref=e568]:
+                - img [ref=e569]
+                - text: 升级到我们的私密浏览器
+              - paragraph [ref=e580]: 快速。安全。免费。
+            - link "安装 Mac 浏览器" [ref=e581] [cursor=pointer]:
+              - /url: /mac
+              - img [ref=e582]
+              - text: 安装 Mac 浏览器
+        - listitem [ref=e584]:
+          - link "Duck.ai" [ref=e585] [cursor=pointer]:
+            - /url: https://duck.ai
+        - listitem [ref=e586]:
+          - link "Email Protection" [ref=e587] [cursor=pointer]:
+            - /url: /email
+        - listitem [ref=e588]:
+          - link "简讯" [ref=e589] [cursor=pointer]:
+            - /url: /newsletter
+        - listitem [ref=e590]:
+          - link "博客" [ref=e591] [cursor=pointer]:
+            - /url: /blog
+        - listitem [ref=e592]:
+          - link "播客" [ref=e593] [cursor=pointer]:
+            - /url: https://insideduckduckgo.substack.com/?showWelcome=true
+        - listitem [ref=e594]:
+          - link "合作" [ref=e595] [cursor=pointer]:
+            - /url: /collaborations
+      - list [ref=e596]:
+        - listitem [ref=e597]: 详细了解
+        - listitem [ref=e598]:
+          - link "最新功能" [ref=e599] [cursor=pointer]:
+            - /url: /updates
+        - listitem [ref=e600]:
+          - link "隐私保护功能比较" [ref=e601] [cursor=pointer]:
+            - /url: /compare-privacy
+        - listitem [ref=e602]:
+          - link "关于我们的浏览器" [ref=e603] [cursor=pointer]:
+            - /url: /app
+        - listitem [ref=e604]:
+          - link "关于 DuckDuckGo" [ref=e605] [cursor=pointer]:
+            - /url: /about
+      - list [ref=e606]:
+        - listitem [ref=e607]: 其他资源
+        - listitem [ref=e608]:
+          - link "帮助" [ref=e609] [cursor=pointer]:
+            - /url: /duckduckgo-help-pages
+        - listitem [ref=e610]:
+          - link "社群" [ref=e611] [cursor=pointer]:
+            - /url: https://www.reddit.com/r/duckduckgo/
+        - listitem [ref=e612]:
+          - link "工作岗位" [ref=e613] [cursor=pointer]:
+            - /url: /careers
+        - listitem [ref=e614]:
+          - link "隐私协议" [ref=e615] [cursor=pointer]:
+            - /url: /privacy
+        - listitem [ref=e616]:
+          - link "服务条款" [ref=e617] [cursor=pointer]:
+            - /url: /terms
+        - listitem [ref=e618]:
+          - link "媒体资源" [ref=e619] [cursor=pointer]:
+            - /url: /press
+        - listitem [ref=e620]:
+          - link "在搜索时投放广告" [ref=e621] [cursor=pointer]:
+            - /url: /duckduckgo-help-pages/company/advertise-on-duckduckgo-search
+  - generic [ref=e625]:
+    - generic [ref=e627]:
+      - img [ref=e628]
+      - generic [ref=e644]:
+        - heading "下载我们的 Mac 浏览器" [level=3] [ref=e645]
+        - paragraph [ref=e646]: 在搜索、浏览和使用 AI 时保护你的数据。
+      - link "下载" [ref=e647] [cursor=pointer]:
+        - /url: https://duckduckgo.com/mac?origin=funnel_browser_searchresults__footercard
+        - img [ref=e648]
+        - text: 下载
+    - generic [ref=e651]:
+      - generic [ref=e652]:
+        - heading "详细了解" [level=3] [ref=e653]
+        - list [ref=e654]:
+          - listitem [ref=e655]:
+            - link "最新功能" [ref=e656] [cursor=pointer]:
+              - /url: https://duckduckgo.com/updates
+          - listitem [ref=e657]:
+            - link "浏览器简介" [ref=e658] [cursor=pointer]:
+              - /url: https://duckduckgo.com/app
+          - listitem [ref=e659]:
+            - link "隐私保护功能比较" [ref=e660] [cursor=pointer]:
+              - /url: https://duckduckgo.com/compare-privacy
+          - listitem [ref=e661]:
+            - link "帮助页面" [ref=e662] [cursor=pointer]:
+              - /url: https://duckduckgo.com/duckduckgo-help-pages/
+      - generic [ref=e663]:
+        - heading "获取更多信息" [level=3] [ref=e664]
+        - list [ref=e665]:
+          - listitem [ref=e666]:
+            - link "Email Protection" [ref=e667] [cursor=pointer]:
+              - /url: https://duckduckgo.com/email
+          - listitem [ref=e668]:
+            - generic [ref=e669]:
+              - link "播客" [ref=e671] [cursor=pointer]:
+                - /url: https://insideduckduckgo.substack.com/?showWelcome=true
+              - generic [ref=e672]:
+                - text: 和
+                - link "简讯" [ref=e673] [cursor=pointer]:
+                  - /url: https://duckduckgo.com/newsletter
+          - listitem [ref=e674]:
+            - link "合作" [ref=e675] [cursor=pointer]:
+              - /url: https://duckduckgo.com/collaborations
+  - button "意见反馈" [ref=e680] [cursor=pointer]

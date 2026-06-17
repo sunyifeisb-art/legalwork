@@ -7,6 +7,8 @@ import { countDiffStats, sumDiffStats } from '../../lib/diff-stats'
 import { useDeferredRender } from '../../hooks/use-deferred-render'
 import type { WritePromptDisplay, WritePromptDisplayQuote } from '../../write/quoted-selection'
 import { DiffView } from '../DiffView'
+import { brandForModel } from '../../lib/model-brand'
+import { ModelBrandIcon } from './ModelBrandIcon'
 import { formatDuration } from './message-timeline-tools'
 
 /**
@@ -366,11 +368,13 @@ export function ModelMetaTag({
 }): ReactElement | null {
   const { t } = useTranslation('common')
   if (!label) return null
+  const brand = brandForModel(label)
   return (
     <div
-      className={`flex min-w-0 text-right ${className}`.trim()}
+      className={`flex min-w-0 items-center gap-1.5 text-right ${className}`.trim()}
       title={t('turnModelBadgeTitle', { model: label })}
     >
+      <ModelBrandIcon brand={brand} className={`ds-model-brand-dot ds-model-brand-${brand}`} />
       <span className="truncate font-mono text-[12px] tracking-tight text-ds-faint/85">
         {label}
       </span>

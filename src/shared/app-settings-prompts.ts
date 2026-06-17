@@ -95,14 +95,14 @@ export function normalizeClawImRemoteSession(input: unknown): ClawImRemoteSessio
 }
 
 /**
- * Read the Kun thread id from a legacy `agentThreadIds` record.
+ * Read the Legalwork thread id from a legacy `agentThreadIds` record.
  * Returns the empty string when no candidate is present.
  */
 export function readLegacyAgentThreadId(input: unknown): string {
   if (!input || typeof input !== 'object' || Array.isArray(input)) return ''
   const raw = input as Record<string, unknown>
   const candidates = [
-    typeof raw.kun === 'string' ? raw.kun.trim() : '',
+    typeof raw.legalwork === 'string' ? raw.legalwork.trim() : '',
     typeof raw.codewhale === 'string' ? raw.codewhale.trim() : '',
     typeof raw.reasonix === 'string' ? raw.reasonix.trim() : ''
   ]

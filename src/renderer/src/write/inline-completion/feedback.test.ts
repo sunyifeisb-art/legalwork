@@ -81,7 +81,7 @@ describe('evaluateInlineCompletionCandidate', () => {
           kind: 'edit',
           from: 0,
           to: 41,
-          original: 'DeepSeek GUI keeps text editing local.',
+          original: 'legalwork keeps text editing local.',
           replacement: 'Write mode keeps text editing local.',
           scopeKind: 'paragraph'
         }

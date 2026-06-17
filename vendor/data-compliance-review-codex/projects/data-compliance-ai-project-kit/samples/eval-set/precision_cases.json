@@ -1,0 +1,86 @@
+[
+  {
+    "name": "detailed_third_party_disclosure_should_not_escalate",
+    "path_id": "third_party_sharing_check",
+    "text": "在征得单独同意后，我们会将必要的位置信息共享给 XX 地图 SDK，用于提供附近门店展示服务。共享对象为 XX 地图 SDK，信息类型为位置信息，处理方式为接口传输，详细规则见第三方清单。",
+    "expected_levels": ["无", "建议优化"]
+  },
+  {
+    "name": "vague_partner_sharing_should_be_flagged",
+    "path_id": "third_party_sharing_check",
+    "text": "我们可能会与合作伙伴共享必要信息用于服务优化。",
+    "expected_levels": ["中风险"]
+  },
+  {
+    "name": "marketing_necessity_without_consent_should_be_high_risk",
+    "path_id": "lawful_basis_check",
+    "text": "为营销推荐之必要，我们会处理您的浏览记录、设备标识和位置信息。",
+    "expected_levels": ["高风险"]
+  },
+  {
+    "name": "clear_retention_and_deletion_should_not_escalate",
+    "path_id": "retention_deletion_check",
+    "text": "我们将在用户注销后 15 日内删除相关个人信息；法律法规另有要求的，按照法定期限保存，到期后删除或匿名化处理。",
+    "expected_levels": ["无", "建议优化"]
+  },
+  {
+    "name": "broad_purpose_with_sensitive_data_should_be_flagged",
+    "path_id": "purpose_scope_check",
+    "text": "我们会收集通讯录、精准定位和剪贴板信息用于服务优化、商业分析和个性化推荐。",
+    "expected_levels": ["高风险"]
+  },
+  {
+    "name": "specific_purpose_mapping_should_not_escalate",
+    "path_id": "purpose_scope_check",
+    "text": "为完成登录验证，我们仅收集手机号；为展示附近门店，我们在单独授权后调用位置信息，用户可随时关闭定位，不影响账号基础功能。",
+    "expected_levels": ["无", "建议优化"]
+  },
+  {
+    "name": "share_conflict_should_be_high_risk",
+    "path_id": "consistency_check",
+    "text": "我们不会向第三方共享您的个人信息。为提供广告投放服务，我们会与合作伙伴共享设备标识和浏览记录。",
+    "expected_levels": ["高风险"]
+  },
+  {
+    "name": "sensitive_info_without_separate_consent_should_be_high_risk",
+    "path_id": "sensitive_personal_info_check",
+    "text": "我们会收集人脸、精准定位和银行卡信息用于个性化推荐与商业分析。",
+    "expected_levels": ["高风险"]
+  },
+  {
+    "name": "sensitive_info_with_controls_should_not_escalate",
+    "path_id": "sensitive_personal_info_check",
+    "text": "在征得单独同意后，我们仅在刷脸登录场景处理人脸信息，并通过加密、访问控制等措施严格保护；用户也可改用短信验证。",
+    "expected_levels": ["无", "建议优化"]
+  },
+  {
+    "name": "minor_info_without_guardian_consent_should_be_high_risk",
+    "path_id": "sensitive_personal_info_check",
+    "text": "我们会收集未成年人精准定位信息用于服务优化和活动推荐。",
+    "expected_levels": ["高风险"]
+  },
+  {
+    "name": "optional_feature_bundled_to_basic_function_should_be_high_risk",
+    "path_id": "consent_feature_coupling_check",
+    "text": "为向您提供个性化推荐和附近门店服务，您必须开启定位并同意相关授权，否则将无法继续使用本产品。",
+    "expected_levels": ["高风险"]
+  },
+  {
+    "name": "optional_feature_with_optout_should_not_escalate",
+    "path_id": "consent_feature_coupling_check",
+    "text": "个性化推荐属于可选功能，您可单独同意后开启，也可随时关闭；关闭后不影响基础浏览和下单功能。",
+    "expected_levels": ["无", "建议优化"]
+  },
+  {
+    "name": "field_purpose_basis_missing_should_be_high_risk",
+    "path_id": "field_purpose_legal_basis_check",
+    "text": "我们会收集位置信息、浏览记录和设备标识用于个性化推荐与商业分析。",
+    "expected_levels": ["高风险"]
+  },
+  {
+    "name": "field_purpose_basis_aligned_should_not_escalate",
+    "path_id": "field_purpose_legal_basis_check",
+    "text": "为完成登录验证，我们收集手机号，并基于履行合同处理；为展示附近门店，在单独同意后调用位置信息，上述处理分别用于登录和附近门店展示，关闭定位授权不影响基础下单功能。",
+    "expected_levels": ["无", "建议优化"]
+  }
+]

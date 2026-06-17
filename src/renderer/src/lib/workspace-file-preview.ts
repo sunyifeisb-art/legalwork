@@ -1,6 +1,6 @@
 import type { WorkspaceFileTarget } from '@shared/workspace-file'
 
-export const WORKSPACE_FILE_PREVIEW_EVENT = 'deepseekgui:workspace-file-preview'
+export const WORKSPACE_FILE_PREVIEW_EVENT = 'legalwork:workspace-file-preview'
 
 export type WorkspaceFilePreviewDetail = WorkspaceFileTarget
 

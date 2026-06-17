@@ -5,9 +5,9 @@ import {
   DEFAULT_WRITE_INLINE_COMPLETION_MAX_TOKENS,
   DEFAULT_WRITE_INLINE_COMPLETION_MODEL,
   DEFAULT_WRITE_INLINE_LONG_COMPLETION_MAX_TOKENS,
-  DEFAULT_KUN_DATA_DIR,
+  DEFAULT_LEGALWORK_DATA_DIR,
   WRITE_INLINE_COMPLETION_MODEL_IDS,
-  isKunRuntimeInsecure
+  isLegalworkRuntimeInsecure
 } from '@shared/app-settings'
 import type { GuiUpdateChannel } from '@shared/gui-update'
 import type { SkillRootId } from '../lib/skill-root-preference'
@@ -27,10 +27,10 @@ export function WriteSettingsSection({ ctx }: { ctx: Record<string, any> }): Rea
     t,
     tCommon,
     form,
-    kun,
+    legalwork,
     activeApiKey,
     update,
-    updateKun,
+    updateLegalwork,
     updateSharedCredential,
     sharedApiKey,
     sharedBaseUrl,

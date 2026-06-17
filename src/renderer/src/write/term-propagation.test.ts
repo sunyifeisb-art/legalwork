@@ -18,25 +18,25 @@ function applyChanges(
 describe('write term propagation', () => {
   it('propagates a case-only phrase replacement within the same paragraph', () => {
     const content = [
-      'i build DeepSeek GUI, li is amazing ui production.',
+      'i build legalwork, li is amazing ui production.',
       'deepseek gui can write paper, also can code. deepseek gui is use',
       'deepseek api, but it not only that.',
       '',
       'deepseek gui in another paragraph stays untouched.'
     ].join('\n')
-    const seedFrom = content.indexOf('DeepSeek GUI')
+    const seedFrom = content.indexOf('legalwork')
 
     const changes = buildWriteTermPropagationChanges(content, {
       from: seedFrom,
-      to: seedFrom + 'DeepSeek GUI'.length,
+      to: seedFrom + 'legalwork'.length,
       deletedText: 'deepseek gui',
-      insertedText: 'DeepSeek GUI'
+      insertedText: 'legalwork'
     })
 
     expect(changes).toHaveLength(2)
     expect(applyChanges(content, changes)).toBe([
-      'i build DeepSeek GUI, li is amazing ui production.',
-      'DeepSeek GUI can write paper, also can code. DeepSeek GUI is use',
+      'i build legalwork, li is amazing ui production.',
+      'legalwork can write paper, also can code. legalwork is use',
       'deepseek api, but it not only that.',
       '',
       'deepseek gui in another paragraph stays untouched.'
@@ -56,24 +56,24 @@ describe('write term propagation', () => {
   })
 
   it('does not replace partial word matches', () => {
-    const content = 'DeepSeek GUI works. mydeepseek gui should not. deepseek gui should.'
-    const seedFrom = content.indexOf('DeepSeek GUI')
+    const content = 'legalwork works. mydeepseek gui should not. deepseek gui should.'
+    const seedFrom = content.indexOf('legalwork')
 
     const changes = buildWriteTermPropagationChanges(content, {
       from: seedFrom,
-      to: seedFrom + 'DeepSeek GUI'.length,
+      to: seedFrom + 'legalwork'.length,
       deletedText: 'deepseek gui',
-      insertedText: 'DeepSeek GUI'
+      insertedText: 'legalwork'
     })
 
     expect(applyChanges(content, changes)).toBe(
-      'DeepSeek GUI works. mydeepseek gui should not. DeepSeek GUI should.'
+      'legalwork works. mydeepseek gui should not. legalwork should.'
     )
   })
 
   it('propagates canonical casing after an incremental case edit', () => {
-    const content = 'DeepSeek GUI works. deepseek gui should follow. deepseek api should not.'
-    const seedFrom = content.indexOf('DeepSeek GUI')
+    const content = 'legalwork works. deepseek gui should follow. deepseek api should not.'
+    const seedFrom = content.indexOf('legalwork')
 
     const changes = buildWriteCanonicalTermPropagationChanges(content, {
       from: seedFrom,
@@ -83,7 +83,7 @@ describe('write term propagation', () => {
     })
 
     expect(applyChanges(content, changes)).toBe(
-      'DeepSeek GUI works. DeepSeek GUI should follow. deepseek api should not.'
+      'legalwork works. legalwork should follow. deepseek api should not.'
     )
   })
 })

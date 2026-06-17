@@ -1,10 +1,11 @@
 import type { ReactElement } from 'react'
 import { PanelTop } from 'lucide-react'
 import { AnimatedWorkLogo } from './AnimatedWorkLogo'
+import type { ModelBrand } from '../../lib/model-brand'
 
-export function WhaleHeroStage(): ReactElement {
+export function WhaleHeroStage({ brand = 'deepseek' }: { brand?: ModelBrand }): ReactElement {
   return (
-    <div className="ds-runtime-wake-stage" aria-hidden="true">
+    <div className={`ds-runtime-wake-stage ds-runtime-wake-brand-${brand}`} aria-hidden="true">
       <div className="ds-runtime-wake-shell">
         <div className="ds-runtime-wake-titlebar">
           <span className="ds-runtime-wake-dot is-red" />
@@ -33,7 +34,7 @@ export function WhaleHeroStage(): ReactElement {
         </div>
         <div className="ds-runtime-wake-core">
           <span className="ds-runtime-wake-ring" />
-          <AnimatedWorkLogo active phase="lead" size="md" className="ds-runtime-wake-logo" />
+          <AnimatedWorkLogo active brand={brand} phase="lead" size="md" className="ds-runtime-wake-logo" />
         </div>
       </div>
     </div>

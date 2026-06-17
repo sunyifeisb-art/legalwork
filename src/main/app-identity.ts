@@ -8,7 +8,8 @@ import { app } from 'electron'
  * 保持一致。Windows 任务栏 / 系统托盘 / 通知中心看到的应用名都来自
  * 这条字符串(在打包产物里还会被写进 VERSIONINFO)。
  */
-export const APP_PRODUCT_NAME = 'DeepSeek GUI'
+export const APP_PRODUCT_NAME = 'legalwork'
+export const APP_USER_MODEL_ID = 'com.xingyuzhong.legalwork'
 
 /**
  * 在 main 进程最早期调用,把 app 的对外名称设好。
@@ -20,5 +21,7 @@ export const APP_PRODUCT_NAME = 'DeepSeek GUI'
  * 专用的,放在 main/index.ts 的 win32 分支里更直观。
  */
 export function configureAppIdentity(): void {
-  app.setName(APP_PRODUCT_NAME)
+  if (app && typeof app.setName === 'function') {
+    app.setName(APP_PRODUCT_NAME)
+  }
 }

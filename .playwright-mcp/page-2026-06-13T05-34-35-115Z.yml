@@ -1,0 +1,753 @@
+- generic [active] [ref=e1]:
+  - link "欢迎进入 行政协议违约致损千万？法院如何认定行政机关全责|约定|赔偿|单方|违约金|政府信息_网易订阅,盲人用户使用操作智能引导，请按快捷键Ctrl+Alt+R；阅读详细操作说明请按快捷键Ctrl+Alt+问号键。":
+    - /url: javascript:void(0)
+    - img [ref=e2] [cursor=pointer]
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - link "网易首页" [ref=e7] [cursor=pointer]:
+        - /url: https://www.163.com/
+      - link "应用" [ref=e9] [cursor=pointer]:
+        - /url: https://www.163.com/#f=topnav
+        - text: 应用
+        - emphasis [ref=e10]
+      - link "无障碍浏览" [ref=e11] [cursor=pointer]:
+        - /url: javascript:void(0)
+      - link "进入关怀版" [ref=e12] [cursor=pointer]:
+        - /url: https://www.163.com/dy/article/K0J26O190551M2GC_pdya11y.html
+    - generic [ref=e13]:
+      - emphasis [ref=e16]: 快速导航
+      - generic [ref=e21]:
+        - link "登录" [ref=e23] [cursor=pointer]:
+          - /url: https://reg.163.com/
+        - link "注册免费邮箱" [ref=e25] [cursor=pointer]:
+          - /url: https://mail.163.com/register/index.htm?from=163navi&regPage=163
+          - text: 注册免费邮箱
+          - emphasis [ref=e26]
+      - list [ref=e27]:
+        - listitem [ref=e28]:
+          - link "移动端" [ref=e30] [cursor=pointer]:
+            - /url: https://www.163.com/newsapp/#f=163nav
+            - emphasis [ref=e31]: 移动端
+        - listitem [ref=e32]:
+          - link "网易公开课" [ref=e34] [cursor=pointer]:
+            - /url: https://open.163.com/#ftopnav0
+            - emphasis [ref=e35]: 网易公开课
+            - emphasis [ref=e36]
+        - listitem [ref=e37]:
+          - link "网易严选" [ref=e39] [cursor=pointer]:
+            - /url: https://you.163.com/?from=web_fc_menhu_xinrukou_1
+            - emphasis [ref=e40]: 网易严选
+            - emphasis [ref=e41]
+        - listitem [ref=e42]:
+          - link "支付" [ref=e44] [cursor=pointer]:
+            - /url: https://ecard.163.com/
+            - emphasis [ref=e45]: 支付
+            - emphasis [ref=e46]
+        - listitem [ref=e47]:
+          - generic [ref=e49] [cursor=pointer]:
+            - emphasis [ref=e50]: 邮箱
+            - emphasis [ref=e51]
+  - generic [ref=e52]:
+    - generic [ref=e54]:
+      - iframe [ref=e56]:
+        - generic [active]:
+          - link:
+            - /url: https://www.wyjianzhan.com/1778741834294cOOm3.html?&pyx=ibyrBqKzZN1__InatUtHHlyi0SChMvkNNwE7qFCMc4gHo5GSJZxHNedRnzrtFUfRfXR0Og0VmZBPKGlW5pPcc9ORETUc65Kz3EvIbpArTpwkc89gSY5UBJZlpLqG6WExfUpydR7mUw1htZvgLtbEqrqnhdjeXDQclSq0Gm7aojzPS51WVAzJo7nsI&vv=2&classify_code=11&ptc=1
+      - link [ref=e57] [cursor=pointer]:
+        - /url: javascript:;
+    - generic [ref=e58]:
+      - generic [ref=e59]:
+        - link "网易首页" [ref=e60] [cursor=pointer]:
+          - /url: https://www.163.com/
+        - text: ">"
+        - link "网易号" [ref=e61] [cursor=pointer]:
+          - /url: https://dy.163.com/
+        - text: "> 正文"
+        - link "申请入驻" [ref=e62] [cursor=pointer]:
+          - /url: https://dy.163.com/wemedia/index.html
+        - generic [ref=e63]:
+          - textbox [ref=e65]: 谢娜演唱会翻车了吗
+          - button "搜索" [ref=e66] [cursor=pointer]
+      - heading "行政协议违约致损千万？法院如何认定行政机关全责" [level=1] [ref=e67]
+      - generic [ref=e68]:
+        - text: "2025-05-27 16:30:20 来源:"
+        - link "北京楹庭律师事务所" [ref=e69] [cursor=pointer]:
+          - /url: https://www.163.com/dy/media/T1596189992020.html
+        - img [ref=e70]
+        - text: 北京
+        - link "举报" [ref=e71] [cursor=pointer]:
+          - /url: https://www.163.com/special/0077jt/tipoff.html?title=%E8%A1%8C%E6%94%BF%E5%8D%8F%E8%AE%AE%E8%BF%9D%E7%BA%A6%E8%87%B4%E6%8D%9F%E5%8D%83%E4%B8%87%EF%BC%9F%E6%B3%95%E9%99%A2%E5%A6%82%E4%BD%95%E8%AE%A4%E5%AE%9A%E8%A1%8C%E6%94%BF%E6%9C%BA%E5%85%B3%E5%85%A8%E8%B4%A3
+      - generic [ref=e72]:
+        - generic [ref=e73]:
+          - generic [ref=e74]:
+            - link "快速发贴" [ref=e75] [cursor=pointer]:
+              - /url: "#post_comment_area"
+            - link "0" [ref=e76] [cursor=pointer]:
+              - /url: https://comment.tie.163.com/K0J26O190551M2GC.html
+          - generic [ref=e77]:
+            - generic [ref=e78]: 分享至
+            - list [ref=e79]:
+              - listitem [ref=e80]:
+                - link [ref=e81] [cursor=pointer]:
+                  - /url: javascript:;
+                  - generic "分享到微信" [ref=e82]
+              - listitem [ref=e83]:
+                - link [ref=e84] [cursor=pointer]:
+                  - /url: javascript:;
+                  - generic "分享到新浪微博" [ref=e85]
+              - listitem [ref=e86]:
+                - link [ref=e87] [cursor=pointer]:
+                  - /url: javascript:;
+                  - generic "分享到QQ空间" [ref=e88]
+        - generic [ref=e89]:
+          - paragraph [ref=e90]: 行政机关未履约能否主张天价赔偿？协议变更为何被判滥用职权？某企业与行政机关签订《文化广场建设协议》，约定由其投资4.2亿元开发项目，行政机关负责拆迁安置及“三通一平”。因行政机关未完成拆迁、擅自变更规划并将部分用地转交第三方，企业被迫自行垫付600万元拆迁款并承担额外工程成本。法院认定行政机关构成根本违约，判赔1997万元。
+          - paragraph [ref=e91]:
+            - img [ref=e92]
+          - paragraph [ref=e93]: 本案的胜诉关键是以下几点：1. 优益权滥用，行政机关单方变更规划且未补偿。法律焦点：行政协议虽赋予行政机关单方变更权（优益权），但行使须以公共利益为前提并给予合理补偿。本案中，行政机关擅自将规划酒店改为孵化基地，并将50亩已出让土地转交第三方开发，既未与企业协商，也未支付补偿，构成权力滥用。法院援引《行政诉讼法》第78条，认定变更行为违法。企业应在协议中明确约定变更触发条件、程序及补偿标准，限制行政机关任意裁量空间。2. 履约瑕疵，行政机关未完成“三通一平”致企业额外投入。协议约定行政机关负责拆迁及“三通一平”，但其未履行导致企业垫付600万元拆迁款并承担配套工程费用。法院采用“比例分摊法”计算损失：占用50亩土地对应工程款308万元（50亩/133亩×820万）。企业需在履约过程中逐笔记录代付费用，要求行政机关书面确认债务关系，为后续索赔锁定证据。3. 违约金条款的“双重效力”1%投资总额违约金获全额支持。协议约定违约方按投资总额1%支付违约金（420万元）。行政机关抗辩“违约金过高”，但法院指出条款兼具补偿与惩罚功能，且企业实际损失远超该数额，故全额支持。
+          - paragraph [ref=e94]: 本案具有极高现实意义，提示各位企业协议须限定行政机关单方变更权适用范围，并明确补偿计算方式（如市场评估价×1.3倍）；代付费用需取得行政机关签收确认单，工程变更须补充书面协议；垫资凭证（银行流水）、单方违约证据（会议纪要）、第三方评估报告（损失鉴定）同步留存；既约定固定比例违约金，又保留实际损失追偿权（孰高原则）；同步主张违约赔偿、合同继续履行、排除妨碍（如第三方清退），最大化维权效果。
+          - paragraph [ref=e95]: 若您的项目遭遇行政协议违约，可以与楹庭律师团队交流寻求解决办法。
+        - generic [ref=e96]:
+          - paragraph [ref=e98]: 特别声明：以上内容(如有图片或视频亦包括在内)为自媒体平台“网易号”用户上传并发布，本平台仅提供信息存储服务。
+          - paragraph [ref=e99]: "Notice: The content above (including the pictures and videos if any) is uploaded and posted by a user of NetEase Hao, which is a social media platform and only provides information storage services."
+        - generic [ref=e102]:
+          - generic [ref=e103]:
+            - textbox [ref=e105]
+            - generic [ref=e106]:
+              - generic [ref=e107]:
+                - textbox "账号" [ref=e108]
+                - textbox "密码" [ref=e109]
+              - generic [ref=e110]:
+                - link "注册" [ref=e111] [cursor=pointer]:
+                  - /url: http://reg.163.com/reg0.shtml?product=tie&url=https://www.163.com/dy/article/K0J26O190551M2GC.html
+                - emphasis [ref=e112]: "|"
+                - link "手机发跟贴" [ref=e113] [cursor=pointer]:
+                  - /url: http://m.163.com/newsapp/
+              - generic [ref=e114] [cursor=pointer]: 登录并发贴
+          - paragraph [ref=e116]: 网友评论仅供其表达个人看法，并不表明网易立场。
+          - link "去跟贴广场看看" [ref=e117] [cursor=pointer]:
+            - /url: http://tie.163.com/?f=0tie
+            - text: 去跟贴广场看看
+      - generic [ref=e119]:
+        - generic [ref=e120]:
+          - generic [ref=e121] [cursor=pointer]: 相关推荐
+          - generic [ref=e122] [cursor=pointer]: 热点推荐
+        - list [ref=e124]:
+          - listitem [ref=e125]:
+            - link [ref=e126] [cursor=pointer]:
+              - /url: https://www.163.com/dy/article/KV8OK2N10514EGPO.html?f=post2020_dy_recommends
+              - img [ref=e127]
+            - generic [ref=e128]:
+              - heading "恶臭!上海一别墅区传出高频尖叫,居民不堪其扰" [level=3] [ref=e129]:
+                - link "恶臭!上海一别墅区传出高频尖叫,居民不堪其扰" [ref=e130] [cursor=pointer]:
+                  - /url: https://www.163.com/dy/article/KV8OK2N10514EGPO.html?f=post2020_dy_recommends
+              - paragraph [ref=e131]: 看看新闻Knews 2026-06-12 22:37:03
+              - link "9530 跟贴 9530" [ref=e132] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KV8OK2N10514EGPO.html?f=post2020_dy_recommends
+                - generic [ref=e133]:
+                  - generic [ref=e134]: "9530"
+                  - generic [ref=e136]:
+                    - emphasis [ref=e137]: 跟贴
+                    - text: "9530"
+          - listitem [ref=e138]:
+            - link [ref=e139] [cursor=pointer]:
+              - /url: https://www.163.com/dy/article/KV8DMKA40512DU6N.html?f=post2020_dy_recommends
+              - img [ref=e140]
+            - generic [ref=e141]:
+              - heading "闹心！奥迪纯电SUV，提车三天“故障频发”！上海车主7个月报修10次，结果更闹心" [level=3] [ref=e142]:
+                - link "闹心！奥迪纯电SUV，提车三天“故障频发”！上海车主7个月报修10次，结果更闹心" [ref=e143] [cursor=pointer]:
+                  - /url: https://www.163.com/dy/article/KV8DMKA40512DU6N.html?f=post2020_dy_recommends
+              - paragraph [ref=e144]: 新民晚报 2026-06-12 19:26:49
+              - link "602 跟贴 602" [ref=e145] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KV8DMKA40512DU6N.html?f=post2020_dy_recommends
+                - generic [ref=e146]:
+                  - generic [ref=e147]: "602"
+                  - generic [ref=e149]:
+                    - emphasis [ref=e150]: 跟贴
+                    - text: "602"
+          - listitem [ref=e152]:
+            - link [ref=e153] [cursor=pointer]:
+              - /url: https://www.163.com/dy/article/KVA2NSBD053469LG.html?f=post2020_dy_recommends
+              - img [ref=e154]
+            - generic [ref=e155]:
+              - heading "中国男篮队长调整" [level=3] [ref=e156]:
+                - link "中国男篮队长调整" [ref=e157] [cursor=pointer]:
+                  - /url: https://www.163.com/dy/article/KVA2NSBD053469LG.html?f=post2020_dy_recommends
+              - paragraph [ref=e158]: 极目新闻 2026-06-13 10:53:08
+              - link "5 跟贴 5" [ref=e159] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KVA2NSBD053469LG.html?f=post2020_dy_recommends
+                - generic [ref=e160]:
+                  - generic [ref=e161]: "5"
+                  - generic [ref=e163]:
+                    - emphasis [ref=e164]: 跟贴
+                    - text: "5"
+          - listitem [ref=e165]:
+            - link [ref=e166] [cursor=pointer]:
+              - /url: https://www.163.com/dy/article/KV899B1V0550B6IS.html?f=post2020_dy_recommends
+              - img [ref=e167]
+            - generic [ref=e168]:
+              - heading "冠军之选！零跑官宣WSBK车手瓦伦丁·德比斯成为Lafa5欧洲首位车主" [level=3] [ref=e169]:
+                - link "冠军之选！零跑官宣WSBK车手瓦伦丁·德比斯成为Lafa5欧洲首位车主" [ref=e170] [cursor=pointer]:
+                  - /url: https://www.163.com/dy/article/KV899B1V0550B6IS.html?f=post2020_dy_recommends
+              - paragraph [ref=e171]: 大象新闻 2026-06-12 18:09:02
+              - link "198 跟贴 198" [ref=e172] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KV899B1V0550B6IS.html?f=post2020_dy_recommends
+                - generic [ref=e173]:
+                  - generic [ref=e174]: "198"
+                  - generic [ref=e176]:
+                    - emphasis [ref=e177]: 跟贴
+                    - text: "198"
+          - listitem [ref=e178]:
+            - link [ref=e179] [cursor=pointer]:
+              - /url: https://www.163.com/dy/article/KV8CF0SG05129QAF.html?f=post2020_dy_recommends
+              - img [ref=e180]
+            - generic [ref=e181]:
+              - heading "公开征求意见！广州拟继续在全市所有道路禁止机动车鸣喇叭" [level=3] [ref=e182]:
+                - link "公开征求意见！广州拟继续在全市所有道路禁止机动车鸣喇叭" [ref=e183] [cursor=pointer]:
+                  - /url: https://www.163.com/dy/article/KV8CF0SG05129QAF.html?f=post2020_dy_recommends
+              - paragraph [ref=e184]: 南方都市报 2026-06-12 19:04:34
+              - link "378 跟贴 378" [ref=e185] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KV8CF0SG05129QAF.html?f=post2020_dy_recommends
+                - generic [ref=e186]:
+                  - generic [ref=e187]: "378"
+                  - generic [ref=e189]:
+                    - emphasis [ref=e190]: 跟贴
+                    - text: "378"
+          - listitem [ref=e191]:
+            - link [ref=e192] [cursor=pointer]:
+              - /url: https://www.163.com/dy/article/KV8PUARN053469LG.html?f=post2020_dy_recommends
+              - img [ref=e193]
+            - generic [ref=e194]:
+              - heading "“张雪机车”获得WSBK艾米利亚-罗马涅站杆位赛第三名" [level=3] [ref=e195]:
+                - link "“张雪机车”获得WSBK艾米利亚-罗马涅站杆位赛第三名" [ref=e196] [cursor=pointer]:
+                  - /url: https://www.163.com/dy/article/KV8PUARN053469LG.html?f=post2020_dy_recommends
+              - paragraph [ref=e197]: 极目新闻 2026-06-12 23:00:07
+              - link "265 跟贴 265" [ref=e198] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KV8PUARN053469LG.html?f=post2020_dy_recommends
+                - generic [ref=e199]:
+                  - generic [ref=e200]: "265"
+                  - generic [ref=e202]:
+                    - emphasis [ref=e203]: 跟贴
+                    - text: "265"
+          - listitem [ref=e205]:
+            - link [ref=e206] [cursor=pointer]:
+              - /url: https://www.163.com/dy/article/KV8BBKUC0514R9OJ.html?f=post2020_dy_recommends
+              - img [ref=e207]
+            - generic [ref=e208]:
+              - heading "高考，考的不仅仅是分数" [level=3] [ref=e209]:
+                - link "高考，考的不仅仅是分数" [ref=e210] [cursor=pointer]:
+                  - /url: https://www.163.com/dy/article/KV8BBKUC0514R9OJ.html?f=post2020_dy_recommends
+              - paragraph [ref=e211]: 环球网资讯 2026-06-12 18:45:15
+              - link "205 跟贴 205" [ref=e212] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KV8BBKUC0514R9OJ.html?f=post2020_dy_recommends
+                - generic [ref=e213]:
+                  - generic [ref=e214]: "205"
+                  - generic [ref=e216]:
+                    - emphasis [ref=e217]: 跟贴
+                    - text: "205"
+          - listitem [ref=e218]:
+            - link [ref=e219] [cursor=pointer]:
+              - /url: https://www.163.com/dy/article/KV5HO2A90512B07B.html?f=post2020_dy_recommends
+              - img [ref=e220]
+            - generic [ref=e221]:
+              - heading "5个月神话破灭！Donut Lab固态电池被实锤造假背后：从未实际生产过电池电芯，固态电池产业化仍需五到十年" [level=3] [ref=e222]:
+                - link "5个月神话破灭！Donut Lab固态电池被实锤造假背后：从未实际生产过电池电芯，固态电池产业化仍需五到十年" [ref=e223] [cursor=pointer]:
+                  - /url: https://www.163.com/dy/article/KV5HO2A90512B07B.html?f=post2020_dy_recommends
+              - paragraph [ref=e224]: 每日经济新闻 2026-06-11 16:39:10
+              - link "168 跟贴 168" [ref=e225] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KV5HO2A90512B07B.html?f=post2020_dy_recommends
+                - generic [ref=e226]:
+                  - generic [ref=e227]: "168"
+                  - generic [ref=e229]:
+                    - emphasis [ref=e230]: 跟贴
+                    - text: "168"
+          - listitem [ref=e231]:
+            - link [ref=e232] [cursor=pointer]:
+              - /url: https://www.163.com/dy/article/KV7RUPUG0514CFC7.html?f=post2020_dy_recommends
+              - img [ref=e233]
+            - generic [ref=e234]:
+              - heading "高铁行李架上惊现宠物蛇 列车长硬着头皮抓 网友：看得出害怕但依然硬上！" [level=3] [ref=e235]:
+                - link "高铁行李架上惊现宠物蛇 列车长硬着头皮抓 网友：看得出害怕但依然硬上！" [ref=e236] [cursor=pointer]:
+                  - /url: https://www.163.com/dy/article/KV7RUPUG0514CFC7.html?f=post2020_dy_recommends
+              - paragraph [ref=e237]: 闪电新闻 2026-06-12 14:16:06
+              - link "99 跟贴 99" [ref=e238] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KV7RUPUG0514CFC7.html?f=post2020_dy_recommends
+                - generic [ref=e239]:
+                  - generic [ref=e240]: "99"
+                  - generic [ref=e242]:
+                    - emphasis [ref=e243]: 跟贴
+                    - text: "99"
+          - listitem [ref=e244]:
+            - link [ref=e245] [cursor=pointer]:
+              - /url: https://www.163.com/dy/article/KVA66C3C0519DDQ2.html?f=post2020_dy_recommends
+              - img [ref=e246]
+            - generic [ref=e247]:
+              - heading "官宣！中国政府债券余额首次突破100万亿元" [level=3] [ref=e248]:
+                - link "官宣！中国政府债券余额首次突破100万亿元" [ref=e249] [cursor=pointer]:
+                  - /url: https://www.163.com/dy/article/KVA66C3C0519DDQ2.html?f=post2020_dy_recommends
+              - paragraph [ref=e250]: 第一财经资讯 2026-06-13 11:53:28
+              - link "1 跟贴 1" [ref=e251] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KVA66C3C0519DDQ2.html?f=post2020_dy_recommends
+                - generic [ref=e252]:
+                  - generic [ref=e253]: "1"
+                  - generic [ref=e255]:
+                    - emphasis [ref=e256]: 跟贴
+                    - text: "1"
+          - listitem [ref=e258]:
+            - link [ref=e259] [cursor=pointer]:
+              - /url: https://www.163.com/dy/article/KV8JTF48055040N3.html?f=post2020_dy_recommends
+              - img [ref=e260]
+            - generic [ref=e261]:
+              - heading "水果店员工用嘴给水果喷水？高校通报：属实，店铺已关停！" [level=3] [ref=e262]:
+                - link "水果店员工用嘴给水果喷水？高校通报：属实，店铺已关停！" [ref=e263] [cursor=pointer]:
+                  - /url: https://www.163.com/dy/article/KV8JTF48055040N3.html?f=post2020_dy_recommends
+              - paragraph [ref=e264]: 上观新闻 2026-06-12 21:14:48
+              - link "1124 跟贴 1124" [ref=e265] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KV8JTF48055040N3.html?f=post2020_dy_recommends
+                - generic [ref=e266]:
+                  - generic [ref=e267]: "1124"
+                  - generic [ref=e269]:
+                    - emphasis [ref=e270]: 跟贴
+                    - text: "1124"
+          - listitem [ref=e271]:
+            - link [ref=e272] [cursor=pointer]:
+              - /url: https://www.163.com/dy/article/KV8BGINQ05149SCF.html?f=post2020_dy_recommends
+              - img [ref=e273]
+            - generic [ref=e274]:
+              - heading "一睁眼就亏几十万！白银一路下跌，有人亏损七位数，“焦虑，走路都腿软”" [level=3] [ref=e275]:
+                - link "一睁眼就亏几十万！白银一路下跌，有人亏损七位数，“焦虑，走路都腿软”" [ref=e276] [cursor=pointer]:
+                  - /url: https://www.163.com/dy/article/KV8BGINQ05149SCF.html?f=post2020_dy_recommends
+              - paragraph [ref=e277]: 浙江之声 2026-06-12 18:47:57
+              - link "111 跟贴 111" [ref=e278] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KV8BGINQ05149SCF.html?f=post2020_dy_recommends
+                - generic [ref=e279]:
+                  - generic [ref=e280]: "111"
+                  - generic [ref=e282]:
+                    - emphasis [ref=e283]: 跟贴
+                    - text: "111"
+          - listitem [ref=e284]:
+            - link [ref=e285] [cursor=pointer]:
+              - /url: https://www.163.com/dy/article/KV7SVPU505129QAF.html?f=post2020_dy_recommends
+              - img [ref=e286]
+            - generic [ref=e287]:
+              - heading "仅靠宣传“吸烟有害健康”难奏效，学者呼吁提高烟草税来控烟" [level=3] [ref=e288]:
+                - link "仅靠宣传“吸烟有害健康”难奏效，学者呼吁提高烟草税来控烟" [ref=e289] [cursor=pointer]:
+                  - /url: https://www.163.com/dy/article/KV7SVPU505129QAF.html?f=post2020_dy_recommends
+              - paragraph [ref=e290]: 南方都市报 2026-06-12 14:34:07
+              - link "238 跟贴 238" [ref=e291] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KV7SVPU505129QAF.html?f=post2020_dy_recommends
+                - generic [ref=e292]:
+                  - generic [ref=e293]: "238"
+                  - generic [ref=e295]:
+                    - emphasis [ref=e296]: 跟贴
+                    - text: "238"
+          - listitem [ref=e297]:
+            - link [ref=e298] [cursor=pointer]:
+              - /url: https://www.163.com/news/article/KV9SBBCK0001899O.html?f=post2020_dy_recommends
+              - img [ref=e299]
+            - generic [ref=e300]:
+              - heading "美将部分中企列入\"中国军事企业清单\" 商务部回应" [level=3] [ref=e301]:
+                - link "美将部分中企列入\"中国军事企业清单\" 商务部回应" [ref=e302] [cursor=pointer]:
+                  - /url: https://www.163.com/news/article/KV9SBBCK0001899O.html?f=post2020_dy_recommends
+              - paragraph [ref=e303]: 界面新闻 2026-06-13 09:04:57
+              - link "33 跟贴 33" [ref=e304] [cursor=pointer]:
+                - /url: https://www.163.com/news/article/KV9SBBCK0001899O.html?f=post2020_dy_recommends
+                - generic [ref=e305]:
+                  - generic [ref=e306]: "33"
+                  - generic [ref=e308]:
+                    - emphasis [ref=e309]: 跟贴
+                    - text: "33"
+          - listitem [ref=e310]:
+            - link [ref=e311] [cursor=pointer]:
+              - /url: https://www.163.com/dy/article/KV7K5N7K0514R9KQ.html?f=post2020_dy_recommends
+              - img [ref=e312]
+            - generic [ref=e313]:
+              - heading "揭秘：为什么不建议老旧家电“超期服役”?" [level=3] [ref=e314]:
+                - link "揭秘：为什么不建议老旧家电“超期服役”?" [ref=e315] [cursor=pointer]:
+                  - /url: https://www.163.com/dy/article/KV7K5N7K0514R9KQ.html?f=post2020_dy_recommends
+              - paragraph [ref=e316]: 北青网-北京青年报 2026-06-12 12:00:04
+              - link "309 跟贴 309" [ref=e317] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KV7K5N7K0514R9KQ.html?f=post2020_dy_recommends
+                - generic [ref=e318]:
+                  - generic [ref=e319]: "309"
+                  - generic [ref=e321]:
+                    - emphasis [ref=e322]: 跟贴
+                    - text: "309"
+          - listitem [ref=e323]:
+            - link [ref=e324] [cursor=pointer]:
+              - /url: https://www.163.com/dy/article/KV627KVF0552H092.html?f=post2020_dy_recommends
+              - img [ref=e325]
+            - generic [ref=e326]:
+              - heading "海光信息在汉披露：国产CPU处理器性能已比肩英特尔" [level=3] [ref=e327]:
+                - link "海光信息在汉披露：国产CPU处理器性能已比肩英特尔" [ref=e328] [cursor=pointer]:
+                  - /url: https://www.163.com/dy/article/KV627KVF0552H092.html?f=post2020_dy_recommends
+              - paragraph [ref=e329]: 支点财经 2026-06-11 21:27:18
+              - link "173 跟贴 173" [ref=e330] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KV627KVF0552H092.html?f=post2020_dy_recommends
+                - generic [ref=e331]:
+                  - generic [ref=e332]: "173"
+                  - generic [ref=e334]:
+                    - emphasis [ref=e335]: 跟贴
+                    - text: "173"
+          - listitem [ref=e337]:
+            - link [ref=e338] [cursor=pointer]:
+              - /url: https://www.163.com/dy/article/KVA40JJU0530QRMB.html?f=post2020_dy_recommends
+              - img [ref=e339]
+            - generic [ref=e340]:
+              - heading "浙江宁波：甬江特大桥建设加速推进" [level=3] [ref=e341]:
+                - link "浙江宁波：甬江特大桥建设加速推进" [ref=e342] [cursor=pointer]:
+                  - /url: https://www.163.com/dy/article/KVA40JJU0530QRMB.html?f=post2020_dy_recommends
+              - paragraph [ref=e343]: 人民资讯 2026-06-13 11:15:22
+              - link "2 跟贴 2" [ref=e344] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KVA40JJU0530QRMB.html?f=post2020_dy_recommends
+                - generic [ref=e345]:
+                  - generic [ref=e346]: "2"
+                  - generic [ref=e348]:
+                    - emphasis [ref=e349]: 跟贴
+                    - text: "2"
+          - listitem [ref=e350]:
+            - link [ref=e351] [cursor=pointer]:
+              - /url: https://www.163.com/dy/article/KVA12J4E0514R9KQ.html?f=post2020_dy_recommends
+              - img [ref=e352]
+            - generic [ref=e353]:
+              - heading "唐斯：OG的绝杀将会与纽约体育史上那些最伟大的时刻并列" [level=3] [ref=e354]:
+                - link "唐斯：OG的绝杀将会与纽约体育史上那些最伟大的时刻并列" [ref=e355] [cursor=pointer]:
+                  - /url: https://www.163.com/dy/article/KVA12J4E0514R9KQ.html?f=post2020_dy_recommends
+              - paragraph [ref=e356]: 北青网-北京青年报 2026-06-13 10:24:01
+              - link "17 跟贴 17" [ref=e357] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KVA12J4E0514R9KQ.html?f=post2020_dy_recommends
+                - generic [ref=e358]:
+                  - generic [ref=e359]: "17"
+                  - generic [ref=e361]:
+                    - emphasis [ref=e362]: 跟贴
+                    - text: "17"
+          - listitem [ref=e363]:
+            - link [ref=e364] [cursor=pointer]:
+              - /url: https://www.163.com/dy/article/KVA1A04R0514R9KQ.html?f=post2020_dy_recommends
+              - img [ref=e365]
+            - generic [ref=e366]:
+              - heading "米奇：我不关注社交媒体 我可能在网上“被解雇”212次了" [level=3] [ref=e367]:
+                - link "米奇：我不关注社交媒体 我可能在网上“被解雇”212次了" [ref=e368] [cursor=pointer]:
+                  - /url: https://www.163.com/dy/article/KVA1A04R0514R9KQ.html?f=post2020_dy_recommends
+              - paragraph [ref=e369]: 北青网-北京青年报 2026-06-13 10:28:04
+              - link "19 跟贴 19" [ref=e370] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KVA1A04R0514R9KQ.html?f=post2020_dy_recommends
+                - generic [ref=e371]:
+                  - generic [ref=e372]: "19"
+                  - generic [ref=e374]:
+                    - emphasis [ref=e375]: 跟贴
+                    - text: "19"
+          - listitem [ref=e376]:
+            - link [ref=e377] [cursor=pointer]:
+              - /url: https://www.163.com/dy/article/KVA3G85J0514R9P4.html?f=post2020_dy_recommends
+              - img [ref=e378]
+            - generic [ref=e379]:
+              - heading "意想不到！美国主导比赛，巴拉圭疲于奔命，美国4比1大胜" [level=3] [ref=e380]:
+                - link "意想不到！美国主导比赛，巴拉圭疲于奔命，美国4比1大胜" [ref=e381] [cursor=pointer]:
+                  - /url: https://www.163.com/dy/article/KVA3G85J0514R9P4.html?f=post2020_dy_recommends
+              - paragraph [ref=e382]: 澎湃新闻 2026-06-13 11:06:27
+              - link "0 跟贴 0" [ref=e383] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KVA3G85J0514R9P4.html?f=post2020_dy_recommends
+                - generic [ref=e384]:
+                  - generic [ref=e385]: "0"
+                  - generic [ref=e387]:
+                    - emphasis [ref=e388]: 跟贴
+                    - text: "0"
+          - listitem [ref=e389]:
+            - link [ref=e390] [cursor=pointer]:
+              - /url: https://www.163.com/dy/article/KVAAOC5J05346RC6.html?f=post2020_dy_recommends
+              - img [ref=e391]
+            - generic [ref=e392]:
+              - heading "“打卡”不能“打扰”" [level=3] [ref=e393]:
+                - link "“打卡”不能“打扰”" [ref=e394] [cursor=pointer]:
+                  - /url: https://www.163.com/dy/article/KVAAOC5J05346RC6.html?f=post2020_dy_recommends
+              - paragraph [ref=e395]: 新华社 2026-06-13 13:13:12
+              - link "0 跟贴 0" [ref=e396] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KVAAOC5J05346RC6.html?f=post2020_dy_recommends
+                - generic [ref=e397]:
+                  - generic [ref=e398]: "0"
+                  - generic [ref=e400]:
+                    - emphasis [ref=e401]: 跟贴
+                    - text: "0"
+    - generic [ref=e402]:
+      - generic [ref=e403]:
+        - link "北京楹庭律师事务所" [ref=e405] [cursor=pointer]:
+          - /url: https://www.163.com/dy/media/T1596189992020.html
+          - img "北京楹庭律师事务所" [ref=e406]
+        - link "北京楹庭律师事务所" [ref=e408] [cursor=pointer]:
+          - /url: https://www.163.com/dy/media/T1596189992020.html
+        - link "企业拆迁维权、政企纠纷普法" [ref=e410] [cursor=pointer]:
+          - /url: https://www.163.com/dy/media/T1596189992020.html
+        - generic [ref=e411]:
+          - generic [ref=e412]:
+            - link "5254" [ref=e413] [cursor=pointer]:
+              - /url: https://www.163.com/dy/media/T1596189992020.html
+              - emphasis [ref=e414]: "5254"
+            - text: 文章数
+          - generic [ref=e415]:
+            - link "4586" [ref=e416] [cursor=pointer]:
+              - /url: https://www.163.com/dy/media/T1596189992020.html
+              - emphasis [ref=e417]: "4586"
+            - text: 关注度
+        - generic [ref=e418]:
+          - text: 往期回顾
+          - link "全部" [ref=e419] [cursor=pointer]:
+            - /url: https://www.163.com/dy/media/T1596189992020.html
+        - list
+      - link [ref=e421] [cursor=pointer]:
+        - /url: javascript:;
+      - generic [ref=e423]:
+        - heading "头条要闻" [level=2] [ref=e424]:
+          - link "头条要闻" [ref=e425] [cursor=pointer]:
+            - /url: https://news.163.com/?f=post2020_dy_news
+        - link "养生馆在洗肠液中掺酱油 北京100多名老人被坑上千万" [ref=e427] [cursor=pointer]:
+          - /url: https://www.163.com/dy/article/KV7T9RA10530WJIN.html
+          - img [ref=e428]
+          - heading "养生馆在洗肠液中掺酱油 北京100多名老人被坑上千万" [level=3] [ref=e429]
+        - list [ref=e430]:
+          - listitem [ref=e431]:
+            - heading "美国4比1大胜 美国主导比赛巴拉圭疲于奔命让人意外" [level=3] [ref=e432]:
+              - link "美国4比1大胜 美国主导比赛巴拉圭疲于奔命让人意外" [ref=e433] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KVA3G85J0514R9P4.html
+          - listitem [ref=e434]:
+            - heading "牛弹琴：全世界都要精疲力竭时 一个超级好消息要来了" [level=3] [ref=e435]:
+              - link "牛弹琴：全世界都要精疲力竭时 一个超级好消息要来了" [ref=e436] [cursor=pointer]:
+                - /url: https://www.163.com/news/article/KV9Q9FH800019B3E.html
+          - listitem [ref=e437]:
+            - heading "入学前查出肺癌晚期的湖南姑娘毕业了 发言感动全网" [level=3] [ref=e438]:
+              - link "入学前查出肺癌晚期的湖南姑娘毕业了 发言感动全网" [ref=e439] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KV9OK0V20534P59R.html
+          - listitem [ref=e440]:
+            - heading "47岁泰国长公主去世 70多岁泰王现继承危机" [level=3] [ref=e441]:
+              - link "47岁泰国长公主去世 70多岁泰王现继承危机" [ref=e442] [cursor=pointer]:
+                - /url: https://www.163.com/news/article/KV9M2NEH00019B3E.html
+      - link [ref=e444] [cursor=pointer]:
+        - /url: javascript:;
+      - generic [ref=e446]:
+        - heading "体育要闻" [level=2] [ref=e447]:
+          - link "体育要闻" [ref=e448] [cursor=pointer]:
+            - /url: https://sports.163.com/
+        - link "东道主三战不败！美墨开门红加拿大零的突破" [ref=e450] [cursor=pointer]:
+          - /url: https://www.163.com/dy/article/KVA3K9UF0552LYH5.html
+          - img [ref=e451]
+          - heading "东道主三战不败！美墨开门红加拿大零的突破" [level=3] [ref=e452]
+        - list [ref=e453]:
+          - listitem [ref=e454]:
+            - heading "美国揭幕战4-1大胜巴拉圭 法甲神锋登顶射手榜" [level=3] [ref=e455]:
+              - link "美国揭幕战4-1大胜巴拉圭 法甲神锋登顶射手榜" [ref=e456] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KVA3CE750549753N.html
+          - listitem [ref=e457]:
+            - heading "草台班子?世界杯开幕式离谱翻车 大力神杯掉皮" [level=3] [ref=e458]:
+              - link "草台班子?世界杯开幕式离谱翻车 大力神杯掉皮" [ref=e459] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KV9GGQPD05566VBM.html
+          - listitem [ref=e460]:
+            - heading "世界杯首场平局：加拿大1-1波黑 终结6连败+历史第1分 破40年魔咒" [level=3] [ref=e461]:
+              - link "世界杯首场平局：加拿大1-1波黑 终结6连败+历史第1分 破40年魔咒" [ref=e462] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KV9CFLOU05497GLB.html
+          - listitem [ref=e463]:
+            - heading "1-1战平波黑，加拿大拿到队史世界杯首个积分" [level=3] [ref=e464]:
+              - link "1-1战平波黑，加拿大拿到队史世界杯首个积分" [ref=e465] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KV9ELIH70549BAP0.html
+      - link [ref=e467] [cursor=pointer]:
+        - /url: javascript:;
+      - generic [ref=e469]:
+        - heading "娱乐要闻" [level=2] [ref=e470]:
+          - link "娱乐要闻" [ref=e471] [cursor=pointer]:
+            - /url: https://ent.163.com/
+        - link "12年情怀碎一地！跑男接连翻车" [ref=e473] [cursor=pointer]:
+          - /url: https://www.163.com/dy/article/KV9SVRL00556BW91.html
+          - img [ref=e474]
+          - heading "12年情怀碎一地！跑男接连翻车" [level=3] [ref=e475]
+        - list [ref=e476]:
+          - listitem [ref=e477]:
+            - heading "疑金泽前女友发声：生前被男大佬逼迫上床" [level=3] [ref=e478]:
+              - link "疑金泽前女友发声：生前被男大佬逼迫上床" [ref=e479] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KV9UT7MH05566MQJ.html
+          - listitem [ref=e480]:
+            - heading "闪闪生父被曝，黄一鸣：王思聪冤大头" [level=3] [ref=e481]:
+              - link "闪闪生父被曝，黄一鸣：王思聪冤大头" [ref=e482] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KV9SFEFA0556DKTX.html
+          - listitem [ref=e483]:
+            - heading "不是张凌赫李晨！公开维护白鹿的，是这个男人" [level=3] [ref=e484]:
+              - link "不是张凌赫李晨！公开维护白鹿的，是这个男人" [ref=e485] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KV9VQFPI0556DK10.html
+          - listitem [ref=e486]:
+            - heading "具俊晔近况曝光，难怪汪小菲要和大S离婚" [level=3] [ref=e487]:
+              - link "具俊晔近况曝光，难怪汪小菲要和大S离婚" [ref=e488] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KV9THH5B05566SDY.html
+      - link [ref=e490] [cursor=pointer]:
+        - /url: javascript:;
+      - generic [ref=e492]:
+        - heading "财经要闻" [level=2] [ref=e493]:
+          - link "财经要闻" [ref=e494] [cursor=pointer]:
+            - /url: https://money.163.com/
+        - link "梁文锋向左，杨植麟向右" [ref=e496] [cursor=pointer]:
+          - /url: https://www.163.com/dy/article/KV9773PV051188EA.html
+          - img [ref=e497]
+          - heading "梁文锋向左，杨植麟向右" [level=3] [ref=e498]
+        - list [ref=e499]:
+          - listitem [ref=e500]:
+            - heading "AI眼镜的隐秘角落：作弊、偷拍与灰色生意经" [level=3] [ref=e501]:
+              - link "AI眼镜的隐秘角落：作弊、偷拍与灰色生意经" [ref=e502] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KV8G1MM90539M9HP.html
+          - listitem [ref=e503]:
+            - heading "洛阳钼业为何押对了铜？" [level=3] [ref=e504]:
+              - link "洛阳钼业为何押对了铜？" [ref=e505] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KV931DRB051188EA.html
+          - listitem [ref=e506]:
+            - heading "全球最大生物科技IPO诞生 给我们什么启示？" [level=3] [ref=e507]:
+              - link "全球最大生物科技IPO诞生 给我们什么启示？" [ref=e508] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KV8US45H051188EA.html
+          - listitem [ref=e509]:
+            - heading "国泰海通资管换帅！30年老将，出任总裁！" [level=3] [ref=e510]:
+              - link "国泰海通资管换帅！30年老将，出任总裁！" [ref=e511] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KVA86OPQ0519JFL1.html
+      - link [ref=e513] [cursor=pointer]:
+        - /url: javascript:;
+      - generic [ref=e515]:
+        - heading "科技要闻" [level=2] [ref=e516]:
+          - link "科技要闻" [ref=e517] [cursor=pointer]:
+            - /url: https://tech.163.com/
+        - link "SpaceX上市首日破2万亿美元，马斯克再封神" [ref=e519] [cursor=pointer]:
+          - /url: https://www.163.com/tech/article/KV9TNJDL00097U7T.html
+          - img [ref=e520]
+          - heading "SpaceX上市首日破2万亿美元，马斯克再封神" [level=3] [ref=e521]
+        - list [ref=e522]:
+          - listitem [ref=e523]:
+            - heading "余承东再次负责华为盘古大模型" [level=3] [ref=e524]:
+              - link "余承东再次负责华为盘古大模型" [ref=e525] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KV9PJO34051481US.html
+          - listitem [ref=e526]:
+            - heading "70年首富榜背后的财富密码：为什么首位万亿富豪是马斯克" [level=3] [ref=e527]:
+              - link "70年首富榜背后的财富密码：为什么首位万亿富豪是马斯克" [ref=e528] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KV9NFUM50514R9P4.html
+          - listitem [ref=e529]:
+            - heading "刚刚，人类历史上首位万亿美元富豪诞生！" [level=3] [ref=e530]:
+              - link "刚刚，人类历史上首位万亿美元富豪诞生！" [ref=e531] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/KV8OB0S00512B07B.html
+          - listitem [ref=e532]:
+            - heading "鸿蒙7发布，余承东：首个完成AI化改造系统" [level=3] [ref=e533]:
+              - link "鸿蒙7发布，余承东：首个完成AI化改造系统" [ref=e534] [cursor=pointer]:
+                - /url: https://www.163.com/tech/article/KV81L9A300098IEO.html
+      - link [ref=e536] [cursor=pointer]:
+        - /url: javascript:;
+      - generic [ref=e538]:
+        - heading "汽车要闻" [level=2] [ref=e539]:
+          - link "汽车要闻" [ref=e540] [cursor=pointer]:
+            - /url: https://auto.163.com/
+        - link "2026重庆车展 长城炮Hi4-T正式上市售14.98万起" [ref=e542] [cursor=pointer]:
+          - /url: https://www.163.com/auto/article/KVA66EOK0008856R.html
+          - img [ref=e543]
+          - heading "2026重庆车展 长城炮Hi4-T正式上市售14.98万起" [level=3] [ref=e544]
+        - list [ref=e545]:
+          - listitem [ref=e546]:
+            - heading "标配激光雷达/双动力可选 昊铂S600限时售17.99万起" [level=3] [ref=e547]:
+              - link "标配激光雷达/双动力可选 昊铂S600限时售17.99万起" [ref=e548] [cursor=pointer]:
+                - /url: https://www.163.com/auto/article/KV8KU6O20008856R.html
+          - listitem [ref=e549]:
+            - heading "BJ30旅行家高光版正式上市 超级置换价8.29万起" [level=3] [ref=e550]:
+              - link "BJ30旅行家高光版正式上市 超级置换价8.29万起" [ref=e551] [cursor=pointer]:
+                - /url: https://www.163.com/auto/article/KV8HH7IF0008856R.html
+          - listitem [ref=e552]:
+            - heading "佟湘北：全新smart#6 自成一派好看更好开" [level=3] [ref=e553]:
+              - link "佟湘北：全新smart#6 自成一派好看更好开" [ref=e554] [cursor=pointer]:
+                - /url: https://www.163.com/v/video/VKU9JIUPC.html
+          - listitem [ref=e555]:
+            - heading "将搭云辇-M智能磁流变悬架 方程豹方程S系列信息曝光" [level=3] [ref=e556]:
+              - link "将搭云辇-M智能磁流变悬架 方程豹方程S系列信息曝光" [ref=e557] [cursor=pointer]:
+                - /url: https://www.163.com/auto/article/KV70L6BA0008856R.html
+      - link [ref=e559] [cursor=pointer]:
+        - /url: javascript:;
+      - generic [ref=e561]:
+        - heading "态度原创" [level=2] [ref=e562]
+        - list [ref=e563]:
+          - listitem [ref=e564]:
+            - heading "清流 | 广州通则康威IPO:产品海外市场空间或有隐忧，关联方信披语焉不详|清流IPO" [level=3] [ref=e565]:
+              - link "清流 | 广州通则康威IPO:产品海外市场空间或有隐忧，关联方信披语焉不详|清流IPO" [ref=e566] [cursor=pointer]:
+                - /url: https://www.163.com/money/article/KQ0GK3VI00258105.html
+                - emphasis [ref=e567]: 清流
+                - text: "| 广州通则康威IPO:产品海外市场空间或有隐忧，关联方信披语焉不详|清流IPO"
+          - listitem [ref=e568]:
+            - heading "城市印象 | AK刘彰邂逅河北南大港湿地" [level=3] [ref=e569]:
+              - link "城市印象 | AK刘彰邂逅河北南大港湿地" [ref=e570] [cursor=pointer]:
+                - /url: https://www.163.com/v/video/VIU9NM449.html
+                - emphasis [ref=e571]: 城市印象
+                - text: "| AK刘彰邂逅河北南大港湿地"
+          - listitem [ref=e572]:
+            - heading "锋雳 | 干细胞生意：5000/小时的三甲病房和17万一针的希望" [level=3] [ref=e573]:
+              - link "锋雳 | 干细胞生意：5000/小时的三甲病房和17万一针的希望" [ref=e574] [cursor=pointer]:
+                - /url: https://www.163.com/money/article/KV4O6JQO00258105.html
+                - emphasis [ref=e575]: 锋雳
+                - text: "| 干细胞生意：5000/小时的三甲病房和17万一针的希望"
+          - listitem [ref=e576]:
+            - heading "中国匠人 | 《中国匠人——锦绣中国》即日上线：解读千年丝线的东方美学密码" [level=3] [ref=e577]:
+              - link "中国匠人 | 《中国匠人——锦绣中国》即日上线：解读千年丝线的东方美学密码" [ref=e578] [cursor=pointer]:
+                - /url: https://www.163.com/dy/article/K14GO3790552U6MX.html
+                - emphasis [ref=e579]: 中国匠人
+                - text: "| 《中国匠人——锦绣中国》即日上线：解读千年丝线的东方美学密码"
+      - link [ref=e581] [cursor=pointer]:
+        - /url: javascript:;
+      - generic [ref=e583]:
+        - generic [ref=e584]:
+          - link "本地" [ref=e586] [cursor=pointer]:
+            - /url: https://bj.news.163.com/
+          - link "亲子" [ref=e588] [cursor=pointer]:
+            - /url: https://baby.163.com/
+          - link "游戏" [ref=e590] [cursor=pointer]:
+            - /url: https://ent.163.com/game/
+          - link "时尚" [ref=e592] [cursor=pointer]:
+            - /url: https://fashion.163.com/
+          - link "公开课" [ref=e594] [cursor=pointer]:
+            - /url: https://open.163.com/
+        - generic [ref=e597]:
+          - link "AK刘彰邂逅河北南大港湿地" [ref=e599] [cursor=pointer]:
+            - /url: https://www.163.com/v/video/VIU9NM449.html
+            - img [ref=e600]
+            - heading "AK刘彰邂逅河北南大港湿地" [level=3] [ref=e601]
+          - list [ref=e602]:
+            - listitem [ref=e603]:
+              - heading "世界杯还没开始，苏超已经火到爆梗" [level=3] [ref=e604]:
+                - link "世界杯还没开始，苏超已经火到爆梗" [ref=e605] [cursor=pointer]:
+                  - /url: https://www.163.com/v/video/VIU5071LR.html
+            - listitem [ref=e606]:
+              - heading "用杨柳青年画的方式，打开天津" [level=3] [ref=e607]:
+                - link "用杨柳青年画的方式，打开天津" [ref=e608] [cursor=pointer]:
+                  - /url: https://www.163.com/v/video/VITJ2P3EM.html
+            - listitem [ref=e609]:
+              - heading "用剪纸的方式，打开江苏扬州" [level=3] [ref=e610]:
+                - link "用剪纸的方式，打开江苏扬州" [ref=e611] [cursor=pointer]:
+                  - /url: https://www.163.com/v/video/VIT0CR4KE.html
+    - link [ref=e612] [cursor=pointer]:
+      - /url: http://www.163.com/newsapp/#f=qr
+      - img [ref=e613]
+    - link [ref=e614] [cursor=pointer]:
+      - /url: "#"
+    - link [ref=e616] [cursor=pointer]:
+      - /url: javascript:;
+  - generic [ref=e619]:
+    - generic [ref=e620]: © 1997-2026 网易公司版权所有
+    - link "About NetEase" [ref=e621] [cursor=pointer]:
+      - /url: https://corp.163.com/
+    - text: "|"
+    - link "公司简介" [ref=e622] [cursor=pointer]:
+      - /url: https://corp.163.com/gb/about/overview.html
+    - text: "|"
+    - link "联系方法" [ref=e623] [cursor=pointer]:
+      - /url: https://corp.163.com/gb/contactus.html
+    - text: "|"
+    - link "招聘信息" [ref=e624] [cursor=pointer]:
+      - /url: https://corp.163.com/gb/job/job.html
+    - text: "|"
+    - link "客户服务" [ref=e625] [cursor=pointer]:
+      - /url: https://help.163.com/
+    - text: "|"
+    - link "隐私政策" [ref=e626] [cursor=pointer]:
+      - /url: https://corp.163.com/gb/legal.html
+    - text: "|"
+    - link "不良信息举报 Complaint Center" [ref=e627] [cursor=pointer]:
+      - /url: https://www.163.com/special/0077jt/tipoff.html
+    - text: "|"
+    - link "廉正举报" [ref=e628] [cursor=pointer]:
+      - /url: https://jubao.163.com/
+    - text: "|"
+    - link "侵权投诉 Reporting Infringements" [ref=e629] [cursor=pointer]:
+      - /url: https://corp.163.com/special/008397U0/reporting_infringements_dy.html?35

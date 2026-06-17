@@ -1,18 +1,21 @@
 import type { ReactElement } from 'react'
 import type { ApprovalPolicy, AppSettingsV1, SandboxMode } from '@shared/app-settings'
 import {
+  BUILTIN_MODEL_PROVIDER_PRESETS,
   DEFAULT_WRITE_INLINE_COMPLETION_BASE_URL,
   DEFAULT_WRITE_INLINE_COMPLETION_MAX_TOKENS,
   DEFAULT_WRITE_INLINE_COMPLETION_MODEL,
   DEFAULT_WRITE_INLINE_LONG_COMPLETION_MAX_TOKENS,
-  DEFAULT_KUN_DATA_DIR,
+  DEFAULT_LEGALWORK_DATA_DIR,
+  DEFAULT_MODEL_PROVIDER_ID,
   WRITE_INLINE_COMPLETION_MODEL_IDS,
-  isKunRuntimeInsecure
+  getBuiltinModelProviderPreset,
+  getModelProviderProfile,
+  isLegalworkRuntimeInsecure,
+  legalworkSettingsPatch
 } from '@shared/app-settings'
-import type { GuiUpdateChannel } from '@shared/gui-update'
 import type { SkillRootId } from '../lib/skill-root-preference'
 import { FolderOpen, Loader2, PencilLine, RefreshCw, Settings } from 'lucide-react'
-import { GuiUpdateControl } from './settings-gui-update'
 import {
   InlineNoticeView,
   SecretInput,
@@ -27,10 +30,11 @@ export function GeneralSettingsSection({ ctx }: { ctx: Record<string, any> }): R
     t,
     tCommon,
     form,
-    kun,
+    provider,
+    legalwork,
     activeApiKey,
     update,
-    updateKun,
+    updateLegalwork,
     updateSharedCredential,
     sharedApiKey,
     sharedBaseUrl,
@@ -44,16 +48,16 @@ export function GeneralSettingsSection({ ctx }: { ctx: Record<string, any> }): R
     pickWorkspace,
     resetWorkspaceToDefault,
     workspacePickerError,
-    guiUpdateInfo,
-    checkingGuiUpdate,
-    downloadingGuiUpdate,
-    installingGuiUpdate,
-    guiUpdateDownloaded,
-    guiUpdateProgress,
-    guiUpdateError,
-    checkGuiUpdate,
-    downloadGuiUpdate,
-    installGuiUpdate,
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     logPath,
     logDirOpenError,
     setLogDirOpenError,
@@ -98,20 +102,102 @@ export function GeneralSettingsSection({ ctx }: { ctx: Record<string, any> }): R
   const openAtLoginSupported = platform === 'win32' || platform === 'darwin'
   const startMinimizedSupported = platform === 'win32'
   const desktopBehavior = form.appBehavior
+  const activeProviderId = legalwork.providerId || DEFAULT_MODEL_PROVIDER_ID
+  const activeProvider = getModelProviderProfile(form, activeProviderId)
+  const activeProviderPreset = getBuiltinModelProviderPreset(activeProvider.id)
+  const buildProviderProfiles = (nextProvider: typeof activeProvider): typeof provider.providers => (
+    provider.providers.some((item: typeof activeProvider) => item.id === nextProvider.id)
+      ? provider.providers.map((item: typeof activeProvider) => item.id === nextProvider.id ? nextProvider : item)
+      : [...provider.providers, nextProvider]
+  )
+  const updateProviderProfiles = (nextProvider: typeof activeProvider): void => {
+    const nextProfiles = buildProviderProfiles(nextProvider)
+    update({
+      provider: nextProvider.id === DEFAULT_MODEL_PROVIDER_ID
+        ? {
+            apiKey: nextProvider.apiKey,
+            baseUrl: nextProvider.baseUrl,
+            providers: nextProfiles
+          }
+        : { providers: nextProfiles }
+    })
+  }
+  const updateActiveProviderProfile = (patch: Partial<typeof activeProvider>): void => {
+    updateProviderProfiles({ ...activeProvider, ...patch })
+  }
+  const selectModelProvider = (providerId: string): void => {
+    const preset = getBuiltinModelProviderPreset(providerId)
+    const current = getModelProviderProfile(form, providerId)
+    const nextProvider = {
+      ...current,
+      id: preset?.id ?? current.id,
+      name: preset?.name ?? current.name,
+      baseUrl: current.baseUrl || preset?.baseUrl || '',
+      models: current.models.length > 0 ? current.models : preset?.models ?? []
+    }
+    update({
+      provider: nextProvider.id === DEFAULT_MODEL_PROVIDER_ID
+        ? {
+            apiKey: nextProvider.apiKey,
+            baseUrl: nextProvider.baseUrl,
+            providers: buildProviderProfiles(nextProvider)
+          }
+        : { providers: buildProviderProfiles(nextProvider) },
+      agents: legalworkSettingsPatch({
+        providerId: nextProvider.id,
+        model: nextProvider.models[0] || legalwork.model
+      })
+    })
+  }
 
   return (
             <>
               <SettingsCard title={t('sectionGeneral')}>
                 <SettingRow
+                  title={t('modelProvider')}
+                  description={t('modelProviderDesc')}
+                  control={
+                    <div className="w-full min-w-0 md:max-w-md">
+                      <select
+                        className={selectControlClass}
+                        value={activeProvider.id}
+                        onChange={(e) => selectModelProvider(e.target.value)}
+                      >
+                        {BUILTIN_MODEL_PROVIDER_PRESETS.map((preset) => (
+                          <option key={preset.id} value={preset.id}>
+                            {preset.name} · {preset.region === 'cn' ? t('modelProviderRegionCn') : t('modelProviderRegionGlobal')}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {BUILTIN_MODEL_PROVIDER_PRESETS.map((preset) => (
+                          <button
+                            key={preset.id}
+                            type="button"
+                            onClick={() => selectModelProvider(preset.id)}
+                            className={`rounded-full border px-2.5 py-1 text-[11.5px] font-medium transition ${
+                              activeProvider.id === preset.id
+                                ? 'border-accent/35 bg-accent/10 text-accent'
+                                : 'border-ds-border bg-ds-card text-ds-muted hover:bg-ds-hover hover:text-ds-ink'
+                            }`}
+                          >
+                            {preset.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  }
+                />
+                <SettingRow
                   title={t('apiKey')}
                   description={t('apiKeySharedDesc')}
                   control={
                     <SecretInput
-                      value={sharedApiKey}
-                      onChange={(value) => updateSharedCredential({ apiKey: value })}
+                      value={activeProvider.apiKey}
+                      onChange={(value) => updateActiveProviderProfile({ apiKey: value })}
                       visible={showApiKey}
                       onToggleVisibility={() => setShowApiKey((value: boolean) => !value)}
-                      placeholder="sk-..."
+                      placeholder={activeProviderPreset?.apiKeyPlaceholder ?? 'sk-...'}
                       autoComplete="off"
                       invalid={!activeApiKey.trim()}
                       showLabel={t('showSecret')}
@@ -127,8 +213,24 @@ export function GeneralSettingsSection({ ctx }: { ctx: Record<string, any> }): R
                     <input
                       className="w-full min-w-0 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[14px] text-ds-ink shadow-sm focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/30 md:max-w-md"
                       placeholder={t('baseUrlPlaceholder')}
-                      value={sharedBaseUrl}
-                      onChange={(e) => updateSharedCredential({ baseUrl: e.target.value })}
+                      value={activeProvider.baseUrl}
+                      onChange={(e) => updateActiveProviderProfile({ baseUrl: e.target.value })}
+                    />
+                  }
+                />
+                <SettingRow
+                  title={t('modelProviderModels')}
+                  description={t('modelProviderModelsDesc')}
+                  control={
+                    <textarea
+                      rows={4}
+                      className="w-full min-w-0 resize-none rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[13px] leading-5 text-ds-ink shadow-sm focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/30 md:max-w-md"
+                      value={activeProvider.models.join('\n')}
+                      onChange={(e) =>
+                        updateActiveProviderProfile({
+                          models: e.target.value.split(/\r?\n|,/).map((item) => item.trim()).filter(Boolean)
+                        })
+                      }
                     />
                   }
                 />
@@ -285,46 +387,6 @@ export function GeneralSettingsSection({ ctx }: { ctx: Record<string, any> }): R
                     <Toggle
                       checked={desktopBehavior.closeToTray}
                       onChange={(v) => update({ appBehavior: { closeToTray: v } })}
-                    />
-                  }
-                />
-              </SettingsCard>
-
-              <SettingsCard title={t('guiUpdate')} className="mt-6">
-                <SettingRow
-                  title={t('guiUpdateChannel')}
-                  description={t('guiUpdateChannelDesc')}
-                  control={
-                    <select
-                      className={selectControlClass}
-                      value={form.guiUpdate.channel}
-                      onChange={(e) =>
-                        update({
-                          guiUpdate: { channel: e.target.value as GuiUpdateChannel }
-                        })
-                      }
-                    >
-                      <option value="frontier">{t('guiUpdateChannelFrontier')}</option>
-                      <option value="stable">{t('guiUpdateChannelStable')}</option>
-                    </select>
-                  }
-                />
-                <SettingRow
-                  title={t('guiUpdate')}
-                  description={t('guiUpdateDesc')}
-                  control={
-                    <GuiUpdateControl
-                      info={guiUpdateInfo}
-                      checking={checkingGuiUpdate}
-                      downloading={downloadingGuiUpdate}
-                      installing={installingGuiUpdate}
-                      downloaded={guiUpdateDownloaded}
-                      progress={guiUpdateProgress}
-                      error={guiUpdateError}
-                      onCheck={checkGuiUpdate}
-                      onDownload={downloadGuiUpdate}
-                      onInstall={installGuiUpdate}
-                      t={t}
                     />
                   }
                 />

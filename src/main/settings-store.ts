@@ -1,18 +1,20 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { basename, dirname, join } from 'node:path'
-import { atomicWriteFile } from '../../kun/src/adapters/file/atomic-write.js'
+import { atomicWriteFile } from '../../legalwork/src/adapters/file/atomic-write.js'
 import {
-  applyKunRuntimePatch,
-  kunSettingsEnvelope,
+  applyLegalworkRuntimePatch,
+  computeLegalworkRuntimeCredentialPatch,
+  legalworkSettingsEnvelope,
   DEFAULT_GUI_UPDATE_CHANNEL,
   DEFAULT_WRITE_WORKSPACE_ROOT,
   defaultClawSettings,
-  defaultKunRuntimeSettings,
+  defaultLegalworkRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
-  getKunRuntimeSettings,
-  mergeKunRuntimeSettings,
+  getLegalworkRuntimeSettings,
+  getModelProviderProfile,
+  mergeLegalworkRuntimeSettings,
   mergeModelProviderSettings,
   defaultWriteSettings,
   mergeClawSettings,
@@ -30,11 +32,12 @@ import {
 
 export type { AppSettingsV1 }
 
-const DEFAULT_WORKSPACE_ROOT = join(homedir(), '.deepseekgui', 'default_workspace')
-const DEFAULT_CLAW_CHANNELS_ROOT = join(homedir(), '.deepseekgui', 'claw')
+const DEFAULT_WORKSPACE_ROOT = join(homedir(), '.legalwork', 'default_workspace')
+const DEFAULT_CLAW_CHANNELS_ROOT = join(homedir(), '.legalwork', 'claw')
 const DEFAULT_WRITE_WORKSPACE_ROOT_ABSOLUTE = expandHomePath(DEFAULT_WRITE_WORKSPACE_ROOT)
-const SETTINGS_FILE_NAME = 'deepseek-gui-settings.json'
-const COMPATIBLE_USER_DATA_DIR_NAMES = ['deepseek-gui', 'DeepSeek GUI'] as const
+const SETTINGS_FILE_NAME = 'legalwork-settings.json'
+const LEGACY_SETTINGS_FILE_NAME = 'deepseek-gui-settings.json'
+const COMPATIBLE_USER_DATA_DIR_NAMES = ['legalwork', 'DeepSeek GUI', 'deepseek-gui'] as const
 const WELCOME_MARKDOWN = `# Welcome to Write
 
 This is your default writing workspace.
@@ -147,16 +150,25 @@ function serializeSettingsForDisk(settings: AppSettingsV1): string {
   return JSON.stringify(normalizeStoredSettings(settings), null, 2)
 }
 
+/** Tracks directories already confirmed to exist, avoiding redundant mkdir calls. */
+const knownDirs = new Set<string>()
+
+async function ensureDirExists(dir: string): Promise<void> {
+  if (knownDirs.has(dir)) return
+  await mkdir(dir, { recursive: true })
+  knownDirs.add(dir)
+}
+
 export async function ensureWorkspaceRootExists(workspaceRoot: string): Promise<string> {
   const normalized = normalizeWorkspaceRoot(workspaceRoot)
-  await mkdir(normalized, { recursive: true })
+  await ensureDirExists(normalized)
   return normalized
 }
 
 async function ensureWriteWorkspaceRootsExist(settings: AppSettingsV1): Promise<void> {
   for (const workspaceRoot of settings.write.workspaces) {
     if (!workspaceRoot) continue
-    await mkdir(workspaceRoot, { recursive: true })
+    await ensureDirExists(workspaceRoot)
   }
 
   const welcomePath = join(settings.write.defaultWorkspaceRoot, 'welcome.md')
@@ -171,23 +183,23 @@ async function ensureClawChannelWorkspaceRootsExist(settings: AppSettingsV1): Pr
   for (const channel of settings.claw.channels) {
     const workspaceRoot = normalizeClawChannelWorkspaceRoot(channel)
     if (!workspaceRoot) continue
-    await mkdir(workspaceRoot, { recursive: true })
+    await ensureDirExists(workspaceRoot)
     for (const conversation of channel.conversations) {
       const conversationWorkspaceRoot = normalizeClawConversationWorkspaceRoot(channel, conversation)
       if (!conversationWorkspaceRoot) continue
-      await mkdir(conversationWorkspaceRoot, { recursive: true })
+      await ensureDirExists(conversationWorkspaceRoot)
     }
   }
 }
 
 const defaultSettings = (): AppSettingsV1 => ({
   version: 1,
-  locale: 'en',
+  locale: 'zh',
   theme: 'system',
   uiFontScale: 'small',
   provider: defaultModelProviderSettings(),
   agents: {
-    kun: defaultKunRuntimeSettings()
+    legalwork: defaultLegalworkRuntimeSettings()
   },
   workspaceRoot: DEFAULT_WORKSPACE_ROOT,
   log: {
@@ -214,8 +226,8 @@ function buildMergedSettings(parsed: Partial<AppSettingsV1>): AppSettingsV1 {
     ...defaults,
     ...migrated,
     provider: mergeModelProviderSettings(defaults.provider, migrated.provider),
-    agents: kunSettingsEnvelope(
-      mergeKunRuntimeSettings(getKunRuntimeSettings(defaults), migrated.agents?.kun)
+    agents: legalworkSettingsEnvelope(
+      mergeLegalworkRuntimeSettings(getLegalworkRuntimeSettings(defaults), migrated.agents?.legalwork)
     ),
     log: { ...defaults.log, ...migrated.log },
     notifications: { ...defaults.notifications, ...migrated.notifications },
@@ -261,9 +273,15 @@ function compatibleSettingsPaths(currentPath: string): string[] {
   const currentUserDataDir = dirname(currentPath)
   const currentDirName = basename(currentUserDataDir)
   const parentDir = dirname(currentUserDataDir)
-  return COMPATIBLE_USER_DATA_DIR_NAMES
-    .filter((dirName) => dirName !== currentDirName)
-    .map((dirName) => join(parentDir, dirName, SETTINGS_FILE_NAME))
+  return [
+    join(currentUserDataDir, LEGACY_SETTINGS_FILE_NAME),
+    ...COMPATIBLE_USER_DATA_DIR_NAMES
+      .filter((dirName) => dirName !== currentDirName)
+      .flatMap((dirName) => [
+        join(parentDir, dirName, SETTINGS_FILE_NAME),
+        join(parentDir, dirName, LEGACY_SETTINGS_FILE_NAME)
+      ])
+  ].filter((path, index, paths) => path !== currentPath && paths.indexOf(path) === index)
 }
 
 async function readSettingsFileWithCompatibility(
@@ -304,20 +322,18 @@ export class JsonSettingsStore {
   async load(): Promise<AppSettingsV1> {
     if (this.cache) return this.cache
 
-    let raw = ''
-    let sourcePath = this.path
+    let found: { raw: string, sourcePath: string } | null
     try {
-      const loaded = await readSettingsFileWithCompatibility(this.path)
-      if (!loaded) {
-        this.cache = await loadDefaultSettings()
-        return this.cache
-      }
-      raw = loaded.raw
-      sourcePath = loaded.sourcePath
+      found = await readSettingsFileWithCompatibility(this.path)
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      throw new Error(`Failed to read settings file ${sourcePath}: ${message}`, { cause: error })
+      throw new Error(`Failed to read settings file ${this.path}: ${message}`, { cause: error })
     }
+    if (!found) {
+      this.cache = await loadDefaultSettings()
+      return this.cache
+    }
+    const { raw, sourcePath } = found
 
     let parsed: Partial<AppSettingsV1>
     try {
@@ -329,11 +345,11 @@ export class JsonSettingsStore {
         await this.save(defaults)
         if (backupPath) {
           console.warn(
-            `[deepseek-gui] Invalid settings JSON was replaced with defaults. Backup: ${backupPath}`
+            `[legalwork] Invalid settings JSON was replaced with defaults. Backup: ${backupPath}`
           )
         } else {
           console.warn(
-            `[deepseek-gui] Invalid settings JSON was replaced with defaults. Backup could not be written for ${sourcePath}.`
+            `[legalwork] Invalid settings JSON was replaced with defaults. Backup could not be written for ${this.path}.`
           )
         }
         return defaults
@@ -343,6 +359,24 @@ export class JsonSettingsStore {
     }
 
     const normalized = normalizeStoredSettings(buildMergedSettings(parsed))
+    const runtime = getLegalworkRuntimeSettings(normalized)
+    const activeProvider = getModelProviderProfile(normalized, runtime.providerId)
+    const activeKey = activeProvider.apiKey.trim()
+    // Only backfill an empty runtime API key when the file is not in the middle
+    // of a legacy migration that moves the runtime key into the shared provider
+    // settings. During that migration the runtime override is intentionally left
+    // empty so it inherits from the selected provider profile at runtime.
+    const hasTopLevelProvider = typeof parsed.provider === 'object' && parsed.provider !== null
+    const hasRuntimeCredential =
+      typeof parsed.agents?.legalwork?.apiKey === 'string' &&
+      parsed.agents.legalwork.apiKey.trim().length > 0
+    const migratingRuntimeCredentialToProvider = !hasTopLevelProvider && hasRuntimeCredential
+    const needsBackfill = activeKey && !runtime.apiKey.trim() && !migratingRuntimeCredentialToProvider
+    if (needsBackfill) {
+      normalized.agents = legalworkSettingsEnvelope(
+        mergeLegalworkRuntimeSettings(runtime, { apiKey: activeKey })
+      )
+    }
     await ensureWorkspaceRootExists(normalized.workspaceRoot)
     await ensureWriteWorkspaceRootsExist(normalized)
     await ensureClawChannelWorkspaceRootsExist(normalized)
@@ -356,18 +390,24 @@ export class JsonSettingsStore {
   async save(data: AppSettingsV1): Promise<void> {
     const normalized = normalizeStoredSettings(data)
     await ensureWorkspaceRootExists(normalized.workspaceRoot)
-    await ensureWriteWorkspaceRootsExist(normalized)
-    await ensureClawChannelWorkspaceRootsExist(normalized)
+    if (normalized.write.workspaces.length > 0 || normalized.claw.channels.length > 0) {
+      await ensureWriteWorkspaceRootsExist(normalized)
+      await ensureClawChannelWorkspaceRootsExist(normalized)
+    }
     this.cache = normalized
-    await mkdir(dirname(this.path), { recursive: true })
+    await ensureDirExists(dirname(this.path))
     await atomicWriteFile(this.path, serializeSettingsForDisk(normalized))
   }
 
   async patch(partial: AppSettingsPatch): Promise<AppSettingsV1> {
     const cur = await this.load()
     const { agents: agentsPatch, provider: providerPatch, ...restPatch } = partial
+    const agentsPatchWithCredentials = computeLegalworkRuntimeCredentialPatch(cur, {
+      agents: agentsPatch,
+      provider: providerPatch
+    })
     const next = normalizeStoredSettings({
-      ...applyKunRuntimePatch(cur, agentsPatch?.kun),
+      ...applyLegalworkRuntimePatch(cur, agentsPatchWithCredentials.legalwork),
       ...restPatch,
       provider: mergeModelProviderSettings(cur.provider, providerPatch),
       log: { ...cur.log, ...(partial.log ?? {}) },

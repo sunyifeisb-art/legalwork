@@ -2,7 +2,11 @@ import { mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from 'node:fs/
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_APPROVAL_POLICY } from '../shared/app-settings'
+import {
+  BUILTIN_MODEL_PROVIDER_PRESETS,
+  DEFAULT_APPROVAL_POLICY,
+  DEFAULT_MODEL_PROVIDER_ID
+} from '../shared/app-settings'
 import { DEFAULT_GUI_UPDATE_CHANNEL } from '../shared/gui-update'
 import { JsonSettingsStore } from './settings-store'
 
@@ -14,7 +18,7 @@ describe('JsonSettingsStore', () => {
     const loaded = await store.load()
 
     expect(loaded.guiUpdate.channel).toBe(DEFAULT_GUI_UPDATE_CHANNEL)
-    expect(loaded.agents.kun.approvalPolicy).toBe(DEFAULT_APPROVAL_POLICY)
+    expect(loaded.agents.legalwork.approvalPolicy).toBe(DEFAULT_APPROVAL_POLICY)
     expect(loaded.appBehavior).toEqual({
       openAtLogin: false,
       startMinimized: false,
@@ -28,7 +32,7 @@ describe('JsonSettingsStore', () => {
     const store = new JsonSettingsStore(userDataDir)
     const loaded = await store.load()
 
-    expect(loaded.write.defaultWorkspaceRoot).toContain('.deepseekgui')
+    expect(loaded.write.defaultWorkspaceRoot).toContain('.legalwork')
     expect(loaded.write.workspaces).toContain(loaded.write.defaultWorkspaceRoot)
     expect(loaded.write.inlineCompletion.enabled).toBe(true)
     expect(loaded.write.inlineCompletion.retrievalEnabled).toBe(true)
@@ -46,7 +50,7 @@ describe('JsonSettingsStore', () => {
     const userDataDir = await mkdtemp(join(tmpdir(), 'ds-gui-settings-'))
 
     await writeFile(
-      join(userDataDir, 'deepseek-gui-settings.json'),
+      join(userDataDir, 'legalwork-settings.json'),
       JSON.stringify({
         version: 1,
         write: {
@@ -69,7 +73,7 @@ describe('JsonSettingsStore', () => {
     const userDataDir = await mkdtemp(join(tmpdir(), 'ds-gui-settings-'))
 
     await writeFile(
-      join(userDataDir, 'deepseek-gui-settings.json'),
+      join(userDataDir, 'legalwork-settings.json'),
       JSON.stringify({
         version: 1,
         write: {
@@ -88,13 +92,13 @@ describe('JsonSettingsStore', () => {
     expect(loaded.write.inlineCompletion.model).toBe('deepseek-v4-flash')
   })
 
-  it('migrates legacy deepseek.autoStart=false into Kun', async () => {
+  it('migrates legacy deepseek.autoStart=false into Legalwork', async () => {
     const userDataDir = await mkdtemp(join(tmpdir(), 'ds-gui-settings-'))
     const workspaceRoot = join(userDataDir, 'workspace')
     await mkdir(workspaceRoot, { recursive: true })
 
     await writeFile(
-      join(userDataDir, 'deepseek-gui-settings.json'),
+      join(userDataDir, 'legalwork-settings.json'),
       JSON.stringify({
         version: 1,
         workspaceRoot,
@@ -108,18 +112,18 @@ describe('JsonSettingsStore', () => {
     const store = new JsonSettingsStore(userDataDir)
     const loaded = await store.load()
 
-    expect(loaded.agents.kun.autoStart).toBe(false)
+    expect(loaded.agents.legalwork.autoStart).toBe(false)
   })
 
-  it('migrates existing Kun credentials into General provider settings', async () => {
+  it('migrates existing Legalwork credentials into General provider settings', async () => {
     const userDataDir = await mkdtemp(join(tmpdir(), 'ds-gui-settings-'))
 
     await writeFile(
-      join(userDataDir, 'deepseek-gui-settings.json'),
+      join(userDataDir, 'legalwork-settings.json'),
       JSON.stringify({
         version: 1,
         agents: {
-          kun: {
+          legalwork: {
             apiKey: 'sk-existing',
             baseUrl: 'https://runtime.example/v1'
           }
@@ -133,15 +137,15 @@ describe('JsonSettingsStore', () => {
 
     expect(loaded.provider.apiKey).toBe('sk-existing')
     expect(loaded.provider.baseUrl).toBe('https://runtime.example/v1')
-    expect(loaded.agents.kun.apiKey).toBe('')
-    expect(loaded.agents.kun.baseUrl).toBe('')
+    expect(loaded.agents.legalwork.apiKey).toBe('')
+    expect(loaded.agents.legalwork.baseUrl).toBe('')
   })
 
-  it('loads settings from the legacy lowercase userData directory and writes them into the current path', async () => {
+  it('loads settings from legacy DeepSeek GUI userData and writes them into the current path', async () => {
     const supportRoot = await mkdtemp(join(tmpdir(), 'ds-gui-settings-compat-'))
     const legacyUserDataDir = join(supportRoot, 'deepseek-gui')
-    const currentUserDataDir = join(supportRoot, 'DeepSeek GUI')
-    const currentSettingsPath = join(currentUserDataDir, 'deepseek-gui-settings.json')
+    const currentUserDataDir = join(supportRoot, 'legalwork')
+    const currentSettingsPath = join(currentUserDataDir, 'legalwork-settings.json')
 
     await mkdir(legacyUserDataDir, { recursive: true })
     await writeFile(
@@ -167,7 +171,7 @@ describe('JsonSettingsStore', () => {
     const workspaceRoot = join(userDataDir, 'missing-workspace')
 
     await writeFile(
-      join(userDataDir, 'deepseek-gui-settings.json'),
+      join(userDataDir, 'legalwork-settings.json'),
       JSON.stringify({
         version: 1,
         workspaceRoot
@@ -182,11 +186,11 @@ describe('JsonSettingsStore', () => {
     expect((await stat(workspaceRoot)).isDirectory()).toBe(true)
   })
 
-  it('migrates legacy deepseek-runtime agentProvider to Kun', async () => {
+  it('migrates legacy deepseek-runtime agentProvider to Legalwork', async () => {
     const userDataDir = await mkdtemp(join(tmpdir(), 'ds-gui-settings-'))
 
     await writeFile(
-      join(userDataDir, 'deepseek-gui-settings.json'),
+      join(userDataDir, 'legalwork-settings.json'),
       JSON.stringify({
         version: 1,
         agentProvider: 'deepseek-runtime',
@@ -198,18 +202,18 @@ describe('JsonSettingsStore', () => {
     const store = new JsonSettingsStore(userDataDir)
     const loaded = await store.load()
 
-    expect(loaded.agents.kun.port).toBe(8787)
+    expect(loaded.agents.legalwork.port).toBe(8787)
   })
 
   it('backs up invalid JSON and replaces it with defaults', async () => {
     const userDataDir = await mkdtemp(join(tmpdir(), 'ds-gui-settings-'))
-    const settingsPath = join(userDataDir, 'deepseek-gui-settings.json')
+    const settingsPath = join(userDataDir, 'legalwork-settings.json')
     await writeFile(settingsPath, '{ invalid json', 'utf8')
 
     const store = new JsonSettingsStore(userDataDir)
     const loaded = await store.load()
     const files = await readdir(userDataDir)
-    const backupName = files.find((file) => file.startsWith('deepseek-gui-settings.invalid-'))
+    const backupName = files.find((file) => file.startsWith('legalwork-settings.invalid-'))
 
     expect(loaded.workspaceRoot.length).toBeGreaterThan(0)
     expect(backupName).toBeTruthy()
@@ -220,7 +224,7 @@ describe('JsonSettingsStore', () => {
 
   it('throws for non-recoverable read errors', async () => {
     const userDataDir = await mkdtemp(join(tmpdir(), 'ds-gui-settings-'))
-    const settingsPath = join(userDataDir, 'deepseek-gui-settings.json')
+    const settingsPath = join(userDataDir, 'legalwork-settings.json')
     await mkdir(settingsPath, { recursive: true })
 
     const store = new JsonSettingsStore(userDataDir)
@@ -228,23 +232,58 @@ describe('JsonSettingsStore', () => {
     await expect(store.load()).rejects.toThrow(/Failed to read settings file/)
   })
 
-  it('merges Kun settings patches', async () => {
+  it('merges Legalwork settings patches', async () => {
     const userDataDir = await mkdtemp(join(tmpdir(), 'ds-gui-settings-'))
     const store = new JsonSettingsStore(userDataDir)
     await store.load()
 
     const saved = await store.patch({
       agents: {
-        kun: {
+        legalwork: {
           model: 'deepseek-reasoner',
           approvalPolicy: 'on-request'
         }
       }
     })
 
-    expect(saved.agents.kun.model).toBe('deepseek-reasoner')
-    expect(saved.agents.kun.approvalPolicy).toBe('on-request')
+    expect(saved.agents.legalwork.model).toBe('deepseek-reasoner')
+    expect(saved.agents.legalwork.approvalPolicy).toBe('on-request')
   })
+
+  it.each(BUILTIN_MODEL_PROVIDER_PRESETS.map((preset) => [preset.id, preset.models[0], preset.baseUrl] as const))(
+    'persists the active %s provider API key across a settings reload',
+    async (providerId, model, baseUrl) => {
+    const userDataDir = await mkdtemp(join(tmpdir(), 'ds-gui-settings-'))
+    const store = new JsonSettingsStore(userDataDir)
+    const initial = await store.load()
+    const apiKey = `sk-${providerId}-test`
+    const providers = initial.provider.providers.map((provider) =>
+      provider.id === providerId
+        ? { ...provider, apiKey, baseUrl }
+        : provider
+    )
+
+    await store.patch({
+      provider: providerId === DEFAULT_MODEL_PROVIDER_ID
+        ? { apiKey, baseUrl, providers }
+        : { providers },
+      agents: {
+        legalwork: {
+          providerId,
+          model
+        }
+      }
+    })
+
+    const reloaded = await new JsonSettingsStore(userDataDir).load()
+    const activeProvider = reloaded.provider.providers.find((provider) => provider.id === providerId)
+
+    expect(activeProvider?.apiKey).toBe(apiKey)
+    expect(activeProvider?.baseUrl).toBe(baseUrl)
+    expect(reloaded.agents.legalwork.providerId).toBe(providerId)
+    expect(reloaded.agents.legalwork.apiKey).toBe(apiKey)
+    }
+  )
 
   it('merges desktop behavior patches without keeping invalid startup state', async () => {
     const userDataDir = await mkdtemp(join(tmpdir(), 'ds-gui-settings-'))
@@ -278,12 +317,12 @@ describe('JsonSettingsStore', () => {
 
   it('omits agentProvider when writing normalized settings to disk', async () => {
     const userDataDir = await mkdtemp(join(tmpdir(), 'ds-gui-settings-'))
-    const settingsPath = join(userDataDir, 'deepseek-gui-settings.json')
+    const settingsPath = join(userDataDir, 'legalwork-settings.json')
     const store = new JsonSettingsStore(userDataDir)
     await store.load()
     await store.patch({
       agents: {
-        kun: {
+        legalwork: {
           model: 'deepseek-chat'
         }
       }
@@ -294,16 +333,16 @@ describe('JsonSettingsStore', () => {
     expect('agentProvider' in persisted).toBe(false)
     expect(persisted.agents).toEqual(
       expect.objectContaining({
-        kun: expect.objectContaining({ model: 'deepseek-chat' })
+        legalwork: expect.objectContaining({ model: 'deepseek-chat' })
       })
     )
   })
 
-  it('folds legacy Claw thread ids into the single Kun mapping', async () => {
+  it('folds legacy Claw thread ids into the single Legalwork mapping', async () => {
     const userDataDir = await mkdtemp(join(tmpdir(), 'ds-gui-settings-'))
 
     await writeFile(
-      join(userDataDir, 'deepseek-gui-settings.json'),
+      join(userDataDir, 'legalwork-settings.json'),
       JSON.stringify({
         version: 1,
         claw: {
@@ -343,7 +382,7 @@ describe('JsonSettingsStore', () => {
     const userDataDir = await mkdtemp(join(tmpdir(), 'ds-gui-settings-'))
 
     await writeFile(
-      join(userDataDir, 'deepseek-gui-settings.json'),
+      join(userDataDir, 'legalwork-settings.json'),
       JSON.stringify({
         version: 1,
         claw: {
@@ -388,7 +427,7 @@ describe('JsonSettingsStore', () => {
 
       // Final file is present and non-empty.
       const finalContents = await readFile(
-        join(userDataDir, 'deepseek-gui-settings.json'),
+        join(userDataDir, 'legalwork-settings.json'),
         'utf8'
       )
       expect(finalContents.length).toBeGreaterThan(0)

@@ -35,7 +35,7 @@ export type SddDraftState = {
   clearActiveDraft: () => void
 }
 
-const SDD_DRAFT_REGISTRY_STORAGE_KEY = 'deepseekgui.sdd.draft.registry.v1'
+const SDD_DRAFT_REGISTRY_STORAGE_KEY = 'legalwork.sdd.draft.registry.v1'
 
 function normalizeWorkspaceRoot(value: string | undefined | null): string {
   return (value ?? '').trim().replaceAll('\\', '/').replace(/\/+$/, '')

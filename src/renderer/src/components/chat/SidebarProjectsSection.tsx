@@ -329,7 +329,7 @@ export function SidebarProjectsSection({
         <button
           type="button"
           onClick={toggleAllGroups}
-          className="flex min-w-0 items-center gap-1.5 rounded-md px-2 py-1.5 text-[13px] text-ds-faint transition hover:bg-[var(--ds-sidebar-row-hover)] hover:text-ds-muted"
+          className="flex min-w-0 items-center gap-1.5 rounded-md px-2 py-1.5 text-[15px] text-ds-faint transition hover:bg-[var(--ds-sidebar-row-hover)] hover:text-ds-muted"
           title={t('sidebarProjects')}
           aria-label={t('sidebarProjects')}
         >

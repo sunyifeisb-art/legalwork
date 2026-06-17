@@ -90,7 +90,7 @@ describe('buildInlineCompletionPayload', () => {
       recentEdits: [edit({
         from: 9,
         to: 21,
-        deletedText: 'DeepSeek GUI',
+        deletedText: 'legalwork',
         insertedText: 'Write mode'
       })]
     })
@@ -116,7 +116,7 @@ describe('buildInlineCompletionPayload', () => {
         recentEdits: [edit({
           from: 9,
           to: 21,
-          deletedText: 'DeepSeek GUI',
+          deletedText: 'legalwork',
           insertedText: 'Write mode'
         })]
       }
@@ -157,7 +157,7 @@ describe('buildInlineCompletionPayload', () => {
         recentEdits: [edit({
           from: 9,
           to: 21,
-          deletedText: 'DeepSeek GUI',
+          deletedText: 'legalwork',
           insertedText: 'Write mode'
         })]
       }

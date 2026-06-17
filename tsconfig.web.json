@@ -16,5 +16,9 @@
     },
     "types": ["vite/client"]
   },
-  "include": ["src/renderer/src/**/*", "src/renderer/**/*.tsx", "src/renderer/**/*.ts", "src/shared/**/*", "src/preload/index.d.ts"]
+  "include": ["src/renderer/src/**/*", "src/renderer/**/*.tsx", "src/renderer/**/*.ts", "src/shared/**/*", "src/preload/index.d.ts"],
+  "exclude": [
+    "src/renderer/src/components/write/**/*",
+    "src/renderer/src/write/**/*.test.ts"
+  ]
 }

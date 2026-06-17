@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "数据合规智能审查",
+  "version": "0.2.0",
+  "description": "在浏览器侧边栏中上传文档或读取当前页 PDF，直接生成数据合规审查结果。",
+  "permissions": ["sidePanel", "storage", "activeTab", "tabs", "downloads", "scripting"],
+  "host_permissions": ["http://*/*", "https://*/*", "file:///*"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "icons": {
+    "128": "assets/icon-128.png"
+  },
+  "action": {
+    "default_title": "数据合规审查",
+    "default_icon": "assets/icon-128.png"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "options_page": "options.html"
+}

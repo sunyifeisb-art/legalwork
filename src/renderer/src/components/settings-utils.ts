@@ -1,10 +1,11 @@
 import {
   DEFAULT_GUI_UPDATE_CHANNEL,
-  defaultKunRuntimeSettings,
-  applyKunRuntimePatch,
-  getKunRuntimeSettings,
-  kunSettingsEnvelope,
-  mergeKunRuntimeSettings,
+  defaultLegalworkRuntimeSettings,
+  applyLegalworkRuntimePatch,
+  computeLegalworkRuntimeCredentialPatch,
+  getLegalworkRuntimeSettings,
+  legalworkSettingsEnvelope,
+  mergeLegalworkRuntimeSettings,
   mergeClawSettings,
   mergeModelProviderSettings,
   mergeScheduleSettings,
@@ -24,7 +25,7 @@ import type { GuiUpdateInfo } from '@shared/gui-update'
 type RendererSettingsShape = AppSettingsPatch
 type SettingsPatch = AppSettingsPatch
 
-export const DEFAULT_WORKSPACE_ROOT = '~/.deepseekgui/default_workspace'
+export const DEFAULT_WORKSPACE_ROOT = '~/.legalwork/default_workspace'
 
 export function splitSettingsList(raw: string): string[] {
   return raw
@@ -38,15 +39,19 @@ export function listSettingsText(values: string[]): string {
 }
 
 export function hasValidPort(settings: AppSettingsV1): boolean {
-  const port = getKunRuntimeSettings(settings).port
+  const port = getLegalworkRuntimeSettings(settings).port
   return Number.isFinite(port) && port >= 1 && port <= 65535
 }
 
 export function mergeSettings(current: AppSettingsV1, patch: SettingsPatch): AppSettingsV1 {
   const safeCurrent = coerceRendererSettings(current)
   const { agents: agentsPatch, provider: providerPatch, ...restPatch } = patch
+  const agentsPatchWithCredentials = computeLegalworkRuntimeCredentialPatch(safeCurrent, {
+    agents: agentsPatch,
+    provider: providerPatch
+  })
   return {
-    ...applyKunRuntimePatch(safeCurrent, agentsPatch?.kun),
+    ...applyLegalworkRuntimePatch(safeCurrent, agentsPatchWithCredentials.legalwork),
     ...restPatch,
     provider: mergeModelProviderSettings(safeCurrent.provider, providerPatch),
     log: {
@@ -93,7 +98,7 @@ export function coerceRendererSettings(settings: AppSettingsV1): AppSettingsV1 {
     theme,
     uiFontScale,
     provider: normalizeModelProviderSettings(raw.provider),
-    agents: kunSettingsEnvelope(mergeKunRuntimeSettings(defaultKunRuntimeSettings(), getKunRuntimeSettings(settings))),
+    agents: legalworkSettingsEnvelope(mergeLegalworkRuntimeSettings(defaultLegalworkRuntimeSettings(), getLegalworkRuntimeSettings(settings))),
     workspaceRoot: typeof raw.workspaceRoot === 'string' ? raw.workspaceRoot : DEFAULT_WORKSPACE_ROOT,
     log: {
       enabled: raw.log?.enabled !== false,

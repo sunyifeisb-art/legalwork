@@ -426,7 +426,7 @@ export class ScheduleRuntime {
     if (workspace) {
       await mkdir(workspace, { recursive: true })
     }
-    const model = normalizeTaskModel(options.model) ?? (settings.agents.kun.model.trim() || DEFAULT_SCHEDULE_MODEL)
+    const model = normalizeTaskModel(options.model) ?? (settings.agents.legalwork.model.trim() || DEFAULT_SCHEDULE_MODEL)
     const create = await this.deps.runtimeRequest(settings, '/v1/threads', {
       method: 'POST',
       body: JSON.stringify({
@@ -553,9 +553,13 @@ export class ScheduleRuntime {
       const secret = settings.schedule.internal.secret.trim()
       if (secret) {
         const auth = req.headers.authorization ?? ''
-        const headerSecret = Array.isArray(req.headers['x-deepseek-gui-secret'])
-          ? req.headers['x-deepseek-gui-secret'][0]
-          : req.headers['x-deepseek-gui-secret']
+        const legalworkHeaderSecret = Array.isArray(req.headers['x-legalwork-secret'])
+          ? req.headers['x-legalwork-secret'][0]
+          : req.headers['x-legalwork-secret']
+        const legacyHeaderSecret = Array.isArray(req.headers['x-legalwork-secret'])
+          ? req.headers['x-legalwork-secret'][0]
+          : req.headers['x-legalwork-secret']
+        const headerSecret = legalworkHeaderSecret ?? legacyHeaderSecret
         if (auth !== `Bearer ${secret}` && headerSecret !== secret) {
           writeJson(res, 401, { ok: false, message: 'Unauthorized.' })
           return

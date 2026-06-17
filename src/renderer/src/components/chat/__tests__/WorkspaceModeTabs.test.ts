@@ -11,32 +11,32 @@ describe('WorkspaceModeTabs', () => {
 
   it('renders two tab buttons', () => {
     const onCodeOpen = vi.fn()
-    const onWriteOpen = vi.fn()
+    const onDataComplianceOpen = vi.fn()
 
     const html = renderToStaticMarkup(
       createElement(WorkspaceModeTabs, {
         activeView: 'chat',
         onCodeOpen,
-        onWriteOpen
+        onDataComplianceOpen
       })
     )
 
     // Both buttons exist
-    expect(html).toContain('Code')
-    expect(html).toContain('Write')
+    expect(html).toContain('work')
+    expect(html).toContain('合规')
     // Both have role="tab"
     expect(html.match(/role="tab"/g)?.length).toBe(2)
   })
 
   it('uses horizontal row layout not vertical column', () => {
     const onCodeOpen = vi.fn()
-    const onWriteOpen = vi.fn()
+    const onDataComplianceOpen = vi.fn()
 
     const html = renderToStaticMarkup(
       createElement(WorkspaceModeTabs, {
         activeView: 'chat',
         onCodeOpen,
-        onWriteOpen
+        onDataComplianceOpen
       })
     )
 
@@ -47,13 +47,13 @@ describe('WorkspaceModeTabs', () => {
 
   it('buttons use flex-1 for equal width instead of w-full', () => {
     const onCodeOpen = vi.fn()
-    const onWriteOpen = vi.fn()
+    const onDataComplianceOpen = vi.fn()
 
     const html = renderToStaticMarkup(
       createElement(WorkspaceModeTabs, {
         activeView: 'chat',
         onCodeOpen,
-        onWriteOpen
+        onDataComplianceOpen
       })
     )
 
@@ -64,14 +64,14 @@ describe('WorkspaceModeTabs', () => {
 
   it('marks active button with aria-selected true', () => {
     const onCodeOpen = vi.fn()
-    const onWriteOpen = vi.fn()
+    const onDataComplianceOpen = vi.fn()
 
-    // Code active
+    // work active
     const htmlCode = renderToStaticMarkup(
       createElement(WorkspaceModeTabs, {
         activeView: 'chat',
         onCodeOpen,
-        onWriteOpen
+        onDataComplianceOpen
       })
     )
     // Exactly one button has aria-selected="true" and one has aria-selected="false"
@@ -80,29 +80,29 @@ describe('WorkspaceModeTabs', () => {
     expect(selectedTrue?.length).toBe(1)
     expect(selectedFalse?.length).toBe(1)
 
-    // Write active
-    const htmlWrite = renderToStaticMarkup(
+    // Data compliance active
+    const htmlDataCompliance = renderToStaticMarkup(
       createElement(WorkspaceModeTabs, {
-        activeView: 'write',
+        activeView: 'dataCompliance',
         onCodeOpen,
-        onWriteOpen
+        onDataComplianceOpen
       })
     )
-    const selectedTrueW = htmlWrite.match(/aria-selected="true"/g)
-    const selectedFalseW = htmlWrite.match(/aria-selected="false"/g)
+    const selectedTrueW = htmlDataCompliance.match(/aria-selected="true"/g)
+    const selectedFalseW = htmlDataCompliance.match(/aria-selected="false"/g)
     expect(selectedTrueW?.length).toBe(1)
     expect(selectedFalseW?.length).toBe(1)
   })
 
   it('preserves truncate class on button text for narrow sidebars', () => {
     const onCodeOpen = vi.fn()
-    const onWriteOpen = vi.fn()
+    const onDataComplianceOpen = vi.fn()
 
     const html = renderToStaticMarkup(
       createElement(WorkspaceModeTabs, {
         activeView: 'chat',
         onCodeOpen,
-        onWriteOpen
+        onDataComplianceOpen
       })
     )
 
@@ -111,35 +111,35 @@ describe('WorkspaceModeTabs', () => {
     expect(truncateMatches?.length).toBe(2)
   })
 
-  it('preserves min-w-0 on buttons for flex truncation', () => {
+  it('preserves min-w-fit on buttons for flex truncation', () => {
     const onCodeOpen = vi.fn()
-    const onWriteOpen = vi.fn()
+    const onDataComplianceOpen = vi.fn()
 
     const html = renderToStaticMarkup(
       createElement(WorkspaceModeTabs, {
         activeView: 'chat',
         onCodeOpen,
-        onWriteOpen
+        onDataComplianceOpen
       })
     )
 
-    // min-w-0 must be present to allow truncate to work in flex children
-    expect(html).toContain('min-w-0')
+    // min-w-fit prevents the flex children from collapsing too small while still allowing truncation
+    expect(html).toContain('min-w-fit')
   })
 
   it('renders role="tablist" container with descriptive aria-label', () => {
     const onCodeOpen = vi.fn()
-    const onWriteOpen = vi.fn()
+    const onDataComplianceOpen = vi.fn()
 
     const html = renderToStaticMarkup(
       createElement(WorkspaceModeTabs, {
         activeView: 'chat',
         onCodeOpen,
-        onWriteOpen
+        onDataComplianceOpen
       })
     )
 
     expect(html).toContain('role="tablist"')
-    expect(html).toContain('Code / Write')
+    expect(html).toContain('work / 脱敏 / 合规')
   })
 })

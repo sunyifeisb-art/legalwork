@@ -1,6 +1,6 @@
 import { readBrowserStorageItem, writeBrowserStorageItem } from './browser-storage'
 
-export const PREFERRED_EDITOR_STORAGE_KEY = 'deepseekgui.editor.preferredId'
+export const PREFERRED_EDITOR_STORAGE_KEY = 'legalwork.editor.preferredId'
 
 export function readPreferredEditorId(): string | undefined {
   const value = readBrowserStorageItem(PREFERRED_EDITOR_STORAGE_KEY)?.trim()
