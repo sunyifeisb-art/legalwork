@@ -114,6 +114,9 @@ jobs:
     needs: create-release
     runs-on: windows-latest
     steps:
+      - name: Enable long paths for Git checkout
+        run: git config --global core.longpaths true
+
       - name: Checkout
         uses: actions/checkout@v4
 
