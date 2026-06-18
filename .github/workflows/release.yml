@@ -205,7 +205,7 @@ jobs:
 
   publish-release:
     name: Publish release
-    needs: [build-macos, build-windows, build-linux]
+    needs: [create-release, build-macos, build-windows, build-linux]
     runs-on: ubuntu-latest
     steps:
       - name: Publish release
