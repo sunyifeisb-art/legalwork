@@ -108,4 +108,43 @@ describe('buildMcpToolProviders', () => {
 
     expect(seenTimeouts).toEqual([4000])
   })
+
+  it('gives stdio MCP servers a longer startup timeout to survive npx cold-start', async () => {
+    const seenTimeouts: number[] = []
+    const config: McpCapabilityConfig = {
+      enabled: true,
+      servers: {
+        context7: {
+          enabled: true,
+          transport: 'stdio',
+          command: 'npx',
+          args: ['-y', '@upstash/context7-mcp@latest'],
+          headers: {},
+          env: {},
+          trustScope: 'user',
+          trustedWorkspaceRoots: [],
+          timeoutMs: 30_000
+        }
+      },
+      search: {
+        enabled: false,
+        mode: 'auto',
+        autoThresholdToolCount: 24,
+        topKDefault: 5,
+        topKMax: 10,
+        minScore: 0.15,
+        bm25: { k1: 1.2, b: 0.75 }
+      }
+    }
+
+    await buildMcpToolProviders(config, {
+      startupTimeoutMs: 8_000,
+      clientFactory: async (_serverId, server) => {
+        seenTimeouts.push(server.timeoutMs)
+        return fakeClient()
+      }
+    })
+
+    expect(seenTimeouts).toEqual([30_000])
+  })
 })

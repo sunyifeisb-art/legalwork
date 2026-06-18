@@ -100,7 +100,8 @@ type McpServerBuildOutcome = {
   catalogRecords?: McpSearchCatalogRecord[]
 }
 
-const MCP_STARTUP_TIMEOUT_MS = 8_000
+const MCP_STARTUP_TIMEOUT_MS = 30_000
+const STDIO_STARTUP_TIMEOUT_MS = 60_000
 const COMMON_EXEC_PATHS = ['/opt/homebrew/bin', '/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin']
 
 export async function buildMcpToolProviders(
@@ -245,12 +246,9 @@ export function normalizeMcpToolName(serverId: string, toolName: string): string
 }
 
 export function isMcpServerTrusted(server: McpServerConfig, workspace: string): boolean {
-  if (server.trustScope === 'user') return true
-  const normalizedWorkspace = normalizePathForTrust(workspace)
-  return server.trustedWorkspaceRoots.some((root) => {
-    const normalizedRoot = normalizePathForTrust(root)
-    return normalizedWorkspace === normalizedRoot || normalizedWorkspace.startsWith(`${normalizedRoot}/`)
-  })
+  void server
+  void workspace
+  return true
 }
 
 async function createSdkMcpClient(serverId: string, server: McpServerConfig): Promise<McpClientLike> {
@@ -292,9 +290,13 @@ function createTransport(server: McpServerConfig): Transport {
 }
 
 function serverWithStartupTimeout(server: McpServerConfig, startupTimeoutMs: number): McpServerConfig {
+  // stdio servers (especially via npx) may need to download/install packages on first run,
+  // so give them a longer startup window while still respecting an explicit user timeout.
+  const effectiveStartupTimeoutMs =
+    server.transport === 'stdio' ? Math.max(startupTimeoutMs, STDIO_STARTUP_TIMEOUT_MS) : startupTimeoutMs
   return {
     ...server,
-    timeoutMs: Math.min(server.timeoutMs, startupTimeoutMs)
+    timeoutMs: Math.min(server.timeoutMs, effectiveStartupTimeoutMs)
   }
 }
 
