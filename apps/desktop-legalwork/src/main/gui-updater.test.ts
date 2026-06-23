@@ -15,6 +15,7 @@ type MockUpdater = EventEmitter & {
 
 let updater: MockUpdater
 let nativeUpdater: EventEmitter
+const ORIGINAL_ENV = { ...process.env }
 
 function createUpdater(): MockUpdater {
   return Object.assign(new EventEmitter(), {
@@ -33,6 +34,12 @@ function createUpdater(): MockUpdater {
 beforeEach(() => {
   vi.useFakeTimers()
   vi.resetModules()
+  process.env = { ...ORIGINAL_ENV }
+  delete process.env.LEGALWORK_UPDATE_URL
+  delete process.env.LEGALWORK_UPDATE_URL_STABLE
+  delete process.env.LEGALWORK_UPDATE_URL_FRONTIER
+  delete process.env.LEGALWORK_GITHUB_REPO
+  delete process.env.LEGALWORK_UPDATE_CHANNEL
   updater = createUpdater()
   nativeUpdater = new EventEmitter()
   vi.doMock('electron', () => ({
@@ -54,9 +61,65 @@ beforeEach(() => {
 afterEach(() => {
   vi.clearAllTimers()
   vi.useRealTimers()
+  vi.unstubAllGlobals()
+  process.env = { ...ORIGINAL_ENV }
   vi.doUnmock('electron')
   vi.doUnmock('electron-updater')
   vi.resetModules()
+})
+
+describe('initializeGuiUpdater', () => {
+  it('uses GitHub Releases as the packaged update feed when a repository is configured', async () => {
+    process.env.LEGALWORK_GITHUB_REPO = 'sunyifeisb-art/legalwork'
+
+    const module = await import('./gui-updater')
+    module.initializeGuiUpdater(() => null, () => 'stable')
+
+    expect(updater.setFeedURL).toHaveBeenLastCalledWith({
+      provider: 'github',
+      owner: 'sunyifeisb-art',
+      repo: 'legalwork'
+    })
+  })
+})
+
+describe('downloadGuiUpdate', () => {
+  it('retries the packaged updater when the previous check only found a manual GitHub fallback', async () => {
+    process.env.LEGALWORK_GITHUB_REPO = 'sunyifeisb-art/legalwork'
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        tag_name: 'v0.2.0',
+        published_at: '2026-06-06T00:00:00.000Z'
+      })
+    })))
+
+    updater.checkForUpdates
+      .mockRejectedValueOnce(new Error('latest-mac.yml is missing'))
+      .mockResolvedValueOnce({
+        updateInfo: { version: '0.2.0', releaseDate: '2026-06-06T00:00:00.000Z' },
+        isUpdateAvailable: true
+      })
+    updater.downloadUpdate.mockResolvedValue(['/tmp/legalwork-0.2.0-mac-arm64.zip'])
+
+    const module = await import('./gui-updater')
+    module.initializeGuiUpdater(() => null, () => 'stable')
+
+    const fallbackInfo = await module.checkGuiUpdate('stable')
+    expect(fallbackInfo).toMatchObject({
+      ok: true,
+      hasUpdate: true,
+      latestVersion: '0.2.0',
+      manualOnly: true
+    })
+
+    await expect(module.downloadGuiUpdate('stable')).resolves.toEqual({
+      ok: true,
+      paths: ['/tmp/legalwork-0.2.0-mac-arm64.zip']
+    })
+    expect(updater.checkForUpdates).toHaveBeenCalledTimes(2)
+    expect(updater.downloadUpdate).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe('installGuiUpdate', () => {

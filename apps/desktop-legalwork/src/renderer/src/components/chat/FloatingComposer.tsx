@@ -11,10 +11,14 @@ import {
 } from 'react'
 import {
   Archive,
+  AudioLines,
   BarChart3,
+  File as FileIcon,
+  FileArchive,
+  FileCode2,
+  FileSpreadsheet,
   FileText,
   GitFork,
-  ImagePlus,
   ListTodo,
   Loader2,
   MessageCircleMore,
@@ -197,6 +201,100 @@ function imageMimeTypeFromFileName(name: string | undefined): string | undefined
   return undefined
 }
 
+function fileTypeLabelForComposer(name: string): string {
+  const ext = name.split('.').pop()?.toLowerCase() || ''
+  if (!ext) return '文件'
+  if (ext === 'doc' || ext === 'docx') return 'WORD'
+  if (ext === 'ppt' || ext === 'pptx') return 'PPT'
+  if (ext === 'xls' || ext === 'xlsx' || ext === 'csv') return 'EXCEL'
+  if (ext === 'pdf') return 'PDF'
+  if (['mp3', 'm4a', 'wav', 'aac', 'flac', 'ogg'].includes(ext)) return '音频'
+  if (['zip', 'rar', '7z'].includes(ext)) return '压缩包'
+  if (['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'svg'].includes(ext)) return '图片'
+  if (['txt', 'md', 'markdown', 'json', 'jsonl', 'csv', 'tsv', 'yaml', 'yml', 'html', 'xml'].includes(ext)) return '文本'
+  return ext.toUpperCase()
+}
+
+function fileTypeBadgeClassForComposer(label: string): string {
+  const map: Record<string, string> = {
+    WORD: 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-500/15 dark:text-blue-400 dark:border-blue-500/20',
+    PPT: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/20',
+    EXCEL: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/20',
+    PDF: 'bg-red-50 text-red-700 border-red-100 dark:bg-red-500/15 dark:text-red-400 dark:border-red-500/20',
+    音频: 'bg-cyan-50 text-cyan-700 border-cyan-100 dark:bg-cyan-500/15 dark:text-cyan-400 dark:border-cyan-500/20',
+    压缩包: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-500/15 dark:text-slate-400 dark:border-slate-500/20',
+    图片: 'bg-purple-50 text-purple-700 border-purple-100 dark:bg-purple-500/15 dark:text-purple-400 dark:border-purple-500/20',
+    文本: 'bg-slate-50 text-slate-600 border-slate-100 dark:bg-slate-500/15 dark:text-slate-400 dark:border-slate-500/20'
+  }
+  return map[label] || 'bg-slate-50 text-slate-600 border-slate-100 dark:bg-slate-500/15 dark:text-slate-400 dark:border-slate-500/20'
+}
+
+function FileTypeIconForComposer({ name, className = 'h-4 w-4' }: { name: string; className?: string }): ReactElement {
+  const ext = name.split('.').pop()?.toLowerCase() || ''
+  if (['mp3', 'm4a', 'wav', 'aac', 'flac', 'ogg'].includes(ext)) {
+    return <AudioLines className={`${className} text-cyan-500`} strokeWidth={1.7} />
+  }
+  if (['doc', 'docx', 'pdf', 'txt', 'md', 'markdown'].includes(ext)) {
+    return <FileText className={`${className} text-slate-400`} strokeWidth={1.6} />
+  }
+  if (['xls', 'xlsx', 'csv'].includes(ext)) {
+    return <FileSpreadsheet className={`${className} text-emerald-500`} strokeWidth={1.6} />
+  }
+  if (['ppt', 'pptx'].includes(ext)) {
+    return <FileCode2 className={`${className} text-amber-500`} strokeWidth={1.6} />
+  }
+  if (['zip', 'rar', '7z'].includes(ext)) {
+    return <FileArchive className={`${className} text-amber-500`} strokeWidth={1.6} />
+  }
+  if (['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'svg'].includes(ext)) {
+    return <FileCode2 className={`${className} text-purple-500`} strokeWidth={1.6} />
+  }
+  return <FileIcon className={`${className} text-slate-300`} strokeWidth={1.6} />
+}
+
+function filesFromTransfer(source: ComposerImageTransferSource | null | undefined): File[] {
+  if (!source) return []
+  const files: File[] = []
+  const seen = new Set<File>()
+  for (const item of arrayLikeValues(source.items)) {
+    if (item.kind && item.kind !== 'file') continue
+    const file = item.getAsFile?.()
+    if (file && !seen.has(file)) {
+      seen.add(file)
+      files.push(normalizedAttachmentFile(file, item.type))
+    }
+  }
+  for (const file of arrayLikeValues(source.files)) {
+    if (file && !seen.has(file)) {
+      seen.add(file)
+      files.push(normalizedAttachmentFile(file))
+    }
+  }
+  return files
+}
+
+export function attachmentFilesFromTransfer(source: ComposerImageTransferSource | null | undefined): File[] {
+  return filesFromTransfer(source)
+}
+
+function transferHasFiles(source: ComposerImageTransferSource | null | undefined): boolean {
+  if (!source) return false
+  if (arrayLikeValues(source.files).length > 0) return true
+  return arrayLikeValues(source.items).some((item) =>
+    (!item.kind || item.kind === 'file') && item.getAsFile?.() !== null
+  )
+}
+
+export function fileTransferHasFiles(source: ComposerImageTransferSource | null | undefined): boolean {
+  return transferHasFiles(source)
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
+}
+
 function comparablePath(path: string | undefined): string {
   return (path ?? '').replace(/\\/g, '/').replace(/\/+$/g, '').toLowerCase()
 }
@@ -223,6 +321,10 @@ function normalizedImageFile(file: File, mimeTypeHint?: string): File | null {
     type: mimeType,
     lastModified: file.lastModified
   })
+}
+
+function normalizedAttachmentFile(file: File, mimeTypeHint?: string): File {
+  return normalizedImageFile(file, mimeTypeHint) ?? file
 }
 
 const FILE_MENTION_MAX_DEPTH = 6
@@ -378,25 +480,7 @@ async function loadWorkspaceFileIndex(workspaceRoot: string): Promise<WorkspaceF
 }
 
 export function imageFilesFromTransfer(source: ComposerImageTransferSource | null | undefined): File[] {
-  if (!source) return []
-  const files: File[] = []
-  const seen = new Set<File>()
-  const addFile = (file: File | null | undefined, mimeTypeHint?: string): void => {
-    if (!file || seen.has(file)) return
-    seen.add(file)
-    const normalized = normalizedImageFile(file, mimeTypeHint)
-    if (normalized) files.push(normalized)
-  }
-
-  for (const item of arrayLikeValues(source.items)) {
-    if (item.kind && item.kind !== 'file') continue
-    if (!isImageMimeType(item.type)) continue
-    addFile(item.getAsFile?.(), item.type)
-  }
-  for (const file of arrayLikeValues(source.files)) {
-    addFile(file)
-  }
-  return files
+  return filesFromTransfer(source).filter((file) => normalizedImageFile(file) !== null)
 }
 
 export function imageTransferHasImages(source: ComposerImageTransferSource | null | undefined): boolean {
@@ -407,7 +491,7 @@ export function imageTransferHasImages(source: ComposerImageTransferSource | nul
   )
 }
 
-export function handleComposerImagePaste({
+export function handleComposerAttachmentPaste({
   canPickAttachment,
   clipboardData,
   preventDefault,
@@ -421,7 +505,7 @@ export function handleComposerImagePaste({
   onPasteClipboardImage?: (options?: { silentNoImage?: boolean }) => void | Promise<void>
 }): boolean {
   if (!canPickAttachment || (!onPickAttachments && !onPasteClipboardImage)) return false
-  const files = imageFilesFromTransfer(clipboardData)
+  const files = filesFromTransfer(clipboardData)
   const hasPlainText = Boolean(clipboardData.getData?.('text/plain'))
   const hasImageTransfer = imageTransferHasImages(clipboardData)
   if (files.length > 0) {
@@ -436,6 +520,8 @@ export function handleComposerImagePaste({
   void onPasteClipboardImage({ silentNoImage: !shouldPreventDefault })
   return shouldPreventDefault
 }
+
+export const handleComposerImagePaste = handleComposerAttachmentPaste
 
 export function formatGoalElapsedSeconds(seconds: number): string {
   const value = Math.max(0, Math.floor(Number.isFinite(seconds) ? seconds : 0))
@@ -1189,14 +1275,14 @@ export function FloatingComposer({
   }
 
   const handleComposerDragOver = (event: ReactDragEvent<HTMLDivElement>): void => {
-    if (!canPickAttachment || !imageTransferHasImages(event.dataTransfer)) return
+    if (!canPickAttachment || !transferHasFiles(event.dataTransfer)) return
     event.preventDefault()
     event.dataTransfer.dropEffect = 'copy'
   }
 
   const handleComposerDrop = (event: ReactDragEvent<HTMLDivElement>): void => {
     if (!canPickAttachment || !onPickAttachments) return
-    const files = imageFilesFromTransfer(event.dataTransfer)
+    const files = filesFromTransfer(event.dataTransfer)
     if (files.length === 0) return
     event.preventDefault()
     onPickAttachments(files)
@@ -1289,9 +1375,9 @@ export function FloatingComposer({
                   {attachmentUploadBusy ? (
                     <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" strokeWidth={1.9} />
                   ) : (
-                    <ImagePlus className="h-3.5 w-3.5 shrink-0" strokeWidth={1.9} />
+                    <FileIcon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.9} />
                   )}
-                  <span className="min-w-0 flex-1 truncate">{t('composerAddImage')}</span>
+                  <span className="min-w-0 flex-1 truncate">{t('composerUploadFile')}</span>
                 </button>
                 <div className="my-1 h-px bg-ds-border-muted/70" />
               </>
@@ -1603,8 +1689,9 @@ export function FloatingComposer({
           ) : null}
           {attachments.length > 0 || attachmentUploadError ? (
             <div className="flex flex-wrap items-center gap-2 px-1">
-              {attachments.map((attachment) => (
-                attachment.previewUrl ? (
+              {attachments.map((attachment) => {
+                const isImage = isImageMimeType(attachment.mimeType) || Boolean(attachment.previewUrl)
+                return isImage && attachment.previewUrl ? (
                   <span
                     key={attachment.id}
                     className="ds-no-drag relative block h-20 w-20 overflow-hidden rounded-lg border border-ds-border-muted bg-ds-card shadow-sm"
@@ -1630,11 +1717,14 @@ export function FloatingComposer({
                 ) : (
                   <span
                     key={attachment.id}
-                    className="ds-no-drag inline-flex h-7 max-w-full items-center gap-1.5 rounded-lg border border-ds-border-muted bg-ds-card/80 px-2 text-[12px] font-medium text-ds-muted"
-                    title={attachment.id}
+                    className="ds-no-drag inline-flex h-8 max-w-full items-center gap-2 rounded-lg border border-ds-border-muted bg-ds-card/80 px-2 text-[12px] font-medium text-ds-muted"
+                    title={attachment.name || attachment.id}
                   >
-                    <ImagePlus className="h-3.5 w-3.5 shrink-0 text-ds-faint" strokeWidth={1.8} />
+                    <FileTypeIconForComposer name={attachment.name || attachment.id} className="h-4 w-4 shrink-0" />
                     <span className="max-w-40 truncate">{attachment.name || attachment.id}</span>
+                    <span className={`inline-flex items-center rounded-[4px] border px-1.5 py-0 text-[10px] font-semibold ${fileTypeBadgeClassForComposer(fileTypeLabelForComposer(attachment.name || attachment.id))}`}>
+                      {fileTypeLabelForComposer(attachment.name || attachment.id)}
+                    </span>
                     {onRemoveAttachment ? (
                       <button
                         type="button"
@@ -1648,7 +1738,7 @@ export function FloatingComposer({
                     ) : null}
                   </span>
                 )
-              ))}
+              })}
               {attachmentUploadError ? (
                 <span className="min-w-0 break-words text-[12px] font-medium text-red-600 dark:text-red-300">
                   {attachmentUploadError}
@@ -1660,7 +1750,7 @@ export function FloatingComposer({
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/png,image/jpeg,image/webp"
+              accept="*/*"
               multiple
               className="hidden"
               onChange={handleAttachmentInput}

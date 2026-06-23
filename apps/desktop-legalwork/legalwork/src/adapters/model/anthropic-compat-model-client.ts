@@ -128,7 +128,7 @@ export class AnthropicCompatModelClient implements ModelClient {
       yield { kind: 'error', message: 'request was aborted before start' }
       return
     }
-    const url = this.buildUrl('/v1/messages')
+    const url = buildMessagesUrl(this.config.baseUrl)
     const stream = request.stream ?? !this.config.nonStreaming
     const body = this.buildRequestBody(request, stream)
     const headers = this.buildHeaders(stream)
@@ -165,11 +165,6 @@ export class AnthropicCompatModelClient implements ModelClient {
       return
     }
     yield* this.streamSse(response.body, request.abortSignal)
-  }
-
-  private buildUrl(path: string): string {
-    const base = this.config.baseUrl.replace(/\/+$/, '')
-    return `${base}${path}`
   }
 
   private buildHeaders(stream: boolean): Record<string, string> {
@@ -434,7 +429,7 @@ export class AnthropicCompatModelClient implements ModelClient {
           const event = parseSseFrame(frame)
           if (!event) continue
           const result = this.consumeStreamEvent(event, pendingToolCalls)
-          if (result.usage) usage = result.usage
+          if (result.usage) usage = mergeUsageSnapshots(usage, result.usage)
           if (result.finishReason) finishReason = result.finishReason
           for (const chunk of result.chunks) yield chunk
         }
@@ -577,18 +572,23 @@ export class AnthropicCompatModelClient implements ModelClient {
   }
 
   private mapUsage(usage: AnthropicUsage): UsageSnapshot {
-    const promptTokens = Number(usage.input_tokens ?? 0) || 0
-    const completionTokens = Number(usage.output_tokens ?? 0) || 0
-    const cacheCreation = Number(usage.cache_creation_input_tokens ?? 0) || 0
-    const cacheRead = Number(usage.cache_read_input_tokens ?? 0) || 0
+    const inputTokens = Math.max(0, Number(usage.input_tokens ?? 0) || 0)
+    const completionTokens = Math.max(0, Number(usage.output_tokens ?? 0) || 0)
+    const cacheCreation = Math.max(0, Number(usage.cache_creation_input_tokens ?? 0) || 0)
+    const cacheRead = Math.max(0, Number(usage.cache_read_input_tokens ?? 0) || 0)
+    const promptTokens = inputTokens + cacheCreation + cacheRead
+    const cacheHit = cacheRead
+    const cacheMiss = Math.max(promptTokens - cacheHit, 0)
+    const cacheTotal = cacheHit + cacheMiss
     return {
       ...emptyUsageSnapshot(),
       promptTokens,
       completionTokens,
       totalTokens: promptTokens + completionTokens,
-      cacheHitTokens: cacheRead,
-      cacheMissTokens: promptTokens - cacheRead,
-      cachedTokens: cacheRead,
+      cacheHitTokens: cacheHit,
+      cacheMissTokens: cacheMiss,
+      cachedTokens: cacheHit,
+      cacheHitRate: cacheTotal === 0 ? null : cacheHit / cacheTotal,
       turns: 1
     }
   }
@@ -612,6 +612,37 @@ function normalizeToolSpecs(tools: ModelToolSpec[]): AnthropicToolSpec[] {
       input_schema: canonicalizeSchema(tool.inputSchema)
     }))
     .sort((a, b) => a.name.localeCompare(b.name))
+}
+
+function buildMessagesUrl(baseUrl: string): string {
+  const normalized = baseUrl.trim().replace(/\/+$/, '')
+  if (!normalized) return '/v1/messages'
+  if (normalized.toLowerCase().endsWith('/messages')) return normalized
+  const lastSegment = normalized.split('/').pop()?.toLowerCase() ?? ''
+  if (/^v\d+$/.test(lastSegment)) return `${normalized}/messages`
+  return `${normalized}/v1/messages`
+}
+
+function mergeUsageSnapshots(current: UsageSnapshot | null, next: UsageSnapshot): UsageSnapshot {
+  if (!current) return next
+  const promptTokens = next.promptTokens || current.promptTokens
+  const completionTokens = Math.max(next.completionTokens, current.completionTokens)
+  const totalTokens = next.totalTokens > 0 && next.promptTokens > 0
+    ? next.totalTokens
+    : promptTokens + completionTokens
+  return {
+    ...current,
+    ...next,
+    promptTokens,
+    completionTokens,
+    totalTokens,
+    cachedTokens: Math.max(current.cachedTokens ?? 0, next.cachedTokens ?? 0),
+    cacheHitTokens: Math.max(current.cacheHitTokens ?? 0, next.cacheHitTokens ?? 0),
+    cacheMissTokens: Math.max(current.cacheMissTokens ?? 0, next.cacheMissTokens ?? 0),
+    cacheHitRate: next.cacheHitRate ?? current.cacheHitRate,
+    costUsd: next.costUsd ?? current.costUsd,
+    costCny: next.costCny ?? current.costCny
+  }
 }
 
 function canonicalizeSchema(value: unknown): Record<string, unknown> {
@@ -701,18 +732,20 @@ function attachTextFallbacksToLatestUserMessage(
 function formatAttachmentTextFallback(
   attachment: NonNullable<ModelRequest['attachmentTextFallbacks']>[number]
 ): string {
-  return [
-    '[Attached image as base64 text]',
+  const lines = [
+    '[Attached file]',
     `Name: ${attachment.name}`,
     `MIME: ${attachment.mimeType}`,
-    `Dimensions: ${formatAttachmentDimensions(attachment)}`,
     `Bytes: ${attachment.byteSize}`,
-    'Base64:',
-    '```base64',
-    attachment.dataBase64,
-    '```',
-    '[/Attached image]'
-  ].join('\n')
+    ...(attachment.width && attachment.height ? [`Dimensions: ${formatAttachmentDimensions(attachment)}`] : [])
+  ]
+  if (attachment.dataBase64) {
+    lines.push('Base64:', '```base64', attachment.dataBase64, '```')
+  } else {
+    lines.push('Content: omitted because the file exceeds the text fallback size limit.')
+  }
+  lines.push('[/Attached file]')
+  return lines.join('\n')
 }
 
 function formatAttachmentDimensions(

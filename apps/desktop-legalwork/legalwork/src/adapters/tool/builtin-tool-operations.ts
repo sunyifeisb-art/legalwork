@@ -3,6 +3,7 @@ import { mkdtemp, mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/
 import { spawn } from 'node:child_process'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
+import { extractDocumentText } from '../../knowledge/text-extractor.js'
 import type {
   BashLocalToolOperations,
   EditLocalToolOperations,
@@ -18,6 +19,7 @@ import {
   DEFAULT_IMAGE_MAX_BASE64_BYTES,
   DEFAULT_IMAGE_MAX_DIMENSION
 } from './builtin-tool-types.js'
+import { isDocxPath, plainTextToDocxBuffer } from './plain-text-docx.js'
 import {
   detectImageMimeType,
   resolveExecutable,
@@ -126,6 +128,7 @@ async function resizeImageWithSips(
 export const defaultReadLocalToolOperations: ReadLocalToolOperations = {
   stat: (path: string) => stat(path),
   readFile: (path: string) => readFile(path),
+  extractDocumentText,
   detectImageMimeType,
   resizeImage: resizeImageWithSips
 }
@@ -168,7 +171,8 @@ export function createLocalBashOperations(): BashLocalToolOperations {
 
 export const defaultWriteLocalToolOperations: WriteLocalToolOperations = {
   mkdir: (path: string) => mkdir(path, { recursive: true }).then(() => {}),
-  writeFile: (path: string, content: string) => writeFile(path, content, 'utf8')
+  writeFile: (path: string, content: string) =>
+    isDocxPath(path) ? writeFile(path, plainTextToDocxBuffer(content, { title: path })) : writeFile(path, content, 'utf8')
 }
 
 export const defaultEditLocalToolOperations: EditLocalToolOperations = {

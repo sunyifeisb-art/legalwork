@@ -14,13 +14,14 @@ import { withFileMutationQueue } from './file-mutation-queue.js'
 import type { EditLocalToolOptions, WriteLocalToolOptions } from './builtin-tool-types.js'
 import { defaultEditLocalToolOperations, defaultWriteLocalToolOperations } from './builtin-tool-operations.js'
 import { parseEditInstructions, resolveWorkspacePath, withToolBoundary } from './builtin-tool-utils.js'
+import { isDocxPath } from './plain-text-docx.js'
 
 export function createWriteLocalTool(_options: WriteLocalToolOptions = {}): LocalTool {
   const mkdirOp = _options.operations?.mkdir ?? defaultWriteLocalToolOperations.mkdir!
   const writeFileOp = _options.operations?.writeFile ?? defaultWriteLocalToolOperations.writeFile!
   return LocalToolHost.defineTool({
     name: 'write',
-    description: 'Create or overwrite a workspace file with the provided content.',
+    description: 'Create or overwrite a local filesystem file with the provided content. Relative paths resolve against the current workspace; absolute paths may point anywhere on the computer.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -62,7 +63,7 @@ export function createEditLocalTool(_options: EditLocalToolOptions = {}): LocalT
   const writeFileOp = _options.operations?.writeFile ?? defaultEditLocalToolOperations.writeFile!
   return LocalToolHost.defineTool({
     name: 'edit',
-    description: 'Edit a workspace file using exact text replacement. Supports multiple disjoint edits in one call.',
+    description: 'Edit a local filesystem file using exact text replacement. Relative paths resolve against the current workspace; absolute paths may point anywhere on the computer. Supports multiple disjoint edits in one call.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -94,6 +95,14 @@ export function createEditLocalTool(_options: EditLocalToolOptions = {}): LocalT
         return { output: { error: 'path and at least one edit are required' }, isError: true }
       }
       const { absolutePath, relativePath } = resolveWorkspacePath(rawPath, context)
+      if (isDocxPath(absolutePath)) {
+        return {
+          output: {
+            error: 'DOCX files are binary OOXML packages. Use the write/export document path instead of text replacement.'
+          },
+          isError: true
+        }
+      }
       return withFileMutationQueue(absolutePath, async () => {
         const rawSource = await readFileOp(absolutePath)
         const { bom, text: source } = stripBom(rawSource)

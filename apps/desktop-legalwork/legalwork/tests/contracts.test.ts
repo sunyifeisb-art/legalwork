@@ -471,7 +471,7 @@ describe('cli', () => {
     expect(config.web.enabled).toBe(false)
     expect(config.skills.enabled).toBe(false)
     expect(config.subagents.maxParallel).toBe(0)
-    expect(config.attachments.allowedMimeTypes).toContain('image/png')
+    expect(config.attachments.allowedMimeTypes).toContain('*/*')
     expect(config.attachments.textFallbackMaxBase64Bytes).toBe(512 * 1024)
     expect(config.attachments.textFallbackMaxImageDimension).toBe(1280)
     expect(config.attachments.textFallbackPreferredMimeType).toBe('image/webp')

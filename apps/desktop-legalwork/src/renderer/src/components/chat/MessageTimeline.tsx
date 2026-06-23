@@ -125,6 +125,7 @@ export function MessageTimeline({
           <MessageTimelineEmptyHero
             route={heroRoute}
             ready={runtimeConnection === 'ready'}
+            showRuntimeWake={runtimeConnection === 'checking' || Boolean(runtimeError?.trim())}
             hasWorkspace={!!workspaceRoot}
             runtimeError={runtimeError}
             activeClawChannel={activeClawChannel}

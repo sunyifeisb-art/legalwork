@@ -47,7 +47,7 @@ export const BUILTIN_MODEL_PROVIDER_PRESETS: BuiltinModelProviderPreset[] = [
     baseUrl: 'https://api.kimi.com/coding/v1',
     models: ['kimi-for-coding'],
     apiKeyPlaceholder: 'sk-kimi-...',
-    endpointFormat: 'chat_completions'
+    endpointFormat: 'messages'
   },
   {
     id: 'qwen',

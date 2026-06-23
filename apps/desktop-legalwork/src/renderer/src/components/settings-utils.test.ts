@@ -61,6 +61,9 @@ describe('mergeSettings', () => {
     expect(merged.provider.providers.find((provider) => provider.id === providerId)?.apiKey).toBe(apiKey)
     expect(merged.agents.legalwork.apiKey).toBe(apiKey)
     expect(merged.agents.legalwork.baseUrl).toBe(baseUrl)
+    expect(merged.agents.legalwork.endpointFormat).toBe(
+      merged.provider.providers.find((provider) => provider.id === providerId)?.endpointFormat
+    )
     }
   )
 })

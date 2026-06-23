@@ -188,20 +188,45 @@ function fileTypeLabel(node: TreeNode): string {
   return ext.toUpperCase()
 }
 
+function fileTypeBadge(node: TreeNode): ReactElement {
+  const label = fileTypeLabel(node)
+  const colorMap: Record<string, string> = {
+    '文件夹': 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/20',
+    'WORD': 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-500/15 dark:text-blue-400 dark:border-blue-500/20',
+    'PPT': 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/20',
+    'EXCEL': 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/20',
+    'PDF': 'bg-red-50 text-red-700 border-red-100 dark:bg-red-500/15 dark:text-red-400 dark:border-red-500/20',
+    '音频': 'bg-cyan-50 text-cyan-700 border-cyan-100 dark:bg-cyan-500/15 dark:text-cyan-400 dark:border-cyan-500/20',
+    '压缩包': 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-500/15 dark:text-slate-400 dark:border-slate-500/20',
+  }
+  const cls = colorMap[label] || 'bg-slate-50 text-slate-600 border-slate-100 dark:bg-slate-500/15 dark:text-slate-400 dark:border-slate-500/20'
+  return (
+    <span className={`inline-flex items-center rounded-[6px] border px-2 py-0.5 text-[11px] font-semibold ${cls}`}>
+      {label}
+    </span>
+  )
+}
+
 function iconForNode(node: TreeNode): ReactElement {
-  if (node.kind === 'folder') return <Folder className="h-5 w-5 text-emerald-300" strokeWidth={1.6} />
+  if (node.kind === 'folder') return <Folder className="h-5 w-5 text-emerald-400" strokeWidth={1.6} />
   const ext = (node.extension || node.name.split('.').pop() || '').replace(/^\./, '').toLowerCase()
   if (['mp3', 'm4a', 'wav', 'aac', 'flac', 'ogg'].includes(ext)) {
-    return <AudioLines className="h-5 w-5 text-cyan-500" strokeWidth={1.7} />
+    return <AudioLines className="h-5 w-5 text-cyan-400" strokeWidth={1.7} />
   }
-  if (['doc', 'docx', 'pdf', 'txt', 'md', 'markdown'].includes(ext)) {
+  if (['doc', 'docx'].includes(ext)) {
+    return <FileText className="h-5 w-5 text-blue-400" strokeWidth={1.6} />
+  }
+  if (['pdf'].includes(ext)) {
+    return <FileText className="h-5 w-5 text-red-400" strokeWidth={1.6} />
+  }
+  if (['txt', 'md', 'markdown'].includes(ext)) {
     return <FileText className="h-5 w-5 text-slate-400" strokeWidth={1.6} />
   }
   if (['xls', 'xlsx', 'csv'].includes(ext)) {
-    return <FileSpreadsheet className="h-5 w-5 text-emerald-500" strokeWidth={1.6} />
+    return <FileSpreadsheet className="h-5 w-5 text-emerald-400" strokeWidth={1.6} />
   }
   if (['zip', 'rar', '7z'].includes(ext)) {
-    return <FileArchive className="h-5 w-5 text-amber-500" strokeWidth={1.6} />
+    return <FileArchive className="h-5 w-5 text-amber-400" strokeWidth={1.6} />
   }
   return <File className="h-5 w-5 text-slate-300" strokeWidth={1.6} />
 }
@@ -824,8 +849,8 @@ export function KnowledgeBaseView(): ReactElement {
           id: string
           status: string
           items?: Array<{
-            type: string
-            content?: string
+            kind: string
+            text?: string
             toolName?: string
             status?: string
           }>
@@ -835,8 +860,8 @@ export function KnowledgeBaseView(): ReactElement {
       const lastTurn = threadData.turns?.at(-1)
       if (lastTurn?.status === 'completed') {
         const textItems = lastTurn.items
-          ?.filter((item) => item.type === 'text' && item.content)
-          .map((item) => item.content ?? '')
+          ?.filter((item) => item.kind === 'assistant_text' && item.text)
+          .map((item) => item.text ?? '')
           .join('\n\n') || '（AI 未返回任何内容）'
         return textItems
       }
@@ -1061,18 +1086,18 @@ ${question.trim()}
       <header className="shrink-0 border-b border-ds-border px-8 pb-5 pt-7">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
-            <div className="flex items-center gap-2 text-[13px] font-semibold uppercase tracking-wide text-[var(--ds-accent)]">
+            <div className="flex items-center gap-2 text-[13px] font-semibold uppercase tracking-wider text-[var(--ds-accent)]">
               <Database className="h-4 w-4" strokeWidth={1.8} />
               <span>Knowledge Base</span>
             </div>
-            <h1 className="mt-3 text-[34px] font-semibold leading-tight text-[var(--ds-ink)]">知识库</h1>
+            <h1 className="mt-3 text-[34px] font-bold leading-tight tracking-tight text-[var(--ds-ink)]">知识库</h1>
             <p className="mt-2 text-[15px] text-[var(--ds-muted)]">按文件夹管理法律资料、论文、案例、录音与内部文档。</p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="inline-flex h-10 items-center gap-2 rounded-[8px] bg-[var(--ds-accent)] px-4 text-[13px] font-medium text-white shadow-sm transition hover:opacity-90"
+              className="inline-flex h-9 items-center gap-2 rounded-[8px] bg-[var(--ds-accent)] px-4 text-[13px] font-semibold text-white shadow-[0_1px_4px_rgba(0,136,255,0.25)] transition hover:opacity-90 hover:shadow-[0_2px_6px_rgba(0,136,255,0.35)]"
             >
               <Upload className="h-4 w-4" strokeWidth={1.9} />
               <span>上传文件</span>
@@ -1080,39 +1105,42 @@ ${question.trim()}
             <button
               type="button"
               onClick={() => folderInputRef.current?.click()}
-              className="inline-flex h-10 items-center gap-2 rounded-[8px] border border-ds-border bg-ds-card px-4 text-[13px] font-medium text-[var(--ds-ink)] shadow-sm transition hover:bg-ds-hover"
+              className="inline-flex h-9 items-center gap-1.5 rounded-[8px] border border-ds-border bg-ds-card px-3 text-[13px] font-medium text-[var(--ds-ink)] transition hover:bg-ds-hover"
+              title="上传文件夹"
             >
-              <FolderPlus className="h-4 w-4" strokeWidth={1.8} />
-              <span>上传文件夹</span>
+              <FolderPlus className="h-3.5 w-3.5" strokeWidth={1.8} />
+              <span>文件夹</span>
             </button>
             <button
               type="button"
               onClick={() => void startCreateFolder()}
-              className="inline-flex h-10 items-center gap-2 rounded-[8px] border border-ds-border bg-ds-card px-4 text-[13px] font-medium text-[var(--ds-ink)] shadow-sm transition hover:bg-ds-hover"
+              className="inline-flex h-9 items-center gap-1.5 rounded-[8px] border border-ds-border bg-ds-card px-3 text-[13px] font-medium text-[var(--ds-ink)] transition hover:bg-ds-hover"
+              title="新建文件夹"
             >
-              <FolderPlus className="h-4 w-4" strokeWidth={1.8} />
-              <span>新建文件夹</span>
+              <FolderPlus className="h-3.5 w-3.5" strokeWidth={1.8} />
+              <span>新建</span>
             </button>
             <button
               type="button"
               disabled={syncing}
               onClick={() => void syncIndex()}
-              className="inline-flex h-10 items-center gap-2 rounded-[8px] border border-ds-border bg-ds-card px-4 text-[13px] font-medium text-[var(--ds-muted)] shadow-sm transition hover:bg-ds-hover hover:text-[var(--ds-ink)] disabled:opacity-50"
+              className="inline-flex h-9 items-center gap-1.5 rounded-[8px] border border-ds-border bg-ds-card px-3 text-[13px] font-medium text-[var(--ds-muted)] transition hover:bg-ds-hover hover:text-[var(--ds-ink)] disabled:opacity-50"
+              title="同步索引"
             >
-              <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} strokeWidth={1.8} />
-              <span>同步索引</span>
+              <RefreshCw className={`h-3.5 w-3.5 ${syncing ? 'animate-spin' : ''}`} strokeWidth={1.8} />
+              <span>同步</span>
             </button>
             <button
               type="button"
               onClick={() => setChatOpen((prev) => !prev)}
-              className={`inline-flex h-10 items-center gap-2 rounded-[8px] border px-4 text-[13px] font-medium shadow-sm transition disabled:opacity-50 ${
+              className={`inline-flex h-9 items-center gap-1.5 rounded-[8px] border px-3 text-[13px] font-medium transition disabled:opacity-50 ${
                 chatOpen
-                  ? 'border-[var(--ds-accent)] bg-[var(--ds-accent)] text-white'
+                  ? 'border-[var(--ds-accent)] bg-[var(--ds-accent)] text-white shadow-[0_1px_4px_rgba(0,136,255,0.25)]'
                   : 'border-ds-border bg-ds-card text-[var(--ds-muted)] hover:bg-ds-hover hover:text-[var(--ds-ink)]'
               }`}
               title="AI 知识库对话"
             >
-              <Sparkles className="h-4 w-4" strokeWidth={1.8} />
+              <Sparkles className="h-3.5 w-3.5" strokeWidth={1.8} />
               <span>AI 对话</span>
             </button>
           </div>
@@ -1134,23 +1162,23 @@ ${question.trim()}
       </header>
 
       <div className="flex min-h-0 flex-1">
-        <div className={`flex min-h-0 flex-1 flex-col px-8 py-5 transition-all ${preview ? 'pr-4' : ''}`}>
+        <div className={`flex min-h-0 min-w-[420px] flex-1 flex-col px-8 py-5 transition-all ${preview && !chatOpen ? 'pr-4' : ''}`}>
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-1 text-[13px] text-[var(--ds-muted)]">
+            <div className="flex min-w-0 items-center gap-0.5 text-[13px] text-[var(--ds-muted)]">
               <button
                 type="button"
                 onClick={() => setCurrentPath('')}
-                className="rounded-[6px] px-2 py-1 text-[var(--ds-ink)] hover:bg-ds-hover"
+                className="rounded-[7px] px-2 py-1 text-[var(--ds-ink)] font-medium transition hover:bg-ds-hover"
               >
                 全部文件
               </button>
               {breadcrumbs.map((part, index) => (
-                <span key={`${part}-${index}`} className="flex min-w-0 items-center gap-1">
-                  <ChevronRight className="h-3.5 w-3.5" strokeWidth={1.8} />
+                <span key={`${part}-${index}`} className="flex min-w-0 items-center gap-0.5">
+                  <ChevronRight className="h-3.5 w-3.5 text-[var(--ds-muted)]" strokeWidth={1.8} />
                   <button
                     type="button"
                     onClick={() => openBreadcrumb(index)}
-                    className="max-w-[220px] truncate rounded-[6px] px-2 py-1 hover:bg-ds-hover hover:text-[var(--ds-ink)]"
+                    className="max-w-[220px] truncate rounded-[7px] px-2 py-1 transition hover:bg-ds-hover hover:text-[var(--ds-ink)]"
                   >
                     {part}
                   </button>
@@ -1163,7 +1191,7 @@ ${question.trim()}
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="搜索文件或文件夹"
-                className="h-9 w-full rounded-[8px] border border-ds-border bg-ds-card pl-9 pr-3 text-[13px] text-[var(--ds-ink)] outline-none transition focus:border-[var(--ds-accent)]"
+                className="h-9 w-full rounded-[10px] border border-ds-border bg-ds-card pl-9 pr-3 text-[13px] text-[var(--ds-ink)] outline-none transition focus:border-[var(--ds-accent)] focus:shadow-[0_0_0_3px_rgba(0,136,255,0.08)]"
               />
             </div>
           </div>
@@ -1223,7 +1251,7 @@ ${question.trim()}
             </div>
           ) : null}
 
-          <div className="relative min-h-0 flex-1 overflow-hidden rounded-[8px] border border-ds-border bg-ds-card">
+          <div className="relative min-h-0 flex-1 overflow-x-auto overflow-y-hidden rounded-[8px] border border-ds-border bg-ds-card">
             {dragActive ? (
               <div className="absolute inset-0 z-20 flex items-center justify-center bg-[color-mix(in_srgb,var(--ds-accent)_12%,transparent)] backdrop-blur-[1px]">
                 <div className="rounded-[8px] border border-dashed border-[var(--ds-accent)] bg-ds-card px-8 py-6 text-center text-[14px] font-medium text-[var(--ds-ink)] shadow-lg">
@@ -1246,7 +1274,7 @@ ${question.trim()}
               </div>
             ) : null}
 
-            <div className="grid h-11 grid-cols-[44px_minmax(260px,1fr)_130px_130px_150px_54px] items-center border-b border-ds-border px-6 text-[13px] font-medium text-[var(--ds-muted)]">
+            <div className="grid h-10 grid-cols-[44px_minmax(260px,1fr)_130px_130px_150px_54px] items-center border-b border-ds-border bg-[color-mix(in_srgb,var(--ds-sidebar-field-bg)_50%,transparent)] px-6 text-[12px] font-semibold uppercase tracking-wider text-[var(--ds-muted)]">
               <div className="flex items-center">
                 <button
                   type="button"
@@ -1272,9 +1300,12 @@ ${question.trim()}
               <div />
             </div>
 
-            <div className="h-[calc(100%-44px)] overflow-y-auto">
+            <div className="h-[calc(100%-40px)] overflow-y-auto">
               {loading && visibleNodes.length === 0 ? (
-                <div className="flex h-full items-center justify-center text-[13px] text-[var(--ds-muted)]">加载中...</div>
+                <div className="flex h-full items-center justify-center gap-2 text-[13px] text-[var(--ds-muted)]">
+                  <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.8} />
+                  加载中...
+                </div>
               ) : visibleNodes.length === 0 ? (
                 <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-[13px] text-[var(--ds-muted)]">
                   <Folder className="h-10 w-10 text-emerald-200" strokeWidth={1.4} />
@@ -1285,10 +1316,10 @@ ${question.trim()}
                 visibleNodes.map((node) => (
                   <div
                     key={node.path}
-                    className={`grid min-h-[52px] grid-cols-[44px_minmax(260px,1fr)_130px_130px_150px_54px] items-center px-6 text-[14px] transition group ${
+                    className={`grid min-h-[52px] grid-cols-[44px_minmax(260px,1fr)_130px_130px_150px_54px] items-center px-6 text-[14px] transition-colors duration-150 group ${
                       isNodeSelected(node)
-                        ? 'bg-[color-mix(in_srgb,var(--ds-accent)_8%,transparent)]'
-                        : 'hover:bg-ds-hover'
+                        ? 'bg-[color-mix(in_srgb,var(--ds-accent)_6%,transparent)]'
+                        : 'hover:bg-[color-mix(in_srgb,var(--ds-sidebar-field-bg)_60%,transparent)]'
                     }`}
                     onDoubleClick={() => void openFileView(node)}
                     onContextMenu={(event) => handleRowContextMenu(event, node)}
@@ -1320,15 +1351,15 @@ ${question.trim()}
                       <span className="shrink-0">{iconForNode(node)}</span>
                       <span className="min-w-0 truncate font-medium text-[var(--ds-ink)]">{node.name}</span>
                     </button>
-                    <div className="text-[13px] text-[var(--ds-muted)]">{fileTypeLabel(node)}</div>
-                    <div className="text-[13px] text-[var(--ds-muted)]">{formatBytes(node.sizeBytes)}</div>
+                    <div className="flex">{fileTypeBadge(node)}</div>
+                    <div className="text-[13px] text-[var(--ds-muted)] tabular-nums">{formatBytes(node.sizeBytes)}</div>
                     <div className="text-[13px] text-[var(--ds-muted)]">{formatDate(node.updatedAt)}</div>
-                    <div className="flex items-center justify-end gap-1">
+                    <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
                       {node.kind === 'file' && previewType(node) !== 'unsupported' ? (
                         <button
                           type="button"
                           onClick={() => void openPreview(node)}
-                          className="flex h-8 w-8 items-center justify-center rounded-[6px] text-[var(--ds-muted)] opacity-0 transition hover:bg-ds-hover hover:text-[var(--ds-ink)] group-hover:opacity-100"
+                          className="flex h-8 w-8 items-center justify-center rounded-[6px] text-[var(--ds-muted)] transition hover:bg-ds-hover hover:text-[var(--ds-ink)]"
                           title="预览"
                         >
                           <Eye className="h-4 w-4" strokeWidth={1.8} />
@@ -1365,7 +1396,7 @@ ${question.trim()}
           ) : null}
         </div>
 
-        {preview ? (
+        {preview && !chatOpen ? (
           <aside className="ds-no-drag flex h-full w-[min(50%,560px)] min-w-[360px] flex-col border-l border-ds-border bg-ds-card">
             <div className="flex h-14 shrink-0 items-center justify-between border-b border-ds-border px-4">
               <div className="flex min-w-0 items-center gap-2">
@@ -1441,7 +1472,7 @@ ${question.trim()}
 
         {/* AI Chat sidebar */}
         {chatOpen ? (
-          <aside className="ds-no-drag flex h-full w-[420px] min-w-[360px] flex-col border-l border-ds-border bg-ds-card">
+          <aside className="ds-no-drag flex h-full w-[380px] min-w-[320px] flex-col border-l border-ds-border bg-ds-card">
             <div className="flex h-12 shrink-0 items-center justify-between border-b border-ds-border px-4">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-[var(--ds-accent)]" strokeWidth={1.8} />

@@ -6,7 +6,12 @@ import type {
   ThreadRelation,
   ThreadStatus
 } from '../contracts/threads.js'
-import { DEFAULT_APPROVAL_POLICY, type ApprovalPolicy, type SandboxMode } from '../contracts/policy.js'
+import {
+  DEFAULT_APPROVAL_POLICY,
+  DEFAULT_SANDBOX_MODE,
+  type ApprovalPolicy,
+  type SandboxMode
+} from '../contracts/policy.js'
 
 /**
  * Domain helper for thread records. The contract type is the source of
@@ -46,7 +51,7 @@ export function createThreadRecord(input: {
     mode: input.mode ?? 'agent',
     status: input.status ?? 'idle',
     approvalPolicy: input.approvalPolicy ?? DEFAULT_APPROVAL_POLICY,
-    sandboxMode: input.sandboxMode ?? 'workspace-write',
+    sandboxMode: input.sandboxMode ?? DEFAULT_SANDBOX_MODE,
     ...(input.costBudgetUsd !== undefined ? { costBudgetUsd: input.costBudgetUsd } : {}),
     ...(input.costBudgetWarningSent !== undefined ? { costBudgetWarningSent: input.costBudgetWarningSent } : {}),
     relation: input.relation ?? 'primary',

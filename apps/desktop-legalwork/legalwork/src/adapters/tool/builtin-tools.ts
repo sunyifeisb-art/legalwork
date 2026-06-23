@@ -10,6 +10,7 @@ import { createEditLocalTool, createWriteLocalTool } from './builtin-file-tools.
 import { createReadLocalTool } from './builtin-read-tool.js'
 import { createDataComplianceLocalTool } from './builtin-data-compliance-tool.js'
 import { createFindLocalTool, createGrepLocalTool, createLsLocalTool } from './builtin-search-tools.js'
+import { createRefreshSkillsTool, createInstallSkillTool } from './builtin-skill-tools.js'
 
 export * from './builtin-tool-types.js'
 export * from './builtin-tool-operations.js'
@@ -39,6 +40,10 @@ export function createBuiltinLocalTool(
       return createLsLocalTool(options.ls)
     case 'data_compliance':
       return createDataComplianceLocalTool(options.dataCompliance ?? {})
+    case 'refresh_skills':
+      return createRefreshSkillsTool(options.skillTools)
+    case 'install_skill':
+      return createInstallSkillTool(options.skillTools)
   }
 }
 
@@ -62,6 +67,10 @@ export function buildBuiltinLocalTools(options: BuiltinLocalToolsOptions = {}): 
   ]
   if (options.dataCompliance?.service) {
     tools.push(createDataComplianceLocalTool(options.dataCompliance))
+  }
+  if (options.skillTools?.skillRuntime) {
+    tools.push(createRefreshSkillsTool(options.skillTools))
+    tools.push(createInstallSkillTool(options.skillTools))
   }
   return tools
 }
@@ -107,7 +116,9 @@ export function buildBuiltinLocalToolRecord(
     grep: createGrepLocalTool(options.grep),
     find: createFindLocalTool(options.find),
     ls: createLsLocalTool(options.ls),
-    data_compliance: createDataComplianceLocalTool(options.dataCompliance ?? {})
+    data_compliance: createDataComplianceLocalTool(options.dataCompliance ?? {}),
+    refresh_skills: createRefreshSkillsTool(options.skillTools),
+    install_skill: createInstallSkillTool(options.skillTools)
   }
 }
 

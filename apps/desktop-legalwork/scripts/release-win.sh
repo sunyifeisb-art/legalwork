@@ -117,6 +117,7 @@ for asset in "${ASSETS[@]}"; do
   gh release upload "${TAG_NAME}" "${asset}" --clobber \
     || die "gh release upload failed for ${asset}"
 done
+verify_windows_release_assets true
 
 if [[ "${R2_UPLOAD}" == "true" ]]; then
   cyan "Uploading Windows asset metadata to R2 (${TAG_NAME})..."
@@ -131,10 +132,11 @@ if [[ "${R2_PROMOTE}" == "true" ]]; then
 fi
 
 if $PUBLISH; then
+  verify_desktop_auto_update_release_assets true
   cyan "Publishing release ${TAG_NAME}..."
   gh release edit "${TAG_NAME}" --draft=false \
     || die "gh release edit --draft=false failed"
-  verify_release_state 1 false "published"
+  verify_desktop_auto_update_release_assets false
 else
   cyan "Release remains draft — run with --publish when macOS + Windows assets are ready."
 fi

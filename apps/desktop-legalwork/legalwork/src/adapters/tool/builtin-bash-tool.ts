@@ -501,7 +501,7 @@ export function createBashLocalTool(options: BashLocalToolOptions = {}): LocalTo
   const shellRuntime = shellRuntimeInfo()
   return LocalToolHost.defineTool({
     name: 'bash',
-    description: `Execute a shell command in the workspace using the host platform shell. Current shell: ${shellRuntime.name}. Use ${shellRuntime.syntax} syntax. Return combined stdout and stderr. Long-running commands return a session_id; use action="poll" to read more output, action="write" with input to send stdin, or action="stop" to terminate the session.`,
+    description: `Execute a shell command on the local computer using the host platform shell. The default cwd is the current workspace, but commands may access absolute paths anywhere on the computer. Current shell: ${shellRuntime.name}. Use ${shellRuntime.syntax} syntax. Return combined stdout and stderr. Long-running commands return a session_id; use action="poll" to read more output, action="write" with input to send stdin, or action="stop" to terminate the session.`,
     inputSchema: {
       type: 'object',
       properties: {

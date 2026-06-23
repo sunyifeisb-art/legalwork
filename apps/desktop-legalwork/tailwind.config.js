@@ -8,6 +8,23 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: [
+          '-apple-system',
+          "'SF Pro Text'",
+          "'SF Pro Display'",
+          "'PingFang SC'",
+          "'Helvetica Neue'",
+          'Arial',
+          'sans-serif',
+        ],
+        mono: [
+          "'SF Mono'",
+          "'JetBrains Mono'",
+          "'IBM Plex Mono'",
+          'monospace',
+        ],
+      },
       colors: {
         accent: {
           DEFAULT: 'var(--ds-accent)',

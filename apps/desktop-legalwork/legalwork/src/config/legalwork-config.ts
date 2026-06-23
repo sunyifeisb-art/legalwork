@@ -1,4 +1,5 @@
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { dirname } from 'node:path'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { z } from 'zod'
@@ -259,6 +260,13 @@ export function readOptionalLegalworkConfigFile(path: string | undefined): Loade
   const resolvedPath = expandHomePath(path)
   if (!existsSync(resolvedPath)) return null
   return readLegalworkConfigFile(resolvedPath)
+}
+
+export function writeLegalworkConfigFile(path: string, config: LegalworkConfig): void {
+  const resolvedPath = expandHomePath(path)
+  const text = `${JSON.stringify(config, null, 2)}\n`
+  mkdirSync(dirname(resolvedPath), { recursive: true })
+  writeFileSync(resolvedPath, text, 'utf8')
 }
 
 export function legalworkConfigPathForDataDir(dataDir: string | undefined): string | undefined {

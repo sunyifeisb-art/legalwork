@@ -57,7 +57,7 @@ describe('model provider settings', () => {
     expect(runtime.baseUrl).toBe('https://custom.example/v1')
   })
 
-  it('resolves Kimi Code with its OpenAI-compatible endpoint format', () => {
+  it('resolves Kimi Code with its Anthropic-compatible endpoint format', () => {
     const base = settings()
     base.provider.providers = base.provider.providers.map((provider) =>
       provider.id === 'kimi-code'
@@ -74,7 +74,29 @@ describe('model provider settings', () => {
 
     expect(runtime.apiKey).toBe('sk-kimi')
     expect(runtime.baseUrl).toBe('https://api.kimi.com/coding/v1')
-    expect(runtime.endpointFormat).toBe('chat_completions')
+    expect(runtime.endpointFormat).toBe('messages')
+  })
+
+  it('resolves endpoint format from a custom provider profile', () => {
+    const base = settings()
+    base.provider.providers.push({
+      id: 'custom-messages',
+      name: 'Custom Messages',
+      apiKey: 'sk-messages',
+      baseUrl: 'https://api.kimi.com/coding/',
+      endpointFormat: 'messages',
+      models: ['kimi-for-coding']
+    })
+    base.agents.legalwork = {
+      ...base.agents.legalwork,
+      providerId: 'custom-messages',
+      model: 'kimi-for-coding'
+    }
+
+    const runtime = resolveLegalworkRuntimeSettings(base)
+
+    expect(runtime.baseUrl).toBe('https://api.kimi.com/coding/')
+    expect(runtime.endpointFormat).toBe('messages')
   })
 })
 
@@ -131,6 +153,7 @@ describe('computeLegalworkRuntimeCredentialPatch', () => {
 
     expect(patch.legalwork.apiKey).toBe('sk-kimi')
     expect(patch.legalwork.baseUrl).toBe('https://api.kimi.com/coding/v1')
+    expect(patch.legalwork.endpointFormat).toBe('messages')
     expect(patch.legalwork.providerId).toBe('kimi-code')
   })
 

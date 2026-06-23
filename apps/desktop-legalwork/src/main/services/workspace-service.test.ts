@@ -122,6 +122,33 @@ describe('workspace-service boundary checks', () => {
     }
   })
 
+  it('creates valid OOXML packages when saving text content to docx files', async () => {
+    const createResult = await createWorkspaceFile({
+      path: 'docs/民事起诉状.docx',
+      workspaceRoot,
+      content: '民事起诉状\n\n原告：张三'
+    })
+
+    expect(createResult.ok).toBe(true)
+    if (!createResult.ok) return
+
+    const createdBytes = await readFile(createResult.path)
+    expect(createdBytes.subarray(0, 2).toString('utf8')).toBe('PK')
+    expect(createdBytes.toString('utf8')).toContain('[Content_Types].xml')
+    expect(createdBytes.toString('utf8')).toContain('word/document.xml')
+
+    const saveResult = await writeWorkspaceFile({
+      path: createResult.path,
+      workspaceRoot,
+      content: '修订后的民事起诉状'
+    })
+    expect(saveResult.ok).toBe(true)
+
+    const savedBytes = await readFile(createResult.path)
+    expect(savedBytes.subarray(0, 2).toString('utf8')).toBe('PK')
+    expect(savedBytes.toString('utf8')).toContain('修订后的民事起诉状')
+  })
+
   it('marks oversized files as truncated when loading preview content', async () => {
     const largePath = join(workspaceRoot, 'large.md')
     await writeFile(largePath, 'a'.repeat(1_500_001), 'utf8')

@@ -22,14 +22,22 @@ import {
 const DEFAULT_MODEL_PROVIDER_NAME = 'DeepSeek'
 
 export function defaultModelProviderSettings(): ModelProviderSettingsV1 {
-  const defaultProvider = defaultModelProviderProfile('', DEFAULT_DEEPSEEK_BASE_URL)
+  const defaultPreset = getBuiltinModelProviderPreset(DEFAULT_MODEL_PROVIDER_ID)
+  const defaultProvider = defaultModelProviderProfile(
+    '',
+    DEFAULT_DEEPSEEK_BASE_URL,
+    DEFAULT_MODEL_PROVIDER_ID,
+    defaultPreset?.name ?? DEFAULT_MODEL_PROVIDER_NAME,
+    defaultPreset?.models,
+    defaultPreset?.endpointFormat
+  )
   return {
     apiKey: defaultProvider.apiKey,
     baseUrl: defaultProvider.baseUrl,
     providers: BUILTIN_MODEL_PROVIDER_PRESETS.map((preset) =>
       preset.id === DEFAULT_MODEL_PROVIDER_ID
         ? defaultProvider
-        : defaultModelProviderProfile('', preset.baseUrl, preset.id, preset.name, preset.models)
+        : defaultModelProviderProfile('', preset.baseUrl, preset.id, preset.name, preset.models, preset.endpointFormat)
     )
   }
 }
@@ -51,7 +59,7 @@ export function normalizeModelProviderSettings(
       preset.id,
       preset.id === DEFAULT_MODEL_PROVIDER_ID
         ? defaultProvider
-        : defaultModelProviderProfile('', preset.baseUrl, preset.id, preset.name, preset.models)
+        : defaultModelProviderProfile('', preset.baseUrl, preset.id, preset.name, preset.models, preset.endpointFormat)
     )
   }
   for (const rawProvider of rawProviders) {
@@ -141,7 +149,7 @@ export function resolveLegalworkRuntimeSettings(settings: AppSettingsV1): Legalw
       runtimeBaseUrl && runtimeBaseUrl !== DEFAULT_DEEPSEEK_BASE_URL
         ? normalizeDeepseekBaseUrl(runtimeBaseUrl)
         : normalizeDeepseekBaseUrl(providerBaseUrl),
-    endpointFormat: runtime.endpointFormat?.trim() || preset?.endpointFormat || 'chat_completions'
+    endpointFormat: runtime.endpointFormat?.trim() || provider.endpointFormat?.trim() || preset?.endpointFormat || 'chat_completions'
   }
 }
 
@@ -175,12 +183,17 @@ export function computeLegalworkRuntimeCredentialPatch(
   const legalworkPatch = agentsPatch?.legalwork
   const agentKeyValue = legalworkPatch && 'apiKey' in legalworkPatch ? legalworkPatch.apiKey : undefined
   const agentBaseUrlValue = legalworkPatch && 'baseUrl' in legalworkPatch ? legalworkPatch.baseUrl : undefined
+  const agentEndpointFormatValue = legalworkPatch && 'endpointFormat' in legalworkPatch
+    ? legalworkPatch.endpointFormat
+    : undefined
 
   // The renderer often sends the full settings object as a patch, so a present
   // agents.legalwork.apiKey does not by itself mean the user edited it. Treat the
   // field as user-edited only when its value differs from what is already stored.
   const userEditedAgentKey = agentKeyValue !== undefined && agentKeyValue !== runtimeBeforePatch.apiKey
   const userEditedAgentBaseUrl = agentBaseUrlValue !== undefined && agentBaseUrlValue !== runtimeBeforePatch.baseUrl
+  const userEditedAgentEndpointFormat =
+    agentEndpointFormatValue !== undefined && agentEndpointFormatValue !== runtimeBeforePatch.endpointFormat
 
   const inheritedAgentKey = userEditedAgentKey
     ? (agentKeyValue ?? '').trim()
@@ -189,12 +202,16 @@ export function computeLegalworkRuntimeCredentialPatch(
   const inheritedAgentBaseUrl = userEditedAgentBaseUrl
     ? (agentBaseUrlValue ?? '').trim()
     : activeProviderProfile.baseUrl.trim()
+  const inheritedAgentEndpointFormat = userEditedAgentEndpointFormat
+    ? (agentEndpointFormatValue ?? '').trim()
+    : activeProviderProfile.endpointFormat?.trim() ?? ''
 
   return {
     legalwork: {
       ...(legalworkPatch ?? {}),
       ...(userEditedAgentKey || !inheritedAgentKey ? {} : { apiKey: inheritedAgentKey }),
-      ...(userEditedAgentBaseUrl || !inheritedAgentBaseUrl ? {} : { baseUrl: inheritedAgentBaseUrl })
+      ...(userEditedAgentBaseUrl || !inheritedAgentBaseUrl ? {} : { baseUrl: inheritedAgentBaseUrl }),
+      ...(userEditedAgentEndpointFormat || !inheritedAgentEndpointFormat ? {} : { endpointFormat: inheritedAgentEndpointFormat })
     }
   }
 }
@@ -205,13 +222,15 @@ function defaultModelProviderProfile(
   id = DEFAULT_MODEL_PROVIDER_ID,
   name = getBuiltinModelProviderPreset(DEFAULT_MODEL_PROVIDER_ID)?.name ?? DEFAULT_MODEL_PROVIDER_NAME,
   models: readonly string[] = getBuiltinModelProviderPreset(DEFAULT_MODEL_PROVIDER_ID)?.models
-    ?? DEFAULT_COMPOSER_MODEL_IDS.filter((modelId) => modelId !== 'auto')
+    ?? DEFAULT_COMPOSER_MODEL_IDS.filter((modelId) => modelId !== 'auto'),
+  endpointFormat = getBuiltinModelProviderPreset(id)?.endpointFormat ?? 'chat_completions'
 ): ModelProviderProfileV1 {
   return {
     id,
     name,
     apiKey: apiKey.trim(),
     baseUrl: normalizeDeepseekBaseUrl(baseUrl),
+    endpointFormat,
     models: [...models]
   }
 }
@@ -228,11 +247,15 @@ function normalizeModelProviderProfile(
       ? normalizeDeepseekBaseUrl(input.baseUrl)
       : preset?.baseUrl ?? DEFAULT_DEEPSEEK_BASE_URL
   const models = normalizeProviderModels(input?.models, preset?.models)
+  const endpointFormat = typeof input?.endpointFormat === 'string' && input.endpointFormat.trim()
+    ? input.endpointFormat.trim()
+    : preset?.endpointFormat ?? 'chat_completions'
   return {
     id,
     name,
     apiKey: typeof input?.apiKey === 'string' ? input.apiKey.trim() : '',
     baseUrl,
+    endpointFormat,
     models
   }
 }

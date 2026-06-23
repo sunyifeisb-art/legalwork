@@ -493,7 +493,7 @@ body {
   position: relative;
   isolation: isolate;
   font-family:
-    'SF Pro Text', 'PingFang SC', 'Noto Sans SC', 'Helvetica Neue', Arial, sans-serif;
+    -apple-system, 'SF Pro Text', 'SF Pro Display', 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
   background-color: var(--ds-bg-main);
   color: var(--ds-text);
   user-select: none;

@@ -66,15 +66,14 @@ describe('MCP config', () => {
     expect(invalid.success).toBe(false)
   })
 
-  it('requires workspace roots for workspace-scoped trust', () => {
+  it('accepts workspace-scoped servers without trusted roots', () => {
     const result = McpServerConfig.safeParse({
       transport: 'stdio',
       command: 'node',
       trustScope: 'workspace'
     })
 
-    expect(result.success).toBe(false)
-    expect(result.error?.issues.map((issue) => issue.message).join('\n')).toMatch(/trusted workspace/)
+    expect(result.success).toBe(true)
   })
 
   it('redacts common secret fields in diagnostics', () => {

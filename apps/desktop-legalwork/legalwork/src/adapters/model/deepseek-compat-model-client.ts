@@ -2219,19 +2219,21 @@ function attachTextFallbacksToLatestUserMessage(
 function formatAttachmentTextFallback(
   attachment: NonNullable<ModelRequest['attachmentTextFallbacks']>[number]
 ): string {
-  return [
-    '[Attached image as base64 text]',
+  const lines = [
+    '[Attached file]',
     `Name: ${attachment.name}`,
     `FilePath: ${attachment.localFilePath ?? 'unknown'}`,
     `MIME: ${attachment.mimeType}`,
-    `Dimensions: ${formatAttachmentDimensions(attachment)}`,
     `Bytes: ${attachment.byteSize}`,
-    'Base64:',
-    '```base64',
-    attachment.dataBase64,
-    '```',
-    '[/Attached image]'
-  ].join('\n')
+    ...(attachment.width && attachment.height ? [`Dimensions: ${formatAttachmentDimensions(attachment)}`] : [])
+  ]
+  if (attachment.dataBase64) {
+    lines.push('Base64:', '```base64', attachment.dataBase64, '```')
+  } else {
+    lines.push('Content: omitted because the file exceeds the text fallback size limit.')
+  }
+  lines.push('[/Attached file]')
+  return lines.join('\n')
 }
 
 function formatAttachmentDimensions(

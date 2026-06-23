@@ -107,18 +107,28 @@ function normalizeGithubOwnerRepo(raw: string): string | null {
   return null
 }
 
-function packageJsonPath(): string {
-  return join(app.getAppPath(), 'package.json')
+function packageJsonPaths(): string[] {
+  // In packaged apps app.getAppPath() usually points to the asar archive, and
+  // Electron's fs patch can read app.asar/package.json. Provide fallbacks so we
+  // still resolve the repository field if that path fails.
+  return [
+    join(app.getAppPath(), 'package.json'),
+    join(process.resourcesPath || '', 'app.asar', 'package.json'),
+    join(process.resourcesPath || '', 'app', 'package.json')
+  ]
 }
 
 function readPackageJson(): Record<string, unknown> | null {
-  try {
-    const path = packageJsonPath()
-    if (!existsSync(path)) return null
-    return JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown>
-  } catch {
-    return null
+  for (const path of packageJsonPaths()) {
+    try {
+      if (existsSync(path)) {
+        return JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown>
+      }
+    } catch {
+      // try next candidate
+    }
   }
+  return null
 }
 
 function resolveGithubReleaseUrl(): string | null {
@@ -590,7 +600,7 @@ export function initializeGuiUpdater(
     // When the release is missing the files electron-updater expects (e.g. no
     // mac zip, only dmgs), fall back to the GitHub API so the UI can at least
     // show "up to date" or "update available (manual)" instead of an error.
-    if (resolveGithubOwnerRepo() && /ZIP file not provided|Cannot download|sha512 checksum mismatch/i.test(message)) {
+    if (resolveGithubOwnerRepo() && /ZIP file not provided|Cannot download|sha512 checksum mismatch|ENOENT.*app-update\.yml|app-update\.yml.*ENOENT/i.test(message)) {
       void checkGithubApiUpdate(configuredChannel).then((info) => {
         if (!info) {
           emitGuiUpdateState({ status: 'error', info: lastInfo ?? undefined, message, code: 'unknown' })
@@ -652,7 +662,7 @@ export async function downloadGuiUpdate(channel?: GuiUpdateChannel): Promise<Gui
   configureUpdaterChannel(selectedChannel)
 
   try {
-    if (!lastInfo?.hasUpdate || lastInfo.channel !== selectedChannel) {
+    if (!lastInfo?.hasUpdate || lastInfo.channel !== selectedChannel || lastInfo.manualOnly) {
       const checked = await checkGuiUpdate(selectedChannel)
       if (!checked.ok) return checked
       if (!checked.hasUpdate || checked.manualOnly) {
@@ -665,6 +675,10 @@ export async function downloadGuiUpdate(channel?: GuiUpdateChannel): Promise<Gui
             : 'No downloadable GUI update is available.'
         }
       }
+    }
+
+    if (downloaded) {
+      return { ok: true, paths: [] }
     }
 
     if (!downloadPromise) {

@@ -266,6 +266,7 @@ const modelProviderPatchSchema = z.object({
     name: z.string().trim().min(1).max(80).optional(),
     apiKey: z.string().max(MAX_BODY_BYTES).optional(),
     baseUrl: z.string().trim().max(MAX_URL_LENGTH).optional(),
+    endpointFormat: z.string().trim().max(64).optional(),
     models: z.array(z.string().trim().min(1).max(128)).max(200).optional()
   }).strict()).max(50).optional()
 }).strict()

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   arrayBufferToBase64,
+  prepareAttachmentUpload,
   prepareImageAttachmentUpload,
   type EncodedAttachmentImage
 } from './image-attachment-upload'
@@ -10,6 +11,39 @@ afterEach(() => {
 })
 
 describe('image attachment upload preparation', () => {
+  it('prepares arbitrary files without image canvas encoding', async () => {
+    const file = new File(['hello'], 'notes.txt', { type: 'text/plain' })
+    const prepared = await prepareAttachmentUpload(file, {
+      maxImageBytes: 100,
+      maxImageDimension: 100,
+      textFallbackMaxBase64Bytes: 100
+    })
+
+    expect(prepared).toMatchObject({
+      dataBase64: 'aGVsbG8=',
+      mimeType: 'text/plain',
+      textFallback: {
+        dataBase64: 'aGVsbG8=',
+        mimeType: 'text/plain',
+        byteSize: 5,
+        wasCompressed: false
+      }
+    })
+    expect(prepared.previewUrl).toBeUndefined()
+  })
+
+  it('omits oversized arbitrary file text fallback while keeping upload data', async () => {
+    const file = new File(['hello'], 'notes.txt', { type: 'text/plain' })
+    const prepared = await prepareAttachmentUpload(file, {
+      maxImageBytes: 100,
+      maxImageDimension: 100,
+      textFallbackMaxBase64Bytes: 4
+    })
+
+    expect(prepared.dataBase64).toBe('aGVsbG8=')
+    expect(prepared.textFallback).toBeUndefined()
+  })
+
   it('reuses one bitmap decode for upload and text fallback preparation', async () => {
     const close = vi.fn()
     const createImageBitmap = vi.fn(async () => ({

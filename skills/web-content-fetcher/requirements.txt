@@ -1,0 +1,5 @@
+scrapling>=0.4.0
+html2text>=2024.2.26
+curl_cffi>=0.14.0
+browserforge>=1.2.4
+playwright>=1.52.0

@@ -98,6 +98,40 @@ describe('skill-service', () => {
     expect(projectSkills.map((skill) => skill.id)).not.toContain('skill')
   })
 
+  it('lists nested Harvey-style skills from project skill roots', async () => {
+    const workspaceRoot = join(tempRoot, 'workspace-harvey')
+    const skillRoot = join(
+      workspaceRoot,
+      'skills',
+      'awesome-legal-aiagent-skills',
+      'capital-markets',
+      'prepare-ipo-risk-factors'
+    )
+    await mkdir(skillRoot, { recursive: true })
+    await writeFile(join(skillRoot, 'SKILL.md'), [
+      '---',
+      'name: prepare-ipo-risk-factors',
+      'task_id: capital-markets/prepare-ipo-risk-factors',
+      'description: Drafts IPO risk factors and capital-markets disclosure sections for securities offerings.',
+      'activates_for: [planner, solver, checker]',
+      '---',
+      '',
+      '# Skill: IPO Risk Factors'
+    ].join('\n'), 'utf8')
+
+    const result = await listGuiSkills(createSettings(workspaceRoot), workspaceRoot)
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.skills).toContainEqual(expect.objectContaining({
+      id: 'capital-markets-prepare-ipo-risk-factors',
+      name: 'Prepare Ipo Risk Factors',
+      description: 'Drafts IPO risk factors and capital-markets disclosure sections for securities offerings.',
+      scope: 'project',
+      legacy: true
+    }))
+  })
+
   function createSettings(workspaceRoot: string): AppSettingsV1 {
     return {
       version: 1,

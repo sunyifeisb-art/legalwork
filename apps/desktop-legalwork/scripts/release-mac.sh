@@ -337,6 +337,7 @@ gh release create "${TAG_NAME}" \
 
 cyan "Uploading ${#ASSETS[@]} macOS asset(s) to GitHub (concurrency ${RELEASE_UPLOAD_CONCURRENCY})..."
 upload_github_assets "${TAG_NAME}" "${ASSETS[@]}"
+verify_mac_release_assets true
 
 if [[ "${R2_UPLOAD}" == "true" ]]; then
   cyan "Uploading macOS asset metadata to R2 (${TAG_NAME})..."
@@ -361,4 +362,7 @@ green "macOS release ${TAG_NAME} ready (draft)."
 cyan "  Meta: dist/.release-meta.env"
 cyan "  Channel: ${RELEASE_CHANNEL}"
 cyan "  Next on Windows: ./scripts/release-win.sh --tag ${TAG_NAME} --channel ${RELEASE_CHANNEL}"
-cyan "  https://github.com/XingYu-Zhong/LegalWork/releases/tag/${TAG_NAME}"
+github_repo_url=""
+github_repo_url="$(release_git remote get-url origin 2>/dev/null | sed -E 's#^(https://github\.com/|git@github\.com:)([^/]+/[^/]+?)(\.git)?$#\2#')"
+github_repo_url="${github_repo_url:-sunyifeisb-art/legalwork}"
+cyan "  https://github.com/${github_repo_url}/releases/tag/${TAG_NAME}"

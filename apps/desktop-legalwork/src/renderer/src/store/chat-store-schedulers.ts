@@ -34,7 +34,7 @@ export function scheduleStartupRuntimeProbe(get: ChatStoreGet): void {
   }
   startupRuntimeProbeTimer = setTimeout(() => {
     startupRuntimeProbeTimer = null
-    void get().probeRuntime('user')
+    void get().probeRuntime('background')
   }, 900)
 }
 

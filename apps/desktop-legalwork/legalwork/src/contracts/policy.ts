@@ -18,7 +18,7 @@ export const SANDBOX_MODES = [
   'danger-full-access',
   'external-sandbox'
  ] as const
-export const DEFAULT_SANDBOX_MODE = 'workspace-write'
+export const DEFAULT_SANDBOX_MODE = 'danger-full-access'
 
 export const SandboxModeSchema = z.enum(SANDBOX_MODES)
 export type SandboxMode = z.infer<typeof SandboxModeSchema>

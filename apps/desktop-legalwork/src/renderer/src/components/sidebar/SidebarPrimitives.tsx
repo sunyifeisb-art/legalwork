@@ -114,21 +114,22 @@ export function SidebarCommandRow({
       title={disabled ? disabledHint : undefined}
       onClick={onClick}
       className={cx(
-        'flex min-h-[34px] w-full items-center gap-2.5 rounded-[8px] px-3 py-1.5 text-[15px] font-normal transition',
+        'flex min-h-[34px] w-full items-center gap-2.5 rounded-[8px] px-3 py-1.5 transition',
         disabled
-          ? 'cursor-not-allowed text-[#a8a8a8] opacity-55'
+          ? 'cursor-not-allowed text-[#a8a8a8] opacity-55 text-[13px] font-normal'
           : active
-            ? 'bg-[var(--ds-sidebar-row-active)] text-[#1f1f1f] shadow-[inset_0_0_0_1px_var(--ds-sidebar-row-ring)] dark:text-white'
+            ? 'bg-[var(--ds-sidebar-row-active)] text-[14px] font-semibold text-[#1f1f1f] shadow-[inset_0_0_0_1px_var(--ds-sidebar-row-ring)] dark:text-white'
             : footer
-              ? 'text-[#4f4f4f] hover:bg-[var(--ds-sidebar-row-hover)] hover:text-[#1f1f1f] dark:text-white/70 dark:hover:text-white'
+              ? 'text-[12px] font-normal text-[#4f4f4f] hover:bg-[var(--ds-sidebar-row-hover)] hover:text-[#1f1f1f] dark:text-white/70 dark:hover:text-white'
               : accent
-                ? 'text-[#1f1f1f] hover:bg-[var(--ds-sidebar-row-hover)] dark:text-white'
-                : 'text-[#343434] hover:bg-[var(--ds-sidebar-row-hover)] hover:text-[#1f1f1f] dark:text-white/75 dark:hover:text-white'
+                ? 'text-[14px] font-semibold text-[#1f1f1f] hover:bg-[var(--ds-sidebar-row-hover)] dark:text-white'
+                : 'text-[14px] font-semibold text-[#343434] hover:bg-[var(--ds-sidebar-row-hover)] hover:text-[#1f1f1f] dark:text-white/75 dark:hover:text-white'
       )}
     >
       <span
         className={cx(
-          'flex h-5 w-5 shrink-0 items-center justify-center',
+          'flex shrink-0 items-center justify-center',
+          accent ? 'h-5 w-5' : 'h-4 w-4',
           accent ? 'text-[#1f1f1f] dark:text-white' : footer ? 'text-[#888888]' : 'text-[#343434] dark:text-white/75'
         )}
       >
@@ -158,7 +159,7 @@ export function SidebarSectionHeader({
 }: SidebarSectionHeaderProps): ReactElement {
   return (
     <div className="flex items-center justify-between px-2.5 pb-2 pt-5">
-      <span className="min-w-0 truncate text-[13px] font-normal text-[#9aa5b5] dark:text-white/35">
+      <span className="min-w-0 truncate text-[11px] font-semibold uppercase tracking-wider text-[#9aa5b5] dark:text-white/35">
         {label}
       </span>
       {actions ? <div className="flex shrink-0 items-center gap-0.5">{actions}</div> : null}
@@ -316,7 +317,7 @@ export function SidebarTreeRow({
   return (
     <div
       className={cx(
-        'group relative flex w-full items-center overflow-hidden rounded-[8px] text-[15px] font-normal transition',
+        'group relative flex w-full items-center overflow-hidden rounded-[8px] text-[14px] font-medium transition',
         outlined
           ? 'bg-[var(--ds-sidebar-row-active)] text-[#1f1f1f] shadow-[inset_0_0_0_1px_var(--ds-sidebar-row-ring)] dark:text-white'
           : active

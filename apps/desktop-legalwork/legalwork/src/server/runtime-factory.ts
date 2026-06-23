@@ -48,6 +48,9 @@ import {
 import {
   DEFAULT_STORAGE_CONFIG,
   expandHomePath,
+  readOptionalLegalworkConfigFile,
+  writeLegalworkConfigFile,
+  type LegalworkConfig,
   type RuntimeTuningConfig,
   type StorageConfig
 } from '../config/legalwork-config.js'
@@ -173,7 +176,38 @@ export async function createLegalworkServeRuntime(
   })
   const mcpProviders = await buildMcpToolProviders(options.capabilities?.mcp)
   const webProviders = buildWebToolProviders(options.capabilities?.web)
-  const skillRuntime = await SkillRuntime.create(options.capabilities?.skills)
+  const skillRuntime = await SkillRuntime.create(options.capabilities?.skills, {
+    onRootsChanged: async (roots) => {
+      if (!options.configPath) return
+      const existing = readOptionalLegalworkConfigFile(options.configPath)
+      if (existing) {
+        const next: LegalworkConfig = {
+          ...existing.config,
+          capabilities: {
+            ...existing.config.capabilities,
+            skills: {
+              ...existing.config.capabilities.skills,
+              enabled: true,
+              roots
+            }
+          }
+        }
+        writeLegalworkConfigFile(options.configPath, next)
+      } else if (options.capabilities) {
+        const next: LegalworkConfig = {
+          capabilities: {
+            ...options.capabilities,
+            skills: {
+              ...options.capabilities.skills,
+              enabled: true,
+              roots
+            }
+          }
+        }
+        writeLegalworkConfigFile(options.configPath, next)
+      }
+    }
+  })
   const attachmentStore = options.capabilities?.attachments.enabled
     ? new FileAttachmentStore({
         rootDir: join(options.dataDir, 'attachments'),
@@ -211,7 +245,10 @@ export async function createLegalworkServeRuntime(
       kind: 'built-in' as const,
       enabled: true,
       available: true,
-      tools: buildDefaultLocalTools({}, { dataCompliance: { service: dataComplianceTaskService } })
+      tools: buildDefaultLocalTools({}, {
+        dataCompliance: { service: dataComplianceTaskService },
+        skillTools: { skillRuntime }
+      })
     },
     ...mcpProviders.providers,
     ...webProviders.providers,
@@ -388,6 +425,12 @@ export async function createLegalworkServeRuntime(
         : { enabled: false, rootDir: '', activeCount: 0, tombstoneCount: 0, lastInjectedIds: [] }
     }),
     skills: () => skillRuntime.diagnostics(),
+    refreshSkills: async () => {
+      await skillRuntime.refresh()
+    },
+    installSkillRoot: async (path: string, overwrite?: boolean) => {
+      await skillRuntime.installFromPath(path, overwrite)
+    },
     dataComplianceTaskService,
     shutdown: async () => {
       try {

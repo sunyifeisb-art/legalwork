@@ -371,6 +371,11 @@
             font-size: 0.8rem;
             border: 1px solid var(--border-light);
         }
+        .download-meta .dl-count {
+            color: var(--accent);
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
         .download-recommendation {
             display: grid;
             grid-template-columns: 1fr auto;
@@ -454,81 +459,75 @@
 
         /* ===== SCREENSHOT SHOWCASE ===== */
         .screenshot-showcase {
-            padding: 2rem 1.5rem 5rem;
-            position: relative;
-            overflow: hidden;
-        }
-        .screenshot-showcase::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 50%;
-            background: linear-gradient(180deg, var(--bg-alt) 0%, transparent 100%);
-            pointer-events: none;
-            z-index: 0;
+            background: linear-gradient(180deg, var(--bg-alt) 0%, var(--bg) 100%);
+            padding: 5rem 1.5rem;
         }
         .screenshot-showcase .container {
             max-width: 1200px;
             margin: 0 auto;
-            position: relative;
-            z-index: 1;
         }
         .screenshot-showcase .section-header {
             text-align: center;
-            max-width: 640px;
-            margin: 0 auto 3rem;
+            margin-bottom: 3rem;
         }
         .screenshot-grid {
             display: grid;
-            grid-template-columns: 1fr 1.35fr 1fr;
-            gap: 1.5rem;
-            align-items: center;
-            perspective: 1200px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            align-items: start;
         }
         .screenshot-card {
             position: relative;
-            transform-style: preserve-3d;
-            transition: transform 0.1s ease-out;
-            will-change: transform;
-        }
-        .screenshot-card.hero-shot {
-            transform: scale(1.05);
-            z-index: 2;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .screenshot-card:hover {
-            z-index: 3;
+            transform: translateY(-8px);
         }
-        .screenshot-inner {
-            transition: transform 0.15s ease-out, box-shadow 0.3s ease;
-            transform: rotateX(var(--rotateX, 0deg)) rotateY(var(--rotateY, 0deg));
-            border-radius: 14px;
+        .screenshot-frame {
+            border-radius: 16px;
+            overflow: hidden;
+            background: #fff;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+            transition: box-shadow 0.4s ease;
+            line-height: 0;
         }
-        .screenshot-card:hover .screenshot-inner {
-            box-shadow: var(--shadow-float);
+        .screenshot-card:hover .screenshot-frame {
+            box-shadow: 0 24px 48px rgba(0,0,0,0.12), 0 8px 16px rgba(0,0,0,0.08);
         }
-        .mac-window {
-            background: linear-gradient(180deg, #f0f0f0 0%, #e8e8e8 100%);
-            border-radius: 14px 14px 0 0;
-            padding: 14px 18px;
+        .screenshot-card::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 90%; height: 90%;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(ellipse at center, rgba(59,130,246,0.12) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+            z-index: -1;
+            border-radius: 50%;
+            filter: blur(20px);
+        }
+        .screenshot-card:hover::after { opacity: 1; }
+        .traffic-bar {
+            height: 36px;
+            background: linear-gradient(180deg, #f5f5f7 0%, #e8e8ed 100%);
+            border-bottom: 1px solid #d1d1d6;
             display: flex;
             align-items: center;
-            gap: 10px;
-            border: 1px solid #d0d0d0;
-            border-bottom: none;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
-        }
-        .mac-traffic-lights {
-            display: flex;
+            padding: 0 14px;
             gap: 8px;
+            border-radius: 14px 14px 0 0;
         }
-        .traffic-light {
-            width: 13px; height: 13px;
+        .traffic-bar .dot {
+            width: 12px; height: 12px;
             border-radius: 50%;
             border: 1px solid rgba(0,0,0,0.06);
             box-shadow: inset 0 1px 2px rgba(255,255,255,0.4), 0 1px 1px rgba(0,0,0,0.1);
             position: relative;
         }
-        .traffic-light::after {
+        .traffic-bar .dot::after {
             content: '';
             position: absolute;
             top: 2px; left: 3px;
@@ -537,84 +536,38 @@
             background: rgba(255,255,255,0.5);
             filter: blur(0.5px);
         }
-        .traffic-light.red { background: #ff5f57; }
-        .traffic-light.yellow { background: #febc2e; }
-        .traffic-light.green { background: #28c840; }
-        .mac-title {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #666;
-            margin-left: 0.5rem;
-            letter-spacing: 0.02em;
-        }
-        .mac-content {
-            border-radius: 0 0 14px 14px;
-            overflow: hidden;
-            border: 1px solid #d0d0d0;
-            border-top: none;
-            background: #fff;
-            line-height: 0;
-        }
-        .mac-content img {
+        .traffic-bar .dot.red { background: #ff5f57; }
+        .traffic-bar .dot.yellow { background: #febc2e; }
+        .traffic-bar .dot.green { background: #28c840; }
+        .screenshot-frame img {
             display: block;
             width: 100%;
             height: auto;
-            transition: transform 0.5s ease;
+            transition: transform 6s ease;
         }
-        .screenshot-card:hover .mac-content img {
+        .screenshot-card:hover .screenshot-frame img {
             transform: scale(1.02);
         }
-        .screenshot-label {
+        .screenshot-caption {
             text-align: center;
-            margin-top: 1rem;
-            font-size: 0.85rem;
-            color: var(--text-muted);
+            margin-top: 1.25rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
             font-weight: 500;
-            transition: color 0.3s ease;
+            letter-spacing: 0.01em;
         }
-        .screenshot-card:hover .screenshot-label {
-            color: var(--primary);
-        }
-        .screenshot-shadow {
-            position: absolute;
-            bottom: -20px;
-            left: 10%;
-            right: 10%;
-            height: 40px;
-            background: radial-gradient(ellipse at center, rgba(0,0,0,0.15) 0%, transparent 70%);
-            border-radius: 50%;
-            filter: blur(8px);
-            pointer-events: none;
-            transition: all 0.3s ease;
-            z-index: -1;
-        }
-        .screenshot-card:hover .screenshot-shadow {
-            left: 5%;
-            right: 5%;
-            height: 50px;
-            background: radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, transparent 70%);
-        }
-        .screenshot-frame-simple {
-            border-radius: 14px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            background: #fff;
-            line-height: 0;
-            box-shadow: var(--shadow);
-            transition: box-shadow 0.3s ease;
-        }
-        .screenshot-card:hover .screenshot-frame-simple {
-            box-shadow: var(--shadow-float);
-        }
-        .screenshot-frame-simple img {
+        .screenshot-caption small {
             display: block;
-            width: 100%;
-            height: auto;
-            transition: transform 0.5s ease;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 400;
+            margin-top: 0.2rem;
         }
-        .screenshot-card:hover .screenshot-frame-simple img {
-            transform: scale(1.02);
+        @media (max-width: 900px) {
+            .screenshot-grid { grid-template-columns: 1fr; gap: 2.5rem; }
         }
+
+
 
         /* ===== SECTIONS COMMON ===== */
         section { padding: 5rem 1.5rem; }
@@ -642,6 +595,13 @@
             margin-bottom: 0.75rem;
             line-height: 1.3;
             color: var(--text);
+            transition: all 0.3s ease;
+        }
+        .section-title:hover {
+            background: linear-gradient(135deg, var(--text), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         .section-desc {
             font-size: 1.05rem;
@@ -750,7 +710,7 @@
             width: 28px; height: 28px;
             stroke-width: 1.5;
         }
-        .feature-card:hover .feature-icon-wrap { transform: scale(1.1) rotate(-4deg); }
+        .feature-card:hover .feature-icon-wrap { transform: scale(1.1) rotate(8deg); }
         .feature-card h3 {
             font-size: 1.15rem;
             font-weight: 700;
@@ -1027,6 +987,9 @@
             transition: all 0.25s ease;
             border: none;
         }
+        .btn:active, .btn-download:active {
+            transform: scale(0.97);
+        }
         .btn-cta-primary {
             background: #fff;
             color: var(--primary);
@@ -1121,8 +1084,7 @@
             .hero-logo-wrap img { max-width: 320px; }
             .hero-logo-ring { display: none; }
             .stats-strip { grid-template-columns: repeat(2, 1fr); }
-            .screenshot-grid { grid-template-columns: 1fr; }
-            .screenshot-card.hero-shot { transform: scale(1); }
+
             .download-recommendation { grid-template-columns: 1fr; text-align: center; }
             .features-grid { grid-template-columns: 1fr; }
             .cap-grid { grid-template-columns: 1fr; }
@@ -1151,12 +1113,21 @@
         }
         @keyframes loader-spin { to { transform: rotate(360deg); } }
 
-        /* ===== PROGRESS BAR ===== */
-        #scroll-progress {
-            position: fixed; top: 0; left: 0; height: 3px;
-            background: linear-gradient(90deg, var(--accent), var(--accent-light));
-            z-index: 10000;
-            width: 0%; transition: width 0.1s linear;
+
+        /* ===== SHIMMER ===== */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .shimmer-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: inherit;
+            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.5) 50%, transparent 100%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s ease-in-out;
+            pointer-events: none;
+            z-index: 10;
         }
 
         /* ===== PARTICLE CANVAS ===== */
@@ -1194,12 +1165,16 @@
 
         /* ===== FAQ SMOOTH ===== */
         .faq-item {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease;
+        }
+        .faq-item:hover {
+            background: var(--bg-alt);
+            border-color: var(--accent-light);
         }
         .faq-item.open {
             box-shadow: var(--shadow);
             border-color: var(--accent);
-            background: var(--bg-card);
+            background: rgba(59,130,246,0.04);
         }
         .faq-answer {
             transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), padding 0.5s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1217,64 +1192,7 @@
             100% { background-position: 0% 50%; }
         }
 
-        /* ===== SCREENSHOT SHOWCASE ===== */
-        .screenshot-showcase {
-            background: linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
-            border-top: 1px solid var(--border-light);
-            border-bottom: 1px solid var(--border-light);
-            padding: 4rem 1.5rem;
-            overflow: hidden;
-        }
-        .macbook-frame {
-            background: #1a1a1a;
-            border-radius: 16px 16px 0 0;
-            padding: 10px 10px 0;
-            box-shadow: 0 25px 80px rgba(0,0,0,0.25), 0 10px 30px rgba(0,0,0,0.15);
-            position: relative;
-        }
-        .macbook-lights {
-            display: flex; gap: 6px; padding: 0 0 10px 6px;
-        }
-        .macbook-lights span {
-            width: 10px; height: 10px; border-radius: 50%;
-        }
-        .ml-red { background: #ff5f57; }
-        .ml-yellow { background: #febc2e; }
-        .ml-green { background: #28c840; }
-        .macbook-base {
-            height: 16px;
-            background: linear-gradient(180deg, #d1d5db 0%, #9ca3af 40%, #6b7280 100%);
-            border-radius: 0 0 8px 8px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            position: relative;
-        }
-        .macbook-base::after {
-            content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-            width: 80px; height: 4px; background: rgba(0,0,0,0.15); border-radius: 0 0 4px 4px;
-        }
-        .macbook-content {
-            background: #fff; border-radius: 4px 4px 0 0; overflow: hidden;
-            line-height: 0;
-        }
-        .macbook-content img {
-            width: 100%; height: auto; display: block;
-        }
-        .screenshot-carousel {
-            display: flex; gap: 2rem; justify-content: center;
-            align-items: flex-end; flex-wrap: wrap;
-        }
-        .screenshot-item {
-            flex: 0 1 auto;
-            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
-        }
-        .screenshot-item.hero-shot { transform: scale(1.08); z-index: 2; }
-        .screenshot-item.hero-shot:hover { transform: scale(1.12); }
-        .screenshot-item.side-shot { transform: scale(0.92); opacity: 0.85; }
-        .screenshot-item.side-shot:hover { transform: scale(0.96); opacity: 1; }
-        .screenshot-label {
-            text-align: center; margin-top: 1rem;
-            font-size: 0.85rem; color: var(--text-muted); font-weight: 500;
-        }
+
 
         /* ===== TESTIMONIALS CAROUSEL ===== */
         .testi-wrapper { position: relative; }
@@ -1287,13 +1205,378 @@
         }
         .testi-dot.active { background: var(--accent); width: 24px; border-radius: 4px; }
 
+        /* ===== CTA FLOATING DOTS ===== */
+        .cta-dots {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+        .cta-dot {
+            position: absolute;
+            width: 3px; height: 3px;
+            background: rgba(255,255,255,0.25);
+            border-radius: 50%;
+            animation: float-dot 10s ease-in-out infinite;
+        }
+        @keyframes float-dot {
+            0%, 100% { transform: translateY(0) translateX(0); opacity: 0.2; }
+            50% { transform: translateY(-30px) translateX(15px); opacity: 0.6; }
+        }
+
         /* ===== BUTTON MAGNETIC ===== */
         .btn-magnetic { position: relative; display: inline-flex; }
+
+        /* ===== MOBILE HOVER FIXES ===== */
+        @media (hover: none) {
+            .feature-card:hover,
+            .screenshot-card:hover,
+            .testi-card:hover,
+            .cap-card:hover,
+            .why-card:hover,
+            .model-pill:hover,
+            .platform-btn:hover,
+            .nav-links a:hover,
+            .nav-cta:hover {
+                transform: none;
+                box-shadow: none;
+            }
+            .feature-card:hover::before { opacity: 0; }
+            .feature-card:hover::after { opacity: 0; }
+            .screenshot-card:hover::after { opacity: 0; }
+            .nav-links a:hover::after { width: 0; }
+            .nav-cta:hover { border-color: var(--border); color: var(--text); }
+            .section-title:hover {
+                background: none;
+                -webkit-background-clip: initial;
+                -webkit-text-fill-color: initial;
+                background-clip: initial;
+                color: var(--text);
+            }
+        }
+        /* ===== TECH STACK ===== */
+        .tech-stack { background: var(--bg); padding: 5rem 1.5rem; }
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+        @media (max-width: 900px) { .tech-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 500px) { .tech-grid { grid-template-columns: 1fr; } }
+        .tech-card {
+            padding: 1.75rem;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-light);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        .tech-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--border);
+        }
+        .tech-icon {
+            width: 44px; height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+        }
+        .tech-card:hover .tech-icon { transform: scale(1.1) rotate(-8deg); }
+        .tech-card h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            color: var(--text);
+        }
+        .tech-card p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* ===== SKILL CATEGORIES ===== */
+        .skill-categories { background: var(--bg-alt); padding: 5rem 1.5rem; }
+        .skill-cat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+        @media (max-width: 900px) { .skill-cat-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 500px) { .skill-cat-grid { grid-template-columns: 1fr; } }
+        .skill-cat-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-light);
+            overflow: hidden;
+            transition: all 0.35s ease;
+        }
+        .skill-cat-card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--border);
+        }
+        .skill-cat-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .skill-cat-icon {
+            width: 36px; height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        .skill-cat-header h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            flex: 1;
+            color: var(--text);
+        }
+        .skill-count {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--accent);
+            background: var(--accent-glow);
+            padding: 0.2rem 0.6rem;
+            border-radius: 999px;
+        }
+        .skill-cat-body {
+            padding: 1rem 1.5rem 1.25rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+        }
+        .skill-tag {
+            font-size: 0.78rem;
+            padding: 0.3rem 0.65rem;
+            border-radius: 6px;
+            background: var(--bg-alt);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-light);
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        .skill-cat-card:hover .skill-tag:hover {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+            transform: translateY(-1px);
+        }
+
+        /* ===== QUICK START ===== */
+        .quick-start { background: var(--bg); padding: 5rem 1.5rem; }
+        .code-showcase {
+            max-width: 800px;
+            margin: 0 auto;
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+        .code-tabs {
+            display: flex;
+            background: var(--bg-alt);
+            border-bottom: 1px solid var(--border);
+        }
+        .code-tab {
+            padding: 0.75rem 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .code-tab:hover { color: var(--text); }
+        .code-tab.active { color: var(--accent); border-bottom-color: var(--accent); background: var(--bg); }
+        .code-blocks { position: relative; }
+        .code-block {
+            display: none;
+            background: var(--primary);
+            color: #e2e8f0;
+        }
+        .code-block.active { display: block; }
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.6rem 1rem;
+            background: rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .code-filename {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-family: 'SF Mono', monospace;
+        }
+        .copy-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.3rem 0.7rem;
+            border-radius: 6px;
+            background: rgba(255,255,255,0.1);
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .copy-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
+        .copy-btn.copied { background: var(--success); color: #fff; }
+        .code-block pre {
+            margin: 0;
+            padding: 1.25rem 1.5rem;
+            overflow-x: auto;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 0.85rem;
+            line-height: 1.7;
+        }
+        .code-block code {
+            font-family: inherit;
+            color: #e2e8f0;
+        }
+        .code-block code .comment { color: #6b7280; }
+        .code-block code .cmd { color: #60a5fa; }
+        .code-block code .arg { color: #fbbf24; }
+
+        /* ===== ARCHITECTURE DIAGRAM ===== */
+        .architecture-section {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #1e293b 100%);
+            color: #fff;
+            padding: 6rem 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .architecture-section::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        .architecture-section .section-title,
+        .architecture-section .section-desc {
+            color: #fff;
+        }
+        .architecture-section .section-label {
+            color: var(--accent-light);
+        }
+        .arch-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 3rem 0;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 1;
+        }
+        .arch-node {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 14px;
+            padding: 1.2rem 1.5rem;
+            text-align: center;
+            min-width: 130px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        .arch-node:hover {
+            background: rgba(255,255,255,0.15);
+            border-color: var(--accent-light);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(59,130,246,0.2);
+        }
+        .arch-node .arch-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .arch-node .arch-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.9);
+        }
+        .arch-arrow {
+            color: var(--accent-light);
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+        .arch-detail {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-top: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+        @media (max-width: 900px) { .arch-detail { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 500px) { .arch-detail { grid-template-columns: 1fr; } }
+        .arch-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 14px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
+        }
+        .arch-card:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.2);
+            transform: translateY(-3px);
+        }
+        .arch-card h4 {
+            font-size: 0.95rem;
+            margin-bottom: 0.75rem;
+            color: var(--accent-light);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .arch-card ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .arch-card li {
+            padding: 0.3rem 0;
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.7);
+            position: relative;
+            padding-left: 1.2rem;
+        }
+        .arch-card li::before {
+            content: '›';
+            position: absolute;
+            left: 0;
+            color: var(--accent-light);
+            font-weight: 700;
+        }
+        .arch-card li code {
+            background: rgba(255,255,255,0.1);
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'SF Mono', monospace;
+            font-size: 0.8rem;
+            color: #fff;
+        }
+
     </style>
 </head>
 <body>
     <div class="page-loader" id="pageLoader"><div class="loader-ring"></div></div>
-    <div id="scroll-progress"></div>
     <!-- NAV -->
     <nav id="navbar">
         <div class="nav-inner">
@@ -1322,7 +1605,7 @@
             <div class="hero-text">
                 <div class="hero-badge fade-up">
                     <span class="pulse-dot"></span>
-                    开源法律 AI 工作台 v0.1.0
+                    开源法律 AI 工作台 <span id="heroBadgeVersion">v0.1.0</span>
                 </div>
                 <h1 class="fade-up delay-1">LegalWork<br><span class="accent-word">法律人工智能工作台</span></h1>
                 <div class="hero-typing fade-up delay-2">
@@ -1335,7 +1618,7 @@
                 <!-- DOWNLOAD ZONE -->
                 <div class="download-zone fade-up delay-4">
                     <div class="download-primary">
-                        <a class="btn-download btn-main magnetic" id="mainDownloadBtn" href="https://github.com/sunyifeisb-art/legalwork/releases/latest" rel="noopener">
+                        <a class="btn-download btn-main magnetic" id="mainDownloadBtn" href="javascript:void(0)" rel="noopener">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                 <polyline points="7 10 12 15 17 10"></polyline>
@@ -1415,7 +1698,7 @@
     </section>
 
     <!-- SCREENSHOT SHOWCASE -->
-    <section class="screenshot-showcase" id="screenshots">
+    <section class="screenshot-showcase">
         <div class="container">
             <div class="section-header fade-up">
                 <div class="section-label">
@@ -1426,37 +1709,49 @@
                 <p class="section-desc">现代化桌面端界面，将法律 AI 能力无缝融入日常工作流。</p>
             </div>
             <div class="screenshot-grid">
-                <div class="screenshot-card fade-up" data-tilt>
-                    <div class="screenshot-inner">
-                        <div class="screenshot-frame-simple">
-                            <img src="legalwork-app-screenshot.png" alt="LegalWork 桌面端工作台界面截图" width="2558" height="1672" loading="lazy" decoding="async" class="parallax-img">
+                <div class="screenshot-card fade-up">
+                    <div class="screenshot-frame">
+                        <div class="traffic-bar">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
                         </div>
-                        <div class="screenshot-shadow"></div>
-                        <div class="screenshot-label">主工作台 · 会话与项目管理</div>
+                        <img src="legalwork-app-screenshot-new.png" alt="全新工作台" width="2532" height="1674" loading="eager">
                     </div>
+                    <div class="screenshot-caption">全新工作台<small>法律调研与技能引擎</small></div>
                 </div>
-                <div class="screenshot-card hero-shot fade-up delay-1" data-tilt>
-                    <div class="macbook-frame">
-                        <div class="macbook-lights">
-                            <span class="ml-red"></span>
-                            <span class="ml-yellow"></span>
-                            <span class="ml-green"></span>
+                <div class="screenshot-card fade-up delay-1">
+                    <div class="screenshot-frame">
+                        <div class="traffic-bar">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
                         </div>
-                        <div class="macbook-content">
-                            <img src="legalwork-app-screenshot-new.png" alt="LegalWork 新界面截图" width="2532" height="1674" loading="eager" decoding="async" class="parallax-img">
-                        </div>
+                        <img src="legalwork-settings-screenshot.png" alt="设置中心" width="1892" height="1658" loading="lazy">
                     </div>
-                    <div class="macbook-base"></div>
-                    <div class="screenshot-label">全新工作台 · 法律调研与技能引擎</div>
+                    <div class="screenshot-caption">设置中心<small>模型与系统配置</small></div>
                 </div>
-                <div class="screenshot-card fade-up delay-2" data-tilt>
-                    <div class="screenshot-inner">
-                        <div class="screenshot-frame-simple">
-                            <img src="legalwork-settings-screenshot.png" alt="LegalWork 设置界面截图" width="1892" height="1658" loading="lazy" decoding="async" class="parallax-img">
+                <div class="screenshot-card fade-up delay-2">
+                    <div class="screenshot-frame">
+                        <div class="traffic-bar">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
                         </div>
-                        <div class="screenshot-shadow"></div>
-                        <div class="screenshot-label">设置中心 · 模型与系统配置</div>
+                        <img src="legalwork-research-screenshot.png" alt="北大法宝MCP法律调研" width="2864" height="1654" loading="lazy">
                     </div>
+                    <div class="screenshot-caption">接入北大法宝MCP法律调研<small>AI 自动调用多源法规引擎完成调研</small></div>
+                </div>
+                <div class="screenshot-card fade-up delay-3">
+                    <div class="screenshot-frame">
+                        <div class="traffic-bar">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                        </div>
+                        <img src="knowledge-base-screenshot.png" alt="agent调用知识库" width="1984" height="1052" loading="lazy">
+                    </div>
+                    <div class="screenshot-caption">agent自动调用知识库内容思考推理<small>按文件夹管理法律资料、论文与案例</small></div>
                 </div>
             </div>
         </div>
@@ -1677,6 +1972,65 @@
         </div>
     </section>
 
+    <!-- TECH STACK -->
+    <section class="tech-stack" id="tech-stack">
+        <div class="container">
+            <div class="section-header fade-up">
+                <div class="section-label">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                    技术栈
+                </div>
+                <h2 class="section-title">现代化全栈技术架构</h2>
+                <p class="section-desc">从 AI 引擎到桌面端，从 OCR 到脱敏，每个环节都采用业界领先的技术方案。</p>
+            </div>
+            <div class="tech-grid">
+                <div class="tech-card fade-up">
+                    <div class="tech-icon" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 12 2.5 7.5"/><path d="M12 12v10"/></svg>
+                    </div>
+                    <h4>AI 引擎</h4>
+                    <p>DeepSeek API / OpenAI API 兼容，模型自由切换</p>
+                </div>
+                <div class="tech-card fade-up delay-1">
+                    <div class="tech-icon" style="background:linear-gradient(135deg,#f59e0b,#d97706);">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    </div>
+                    <h4>OCR 双引擎</h4>
+                    <p>PaddleOCR + Tesseract + PyMuPDF，多格式扫描件识别</p>
+                </div>
+                <div class="tech-card fade-up delay-2">
+                    <div class="tech-icon" style="background:linear-gradient(135deg,#ec4899,#db2777);">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    </div>
+                    <h4>智能脱敏</h4>
+                    <p>正则 + NER + 策略引擎，5 种脱敏模式，PDF 坐标级涂黑</p>
+                </div>
+                <div class="tech-card fade-up">
+                    <div class="tech-icon" style="background:linear-gradient(135deg,#10b981,#059669);">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                    </div>
+                    <h4>桌面端</h4>
+                    <p>Electron + TypeScript + React，本地优先 Agent 运行时</p>
+                </div>
+                <div class="tech-card fade-up delay-1">
+                    <div class="tech-icon" style="background:linear-gradient(135deg,#3b82f6,#2563eb);">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                    </div>
+                    <h4>数据存储</h4>
+                    <p>SQLite + JSONL，结构化存储与日志记录</p>
+                </div>
+                <div class="tech-card fade-up delay-2">
+                    <div class="tech-icon" style="background:linear-gradient(135deg,#6366f1,#4f46e5);">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                    </div>
+                    <h4>协议集成</h4>
+                    <p>HTTP/SSE + MCP 协议，RESTful API + RAG 检索</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
     <!-- WHY CHOOSE -->
     <section class="why-choose" id="why">
         <div class="container">
@@ -1730,6 +2084,317 @@
                         开源可扩展
                     </h4>
                     <p>基于 MIT 许可证开源，支持自定义技能开发、MCP 工具服务器扩展，打造属于你的法律 AI 工作流。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SKILL CATEGORIES -->
+    <section class="skill-categories" id="skills">
+        <div class="container">
+            <div class="section-header fade-up">
+                <div class="section-label">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    技能分类
+                </div>
+                <h2 class="section-title">69 项法律 AI 技能全景</h2>
+                <p class="section-desc">覆盖案件分析、裁判预测、文书起草、法律检索、合规风控、案件管理 6 大领域。</p>
+            </div>
+            <div class="skill-cat-grid">
+                <div class="skill-cat-card fade-up">
+                    <div class="skill-cat-header">
+                        <span class="skill-cat-icon" style="background:rgba(59,130,246,0.1);color:var(--accent);">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 12 2.5 7.5"/><path d="M12 12v10"/></svg>
+                        </span>
+                        <h4>案件分析与推理</h4>
+                        <span class="skill-count">17 项</span>
+                    </div>
+                    <div class="skill-cat-body">
+                        <span class="skill-tag">案情综合分析</span>
+                        <span class="skill-tag">事实抽取</span>
+                        <span class="skill-tag">证据评估</span>
+                        <span class="skill-tag">证据链构建</span>
+                        <span class="skill-tag">演绎推理</span>
+                        <span class="skill-tag">归纳推理</span>
+                        <span class="skill-tag">类比推理</span>
+                        <span class="skill-tag">法律溯因</span>
+                        <span class="skill-tag">体系解释</span>
+                        <span class="skill-tag">目的解释</span>
+                        <span class="skill-tag">司法价值判断</span>
+                        <span class="skill-tag">形式法律后果</span>
+                    </div>
+                </div>
+                <div class="skill-cat-card fade-up delay-1">
+                    <div class="skill-cat-header">
+                        <span class="skill-cat-icon" style="background:rgba(16,185,129,0.1);color:#10b981;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 12 2.5 7.5"/><path d="M12 12v10"/></svg>
+                        </span>
+                        <h4>裁判预测与评估</h4>
+                        <span class="skill-count">7 项</span>
+                    </div>
+                    <div class="skill-cat-body">
+                        <span class="skill-tag">裁判结果预测</span>
+                        <span class="skill-tag">法律风险评估</span>
+                        <span class="skill-tag">战略风险排序</span>
+                        <span class="skill-tag">合规风险识别</span>
+                        <span class="skill-tag">争议解决方案</span>
+                        <span class="skill-tag">争议焦点识别</span>
+                        <span class="skill-tag">履约风险分析</span>
+                    </div>
+                </div>
+                <div class="skill-cat-card fade-up delay-2">
+                    <div class="skill-cat-header">
+                        <span class="skill-cat-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        </span>
+                        <h4>法律文书</h4>
+                        <span class="skill-count">12 项</span>
+                    </div>
+                    <div class="skill-cat-body">
+                        <span class="skill-tag">文书起草</span>
+                        <span class="skill-tag">格式规范化</span>
+                        <span class="skill-tag">文书摘要</span>
+                        <span class="skill-tag">判决文书生成</span>
+                        <span class="skill-tag">法律备忘录</span>
+                        <span class="skill-tag">评估报告</span>
+                        <span class="skill-tag">去 AI 痕迹</span>
+                        <span class="skill-tag">论文选题</span>
+                        <span class="skill-tag">会议纪要</span>
+                        <span class="skill-tag">案件笔记</span>
+                    </div>
+                </div>
+                <div class="skill-cat-card fade-up">
+                    <div class="skill-cat-header">
+                        <span class="skill-cat-icon" style="background:rgba(99,102,241,0.1);color:#6366f1;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        </span>
+                        <h4>法律检索与研究</h4>
+                        <span class="skill-count">7 项</span>
+                    </div>
+                    <div class="skill-cat-body">
+                        <span class="skill-tag">法律研究</span>
+                        <span class="skill-tag">法条检索</span>
+                        <span class="skill-tag">案例检索</span>
+                        <span class="skill-tag">来源验证</span>
+                        <span class="skill-tag">条文核验</span>
+                        <span class="skill-tag">规范效力审查</span>
+                        <span class="skill-tag">新法分析</span>
+                    </div>
+                </div>
+                <div class="skill-cat-card fade-up delay-1">
+                    <div class="skill-cat-header">
+                        <span class="skill-cat-icon" style="background:rgba(236,72,153,0.1);color:#ec4899;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        </span>
+                        <h4>合规与风控</h4>
+                        <span class="skill-count">6 项</span>
+                    </div>
+                    <div class="skill-cat-body">
+                        <span class="skill-tag">合规审查</span>
+                        <span class="skill-tag">合同风险审查</span>
+                        <span class="skill-tag">尽职调查</span>
+                        <span class="skill-tag">AI 研发合规</span>
+                        <span class="skill-tag">数据合规</span>
+                        <span class="skill-tag">创作者权益</span>
+                    </div>
+                </div>
+                <div class="skill-cat-card fade-up delay-2">
+                    <div class="skill-cat-header">
+                        <span class="skill-cat-icon" style="background:rgba(14,165,233,0.1);color:#0ea5e9;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        </span>
+                        <h4>案件管理</h4>
+                        <span class="skill-count">20 项</span>
+                    </div>
+                    <div class="skill-cat-body">
+                        <span class="skill-tag">案件管理</span>
+                        <span class="skill-tag">生命周期规划</span>
+                        <span class="skill-tag">案件检索</span>
+                        <span class="skill-tag">庭审排期</span>
+                        <span class="skill-tag">时间线生成</span>
+                        <span class="skill-tag">诉讼预算</span>
+                        <span class="skill-tag">客户沟通</span>
+                        <span class="skill-tag">知识分享</span>
+                        <span class="skill-tag">职业成长</span>
+                        <span class="skill-tag">时间管理</span>
+                        <span class="skill-tag">术语解释</span>
+                        <span class="skill-tag">要素提取</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- QUICK START -->
+    <section class="quick-start" id="quick-start">
+        <div class="container">
+            <div class="section-header fade-up">
+                <div class="section-label">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                    快速开始
+                </div>
+                <h2 class="section-title">三步上手 LegalWork</h2>
+                <p class="section-desc">命令行、桌面端两种方式，灵活适配你的工作流。</p>
+            </div>
+            <div class="code-showcase">
+                <div class="code-tabs">
+                    <button class="code-tab active" data-tab="cli" onclick="switchTab('cli')">命令行</button>
+                    <button class="code-tab" data-tab="desktop" onclick="switchTab('desktop')">桌面端</button>
+                </div>
+                <div class="code-blocks">
+                    <div class="code-block active" id="cli-block">
+                        <div class="code-header">
+                            <span class="code-filename">Terminal</span>
+                            <button class="copy-btn" onclick="copyCode(this)">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                复制
+                            </button>
+                        </div>
+                        <pre><code># 安装依赖
+pip install -r requirements.txt
+
+# OCR 依赖（可选）
+pip install paddleocr pytesseract pymupdf
+
+# 运行 OCR
+python3 ocr_agent.py auto 文档.pdf
+
+# 运行脱敏
+python3 redact_agent.py 文档.docx
+
+# 运行技能
+python3 run_skill.py legal-case-analysis 案件材料.pdf</code></pre>
+                    </div>
+                    <div class="code-block" id="desktop-block">
+                        <div class="code-header">
+                            <span class="code-filename">Terminal</span>
+                            <button class="copy-btn" onclick="copyCode(this)">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                复制
+                            </button>
+                        </div>
+                        <pre><code>cd apps/desktop-legalwork
+
+# 安装依赖
+npm install
+
+# 开发模式
+npm run dev
+
+# 构建
+npm run build
+
+# 启动服务
+legalwork serve --data-dir ~/.legalwork</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ARCHITECTURE -->
+    <section class="architecture-section" id="architecture">
+        <div class="container">
+            <div class="section-header fade-up">
+                <div class="section-label">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                    技术架构
+                </div>
+                <h2 class="section-title">从文档到洞察的完整流水线</h2>
+                <p class="section-desc">本地优先、模型无关、可扩展的现代化法律 AI 架构，每个环节都经过精心设计。</p>
+            </div>
+            <div class="arch-flow fade-up">
+                <div class="arch-node">
+                    <div class="arch-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    </div>
+                    <div class="arch-name">文档输入</div>
+                </div>
+                <div class="arch-arrow">→</div>
+                <div class="arch-node">
+                    <div class="arch-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+                    </div>
+                    <div class="arch-name">OCR 识别</div>
+                </div>
+                <div class="arch-arrow">→</div>
+                <div class="arch-node">
+                    <div class="arch-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    </div>
+                    <div class="arch-name">脱敏处理</div>
+                </div>
+                <div class="arch-arrow">→</div>
+                <div class="arch-node">
+                    <div class="arch-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                    </div>
+                    <div class="arch-name">技能引擎</div>
+                </div>
+                <div class="arch-arrow">→</div>
+                <div class="arch-node">
+                    <div class="arch-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 12 2.5 7.5"/><path d="M12 12v10"/></svg>
+                    </div>
+                    <div class="arch-name">AI 推理</div>
+                </div>
+                <div class="arch-arrow">→</div>
+                <div class="arch-node">
+                    <div class="arch-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                    </div>
+                    <div class="arch-name">结构化输出</div>
+                </div>
+            </div>
+            <div class="arch-detail">
+                <div class="arch-card fade-up">
+                    <h4>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                        AI 引擎层
+                    </h4>
+                    <ul>
+                        <li>DeepSeek API 兼容</li>
+                        <li>OpenAI API 兼容</li>
+                        <li>模型无关设计</li>
+                        <li>子代理任务委派</li>
+                    </ul>
+                </div>
+                <div class="arch-card fade-up delay-1">
+                    <h4>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                        协议与集成
+                    </h4>
+                    <ul>
+                        <li>HTTP/SSE 实时事件</li>
+                        <li>MCP 工具服务器</li>
+                        <li>RESTful API</li>
+                        <li>RAG 知识库检索</li>
+                    </ul>
+                </div>
+                <div class="arch-card fade-up delay-2">
+                    <h4>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        数据处理
+                    </h4>
+                    <ul>
+                        <li>PaddleOCR / Tesseract</li>
+                        <li>PyMuPDF 文档解析</li>
+                        <li>语义分块与增强</li>
+                        <li>Cache-first 架构</li>
+                    </ul>
+                </div>
+                <div class="arch-card fade-up delay-3">
+                    <h4>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                        存储与记忆
+                    </h4>
+                    <ul>
+                        <li>SQLite 结构化存储</li>
+                        <li>JSONL 日志记录</li>
+                        <li>长期记忆系统</li>
+                        <li>线程管理与 Fork</li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -1867,6 +2532,7 @@
 
     <!-- CTA -->
     <section class="cta">
+        <div class="cta-dots" id="ctaDots"></div>
         <div class="cta-inner">
             <h2 class="fade-up">开始你的法律 AI 之旅</h2>
             <p class="fade-up delay-1">加入开源社区，与法律科技同行一起探索 AI 赋能的无限可能。</p>
@@ -1990,17 +2656,48 @@
         }
 
         async function loadLatestRelease() {
+            async function tryFetch(attempt) {
+                try {
+                    const controller = new AbortController();
+                    const timeout = setTimeout(() => controller.abort(), 8000);
+                    const response = await fetch(latestReleaseApiUrl, {
+                        headers: { Accept: 'application/vnd.github+json' },
+                        cache: 'no-store',
+                        signal: controller.signal
+                    });
+                    clearTimeout(timeout);
+                    if (!response.ok) throw new Error(`GitHub API ${response.status}`);
+                    const data = await response.json();
+                    if (!Array.isArray(data.assets)) throw new Error('Release assets missing');
+                    try {
+                        localStorage.setItem('lw_release_cache', JSON.stringify({
+                            data,
+                            ts: Date.now()
+                        }));
+                    } catch (e) {}
+                    return data;
+                } catch (err) {
+                    if (attempt < 2) {
+                        await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+                        return tryFetch(attempt + 1);
+                    }
+                    throw err;
+                }
+            }
+            function loadCache() {
+                try {
+                    const raw = localStorage.getItem('lw_release_cache');
+                    if (!raw) return null;
+                    const cached = JSON.parse(raw);
+                    if (Date.now() - cached.ts > 60 * 60 * 1000) return null; // 1 hour cache
+                    return cached.data;
+                } catch (e) { return null; }
+            }
             try {
-                const response = await fetch(latestReleaseApiUrl, {
-                    headers: { Accept: 'application/vnd.github+json' },
-                    cache: 'no-store'
-                });
-                if (!response.ok) throw new Error(`GitHub API ${response.status}`);
-                const data = await response.json();
-                if (!Array.isArray(data.assets)) throw new Error('Release assets missing');
-                releaseData = data;
-            } catch (error) {
-                releaseData = null;
+                releaseData = await tryFetch(0);
+            } catch (err) {
+                releaseData = loadCache();
+                if (!releaseData) console.warn('GitHub API unavailable and no cache');
             }
         }
 
@@ -2014,15 +2711,18 @@
             const releaseChip = document.getElementById('releaseChip');
             const profile = platformProfiles[currentPlatform] || platformProfiles.source;
             const asset = findReleaseAsset(currentPlatform);
+            const tag = releaseData?.tag_name || '';
 
             document.querySelectorAll('.platform-btn').forEach(p => {
                 p.classList.toggle('active', p.dataset.platform === currentPlatform);
             });
 
-            releaseChip.textContent = releaseData?.tag_name || 'latest';
+            releaseChip.textContent = tag || 'latest';
             if (detected) detected.textContent = profile.osLabel;
             recommendedTitle.textContent = `推荐：${profile.label}`;
-            recommendedDetail.textContent = profile.recommendation;
+            recommendedDetail.textContent = tag
+                ? `${profile.recommendation} · 版本 ${tag}`
+                : profile.recommendation;
             btn.classList.remove('is-disabled');
 
             if (currentPlatform === 'source') {
@@ -2035,18 +2735,24 @@
             }
 
             if (!asset) {
-                text.textContent = releaseData ? '查看 GitHub Release' : '打开最新 Release';
-                meta.innerHTML = releaseData
-                    ? `${profile.label} 暂未在当前 Release 中找到安装包 · <span style="color:var(--text-muted)">前往 Release 查看</span>`
-                    : '动态读取最新安装包；若浏览器限制 GitHub API，将打开最新 Release 页面';
+                // Try to build a download URL from known release tag even without asset match
+                if (tag) {
+                    text.textContent = `下载 ${tag} · ${profile.label}`;
+                    meta.innerHTML = `${profile.label} 安装包暂未匹配 · <span style="color:var(--text-muted)">前往 GitHub 手动下载</span>`;
+                } else {
+                    text.textContent = '前往 GitHub 下载';
+                    meta.innerHTML = '动态读取最新安装包中...';
+                }
                 btn.href = releaseData?.html_url || latestReleaseUrl;
                 btn.removeAttribute('download');
                 btn.target = '_blank';
                 return;
             }
 
-            text.textContent = `下载 ${profile.label}`;
-            meta.innerHTML = `来源：GitHub Release · <span style="color:var(--text-muted)">${asset.name}</span>`;
+            text.textContent = `下载 ${tag || '最新版'} · ${profile.label}`;
+            const dlCount = asset.download_count || 0;
+            const dlText = dlCount > 0 ? `<span class="dl-count">下载量 ${dlCount.toLocaleString()}</span>` : '';
+            meta.innerHTML = `GitHub Release ${dlText} · <span style="color:var(--text-muted)">${asset.name}</span>`;
             btn.href = asset.browser_download_url;
             btn.removeAttribute('download');
             btn.removeAttribute('target');
@@ -2109,20 +2815,7 @@
         }
         initTilt();
 
-        // ===== MOUSE-FOLLOWING GRADIENT GLOW =====
-        const heroGlow = document.getElementById('heroGlow');
-        const heroSection = document.querySelector('.hero');
-        if (heroGlow && heroSection) {
-            heroSection.addEventListener('mousemove', (e) => {
-                const rect = heroSection.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                heroGlow.style.left = `${x}px`;
-                heroGlow.style.top = `${y}px`;
-            });
-        }
 
-        // ===== COUNTER ANIMATION =====
         function animateCounters() {
             const counters = document.querySelectorAll('.stat-number');
             const counterObserver = new IntersectionObserver((entries) => {
@@ -2250,18 +2943,7 @@
         }
         initParticles();
 
-        // ===== SCROLL PROGRESS =====
-        function initProgress() {
-            const bar = document.getElementById('scroll-progress');
-            if (!bar) return;
-            window.addEventListener('scroll', () => {
-                const scrollTop = window.scrollY;
-                const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-                const progress = (scrollTop / docHeight) * 100;
-                bar.style.width = progress + '%';
-            }, { passive: true });
-        }
-        initProgress();
+
 
         // ===== PAGE LOADER =====
         function initLoader() {
@@ -2303,6 +2985,66 @@
             });
         }
         initHeroGlow();
+
+        // ===== HERO LOGO PARALLAX =====
+        function initHeroParallax() {
+            const heroLogo = document.querySelector('.hero-logo-wrap');
+            const hero = document.querySelector('.hero');
+            if (!heroLogo || !hero) return;
+            window.addEventListener('scroll', () => {
+                const scrollY = window.scrollY;
+                const heroHeight = hero.offsetHeight;
+                if (scrollY < heroHeight) {
+                    heroLogo.style.transform = `translateY(${scrollY * 0.12}px)`;
+                }
+            });
+        }
+        initHeroParallax();
+
+        // ===== BUTTON PULSE =====
+        function initButtonPulse() {
+            document.querySelectorAll('.btn, .btn-download').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    btn.style.transform = 'scale(0.97)';
+                    setTimeout(() => {
+                        btn.style.transform = '';
+                    }, 150);
+                });
+            });
+        }
+        initButtonPulse();
+
+        // ===== CTA FLOATING DOTS =====
+        function initCtaDots() {
+            const container = document.getElementById('ctaDots');
+            if (!container) return;
+            for (let i = 0; i < 20; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'cta-dot';
+                dot.style.left = Math.random() * 100 + '%';
+                dot.style.top = Math.random() * 100 + '%';
+                dot.style.animationDelay = (Math.random() * 10) + 's';
+                dot.style.animationDuration = (8 + Math.random() * 6) + 's';
+                container.appendChild(dot);
+            }
+        }
+        initCtaDots();
+
+        // ===== CARD SHIMMER ON LOAD =====
+        function initShimmer() {
+            const selectors = ['.feature-card', '.screenshot-card', '.testi-card'];
+            selectors.forEach(sel => {
+                document.querySelectorAll(sel).forEach(card => {
+                    const overlay = document.createElement('div');
+                    overlay.className = 'shimmer-overlay';
+                    card.appendChild(overlay);
+                    setTimeout(() => overlay.remove(), 1600);
+                });
+            });
+        }
+        window.addEventListener('load', () => {
+            setTimeout(initShimmer, 400);
+        });
 
         // ===== PARALLAX SCROLL =====
         function initParallax() {
@@ -2358,10 +3100,69 @@
         // ===== INIT =====
         (async function init() {
             currentPlatform = await detectDeviceProfile();
+            let cachedTag = null;
+            // Load cache first for immediate display (1 hour cache)
+            try {
+                const raw = localStorage.getItem('lw_release_cache');
+                if (raw) {
+                    const cached = JSON.parse(raw);
+                    if (Date.now() - cached.ts < 60 * 60 * 1000) {
+                        releaseData = cached.data;
+                        cachedTag = cached.data?.tag_name;
+                    }
+                }
+            } catch (e) {}
+            // Update badge version
+            function updateBadgeVersion(tag) {
+                const badge = document.getElementById('heroBadgeVersion');
+                if (badge && tag) badge.textContent = tag;
+            }
+            updateBadgeVersion(cachedTag);
             updateDownloadUI();
             await loadLatestRelease();
+            // Check if new version detected
+            const newTag = releaseData?.tag_name;
+            updateBadgeVersion(newTag);
+            if (cachedTag && newTag && cachedTag !== newTag) {
+                // Flash the version chip to indicate update
+                const chip = document.getElementById('releaseChip');
+                if (chip) {
+                    chip.style.background = 'linear-gradient(135deg, #3b82f6, #8b5cf6)';
+                    chip.style.color = '#fff';
+                    chip.style.animation = 'pulse-dot 1s ease 3';
+                    chip.textContent = newTag;
+                }
+                // Show toast notification
+                const toast = document.createElement('div');
+                toast.style.cssText = 'position:fixed;bottom:2rem;right:2rem;z-index:10000;background:var(--primary);color:#fff;padding:1rem 1.5rem;border-radius:12px;font-size:0.9rem;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.2);animation:fadeInUp 0.5s ease;';
+                toast.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>新版本 ' + newTag + ' 已发布！';
+                document.body.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.transition = 'opacity 0.5s ease';
+                    toast.style.opacity = '0';
+                    setTimeout(() => toast.remove(), 500);
+                }, 4000);
+            }
             updateDownloadUI();
         })();
+        // ===== TAB SWITCH =====
+        function switchTab(tab) {
+            document.querySelectorAll('.code-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+            document.querySelectorAll('.code-block').forEach(b => b.classList.toggle('active', b.id === tab + '-block'));
+        }
+        // ===== COPY CODE =====
+        function copyCode(btn) {
+            const block = btn.closest('.code-block').querySelector('code');
+            navigator.clipboard.writeText(block.textContent).then(() => {
+                btn.classList.add('copied');
+                btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>已复制';
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>复制';
+                }, 2000);
+            });
+        }
+
     </script>
 </body>
 </html>

@@ -1,0 +1,19 @@
+{
+  "name": "find-skills",
+  "description": "发现、筛选和安装 Agent Skills：当用户想找某类 skill、扩展软件能力、搜索可复用工作流或集成外部 skill 仓库时使用。",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/find-skills",
+      "/skills-find"
+    ],
+    "promptPatterns": [
+      "找.*skill|搜索.*skill|安装.*skill|有没有.*skill|集成.*skill|扩展.*能力|agent skills|find.*skills|install.*skills"
+    ],
+    "fileTypes": []
+  },
+  "allowedTools": [],
+  "assets": [],
+  "priority": 90
+}

@@ -62,6 +62,8 @@ export type GuiSkillRoot = {
   scope: GuiSkillScope
 }
 
+const SKILL_PACKAGE_SCAN_DEPTH = 5
+
 export async function guiSkillRootsForRuntime(
   settings: AppSettingsV1 | undefined,
   workspaceRootOverride?: string
@@ -116,7 +118,7 @@ export async function listGuiSkills(
     const skills: GuiSkillSummary[] = []
     const validationErrors: Array<{ root: string; message: string }> = []
     for (const root of roots) {
-      const candidates = await packageCandidates(root.path).catch((error) => {
+      const candidates = await packageCandidates(root.path, SKILL_PACKAGE_SCAN_DEPTH).catch((error) => {
         validationErrors.push({ root: root.path, message: errorMessage(error) })
         return []
       })
@@ -152,6 +154,7 @@ async function discoverComputerWideSkillRoots(): Promise<string[]> {
   const roots: string[] = []
   const userHome = homedir()
   const knownPaths = [
+    join(userHome, '.claude', 'skills'),
     join(userHome, '.codex', 'skills'),
     join(userHome, '.agents', 'skills'),
     join(userHome, '.legalwork', 'skills'),
@@ -240,17 +243,22 @@ function skillRootHasPackages(root: string): boolean {
   }
 }
 
-async function packageCandidates(root: string): Promise<string[]> {
+async function packageCandidates(root: string, maxDepth: number): Promise<string[]> {
   const candidates = new Set<string>()
   if (existsSync(join(root, 'skill.json')) || existsSync(join(root, 'SKILL.md'))) {
     candidates.add(root)
   }
+  if (maxDepth <= 0) return [...candidates]
   const entries = await readdir(root, { withFileTypes: true })
   for (const entry of entries) {
-    if (!entry.isDirectory()) continue
+    if (!entry.isDirectory() || shouldSkipSkillPackageDirectory(entry.name)) continue
     const dir = join(root, entry.name)
     if (existsSync(join(dir, 'skill.json')) || existsSync(join(dir, 'SKILL.md'))) {
       candidates.add(dir)
+      continue
+    }
+    for (const child of await packageCandidates(dir, maxDepth - 1)) {
+      candidates.add(child)
     }
   }
   return [...candidates]
@@ -272,7 +280,7 @@ async function loadSkillSummary(root: string, scope: GuiSkillScope): Promise<Gui
   const entry = stringValue(manifest.entry) || 'SKILL.md'
   const legacy = !hasManifest
 
-  let frontmatter: { id?: string; name?: string; description?: string } = {}
+  let frontmatter: { id?: string; name?: string; description?: string; taskId?: string } = {}
   if (hasEntry) {
     const content = await readFile(entryPath, 'utf8')
     frontmatter = readFrontmatter(content)
@@ -297,7 +305,7 @@ async function loadSkillSummary(root: string, scope: GuiSkillScope): Promise<Gui
     description = manifestDescription || frontmatter.description || undefined
   }
 
-  const id = slug(manifestId || frontmatter.id || (legacy ? basename(root) : name || basename(root)))
+  const id = slug(manifestId || frontmatter.id || frontmatter.taskId || (legacy ? basename(root) : name || basename(root)))
 
   return {
     id,
@@ -310,14 +318,24 @@ async function loadSkillSummary(root: string, scope: GuiSkillScope): Promise<Gui
   }
 }
 
-function readFrontmatter(content: string): { id?: string; name?: string; description?: string } {
+function shouldSkipSkillPackageDirectory(name: string): boolean {
+  return name.startsWith('.') ||
+    name === '__pycache__' ||
+    name === 'node_modules' ||
+    name === '.venv' ||
+    name === 'venv' ||
+    name === '_template'
+}
+
+function readFrontmatter(content: string): { id?: string; name?: string; description?: string; taskId?: string } {
   const match = /^---\r?\n([\s\S]*?)\r?\n---/.exec(content)
   if (!match) return { description: firstMarkdownParagraph(content) }
   const yaml = match[1] ?? ''
   return {
     id: frontmatterString(yaml, 'id'),
     name: frontmatterString(yaml, 'name'),
-    description: frontmatterString(yaml, 'description') || firstMarkdownParagraph(content.slice(match[0].length))
+    description: frontmatterString(yaml, 'description') || firstMarkdownParagraph(content.slice(match[0].length)),
+    taskId: frontmatterString(yaml, 'task_id')
   }
 }
 

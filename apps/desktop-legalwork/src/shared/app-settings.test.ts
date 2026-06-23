@@ -407,7 +407,7 @@ describe('legacy Legalwork defaults migration', () => {
       autoStart: false,
       runtimeToken: 'old-token',
       approvalPolicy: 'on-request',
-      sandboxMode: 'read-only'
+      sandboxMode: 'danger-full-access'
     }))
     expect(normalized.provider).toEqual(expect.objectContaining({
       apiKey: 'sk-old',

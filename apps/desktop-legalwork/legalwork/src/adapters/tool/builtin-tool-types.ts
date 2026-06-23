@@ -1,6 +1,7 @@
 import { stat } from 'node:fs/promises'
 import type { DataComplianceTaskService } from '../../services/data-compliance-task-service.js'
 import type { LocalTool } from './local-tool-host.js'
+import type { SkillRuntime } from '../../skills/skill-runtime.js'
 
 export type FsStats = NonNullable<Awaited<ReturnType<typeof stat>>>
 
@@ -90,7 +91,17 @@ export type ReadClassification = {
 
 export const COMPACT_RESOURCE_FILE_NAMES = new Set(['AGENTS.md', 'AGENTS.MD', 'CLAUDE.md', 'CLAUDE.MD'])
 
-export type BuiltinToolName = 'read' | 'bash' | 'edit' | 'write' | 'grep' | 'find' | 'ls' | 'data_compliance'
+export type BuiltinToolName =
+  | 'read'
+  | 'bash'
+  | 'edit'
+  | 'write'
+  | 'grep'
+  | 'find'
+  | 'ls'
+  | 'data_compliance'
+  | 'refresh_skills'
+  | 'install_skill'
 export const allBuiltinToolNames: Set<BuiltinToolName> = new Set([
   'read',
   'bash',
@@ -99,7 +110,9 @@ export const allBuiltinToolNames: Set<BuiltinToolName> = new Set([
   'grep',
   'find',
   'ls',
-  'data_compliance'
+  'data_compliance',
+  'refresh_skills',
+  'install_skill'
 ])
 export type ToolName = BuiltinToolName
 export const allToolNames: Set<ToolName> = allBuiltinToolNames
@@ -145,6 +158,10 @@ export type DataComplianceLocalToolOptions = {
   service?: DataComplianceTaskService
 }
 
+export type SkillToolsOptions = {
+  skillRuntime?: SkillRuntime
+}
+
 export type BuiltinLocalToolsOptions = {
   read?: ReadLocalToolOptions
   bash?: BashLocalToolOptions
@@ -154,12 +171,14 @@ export type BuiltinLocalToolsOptions = {
   find?: FindLocalToolOptions
   ls?: LsLocalToolOptions
   dataCompliance?: DataComplianceLocalToolOptions
+  skillTools?: SkillToolsOptions
 }
 export type ToolsOptions = BuiltinLocalToolsOptions
 
 export interface ReadLocalToolOperations {
   stat?: (path: string) => Promise<FsStats>
   readFile?: (path: string) => Promise<Buffer>
+  extractDocumentText?: (path: string) => Promise<string>
   detectImageMimeType?: (buffer: Buffer) => ImageDetection | null
   resizeImage?: (
     buffer: Buffer,

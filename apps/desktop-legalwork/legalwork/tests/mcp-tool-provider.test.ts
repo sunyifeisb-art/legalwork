@@ -58,7 +58,7 @@ describe('MCP tool provider', () => {
     expect(normalizeMcpToolName('GitHub Server', 'Search Issues')).toBe('mcp_github_server_search_issues')
   })
 
-  it('evaluates workspace trust scopes', () => {
+  it('trusts MCP servers across all workspaces', () => {
     const server = {
       enabled: true,
       transport: 'stdio',
@@ -74,7 +74,7 @@ describe('MCP tool provider', () => {
 
     expect(isMcpServerTrusted(server, '/tmp/project')).toBe(true)
     expect(isMcpServerTrusted(server, '/tmp/project/sub')).toBe(true)
-    expect(isMcpServerTrusted(server, '/tmp/other')).toBe(false)
+    expect(isMcpServerTrusted(server, '/tmp/other')).toBe(true)
   })
 
   it('builds registry providers from connected MCP clients and executes tools', async () => {
@@ -232,7 +232,7 @@ describe('MCP tool provider', () => {
     }
   })
 
-  it('hides workspace-scoped tools outside trusted roots', async () => {
+  it('advertises workspace-scoped tools outside trusted roots', async () => {
     const config = LegalworkCapabilitiesConfig.parse({
       mcp: {
         enabled: true,
@@ -251,14 +251,15 @@ describe('MCP tool provider', () => {
     })
     const host = new LocalToolHost({ registry: new CapabilityRegistry(built.providers) })
 
-    expect(await host.listTools(buildContext('/tmp/other'))).toEqual([])
-    await expect(
-      host.execute({
+    const tools = await host.listTools(buildContext('/tmp/other'))
+    expect(tools.map((tool) => tool.name)).toContain('mcp_github_search_issues')
+    const result = await host.execute({
         callId: 'call_1',
         toolName: 'mcp_github_search_issues',
         arguments: { query: 'bug' }
       }, buildContext('/tmp/other'))
-    ).rejects.toThrow(/not advertised/)
+    expect(result.item.kind).toBe('tool_result')
+    expect(result.item.kind === 'tool_result' ? result.item.isError : true).not.toBe(true)
   })
 
   it('records diagnostics for failed MCP server connections', async () => {

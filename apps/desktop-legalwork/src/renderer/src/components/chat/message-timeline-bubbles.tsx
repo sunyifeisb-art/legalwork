@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { useTranslation } from 'react-i18next'
-import { Check, ChevronDown, ChevronRight, Copy, FileEdit, ImageIcon, Loader2, MessageSquareQuote, PencilLine, Terminal, Wrench } from 'lucide-react'
+import { Check, ChevronDown, ChevronRight, Copy, FileEdit, FileText, ImageIcon, Loader2, MessageSquareQuote, PencilLine, Terminal, Wrench } from 'lucide-react'
 import type { AttachmentReference, ChatBlock, RuntimeDisclosureMetadata, ToolBlock, UserInputAnswer, UserInputQuestion } from '../../agent/types'
 import { extractUnifiedDiffText } from '../../lib/diff-stats'
 import { useChatStore } from '../../store/chat-store'
@@ -266,7 +266,12 @@ function UserAttachmentPreviews({
   const [resolvedPreviewUrls, setResolvedPreviewUrls] = useState<Record<string, string>>({})
   const [failedPreviewIds, setFailedPreviewIds] = useState<Record<string, true>>({})
   const missingPreviewKey = attachments
-    .filter((attachment) => !attachment.previewUrl && !resolvedPreviewUrls[attachment.id] && !failedPreviewIds[attachment.id])
+    .filter((attachment) =>
+      isImageAttachment(attachment) &&
+      !attachment.previewUrl &&
+      !resolvedPreviewUrls[attachment.id] &&
+      !failedPreviewIds[attachment.id]
+    )
     .map((attachment) => attachment.id)
     .join('\n')
 
@@ -283,7 +288,9 @@ function UserAttachmentPreviews({
             ...(activeThreadId ? { threadId: activeThreadId } : {}),
             ...(workspaceRoot ? { workspace: workspaceRoot } : {})
           })
-          if (!content) return { id, failed: true as const }
+          if (!content || !content.attachment.mimeType.toLowerCase().startsWith('image/')) {
+            return { id, failed: true as const }
+          }
           return {
             id,
             previewUrl: `data:${content.attachment.mimeType};base64,${content.dataBase64}`
@@ -324,19 +331,25 @@ function UserAttachmentPreviews({
         {attachments.map((attachment) => {
           const previewUrl = attachment.previewUrl ?? resolvedPreviewUrls[attachment.id]
           const title = attachment.name || attachment.id
+          const showImage = isImageAttachment(attachment) && previewUrl
           return (
             <span
               key={attachment.id}
-              className="block h-28 w-36 overflow-hidden rounded-[14px] border border-ds-border-muted bg-ds-card shadow-sm"
+              className={`${showImage ? 'block h-28 w-36 overflow-hidden' : 'inline-flex h-8 max-w-52 items-center gap-1.5 px-2.5'} rounded-[14px] border border-ds-border-muted bg-ds-card text-[12px] font-medium text-ds-muted shadow-sm`}
               title={title}
             >
-              {previewUrl ? (
+              {showImage ? (
                 <img
                   src={previewUrl}
                   alt={title}
                   className="h-full w-full object-cover"
                   loading="lazy"
                 />
+              ) : !isImageAttachment(attachment) ? (
+                <>
+                  <FileText className="h-3.5 w-3.5 shrink-0 text-ds-faint" strokeWidth={1.7} />
+                  <span className="truncate">{title}</span>
+                </>
               ) : (
                 <span className="flex h-full w-full items-center justify-center text-ds-faint">
                   <ImageIcon className="h-7 w-7" strokeWidth={1.6} />
@@ -348,6 +361,10 @@ function UserAttachmentPreviews({
       </div>
     </div>
   )
+}
+
+function isImageAttachment(attachment: AttachmentReference): boolean {
+  return attachment.mimeType?.toLowerCase().startsWith('image/') !== false
 }
 
 function metaSources(meta: Record<string, unknown> | undefined): Array<{ title?: string; url?: string }> {

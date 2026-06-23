@@ -231,7 +231,8 @@ export class DataComplianceRuntime {
       headers: options.body
         ? { 'content-type': options.contentType ?? 'application/json' }
         : undefined,
-      body: options.body
+      body: options.body,
+      signal: AbortSignal.timeout(30_000)
     })
     const body = await response.text()
     return {
@@ -270,7 +271,8 @@ export class DataComplianceRuntime {
     const endpoint = payload.mode === 'review' ? '/api/upload' : '/api/desensitize'
     const response = await fetch(new URL(endpoint, this.baseUrl), {
       method: 'POST',
-      body: form
+      body: form,
+      signal: AbortSignal.timeout(30_000)
     })
     const body = await response.text()
     return {

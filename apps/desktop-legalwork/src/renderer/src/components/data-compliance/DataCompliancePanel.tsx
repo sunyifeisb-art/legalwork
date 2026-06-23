@@ -1,19 +1,27 @@
-import type { ChangeEvent, MouseEvent, ReactElement } from 'react'
+import type { ChangeEvent, DragEvent as ReactDragEvent, MouseEvent, ReactElement } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertCircle,
+  AudioLines,
   CheckCircle2,
   Download,
   Eye,
+  File,
+  FileArchive,
+  FileCode2,
   FileSearch,
+  FileSpreadsheet,
   FileText,
   Folder,
   History,
   Loader2,
+  Minimize2,
   RefreshCw,
   ScanEye,
   ShieldCheck,
-  Trash2
+  Trash2,
+  Upload,
+  X
 } from 'lucide-react'
 import type {
   DataComplianceRequestResult,
@@ -216,11 +224,85 @@ function inferOutputFormats(file: File | null): Array<{ value: 'md' | 'docx' | '
   return []
 }
 
+function fileTypeLabelForFile(fileName: string): string {
+  const ext = fileName.split('.').pop()?.toLowerCase() || ''
+  if (!ext) return '文件'
+  if (ext === 'doc' || ext === 'docx') return 'WORD'
+  if (ext === 'ppt' || ext === 'pptx') return 'PPT'
+  if (ext === 'xls' || ext === 'xlsx' || ext === 'csv') return 'EXCEL'
+  if (ext === 'pdf') return 'PDF'
+  if (['mp3', 'm4a', 'wav', 'aac', 'flac', 'ogg'].includes(ext)) return '音频'
+  if (['zip', 'rar', '7z'].includes(ext)) return '压缩包'
+  if (['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'svg'].includes(ext)) return '图片'
+  if (['txt', 'md', 'markdown', 'json', 'jsonl', 'csv', 'tsv', 'yaml', 'yml', 'html', 'xml'].includes(ext)) return '文本'
+  return ext.toUpperCase()
+}
+
+function fileTypeBadgeClass(label: string): string {
+  const map: Record<string, string> = {
+    WORD: 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-500/15 dark:text-blue-400 dark:border-blue-500/20',
+    PPT: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/20',
+    EXCEL: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/20',
+    PDF: 'bg-red-50 text-red-700 border-red-100 dark:bg-red-500/15 dark:text-red-400 dark:border-red-500/20',
+    音频: 'bg-cyan-50 text-cyan-700 border-cyan-100 dark:bg-cyan-500/15 dark:text-cyan-400 dark:border-cyan-500/20',
+    压缩包: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-500/15 dark:text-slate-400 dark:border-slate-500/20',
+    图片: 'bg-purple-50 text-purple-700 border-purple-100 dark:bg-purple-500/15 dark:text-purple-400 dark:border-purple-500/20',
+    文本: 'bg-slate-50 text-slate-600 border-slate-100 dark:bg-slate-500/15 dark:text-slate-400 dark:border-slate-500/20'
+  }
+  return map[label] || 'bg-slate-50 text-slate-600 border-slate-100 dark:bg-slate-500/15 dark:text-slate-400 dark:border-slate-500/20'
+}
+
+function FileTypeIcon({ fileName, className = 'h-5 w-5' }: { fileName: string; className?: string }): ReactElement {
+  const ext = fileName.split('.').pop()?.toLowerCase() || ''
+  if (['mp3', 'm4a', 'wav', 'aac', 'flac', 'ogg'].includes(ext)) {
+    return <AudioLines className={`${className} text-cyan-500`} strokeWidth={1.7} />
+  }
+  if (['doc', 'docx', 'pdf', 'txt', 'md', 'markdown'].includes(ext)) {
+    return <FileText className={`${className} text-slate-400`} strokeWidth={1.6} />
+  }
+  if (['xls', 'xlsx', 'csv'].includes(ext)) {
+    return <FileSpreadsheet className={`${className} text-emerald-500`} strokeWidth={1.6} />
+  }
+  if (['ppt', 'pptx'].includes(ext)) {
+    return <FileCode2 className={`${className} text-amber-500`} strokeWidth={1.6} />
+  }
+  if (['zip', 'rar', '7z'].includes(ext)) {
+    return <FileArchive className={`${className} text-amber-500`} strokeWidth={1.6} />
+  }
+  if (['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'svg'].includes(ext)) {
+    return <FileCode2 className={`${className} text-purple-500`} strokeWidth={1.6} />
+  }
+  return <File className={`${className} text-slate-300`} strokeWidth={1.6} />
+}
+
+const LARGE_FILE_THRESHOLD_BYTES = 20 * 1024 * 1024
+
+function readFileChunkAsBase64(file: File, start: number, end: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        resolve(arrayBufferToBase64(reader.result as ArrayBuffer))
+      } catch (error) {
+        reject(error)
+      }
+    }
+    reader.onerror = () => reject(reader.error ?? new Error('FileReader failed'))
+    reader.readAsArrayBuffer(file.slice(start, end))
+  })
+}
+
 async function fileToPayload(file: File): Promise<DataComplianceSubmitPayload['file']> {
+  const chunkSize = 1024 * 1024 // 1 MiB
+  const chunks: string[] = []
+  for (let offset = 0; offset < file.size; offset += chunkSize) {
+    const base64 = await readFileChunkAsBase64(file, offset, Math.min(offset + chunkSize, file.size))
+    chunks.push(base64)
+  }
   return {
     name: file.name,
     type: file.type || 'application/octet-stream',
-    dataBase64: arrayBufferToBase64(await file.arrayBuffer())
+    dataBase64: chunks.join('')
   }
 }
 
@@ -303,6 +385,7 @@ type InstallProgressState =
 function useComplianceProgress(taskId: string | null): ProgressState {
   const [state, setState] = useState<ProgressState>({ kind: 'idle' })
   const abortRef = useRef<AbortController | null>(null)
+  const timerRef = useRef<number | null>(null)
 
   useEffect(() => {
     if (!taskId) {
@@ -316,12 +399,21 @@ function useComplianceProgress(taskId: string | null): ProgressState {
     }
 
     abortRef.current?.abort()
+    if (timerRef.current) {
+      window.clearTimeout(timerRef.current)
+      timerRef.current = null
+    }
     const controller = new AbortController()
     abortRef.current = controller
     setState({ kind: 'running', step: 0, message: '任务已提交，等待开始处理…', percent: 0 })
 
     // 主 LegalWork runtime 需要鉴权，renderer 无法直接连接 SSE。
     // 改为通过 IPC 轮询 /data-compliance/tasks/:id。
+    const schedule = (delay: number): void => {
+      if (controller.signal.aborted) return
+      timerRef.current = window.setTimeout(poll, delay)
+    }
+
     const poll = async (): Promise<void> => {
       if (controller.signal.aborted) return
       try {
@@ -345,18 +437,22 @@ function useComplianceProgress(taskId: string | null): ProgressState {
         const message = typeof progress?.message === 'string' ? progress.message : '正在处理…'
         const percent = typeof progress?.percent === 'number' ? progress.percent : Math.min(step * 9, 95)
         setState({ kind: 'running', step, message, percent })
-        window.setTimeout(poll, 1000)
+        schedule(1000)
       } catch {
         if (!controller.signal.aborted) {
-          window.setTimeout(poll, 2000)
+          schedule(2000)
         }
       }
     }
 
-    poll()
+    schedule(0)
 
     return () => {
       controller.abort()
+      if (timerRef.current) {
+        window.clearTimeout(timerRef.current)
+        timerRef.current = null
+      }
     }
   }, [taskId])
 
@@ -373,20 +469,18 @@ function ProgressModal({ state, onDismiss, modeScope = 'review' }: { state: Prog
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onDismiss() }}>
-      <div className="w-full max-w-md rounded-[18px] border border-ds-border bg-ds-card p-6 shadow-[0_24px_60px_rgba(0,0,0,0.28)] relative">
+      <div className="relative w-full max-w-md rounded-[18px] border border-ds-border bg-ds-card p-6 shadow-[0_24px_60px_rgba(0,0,0,0.28)]">
         <button
           type="button"
           onClick={onDismiss}
           title="后台运行"
           aria-label="后台运行"
-          className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full text-ds-faint transition hover:bg-ds-hover hover:text-ds-muted"
+          className="absolute right-4 top-4 inline-flex h-8 items-center gap-1.5 rounded-full border border-ds-border-muted bg-ds-subtle px-3 text-[12px] font-medium text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
+          <Minimize2 className="h-3.5 w-3.5" strokeWidth={1.9} />
+          后台运行
         </button>
-        <div className="mb-4 flex items-center gap-3">
+        <div className="mb-4 flex items-center gap-3 pr-28">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--ds-accent-soft)] text-[var(--ds-accent)]">
             <Loader2 className="h-5 w-5 animate-spin" />
           </div>
@@ -1036,7 +1130,7 @@ export function DataComplianceSidebarNav({
   return (
     <div className="ds-no-drag flex min-h-0 flex-1 flex-col px-2 pt-1">
       <div className="mb-2 px-1">
-        <div className="text-[15px] font-medium text-ds-ink">数据合规</div>
+        <div className="text-[13px] font-semibold text-ds-muted">数据合规</div>
       </div>
       <div className="space-y-1">
         {items.map((item) => {
@@ -1046,10 +1140,10 @@ export function DataComplianceSidebarNav({
               key={item.section}
               type="button"
               onClick={() => onSectionChange(item.section)}
-              className={`flex w-full items-center gap-2 rounded-[10px] px-2.5 py-2 text-left text-[15px] transition ${
+              className={`flex w-full items-center gap-2 rounded-[10px] px-2.5 py-2 text-left transition ${
                 active
-                  ? 'bg-[var(--ds-accent-soft)] text-[var(--ds-accent)] shadow-[inset_0_0_0_1px_rgba(0,136,255,0.14)]'
-                  : 'text-ds-muted hover:bg-ds-hover hover:text-ds-ink'
+                  ? 'bg-[var(--ds-accent-soft)] text-[var(--ds-accent)] shadow-[inset_0_0_0_1px_rgba(0,136,255,0.14)] text-[13px] font-semibold'
+                  : 'text-ds-muted hover:bg-ds-hover hover:text-ds-ink text-[13px] font-medium'
               }`}
             >
               <span className="shrink-0">{item.icon}</span>
@@ -1078,7 +1172,7 @@ export function DesensitizeSidebarNav({
   return (
     <div className="ds-no-drag flex min-h-0 flex-1 flex-col px-2 pt-1">
       <div className="mb-2 px-1">
-        <div className="text-[15px] font-medium text-ds-ink">脱敏</div>
+        <div className="text-[13px] font-semibold text-ds-muted">脱敏</div>
       </div>
       <div className="space-y-1">
         {items.map((item) => {
@@ -1088,10 +1182,10 @@ export function DesensitizeSidebarNav({
               key={item.section}
               type="button"
               onClick={() => onSectionChange(item.section)}
-              className={`flex w-full items-center gap-2 rounded-[10px] px-2.5 py-2 text-left text-[15px] transition ${
+              className={`flex w-full items-center gap-2 rounded-[10px] px-2.5 py-2 text-left transition ${
                 active
-                  ? 'bg-[var(--ds-accent-soft)] text-[var(--ds-accent)] shadow-[inset_0_0_0_1px_rgba(0,136,255,0.14)]'
-                  : 'text-ds-muted hover:bg-ds-hover hover:text-ds-ink'
+                  ? 'bg-[var(--ds-accent-soft)] text-[var(--ds-accent)] shadow-[inset_0_0_0_1px_rgba(0,136,255,0.14)] text-[13px] font-semibold'
+                  : 'text-ds-muted hover:bg-ds-hover hover:text-ds-ink text-[13px] font-medium'
               }`}
             >
               <span className="shrink-0">{item.icon}</span>
@@ -1120,6 +1214,8 @@ export function DataCompliancePanel({
   const [documentName, setDocumentName] = useState('')
   const [inputText, setInputText] = useState('')
   const [file, setFile] = useState<File | null>(null)
+  const [dragActive, setDragActive] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<Notice | null>(null)
   const [taskId, setTaskId] = useState('')
@@ -1127,6 +1223,8 @@ export function DataCompliancePanel({
   const [historyBusy, setHistoryBusy] = useState(false)
   const [resultBusy, setResultBusy] = useState(false)
   const [result, setResult] = useState<ComplianceResult | null>(null)
+  const [progressTaskId, setProgressTaskId] = useState('')
+  const [submissionProgress, setSubmissionProgress] = useState<ProgressState>({ kind: 'idle' })
   const [serverStatus, setServerStatus] = useState<DataComplianceStatus | null>({
     ok: false, running: false, installing: false,
     baseUrl: '', message: '检测中...'
@@ -1152,9 +1250,8 @@ export function DataCompliancePanel({
               ? { kind: 'installing', step: 'detecting', percent: 5, message: status.message || '正在准备环境…' }
               : prev
           )
-          if (typeof window.dsGui?.installDataCompliance === 'function') {
-            void window.dsGui.installDataCompliance()
-          }
+          // 安装由主进程 data-compliance:status handler 自动触发，renderer 只需监听进度，
+          // 避免与 installDataCompliance() 重复调用导致竞态。
         } else {
           setNotice({ tone: 'error', text: status.message })
         }
@@ -1187,7 +1284,9 @@ export function DataCompliancePanel({
     const unsubscribe = window.dsGui.onDataComplianceInstallProgress((payload) => {
       if (payload.step === 'done') {
         setInstallProgress({ kind: 'done' })
-        void ensureServer()
+        ensureServer().catch((error: unknown) => {
+          console.error('[DataCompliancePanel] ensureServer after install failed:', error)
+        })
       } else if (payload.step === 'error') {
         setInstallProgress({ kind: 'error', message: payload.message })
       } else {
@@ -1214,10 +1313,30 @@ export function DataCompliancePanel({
     : sectionMeta[resolvedActiveSection]
   const selectedTaskId = taskId.trim()
   const [progressDismissed, setProgressDismissed] = useState(false)
-  const progress = useComplianceProgress(
-    progressDismissed ? null : (selectedTaskId || result?.task_id || null)
-  )
+  const progressDismissedRef = useRef(progressDismissed)
+  const progress = useComplianceProgress(progressDismissed ? null : (progressTaskId.trim() || null))
+  const visibleProgress: ProgressState = progressDismissed
+    ? { kind: 'idle' }
+    : submissionProgress.kind !== 'idle' && progress.kind === 'idle'
+      ? submissionProgress
+      : progress
   const resultSummary = summarizeResult(result)
+
+  useEffect(() => {
+    progressDismissedRef.current = progressDismissed
+  }, [progressDismissed])
+
+  useEffect(() => {
+    if (submissionProgress.kind !== 'idle' && progress.kind !== 'idle') {
+      setSubmissionProgress({ kind: 'idle' })
+    }
+  }, [progress.kind, submissionProgress.kind])
+
+  const dismissProgress = useCallback(() => {
+    progressDismissedRef.current = true
+    setProgressDismissed(true)
+    setSubmissionProgress({ kind: 'idle' })
+  }, [])
 
   const serverHint = useMemo(() => {
     if (!serverStatus) return '服务状态：正在检测'
@@ -1257,6 +1376,12 @@ export function DataCompliancePanel({
       if (payload.error) throw new Error(payload.error)
       setTaskId(targetId)
       setResult(payload)
+      const status = (payload.status ?? '').toLowerCase()
+      if (status === 'pending' || status === 'running' || status === 'processing') {
+        setProgressTaskId(targetId)
+      } else {
+        setProgressTaskId((current) => (current === targetId ? '' : current))
+      }
       onSectionChange('results')
       return payload
     } catch (error) {
@@ -1273,36 +1398,60 @@ export function DataCompliancePanel({
   }, [ensureServer, onSectionChange, selectedTaskId])
 
   useEffect(() => {
-    void refreshHistory()
+    void refreshHistory().catch((error: unknown) => {
+      console.error('[DataCompliancePanel] refreshHistory failed:', error)
+    })
   }, [refreshHistory, modeScope])
-
-  useEffect(() => {
-    const activeTaskId = result?.task_id ?? selectedTaskId
-    const status = (result?.status ?? '').toLowerCase()
-    if (!activeTaskId || status === 'completed' || status === 'failed' || status === 'error') return
-    const timer = window.setInterval(() => {
-      void loadResult(activeTaskId, { quiet: true })
-    }, 1500)
-    return () => window.clearInterval(timer)
-  }, [loadResult, result?.status, result?.task_id, selectedTaskId])
 
   // Dismiss progress modal when result loads as completed/failed/error
   useEffect(() => {
     const status = (result?.status ?? '').toLowerCase()
     if (status === 'completed' || status === 'failed' || status === 'error') {
       setProgressDismissed(true)
+      setProgressTaskId('')
     }
   }, [result?.status])
 
-  const onPickFile = (event: ChangeEvent<HTMLInputElement>): void => {
-    const nextFile = event.target.files?.[0] ?? null
+  const setSelectedFile = useCallback((nextFile: File | null): void => {
     setFile(nextFile)
     if (nextFile && !documentName.trim()) {
       setDocumentName(nextFile.name.replace(/\.[^.]+$/, ''))
     }
     const formats = inferOutputFormats(nextFile)
     setOutputFormat(formats[0]?.value ?? '')
+  }, [documentName])
+
+  const onPickFile = (event: ChangeEvent<HTMLInputElement>): void => {
+    const nextFile = event.target.files?.[0] ?? null
+    setSelectedFile(nextFile)
+    // 允许重复选择同一文件
+    if (event.target) event.target.value = ''
   }
+
+  const onDropFile = useCallback((event: ReactDragEvent<HTMLDivElement>): void => {
+    event.preventDefault()
+    event.stopPropagation()
+    setDragActive(false)
+    const dropped = event.dataTransfer.files?.[0] ?? null
+    if (dropped) setSelectedFile(dropped)
+  }, [setSelectedFile])
+
+  const onDragOver = useCallback((event: ReactDragEvent<HTMLDivElement>): void => {
+    event.preventDefault()
+    event.stopPropagation()
+    setDragActive(true)
+  }, [])
+
+  const onDragLeave = useCallback((event: ReactDragEvent<HTMLDivElement>): void => {
+    event.preventDefault()
+    event.stopPropagation()
+    setDragActive(false)
+  }, [])
+
+  const clearFile = useCallback((): void => {
+    setSelectedFile(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }, [setSelectedFile])
 
   const pickOutputDir = async (): Promise<void> => {
     if (typeof window.dsGui?.pickWorkspaceDirectory !== 'function') {
@@ -1324,16 +1473,39 @@ export function DataCompliancePanel({
       setNotice({ tone: 'error', text: '请先上传文件或输入待处理文本。' })
       return
     }
+    if (file && file.size > LARGE_FILE_THRESHOLD_BYTES) {
+      setNotice({
+        tone: 'error',
+        text: `文件过大（${(file.size / 1024 / 1024).toFixed(1)} MB），建议先压缩、拆分或仅粘贴关键文本，以免前端卡死。`
+      })
+      return
+    }
     setBusy(true)
     setNotice(null)
+    progressDismissedRef.current = false
+    setProgressDismissed(false)
+    setProgressTaskId('')
+    setSubmissionProgress({
+      kind: 'running',
+      step: 0,
+      message: file ? '正在读取材料并创建任务…' : '正在创建任务…',
+      percent: 3
+    })
     try {
       await ensureServer()
+      setSubmissionProgress({
+        kind: 'running',
+        step: 0,
+        message: '正在提交到后台队列…',
+        percent: 8
+      })
+      const filePayload = file ? await fileToPayload(file) : undefined
       const payload: DataComplianceSubmitPayload = {
         mode,
         documentName,
         inputText,
         reviewType: reviewType === 'code' ? 'code' : 'document',
-        file: file ? await fileToPayload(file) : undefined
+        file: filePayload
       }
       if (mode === 'desensitize' && desensitizeKind === 'material') {
         payload.outputDir = outputDir.trim() || workspaceRoot
@@ -1343,14 +1515,32 @@ export function DataCompliancePanel({
       }
       const submitted = await submitComplianceTask(payload)
       const nextTaskId = submitted.task_id ?? ''
-      setProgressDismissed(false)
       setTaskId(nextTaskId)
+      setProgressTaskId(nextTaskId)
+      setSubmissionProgress(
+        progressDismissedRef.current
+          ? { kind: 'idle' }
+          : {
+              kind: 'running',
+              step: 0,
+              message: '任务已创建，等待 worker 启动…',
+              percent: 10
+            }
+      )
       setResult(nextTaskId ? { task_id: nextTaskId, status: 'processing', document_name: documentName || file?.name } : null)
       setNotice({ tone: 'success', text: `任务已提交：${nextTaskId}` })
       onSectionChange('results')
-      void refreshHistory()
-      if (nextTaskId) void loadResult(nextTaskId, { quiet: true })
+      refreshHistory().catch((error: unknown) => {
+        console.error('[DataCompliancePanel] refreshHistory after submit failed:', error)
+      })
+      if (nextTaskId) {
+        loadResult(nextTaskId, { quiet: true }).catch((error: unknown) => {
+          console.error('[DataCompliancePanel] loadResult after submit failed:', error)
+        })
+      }
     } catch (error) {
+      setProgressTaskId('')
+      setSubmissionProgress({ kind: 'idle' })
       setNotice({
         tone: 'error',
         text: error instanceof Error ? `提交失败：${error.message}` : '提交失败。'
@@ -1370,6 +1560,7 @@ export function DataCompliancePanel({
         setTaskId('')
         setResult(null)
       }
+      setProgressTaskId((current) => (current === id ? '' : current))
     } catch (error) {
       setNotice({
         tone: 'error',
@@ -1475,11 +1666,61 @@ export function DataCompliancePanel({
         </label>
         <label className="block">
           <span className="text-[12px] font-medium text-ds-muted">上传文件</span>
-          <input
-            type="file"
-            onChange={onPickFile}
-            className="mt-1.5 block w-full rounded-[12px] border border-ds-border bg-ds-card px-3 py-2 text-[13px] text-ds-muted file:mr-3 file:rounded-[8px] file:border-0 file:bg-ds-subtle file:px-3 file:py-1.5 file:text-[12px] file:font-medium file:text-ds-ink"
-          />
+          <div
+            onDragOver={onDragOver}
+            onDragLeave={onDragLeave}
+            onDrop={onDropFile}
+            onClick={() => fileInputRef.current?.click()}
+            className={`mt-1.5 cursor-pointer rounded-[12px] border border-dashed border-ds-border bg-ds-card px-4 py-4 transition ${
+              dragActive
+                ? 'border-[var(--ds-accent)] bg-[color-mix(in_srgb,var(--ds-accent)_8%,transparent)]'
+                : 'hover:border-ds-border-muted hover:bg-ds-subtle'
+            }`}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              onChange={onPickFile}
+              className="hidden"
+            />
+            {file ? (
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-ds-subtle">
+                  <FileTypeIcon fileName={file.name} className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[13.5px] font-medium text-ds-ink" title={file.name}>
+                    {file.name}
+                  </div>
+                  <div className="mt-0.5 flex items-center gap-2 text-[11.5px] text-ds-muted">
+                    <span className={`inline-flex items-center rounded-[6px] border px-2 py-0.5 text-[11px] font-semibold ${fileTypeBadgeClass(fileTypeLabelForFile(file.name))}`}>
+                      {fileTypeLabelForFile(file.name)}
+                    </span>
+                    <span>{(file.size / 1024).toFixed(1)} KB</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    clearFile()
+                  }}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-ds-faint transition hover:bg-red-500/10 hover:text-red-600"
+                  title="移除文件"
+                >
+                  <X className="h-4 w-4" strokeWidth={1.8} />
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-2 py-2 text-center">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-ds-subtle text-ds-muted">
+                  <Upload className="h-5 w-5" strokeWidth={1.8} />
+                </div>
+                <div className="text-[13px] font-medium text-ds-ink">拖拽文件到此处</div>
+                <div className="text-[12px] text-ds-muted">或点击选择文件</div>
+              </div>
+            )}
+          </div>
         </label>
         <label className="block">
           <span className="text-[12px] font-medium text-ds-muted">直接输入</span>
@@ -1524,7 +1765,11 @@ export function DataCompliancePanel({
                 </div>
                 <button
                   type="button"
-                  onClick={() => void pickOutputDir()}
+                  onClick={() => {
+                    pickOutputDir().catch((error: unknown) => {
+                      console.error('[DataCompliancePanel] pickOutputDir failed:', error)
+                    })
+                  }}
                   disabled={busy || statusBusy || installProgress.kind === 'installing'}
                   className="inline-flex shrink-0 items-center gap-1.5 rounded-[10px] border border-ds-border bg-ds-subtle px-3 py-2 text-[12.5px] font-medium text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink disabled:opacity-55"
                 >
@@ -1547,7 +1792,11 @@ export function DataCompliancePanel({
         <button
           type="button"
           disabled={busy || statusBusy || installProgress.kind === 'installing'}
-          onClick={() => void submitTask(mode)}
+          onClick={() => {
+            submitTask(mode).catch((error: unknown) => {
+              console.error('[DataCompliancePanel] submitTask failed:', error)
+            })
+          }}
           className="inline-flex items-center gap-2 rounded-full bg-[var(--ds-accent)] px-4 py-2 text-[13px] font-semibold text-white shadow-sm transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-55"
         >
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
@@ -1574,7 +1823,11 @@ export function DataCompliancePanel({
           </div>
           <button
             type="button"
-            onClick={() => void refreshHistory()}
+            onClick={() => {
+              refreshHistory().catch((error: unknown) => {
+                console.error('[DataCompliancePanel] refreshHistory failed:', error)
+              })
+            }}
             className="inline-flex shrink-0 items-center gap-2 rounded-full border border-ds-border bg-ds-card px-3 py-2 text-[12.5px] font-medium text-ds-muted shadow-sm transition hover:bg-ds-hover hover:text-ds-ink"
           >
             {historyBusy || statusBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
@@ -1606,7 +1859,9 @@ export function DataCompliancePanel({
             onRetry={() => {
               setInstallProgress({ kind: 'idle' })
               if (typeof window.dsGui?.installDataCompliance === 'function') {
-                void window.dsGui.installDataCompliance()
+                window.dsGui.installDataCompliance().catch((error: unknown) => {
+                  console.error('[DataCompliancePanel] installDataCompliance failed:', error)
+                })
               }
             }}
           />
@@ -1619,7 +1874,11 @@ export function DataCompliancePanel({
                 <h2 className="text-[16px] font-semibold text-ds-ink">历史任务</h2>
                 <button
                   type="button"
-                  onClick={() => void refreshHistory()}
+                  onClick={() => {
+                    refreshHistory().catch((error: unknown) => {
+                      console.error('[DataCompliancePanel] refreshHistory failed:', error)
+                    })
+                  }}
                   className="inline-flex items-center gap-2 rounded-full border border-ds-border bg-ds-card px-3 py-1.5 text-[12px] font-medium text-ds-muted hover:bg-ds-hover hover:text-ds-ink"
                 >
                   {historyBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
@@ -1636,7 +1895,11 @@ export function DataCompliancePanel({
                       key={id || task.document_name}
                       type="button"
                       onClick={() => {
-                        if (id) void loadResult(id)
+                        if (id) {
+                          loadResult(id).catch((error: unknown) => {
+                            console.error('[DataCompliancePanel] loadResult failed:', error)
+                          })
+                        }
                       }}
                       className="flex w-full items-center justify-between gap-3 bg-ds-card px-4 py-3 text-left transition hover:bg-ds-hover"
                     >
@@ -1688,7 +1951,11 @@ export function DataCompliancePanel({
                   <button
                     type="button"
                     disabled={resultBusy}
-                    onClick={() => void loadResult()}
+                    onClick={() => {
+                      loadResult().catch((error: unknown) => {
+                        console.error('[DataCompliancePanel] loadResult failed:', error)
+                      })
+                    }}
                     className="inline-flex items-center gap-2 rounded-full bg-[var(--ds-accent)] px-4 py-2 text-[13px] font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-55"
                   >
                     {resultBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileSearch className="h-4 w-4" />}
@@ -1810,7 +2077,7 @@ export function DataCompliancePanel({
           ) : null}
         </div>
       </div>
-      <ProgressModal state={progress} onDismiss={() => setProgressDismissed(true)} modeScope={modeScope} />
+      <ProgressModal state={visibleProgress} onDismiss={dismissProgress} modeScope={modeScope} />
     </div>
   )
 }

@@ -71,12 +71,22 @@ describe('Attachment store and multimodal input', () => {
     })
   })
 
-  it('rejects unsupported MIME, size, and dimensions', async () => {
+  it('stores non-image files and still rejects disallowed MIME, size, and image dimensions', async () => {
     await expect(createStore().create({
+      name: 'notes.txt',
+      data: Buffer.from('hello'),
+      mimeType: 'text/plain'
+    })).resolves.toMatchObject({
+      name: 'notes.txt',
+      mimeType: 'text/plain',
+      byteSize: 5
+    })
+
+    await expect(createStore({ allowedMimeTypes: ['image/png'] }).create({
       name: 'bad.txt',
       data: Buffer.from('nope'),
       mimeType: 'text/plain'
-    })).rejects.toThrow(/unsupported/)
+    })).rejects.toThrow(/not allowed/)
 
     await expect(createStore({ maxImageBytes: 10 }).create({
       name: 'large.png',
@@ -214,6 +224,42 @@ describe('Attachment store and multimodal input', () => {
     })
   })
 
+  it('routes non-image files as text fallbacks even for vision models', async () => {
+    const store = createStore()
+    const attachment = await store.create({
+      name: 'notes.txt',
+      data: Buffer.from('hello'),
+      mimeType: 'text/plain',
+      threadId: 'thr_1',
+      workspace: '/tmp/ws'
+    })
+    const seenRequests: ModelRequest[] = []
+    const model: ModelClient = {
+      provider: 'fake',
+      model: 'fake',
+      async *stream(request) {
+        seenRequests.push(request)
+        yield { kind: 'completed', stopReason: 'stop' }
+      }
+    }
+    const h = makeHarness(model, {
+      attachmentStore: store,
+      modelCapabilities: () => visionCapabilities()
+    })
+    await bootstrapThread(h, {
+      workspace: '/tmp/ws',
+      request: { prompt: 'read this', attachmentIds: [attachment.id], model: 'vision-model' }
+    })
+
+    expect(await h.loop.runTurn(h.threadId, h.turnId)).toBe('completed')
+    expect(seenRequests.at(-1)?.attachments).toBeUndefined()
+    expect(seenRequests.at(-1)?.attachmentTextFallbacks?.[0]).toMatchObject({
+      id: attachment.id,
+      mimeType: 'text/plain',
+      dataBase64: Buffer.from('hello').toString('base64')
+    })
+  })
+
   it('routes built-in DeepSeek v4 image attachments as text fallbacks', async () => {
     const store = createStore()
     const attachment = await store.create({
@@ -270,7 +316,7 @@ describe('Attachment store and multimodal input', () => {
     })
   })
 
-  it('fails text-only image turns when no bounded text fallback is available', async () => {
+  it('keeps oversized text fallbacks as metadata-only attachment context', async () => {
     const store = createStore({ textFallbackMaxBase64Bytes: 8 })
     const attachment = await store.create({
       name: 'shot.png',
@@ -278,10 +324,12 @@ describe('Attachment store and multimodal input', () => {
       threadId: 'thr_1',
       workspace: '/tmp/ws'
     })
+    const seenRequests: ModelRequest[] = []
     const model: ModelClient = {
       provider: 'fake',
       model: 'fake',
-      async *stream() {
+      async *stream(request) {
+        seenRequests.push(request)
         yield { kind: 'completed', stopReason: 'stop' }
       }
     }
@@ -294,9 +342,12 @@ describe('Attachment store and multimodal input', () => {
       request: { prompt: 'look', attachmentIds: [attachment.id], model: 'text-only' }
     })
 
-    expect(await h.loop.runTurn(h.threadId, h.turnId)).toBe('failed')
-    await expect(h.turns.getTurn(h.threadId, h.turnId)).resolves.toMatchObject({
-      error: expect.stringMatching(/missing a compressed text fallback/)
+    expect(await h.loop.runTurn(h.threadId, h.turnId)).toBe('completed')
+    expect(seenRequests.at(-1)?.attachmentTextFallbacks?.[0]).toMatchObject({
+      id: attachment.id,
+      mimeType: 'image/png',
+      dataBase64: '',
+      byteSize: png(1, 1).byteLength
     })
   })
 
@@ -401,7 +452,7 @@ describe('Attachment store and multimodal input', () => {
     }
 
     expect(body?.messages?.[0]?.content).toContain('describe')
-    expect(body?.messages?.[0]?.content).toContain('[Attached image as base64 text]')
+    expect(body?.messages?.[0]?.content).toContain('[Attached file]')
     expect(body?.messages?.[0]?.content).toContain('MIME: image/webp')
     expect(body?.messages?.[0]?.content).toContain('Dimensions: 1280x720')
     expect(body?.messages?.[0]?.content).toContain('```base64\nYWJj\n```')

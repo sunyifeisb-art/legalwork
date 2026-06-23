@@ -58,7 +58,7 @@ import { useWorkbenchLayout } from './workbench-layout'
 import { useWorkbenchPlanController } from './workbench-plan-controller'
 import type { DataComplianceSection, DesensitizeSection } from './data-compliance/DataCompliancePanel'
 import { useLegalResearch } from './legal-research/useLegalResearch'
-import { prepareImageAttachmentUpload } from '../lib/image-attachment-upload'
+import { prepareAttachmentUpload, prepareImageAttachmentUpload } from '../lib/image-attachment-upload'
 import { isChatAttachmentUploadEnabled } from '../lib/attachment-upload-availability'
 import { normalizeWorkspaceRoot } from '../lib/workspace-path'
 import { useKeyboardShortcutSettings } from '../lib/keyboard-shortcut-settings'
@@ -736,10 +736,9 @@ export function Workbench(): ReactElement {
       }
       const uploaded: AttachmentReference[] = []
       for (const file of files) {
-        if (!file.type.startsWith('image/')) continue
-        const prepared = await prepareImageAttachmentUpload(file, attachmentCapabilities)
+        const prepared = await prepareAttachmentUpload(file, attachmentCapabilities)
         const attachment = await provider.uploadAttachment({
-          name: file.name || 'image',
+          name: file.name || 'attachment',
           mimeType: prepared.mimeType,
           dataBase64: prepared.dataBase64,
           textFallback: prepared.textFallback,
@@ -752,7 +751,7 @@ export function Workbench(): ReactElement {
           mimeType: attachment.mimeType,
           width: attachment.width,
           height: attachment.height,
-          previewUrl: `data:${prepared.mimeType};base64,${prepared.dataBase64}`
+          ...(prepared.previewUrl ? { previewUrl: prepared.previewUrl } : {})
         })
       }
       if (uploaded.length > 0) {
@@ -1100,17 +1099,17 @@ export function Workbench(): ReactElement {
     if (!v && attachmentIds.length === 0 && fileReferences.length === 0) return
     const emptyPrompt =
       fileReferences.length > 0 && attachmentIds.length > 0
-        ? t('composerFileAndImageOnlyPrompt')
+        ? t('composerFileAndAttachmentOnlyPrompt')
         : fileReferences.length > 0
           ? t('composerFileOnlyPrompt')
-          : t('composerImageOnlyPrompt')
+          : t('composerAttachmentOnlyPrompt')
     const emptyDisplayText = v
       ? undefined
       : fileReferences.length > 0 && attachmentIds.length > 0
-        ? t('composerFileAndImageOnlyDisplay', { count: fileReferences.length })
+        ? t('composerFileAndAttachmentOnlyDisplay', { count: fileReferences.length })
         : fileReferences.length > 0
           ? t('composerFileOnlyDisplay', { count: fileReferences.length })
-          : t('composerImageOnlyDisplay')
+          : t('composerAttachmentOnlyDisplay')
     const messageText = v || emptyPrompt
     const prepareChatMessage = async (): Promise<{ text: string; displayText?: string } | null> => {
       if (fileReferences.length === 0) {
@@ -1545,6 +1544,7 @@ export function Workbench(): ReactElement {
               connectPhoneSidebarOpen={connectPhoneSidebarOpen}
               pluginsActive={route === 'plugins'}
               knowledgePanelOpen={route === 'knowledgeBase'}
+              runtimeConnection={runtimeConnection}
               runtimeReady={runtimeConnection === 'ready'}
               threadSearch={threadSearch}
               showArchivedThreads={showArchivedThreads}

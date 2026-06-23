@@ -1,6 +1,5 @@
 import { readFile } from 'node:fs/promises'
 import { basename, extname } from 'node:path'
-import { randomUUID } from 'node:crypto'
 import { LocalToolHost, type LocalTool } from './local-tool-host.js'
 import { withToolBoundary } from './builtin-tool-utils.js'
 import type { DataComplianceTask, DataComplianceTaskService } from '../../services/data-compliance-task-service.js'
@@ -108,8 +107,8 @@ export function createDataComplianceLocalTool(options: DataComplianceLocalToolOp
       'Use action="review" for compliance checks on documents or code. ' +
       'Use action="desensitize" to remove personal/sensitive information. ' +
       'Use action="poll" with task_id to check an existing task. ' +
-      'When you detect sensitive personal information in the user message and the user has not explicitly asked for desensitization, ' +
-      'call this tool with action="desensitize", auto_confirm=false, and mode="text" to ask the user whether they want to desensitize it.',
+      'When the user mentions sensitive personal information or asks to desensitize, use action="desensitize". ' +
+      'When the user asks to review a contract, privacy policy, or code for compliance risks, use action="review".',
     inputSchema: {
       type: 'object',
       properties: {
@@ -152,16 +151,12 @@ export function createDataComplianceLocalTool(options: DataComplianceLocalToolOp
         task_id: {
           type: 'string',
           description: '已有任务编号，仅 action=poll 时必填'
-        },
-        auto_confirm: {
-          type: 'boolean',
-          description: '是否跳过用户确认（默认 false）。用户明确要求时仍建议询问确认。'
         }
       },
       required: ['action'],
       additionalProperties: false
     },
-    policy: 'auto',
+    policy: 'on-request',
     toolKind: 'tool_call',
     execute: async (args, context) =>
       withToolBoundary(async () => {
@@ -210,42 +205,6 @@ export function createDataComplianceLocalTool(options: DataComplianceLocalToolOp
             return { output: { error: 'mode=text 时需要提供非空 text' }, isError: true }
           }
           inputText = text.trim()
-        }
-
-        // Ask for user confirmation unless auto_confirm is true.
-        const autoConfirm = args.auto_confirm === true
-        if (!autoConfirm) {
-          if (!context.awaitUserInput) {
-            return {
-              output: {
-                error:
-                  '当前环境不支持用户确认。如需直接执行，请设置 auto_confirm=true。'
-              },
-              isError: true
-            }
-          }
-          const resolution = await context.awaitUserInput({
-            id: randomUUID(),
-            itemId: randomUUID(),
-            prompt: `即将对 "${documentName}" 执行${actionLabel(action)}。是否继续？`,
-            questions: [
-              {
-                header: '确认',
-                id: 'confirm',
-                question: '请选择操作',
-                options: [
-                  { label: '执行', description: `开始${actionLabel(action)}` },
-                  { label: '取消', description: '取消操作' }
-                ]
-              }
-            ]
-          })
-          const confirmed =
-            resolution.status === 'submitted' &&
-            resolution.answers.some((a) => a.id === 'confirm' && a.value === '执行')
-          if (!confirmed) {
-            return { output: { cancelled: true, message: '用户取消了操作' } }
-          }
         }
 
         const taskInput = {

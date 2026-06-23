@@ -1,7 +1,9 @@
+import { extname } from 'node:path'
 import { LocalToolHost, type LocalTool } from './local-tool-host.js'
 import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, formatSize, truncateHead } from './truncate.js'
 import type { ReadLocalToolOptions, TextSlice } from './builtin-tool-types.js'
 import { defaultReadLocalToolOperations } from './builtin-tool-operations.js'
+import { EXTRACTABLE_EXTENSIONS } from '../../knowledge/text-extractor.js'
 import {
   formatDimensionNote,
   getReadClassification,
@@ -14,13 +16,15 @@ import {
 export function createReadLocalTool(options: ReadLocalToolOptions = {}): LocalTool {
   const statOp = options.operations?.stat ?? defaultReadLocalToolOperations.stat!
   const readFileOp = options.operations?.readFile ?? defaultReadLocalToolOperations.readFile!
+  const extractDocumentTextOp =
+    options.operations?.extractDocumentText ?? defaultReadLocalToolOperations.extractDocumentText!
   const detectImageMimeTypeOp =
     options.operations?.detectImageMimeType ?? defaultReadLocalToolOperations.detectImageMimeType!
   const resizeImageOp = options.operations?.resizeImage
   const autoResizeImages = options.autoResizeImages ?? true
   return LocalToolHost.defineTool({
     name: 'read',
-    description: 'Read a file from the workspace. Supports optional line offset and limit for large files.',
+    description: 'Read a file from the local filesystem. Relative paths resolve against the current workspace; absolute paths may point anywhere on the computer. Supports optional line offset and limit for large files, and extracts text from PDF/DOCX/XLSX documents when possible.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -92,10 +96,17 @@ export function createReadLocalTool(options: ReadLocalToolOptions = {}): LocalTo
           }
         }
       }
-      if (isBinaryBuffer(fileBuffer)) {
-        return { output: { error: 'read only supports text files in Legalwork serve mode', path: absolutePath }, isError: true }
+      const extension = extname(absolutePath).toLowerCase()
+      const isExtractableDocument = EXTRACTABLE_EXTENSIONS.has(extension)
+      if (isBinaryBuffer(fileBuffer) && !isExtractableDocument) {
+        return { output: { error: 'read only supports text files, images, and extractable documents in Legalwork serve mode', path: absolutePath }, isError: true }
       }
-      const text = fileBuffer.toString('utf8').replace(/\r\n/g, '\n')
+      const text = isExtractableDocument
+        ? (await extractDocumentTextOp(absolutePath)).replace(/\r\n/g, '\n')
+        : fileBuffer.toString('utf8').replace(/\r\n/g, '\n')
+      if (isExtractableDocument && !text.trim()) {
+        return { output: { error: 'document text extraction returned no readable text', path: absolutePath }, isError: true }
+      }
       const allLines = text.split('\n')
       const offset = Math.max(1, normalizePositiveInteger(args.offset, 1))
       const effectiveMaxLines = options.maxLines ?? DEFAULT_MAX_LINES
@@ -138,6 +149,8 @@ export function createReadLocalTool(options: ReadLocalToolOptions = {}): LocalTo
           path: absolutePath,
           relative_path: relativePath,
           content,
+          kind: isExtractableDocument ? 'document_text' : 'text',
+          extension: isExtractableDocument ? extension : undefined,
           classification: classification ?? null,
           start_line: offset,
           end_line: Math.max(offset, offset + truncated.shownLines - 1),

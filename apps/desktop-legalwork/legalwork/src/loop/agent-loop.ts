@@ -1773,7 +1773,7 @@ export class AgentLoop {
         threadId: input.threadId,
         workspace: input.workspace
       })
-      if (supportsImageInput) {
+      if (supportsImageInput && attachment.mimeType.toLowerCase().startsWith('image/')) {
         imageAttachments.push({
           id: attachment.id,
           name: attachment.name,
@@ -1839,9 +1839,16 @@ function buildTextAttachmentFallback(
 
   const originalBase64 = attachment.data.toString('base64')
   if (Buffer.byteLength(originalBase64, 'utf8') > maxBase64Bytes) {
-    throw new Error(
-      `attachment ${attachment.id} is missing a compressed text fallback and original base64 exceeds ${maxBase64Bytes} byte limit`
-    )
+    return {
+      id: attachment.id,
+      name: attachment.name,
+      mimeType: attachment.mimeType,
+      dataBase64: '',
+      byteSize: attachment.byteSize,
+      ...(attachment.width ? { width: attachment.width } : {}),
+      ...(attachment.height ? { height: attachment.height } : {}),
+      wasCompressed: false
+    }
   }
   return {
     id: attachment.id,

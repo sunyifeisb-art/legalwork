@@ -117,6 +117,7 @@ function RuntimeWakeHero({
 export function MessageTimelineEmptyHero({
   route,
   ready,
+  showRuntimeWake,
   hasWorkspace,
   runtimeError,
   activeClawChannel,
@@ -128,6 +129,7 @@ export function MessageTimelineEmptyHero({
 }: {
   route: 'chat' | 'claw'
   ready: boolean
+  showRuntimeWake: boolean
   hasWorkspace: boolean
   runtimeError?: string | null
   activeClawChannel: ClawImChannelV1 | null
@@ -139,8 +141,14 @@ export function MessageTimelineEmptyHero({
 }): ReactElement | null {
   const { t } = useTranslation('common')
 
-  if (!ready) {
-    return <RuntimeWakeHero onRetry={onRetry} onOpenSettings={onOpenSettings} />
+  if (!ready && showRuntimeWake) {
+    return (
+      <RuntimeWakeHero
+        runtimeError={runtimeError}
+        onRetry={onRetry}
+        onOpenSettings={onOpenSettings}
+      />
+    )
   }
 
   if (!hasWorkspace) {

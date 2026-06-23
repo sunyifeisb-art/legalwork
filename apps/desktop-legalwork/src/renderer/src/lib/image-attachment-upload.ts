@@ -39,6 +39,39 @@ export type PreparedImageAttachmentUpload = {
   dataBase64: string
   mimeType: string
   textFallback: CoreAttachmentTextFallbackJson
+  previewUrl?: string
+}
+
+export type PreparedAttachmentUpload = {
+  dataBase64: string
+  mimeType: string
+  textFallback?: CoreAttachmentTextFallbackJson
+  previewUrl?: string
+}
+
+export async function prepareAttachmentUpload(
+  file: File,
+  capabilities: ImageAttachmentUploadCapabilities,
+  encoder: ImageAttachmentEncoder = encodeImageWithCanvas
+): Promise<PreparedAttachmentUpload> {
+  if (isImageFile(file)) {
+    return prepareImageAttachmentUpload(file, capabilities, encoder)
+  }
+  const dataBase64 = arrayBufferToBase64(await file.arrayBuffer())
+  return {
+    dataBase64,
+    mimeType: file.type || 'application/octet-stream',
+    textFallback: base64ByteLength(dataBase64) <= (
+      capabilities.textFallbackMaxBase64Bytes ?? DEFAULT_ATTACHMENT_TEXT_FALLBACK_MAX_BASE64_BYTES
+    )
+      ? {
+          dataBase64,
+          mimeType: file.type || 'application/octet-stream',
+          byteSize: file.size,
+          wasCompressed: false
+        }
+      : undefined
+  }
 }
 
 export async function prepareImageAttachmentUpload(
@@ -78,6 +111,7 @@ export async function prepareImageAttachmentUpload(
   return {
     dataBase64: uploadImage.dataBase64,
     mimeType: uploadImage.mimeType,
+    previewUrl: `data:${uploadImage.mimeType};base64,${uploadImage.dataBase64}`,
     textFallback: {
       dataBase64: textFallback.dataBase64,
       mimeType: textFallback.mimeType,
@@ -87,6 +121,10 @@ export async function prepareImageAttachmentUpload(
       wasCompressed: textFallback.wasCompressed
     }
   }
+}
+
+export function isImageFile(file: File): boolean {
+  return file.type.toLowerCase().startsWith('image/')
 }
 
 export async function encodeImageWithCanvas(
@@ -215,6 +253,9 @@ function resolvePreferredMimeType(capabilities: ImageAttachmentUploadCapabilitie
   const preferred =
     capabilities.textFallbackPreferredMimeType || DEFAULT_ATTACHMENT_TEXT_FALLBACK_PREFERRED_MIME_TYPE
   if (!capabilities.allowedMimeTypes?.length) return preferred
+  if (capabilities.allowedMimeTypes.some((mimeType) => mimeType === '*/*' || mimeType.endsWith('/*'))) {
+    return preferred
+  }
   return capabilities.allowedMimeTypes.includes(preferred)
     ? preferred
     : capabilities.allowedMimeTypes[0]!
@@ -228,7 +269,7 @@ function imageFitsLimits(input: {
   height: number
   options: ImageAttachmentEncoderOptions
 }): boolean {
-  if (input.options.allowedMimeTypes?.length && !input.options.allowedMimeTypes.includes(input.mimeType)) return false
+  if (input.options.allowedMimeTypes?.length && !mimeTypeAllowed(input.mimeType, input.options.allowedMimeTypes)) return false
   if (Math.max(input.width, input.height) > input.options.maxDimension) return false
   if (input.options.maxDecodedBytes !== undefined && input.byteSize > input.options.maxDecodedBytes) return false
   if (
@@ -240,6 +281,14 @@ function imageFitsLimits(input: {
 
 function base64ByteLength(value: string): number {
   return new TextEncoder().encode(value).byteLength
+}
+
+function mimeTypeAllowed(mimeType: string, allowedMimeTypes: readonly string[]): boolean {
+  return allowedMimeTypes.some((allowed) =>
+    allowed === '*/*' ||
+    allowed === mimeType ||
+    (allowed.endsWith('/*') && mimeType.startsWith(allowed.slice(0, -1)))
+  )
 }
 
 function canvasToBlob(

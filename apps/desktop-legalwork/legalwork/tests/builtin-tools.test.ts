@@ -320,6 +320,49 @@ describe('Legalwork built-in tools', () => {
     expect((lsOutput.names as Array<string>)[0]).toBe('demo.txt')
   })
 
+  it('writes valid OOXML packages instead of plain text when the target path is docx', async () => {
+    const writeOutput = await executeTool(host, workspace, 'write', {
+      path: 'docs/民事起诉状.docx',
+      content: '民事起诉状\n\n原告：张三'
+    })
+    expect(writeOutput.path).toBe(join(workspace, 'docs/民事起诉状.docx'))
+
+    const disk = await readFile(join(workspace, 'docs/民事起诉状.docx'))
+    expect(disk.subarray(0, 2).toString('utf8')).toBe('PK')
+    expect(disk.toString('utf8')).toContain('[Content_Types].xml')
+    expect(disk.toString('utf8')).toContain('word/document.xml')
+    expect(disk.toString('utf8')).toContain('民事起诉状')
+  })
+
+  it('rejects text replacement edits against docx packages', async () => {
+    await executeTool(host, workspace, 'write', {
+      path: 'docs/民事起诉状.docx',
+      content: '民事起诉状\n\n原告：张三'
+    })
+
+    const result = await host.execute(
+      {
+        callId: 'call_edit_docx',
+        toolName: 'edit',
+        arguments: {
+          path: 'docs/民事起诉状.docx',
+          oldText: '张三',
+          newText: '李四'
+        }
+      },
+      buildContext(workspace)
+    )
+
+    expect(result.item).toMatchObject({
+      kind: 'tool_result',
+      toolName: 'edit',
+      isError: true
+    })
+    expect(result.item.kind === 'tool_result' ? String((result.item.output as Record<string, unknown>).error) : '').toContain(
+      'DOCX files are binary'
+    )
+  })
+
   it('executes bash commands in the workspace', async () => {
     await writeFile(join(workspace, 'cmd.txt'), 'from bash\n', 'utf8')
     const output = await executeTool(host, workspace, 'bash', {
@@ -406,20 +449,26 @@ describe('Legalwork built-in tools', () => {
     )
   })
 
-  it('rejects file paths outside the workspace root', async () => {
+  it('reads absolute file paths outside the workspace root', async () => {
+    const outside = join(tmpdir(), `legalwork-outside-${Date.now()}.txt`)
+    await writeFile(outside, 'outside workspace\n', 'utf8')
     const result = await host.execute(
       {
         callId: 'call_escape',
         toolName: 'read',
-        arguments: { path: '../escape.txt' }
+        arguments: { path: outside }
       },
       buildContext(workspace)
     )
     expect(result.item).toMatchObject({
       kind: 'tool_result',
-      toolName: 'read',
-      isError: true
+      toolName: 'read'
     })
+    expect(result.item.kind === 'tool_result' ? result.item.isError : true).not.toBe(true)
+    expect(result.item.kind === 'tool_result' ? String((result.item.output as Record<string, unknown>).content) : '').toContain(
+      'outside workspace'
+    )
+    await rm(outside, { force: true })
   })
 
   it('rejects ambiguous multi-match edits like pi edit does', async () => {
@@ -487,6 +536,25 @@ describe('Legalwork built-in tools', () => {
     })
     expect(output.start_line).toBe(2)
     expect(String(output.content)).toContain('Use offset=4 to continue')
+  })
+
+  it('extracts readable text from supported binary documents', async () => {
+    await writeFile(join(workspace, 'sample.pdf'), Buffer.from('%PDF-1.7\0binary'))
+    const customRead = createReadLocalTool({
+      operations: {
+        extractDocumentText: async () => 'first page\nsecond page\nthird page'
+      }
+    })
+    const customHost = new LocalToolHost({ tools: [customRead] })
+    const output = await executeTool(customHost, workspace, 'read', {
+      path: 'sample.pdf',
+      limit: 2
+    })
+    expect(output.kind).toBe('document_text')
+    expect(output.extension).toBe('.pdf')
+    expect(output.start_line).toBe(1)
+    expect(String(output.content)).toContain('first page')
+    expect(String(output.content)).toContain('Use offset=3 to continue')
   })
 
   it('reads supported images with pi-style structured image metadata', async () => {

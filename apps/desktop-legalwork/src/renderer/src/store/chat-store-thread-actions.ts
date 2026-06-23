@@ -80,6 +80,18 @@ type StoreActionContext = {
 }
 
 let drainingQueuedMessages = false
+let scheduledStreamRecoveryTimer: ReturnType<typeof setTimeout> | null = null
+const STREAM_RECOVERY_RETRY_DELAY_MS = 1200
+
+async function ensureRuntimeReadyForAction(set: ChatStoreSet, get: ChatStoreGet): Promise<boolean> {
+  if (get().runtimeConnection === 'ready') return true
+  await get().probeRuntime('user')
+  if (get().runtimeConnection === 'ready') return true
+  if (!get().error) {
+    set({ error: i18n.t('common:runtimeActionNeedsConnection') })
+  }
+  return false
+}
 
 function subscribeThreadEventsWithRecovery(
   provider: AgentProvider,
@@ -95,8 +107,18 @@ function subscribeThreadEventsWithRecovery(
       if (signal.aborted) return
       const state = get()
       if (state.activeThreadId !== threadId || !state.busy) return
-      void state.recoverActiveTurn()
+      scheduleThreadStreamRecovery(get, threadId)
     })
+}
+
+function scheduleThreadStreamRecovery(get: ChatStoreGet, threadId: string): void {
+  if (scheduledStreamRecoveryTimer) return
+  scheduledStreamRecoveryTimer = setTimeout(() => {
+    scheduledStreamRecoveryTimer = null
+    const state = get()
+    if (state.activeThreadId !== threadId || !state.busy) return
+    void state.recoverActiveTurn()
+  }, STREAM_RECOVERY_RETRY_DELAY_MS)
 }
 
 export function createThreadActions(
@@ -104,8 +126,7 @@ export function createThreadActions(
 ): Pick<ChatState, 'createThread' | 'recoverActiveTurn' | 'selectThread' | 'drainQueuedMessages' | 'removeQueuedMessage' | 'sendMessage' | 'reviewActiveThread'> {
   return {
   createThread: async (options = {}) => {
-    if (get().runtimeConnection !== 'ready') {
-      set({ error: i18n.t('common:runtimeActionNeedsConnection') })
+    if (!(await ensureRuntimeReadyForAction(set, get))) {
       return
     }
     try {
@@ -213,7 +234,7 @@ export function createThreadActions(
       const ac = new AbortController()
       sseAbortRef.current = ac
       const sink = buildThreadEventSink(set, get, { threadId: activeThreadId, signal: ac.signal })
-      void p.subscribeThreadEvents(activeThreadId, latestSeq, sink, ac.signal)
+      subscribeThreadEventsWithRecovery(p, activeThreadId, latestSeq, sink, ac.signal, get)
       if (busy) {
         armBusyWatchdog(set, get)
       } else {
@@ -236,8 +257,7 @@ export function createThreadActions(
   },
 
   selectThread: async (id) => {
-    if (get().runtimeConnection !== 'ready') {
-      set({ error: i18n.t('common:runtimeActionNeedsConnection') })
+    if (!(await ensureRuntimeReadyForAction(set, get))) {
       return
     }
     const prevId = get().activeThreadId
@@ -335,8 +355,7 @@ export function createThreadActions(
   sendMessage: async (text, mode, overrides) => {
     const trimmedText = text.trim()
     if (!trimmedText) return false
-    if (get().runtimeConnection !== 'ready') {
-      set({ error: i18n.t('common:runtimeActionNeedsConnection') })
+    if (!(await ensureRuntimeReadyForAction(set, get))) {
       return false
     }
     const p = getProvider()
@@ -673,8 +692,7 @@ export function createThreadActions(
   },
 
   reviewActiveThread: async (target: ReviewTarget) => {
-    if (get().runtimeConnection !== 'ready') {
-      set({ error: i18n.t('common:runtimeActionNeedsConnection') })
+    if (!(await ensureRuntimeReadyForAction(set, get))) {
       return false
     }
     const p = getProvider()

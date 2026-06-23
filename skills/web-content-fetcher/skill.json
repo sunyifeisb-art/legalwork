@@ -1,0 +1,22 @@
+{
+  "name": "web-content-fetcher",
+  "description": "网页正文内容提取：已知 URL 的文章、页面正文、结构化信息抓取，优先返回干净 Markdown。",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/fetch",
+      "/read-url"
+    ],
+    "promptPatterns": [
+      "读取.*https?://|提取.*https?://|抓取.*https?://|网页正文|文章正文|页面内容|known URL|read.*url|fetch.*url"
+    ],
+    "fileTypes": []
+  },
+  "allowedTools": [],
+  "assets": [
+    "scripts/fetch.py",
+    "requirements.txt"
+  ],
+  "priority": 80
+}

@@ -48,6 +48,7 @@ export type ModelProviderProfileV1 = {
   name: string
   apiKey: string
   baseUrl: string
+  endpointFormat?: string
   models: string[]
 }
 export type ModelProviderSettingsV1 = {

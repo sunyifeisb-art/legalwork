@@ -54,7 +54,7 @@ describe('HTTP server', () => {
     expect(body.capabilities?.mcp?.available).toBe(false)
     expect(body.capabilities?.mcp?.reason).toMatch(/disabled/)
     expect(body.capabilities?.web?.fetch?.available).toBe(false)
-    expect(body.capabilities?.attachments?.allowedMimeTypes).toContain('image/png')
+    expect(body.capabilities?.attachments?.allowedMimeTypes).toContain('*/*')
     expect(body.capabilities?.cli?.serve?.available).toBe(true)
     expect(body.capabilities?.cli?.run?.available).toBe(false)
   })

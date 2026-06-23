@@ -67,6 +67,8 @@ export type ServerRuntime = {
   info(): RuntimeInfoResponse
   toolDiagnostics?(): RuntimeToolDiagnostics | Promise<RuntimeToolDiagnostics>
   skills?(): SkillRuntimeDiagnostics | Promise<SkillRuntimeDiagnostics>
+  refreshSkills?(): Promise<void>
+  installSkillRoot?(path: string, overwrite?: boolean): Promise<void>
   shutdown?(): Promise<void>
   dataComplianceTaskService?: DataComplianceTaskService
 }

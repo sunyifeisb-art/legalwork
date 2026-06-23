@@ -132,8 +132,9 @@ export function FloatingComposerModelPicker({
   const reasoningEnabled = Boolean(onComposerReasoningEffortChange)
   const currentReasoning = normalizeComposerReasoningEffort(composerReasoningEffort)
   const currentReasoningLabel = t(reasoningLabelKey(currentReasoning))
-  const modelLabel = fullModelLabel(composerModel, t('autoLabel'))
-  const currentBrand = brandForModel(composerModel, composerModelGroups)
+  const displayModel = resolveComposerDisplayModel(composerModel, composerPickList, composerModelGroups)
+  const modelLabel = fullModelLabel(displayModel, t('autoLabel'))
+  const currentBrand = brandForModel(displayModel, composerModelGroups)
   const controlsTitle = reasoningEnabled
     ? `${modelLabel} / ${currentReasoningLabel}`
     : modelLabel
@@ -601,6 +602,22 @@ function fullModelLabel(model: string, autoLabel: string): string {
   const trimmed = model.trim()
   if (!trimmed || trimmed.toLowerCase() === 'auto') return autoLabel
   return trimmed
+}
+
+export function resolveComposerDisplayModel(
+  composerModel: string,
+  _composerPickList: readonly string[],
+  composerModelGroups: readonly ModelProviderModelGroup[] = []
+): string {
+  const current = composerModel.trim()
+  if (current && current.toLowerCase() !== 'auto') return current
+
+  const groupedModelIds = composerModelGroups.flatMap((group) =>
+    group.modelIds.map((id) => id.trim()).filter((id) => id && id.toLowerCase() !== 'auto')
+  )
+  if (composerModelGroups.length === 1 && groupedModelIds.length > 0) return groupedModelIds[0]
+
+  return current
 }
 
 function estimatedModelSubmenuHeight(modelCount: number): number {

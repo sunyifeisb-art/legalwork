@@ -148,13 +148,6 @@ export const McpServerConfig = z
         })
       }
     }
-    if (server.trustScope === 'workspace' && server.trustedWorkspaceRoots.length === 0) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['trustedWorkspaceRoots'],
-        message: 'workspace-scoped MCP servers require at least one trusted workspace root'
-      })
-    }
   })
 export type McpServerConfig = z.infer<typeof McpServerConfig>
 
@@ -196,7 +189,7 @@ export const DEFAULT_ATTACHMENT_TEXT_FALLBACK_PREFERRED_MIME_TYPE = 'image/webp'
 export const AttachmentsCapabilityConfig = CapabilityToggleConfig.extend({
   maxImageBytes: z.number().int().positive().default(5 * 1024 * 1024),
   maxImageDimension: z.number().int().positive().default(4096),
-  allowedMimeTypes: z.array(z.string().min(1)).default(['image/png', 'image/jpeg', 'image/webp']),
+  allowedMimeTypes: z.array(z.string().min(1)).default(['*/*']),
   textFallbackMaxBase64Bytes: z.number().int().positive().default(DEFAULT_ATTACHMENT_TEXT_FALLBACK_MAX_BASE64_BYTES),
   textFallbackMaxImageDimension: z.number().int().positive().default(DEFAULT_ATTACHMENT_TEXT_FALLBACK_MAX_IMAGE_DIMENSION),
   textFallbackPreferredMimeType: z.string().min(1).default(DEFAULT_ATTACHMENT_TEXT_FALLBACK_PREFERRED_MIME_TYPE)

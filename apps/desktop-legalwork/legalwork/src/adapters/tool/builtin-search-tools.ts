@@ -78,7 +78,7 @@ export const createLsToolDefinition = createLsLocalTool
 export function createFindLocalTool(options: FindLocalToolOptions = {}): LocalTool {
   return LocalToolHost.defineTool({
     name: 'find',
-    description: 'Find workspace files by glob pattern, similar to pi find.',
+    description: 'Find local filesystem files by glob pattern, similar to pi find. Relative paths resolve against the current workspace; absolute paths may point anywhere on the computer.',
     inputSchema: {
       type: 'object',
       properties: {

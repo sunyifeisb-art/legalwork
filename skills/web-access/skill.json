@@ -1,0 +1,24 @@
+{
+  "name": "web-access",
+  "description": "浏览器与动态网页访问：处理登录态、动态渲染、小红书/社交平台、表单上传、Chrome/CDP 操作等网页任务。",
+  "version": "2.5.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/browser",
+      "/web-access"
+    ],
+    "promptPatterns": [
+      "小红书|微博|抖音|twitter|x\\.com|登录|动态页面|浏览器|chrome|cdp|网页操作|表单|上传|社交平台|打开网页|访问网页|browser|dynamic page|logged in|social platform"
+    ],
+    "fileTypes": []
+  },
+  "allowedTools": [],
+  "assets": [
+    "scripts/check-deps.mjs",
+    "scripts/cdp-proxy.mjs",
+    "scripts/find-url.mjs",
+    "references/cdp-api.md"
+  ],
+  "priority": 100
+}

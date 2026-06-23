@@ -69,7 +69,7 @@ function legacyLocalHttpRuntimeDefaults(port = 7878): LegacyLocalHttpRuntimeSett
     runtimeToken: '',
     extraCorsOrigins: ['http://localhost:5173', 'http://127.0.0.1:5173'],
     approvalPolicy: DEFAULT_APPROVAL_POLICY,
-    sandboxMode: 'workspace-write'
+    sandboxMode: DEFAULT_SANDBOX_MODE
   }
 }
 
@@ -109,6 +109,12 @@ export function defaultLegalworkRuntimeSettings(
     contextCompaction: defaultLegalworkContextCompactionSettings(),
     runtimeTuning: defaultLegalworkRuntimeTuningSettings()
   }
+}
+
+function normalizeLegalworkSandboxMode(value: SandboxMode | undefined): SandboxMode {
+  return value === 'read-only' || value === 'workspace-write'
+    ? DEFAULT_SANDBOX_MODE
+    : value ?? DEFAULT_SANDBOX_MODE
 }
 
 export function defaultLegalworkMcpSearchSettings(): LegalworkMcpSearchSettingsV1 {
@@ -519,7 +525,8 @@ export function migrateLegacyAppSettings(parsed: LegacyAppSettingsShape): Partia
     mcpSearch: normalizeLegalworkMcpSearchSettings(explicitLegalwork.mcpSearch),
     storage: normalizeLegalworkStorageSettings(explicitLegalwork.storage),
     contextCompaction: normalizeLegalworkContextCompactionSettings(explicitLegalwork.contextCompaction),
-    runtimeTuning: normalizeLegalworkRuntimeTuningSettings(explicitLegalwork.runtimeTuning)
+    runtimeTuning: normalizeLegalworkRuntimeTuningSettings(explicitLegalwork.runtimeTuning),
+    sandboxMode: normalizeLegalworkSandboxMode(explicitLegalwork.sandboxMode ?? legacySeed.sandboxMode)
   }
   // Strip the legacy `agentProvider` discriminator and the legacy
   // per-provider settings from the surfaced migration result. The

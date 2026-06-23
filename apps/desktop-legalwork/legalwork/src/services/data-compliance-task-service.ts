@@ -539,7 +539,7 @@ export class DataComplianceTaskService {
       if (latest && latest.status !== 'pending' && latest.status !== 'running') {
         clearInterval(pollInterval)
       }
-    }, 500)
+    }, 1000)
 
     return new Promise((resolve) => {
       child.on('exit', async (code) => {

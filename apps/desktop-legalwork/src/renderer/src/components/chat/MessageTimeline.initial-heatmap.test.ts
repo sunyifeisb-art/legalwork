@@ -7,6 +7,7 @@ import { MessageTimelineEmptyHero } from './message-timeline-empty'
 function renderHero(options: {
   route?: 'chat' | 'claw'
   ready?: boolean
+  showRuntimeWake?: boolean
   hasWorkspace?: boolean
   runtimeError?: string | null
 } = {}): string {
@@ -14,6 +15,7 @@ function renderHero(options: {
     createElement(MessageTimelineEmptyHero, {
       route: options.route ?? 'chat',
       ready: options.ready ?? true,
+      showRuntimeWake: options.showRuntimeWake ?? false,
       hasWorkspace: options.hasWorkspace ?? true,
       runtimeError: options.runtimeError ?? null,
       activeClawChannel: null,
@@ -38,10 +40,8 @@ describe('MessageTimeline empty hero routing', () => {
   })
 
   it('keeps offline, missing-workspace, and Claw empty states intact', () => {
-    const offlineHtml = renderHero({ ready: false })
+    const offlineHtml = renderHero({ ready: false, showRuntimeWake: true })
     expect(offlineHtml).toContain('legalwork is waking the local agent')
-    expect(offlineHtml).toContain('ds-runtime-wake-logo')
-    expect(offlineHtml).toContain('ds-work-logo')
     expect(renderHero({ hasWorkspace: false })).toContain('Choose working directory')
     const clawHtml = renderHero({ route: 'claw' })
     expect(clawHtml).toContain('Start a conversation with this assistant')
@@ -53,9 +53,16 @@ describe('MessageTimeline empty hero routing', () => {
   it('shows the runtime error in the offline hero when one is available', () => {
     const html = renderHero({
       ready: false,
-      runtimeError: i18n.t('common:runtimePortConflict')
+      showRuntimeWake: true,
+      runtimeError: 'The runtime port is already in use.'
     })
 
     expect(html).toContain('The runtime port is already in use.')
+  })
+
+  it('does not show the runtime wake hero during quiet background startup', () => {
+    const html = renderHero({ ready: false, showRuntimeWake: false })
+
+    expect(html).not.toContain('legalwork is waking the local agent')
   })
 })

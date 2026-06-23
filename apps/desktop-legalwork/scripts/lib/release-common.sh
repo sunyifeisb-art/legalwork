@@ -284,3 +284,82 @@ verify_release_state() {
 
   die "GitHub release verification timed out — expected draft=${expected_draft}, assets>=${expected_assets}"
 }
+
+verify_release_assets() {
+  local expected_draft="$1"
+  local label="$2"
+  shift 2
+  local required_patterns=("$@")
+  local attempt
+  local draft
+  local assets
+  local pattern
+  local asset
+  local matched
+  local missing
+
+  cyan "Verifying ${label} release assets on GitHub..."
+  for attempt in {1..30}; do
+    if draft=$(
+      gh release view "${TAG_NAME}" --json isDraft --jq '.isDraft' 2>/dev/null
+    ) && assets=$(
+      gh release view "${TAG_NAME}" --json assets --jq '.assets[].name' 2>/dev/null
+    ); then
+      missing=()
+      for pattern in "${required_patterns[@]}"; do
+        matched=false
+        while IFS= read -r asset; do
+          [[ -n "${asset}" ]] || continue
+          if [[ "${asset}" =~ ${pattern} ]]; then
+            matched=true
+            break
+          fi
+        done <<<"${assets}"
+        if [[ "${matched}" != true ]]; then
+          missing+=("${pattern}")
+        fi
+      done
+
+      if [[ "${draft}" == "${expected_draft}" && ${#missing[@]} -eq 0 ]]; then
+        green "  ✓ GitHub release assets verified (draft=${draft})"
+        return
+      fi
+    fi
+    sleep 2
+  done
+
+  red "GitHub release assets:"
+  printf '%s\n' "${assets:-<none>}" >&2
+  if [[ ${#missing[@]} -gt 0 ]]; then
+    red "Missing required asset pattern(s):"
+    printf '  - %s\n' "${missing[@]}" >&2
+  fi
+  die "GitHub release verification timed out — expected draft=${expected_draft} and required ${label} assets"
+}
+
+verify_mac_release_assets() {
+  local expected_draft="$1"
+  verify_release_assets "${expected_draft}" "macOS" \
+    '^latest-mac\.yml$' \
+    '^legalwork-[0-9]+\.[0-9]+\.[0-9]+-mac-arm64\.zip$' \
+    '^legalwork-[0-9]+\.[0-9]+\.[0-9]+-mac-x64\.zip$' \
+    '^legalwork-[0-9]+\.[0-9]+\.[0-9]+-mac-arm64\.dmg$' \
+    '^legalwork-[0-9]+\.[0-9]+\.[0-9]+-mac-x64\.dmg$'
+}
+
+verify_windows_release_assets() {
+  local expected_draft="$1"
+  verify_release_assets "${expected_draft}" "Windows" \
+    '^latest\.yml$' \
+    '^legalwork-[0-9]+\.[0-9]+\.[0-9]+-win-(x64|ia32)\.exe$'
+}
+
+verify_desktop_auto_update_release_assets() {
+  local expected_draft="$1"
+  verify_release_assets "${expected_draft}" "desktop auto-update" \
+    '^latest-mac\.yml$' \
+    '^legalwork-[0-9]+\.[0-9]+\.[0-9]+-mac-arm64\.zip$' \
+    '^legalwork-[0-9]+\.[0-9]+\.[0-9]+-mac-x64\.zip$' \
+    '^latest\.yml$' \
+    '^legalwork-[0-9]+\.[0-9]+\.[0-9]+-win-(x64|ia32)\.exe$'
+}

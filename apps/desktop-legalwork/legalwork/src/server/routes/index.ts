@@ -29,7 +29,7 @@ import { resolveUserInput } from './user-inputs.js'
 import { resumeSession } from './sessions.js'
 import { usageJsonResponse } from './usage.js'
 import { runtimeInfoJsonResponse, runtimeToolDiagnosticsJsonResponse } from './runtime-info.js'
-import { listSkills } from './skills.js'
+import { installSkill, listSkills, refreshSkills } from './skills.js'
 import {
   attachmentDiagnostics,
   getAttachmentContent,
@@ -114,6 +114,14 @@ export function buildRouter(runtime: ServerRuntime): Router {
   router.add('GET', '/v1/skills', async (request) => {
     if (!authorize(request, runtime)) return ERRORS.unauthorized()
     return listSkills(runtime)
+  })
+  router.add('POST', '/v1/skills/refresh', async (request) => {
+    if (!authorize(request, runtime)) return ERRORS.unauthorized()
+    return refreshSkills(runtime)
+  })
+  router.add('POST', '/v1/skills/install', async (request) => {
+    if (!authorize(request, runtime)) return ERRORS.unauthorized()
+    return installSkill(runtime, request)
   })
   router.add('POST', '/v1/attachments', async (request) => {
     if (!authorize(request, runtime)) return ERRORS.unauthorized()

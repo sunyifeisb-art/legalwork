@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import {
+  attachmentFilesFromTransfer,
   FloatingComposer,
   formatGoalElapsedSeconds,
   handleComposerImagePaste,
@@ -16,6 +17,7 @@ import {
   calculateFloatingMenuPlacement,
   calculateFloatingSubmenuPlacement,
   composerReasoningEffortRequestValue,
+  resolveComposerDisplayModel,
 } from './FloatingComposerModelPicker'
 import { getGoalPanelDraftObjective } from './floating-composer-commands'
 import { useChatStore } from '../../store/chat-store'
@@ -210,6 +212,32 @@ describe('FloatingComposer model controls', () => {
     expect(html).toContain('Auto')
     expect(html).toContain('High')
   })
+
+  it('shows the active provider model when auto resolves to Kimi Code', () => {
+    expect(resolveComposerDisplayModel('auto', ['auto', 'kimi-for-coding'], [
+      { providerId: 'kimi-code', label: 'Kimi Code', modelIds: ['kimi-for-coding'] }
+    ])).toBe('kimi-for-coding')
+
+    const html = renderToStaticMarkup(
+      createElement(FloatingComposerModelPicker, {
+        compact: false,
+        mode: 'select',
+        composerModel: 'auto',
+        composerPickList: ['auto', 'kimi-for-coding'],
+        composerModelGroups: [
+          { providerId: 'kimi-code', label: 'Kimi Code', modelIds: ['kimi-for-coding'] }
+        ],
+        composerReasoningEffort: 'max',
+        canChangeModel: true,
+        onComposerModelChange: () => undefined,
+        onComposerReasoningEffortChange: () => undefined
+      })
+    )
+
+    expect(html).toContain('kimi-for-coding')
+    expect(html).toContain('ds-model-brand-kimi-code')
+    expect(html).not.toContain('ds-model-brand-deepseek')
+  })
 })
 
 describe('FloatingComposer image transfer helpers', () => {
@@ -232,6 +260,7 @@ describe('FloatingComposer image transfer helpers', () => {
     }
 
     expect(imageFilesFromTransfer(source)).toEqual([pastedWebp, screenshot])
+    expect(attachmentFilesFromTransfer(source)).toEqual([pastedWebp, notes, screenshot])
     expect(imageTransferHasImages(source)).toBe(true)
   })
 

@@ -398,8 +398,8 @@ export function KnowledgeBaseFileView({ node, onBack }: Props): ReactElement {
         id: string
         status: string
         items?: Array<{
-          type: string
-          content?: string
+          kind: string
+          text?: string
           toolName?: string
           status?: string
         }>
@@ -409,8 +409,8 @@ export function KnowledgeBaseFileView({ node, onBack }: Props): ReactElement {
       if (turnData.status === 'completed') {
         // Extract the assistant's text response from items
         const textItems = turnData.items
-          ?.filter((item) => item.type === 'text' && item.content)
-          .map((item) => item.content ?? '')
+          ?.filter((item) => item.kind === 'assistant_text' && item.text)
+          .map((item) => item.text ?? '')
           .join('\n\n') || '（AI 未返回任何内容）'
         return textItems
       }

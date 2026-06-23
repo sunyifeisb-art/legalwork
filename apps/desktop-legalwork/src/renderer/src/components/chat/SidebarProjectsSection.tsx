@@ -329,7 +329,7 @@ export function SidebarProjectsSection({
         <button
           type="button"
           onClick={toggleAllGroups}
-          className="flex min-w-0 items-center gap-1.5 rounded-md px-2 py-1.5 text-[15px] text-ds-faint transition hover:bg-[var(--ds-sidebar-row-hover)] hover:text-ds-muted"
+          className="flex min-w-0 items-center gap-1.5 rounded-md px-2 py-1.5 text-[13px] font-semibold text-ds-muted transition hover:bg-[var(--ds-sidebar-row-hover)] hover:text-ds-ink"
           title={t('sidebarProjects')}
           aria-label={t('sidebarProjects')}
         >
@@ -410,7 +410,7 @@ export function SidebarProjectsSection({
                 onClick={() =>
                   setCollapsed((current) => ({ ...current, [workspacePath]: !current[workspacePath] }))
                 }
-                className="min-h-[36px] text-[13.5px]"
+                className="min-h-[36px]"
                 buttonClassName="items-center gap-2 px-2.5 py-2"
                 actionsVisibility="hidden"
                 actionsLayout="overlay"

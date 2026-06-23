@@ -51,6 +51,71 @@ function Require-Command([string]$Name) {
   }
 }
 
+function Test-GitHubReleaseAssets([string]$TagName, [bool]$ExpectedDraft, [string]$Label, [string[]]$RequiredPatterns) {
+  Write-Info "Verifying $Label release assets on GitHub..."
+  $lastAssets = @()
+  $missing = @()
+
+  for ($attempt = 1; $attempt -le 30; $attempt++) {
+    try {
+      $json = & gh release view $TagName --json isDraft,assets
+      if ($LASTEXITCODE -ne 0) { throw "gh release view failed" }
+      $release = $json | ConvertFrom-Json
+      $lastAssets = @($release.assets | ForEach-Object { $_.name })
+      $missing = @()
+
+      foreach ($pattern in $RequiredPatterns) {
+        $matched = $false
+        foreach ($asset in $lastAssets) {
+          if ($asset -match $pattern) {
+            $matched = $true
+            break
+          }
+        }
+        if (-not $matched) { $missing += $pattern }
+      }
+
+      if ([bool]$release.isDraft -eq $ExpectedDraft -and $missing.Count -eq 0) {
+        Write-Ok "  ✓ GitHub release assets verified (draft=$($release.isDraft))"
+        return
+      }
+    } catch {
+      # GitHub release metadata can lag briefly after upload; retry below.
+    }
+    Start-Sleep -Seconds 2
+  }
+
+  Write-Err 'GitHub release asset verification failed.'
+  Write-Host 'GitHub release assets:' -ForegroundColor Red
+  if ($lastAssets.Count) {
+    $lastAssets | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
+  } else {
+    Write-Host '  <none>' -ForegroundColor Red
+  }
+  if ($missing.Count) {
+    Write-Host 'Missing required asset pattern(s):' -ForegroundColor Red
+    $missing | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
+  }
+  exit 1
+}
+
+function Test-WindowsReleaseAssets([string]$TagName, [bool]$ExpectedDraft) {
+  Test-GitHubReleaseAssets $TagName $ExpectedDraft 'Windows' @(
+    '^latest\.yml$',
+    '^legalwork-[0-9]+\.[0-9]+\.[0-9]+-win-(x64|ia32)\.exe$'
+  )
+}
+
+function Test-DesktopAutoUpdateReleaseAssets([string]$TagName, [bool]$ExpectedDraft) {
+  Test-GitHubReleaseAssets $TagName $ExpectedDraft 'desktop auto-update' @(
+    '^latest-mac\.yml$',
+    '^legalwork-[0-9]+\.[0-9]+\.[0-9]+-mac-arm64\.zip$',
+    '^legalwork-[0-9]+\.[0-9]+\.[0-9]+-mac-x64\.zip$',
+    '^latest\.yml$',
+    '^legalwork-[0-9]+\.[0-9]+\.[0-9]+-win-(x64|ia32)\.exe$'
+  )
+}
+
 function Load-LocalReleaseEnv([string]$RootPath) {
   $configuredLegacy = [Environment]::GetEnvironmentVariable('DEEPSEEK_GUI_RELEASE_ENV', 'Process')
   $configured = [Environment]::GetEnvironmentVariable('LEGALWORK_RELEASE_ENV', 'Process') || $configuredLegacy
@@ -203,6 +268,7 @@ foreach ($asset in $Assets) {
     exit 1
   }
 }
+Test-WindowsReleaseAssets $TagName $true
 
 if ($R2 -or $PromoteR2) {
   Write-Info "Uploading Windows asset metadata to R2 ($TagName)..."
@@ -223,12 +289,14 @@ if ($PromoteR2) {
 }
 
 if ($Publish) {
+  Test-DesktopAutoUpdateReleaseAssets $TagName $true
   Write-Info "Publishing release $TagName..."
   & gh release edit $TagName --draft=false
   if ($LASTEXITCODE -ne 0) {
     Write-Err 'gh release edit --draft=false failed'
     exit 1
   }
+  Test-DesktopAutoUpdateReleaseAssets $TagName $false
   Write-Ok "Release $TagName is now public."
 } else {
   Write-Info 'Release remains draft. Re-run with -Publish when ready.'

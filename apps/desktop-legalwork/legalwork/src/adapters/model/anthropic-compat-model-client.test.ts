@@ -86,6 +86,33 @@ describe('AnthropicCompatModelClient', () => {
     vi.restoreAllMocks()
   })
 
+  it.each([
+    ['https://api.kimi.com/coding/', 'https://api.kimi.com/coding/v1/messages'],
+    ['https://api.kimi.com/coding/v1', 'https://api.kimi.com/coding/v1/messages'],
+    ['https://api.kimi.com/coding/v1/messages', 'https://api.kimi.com/coding/v1/messages'],
+    ['https://api.anthropic.com/v1', 'https://api.anthropic.com/v1/messages']
+  ])('builds the messages endpoint from %s', async (baseUrl, expectedUrl) => {
+    const fetchImpl = vi.fn().mockResolvedValue(
+      okJsonResponse({
+        id: 'msg_1',
+        type: 'message',
+        role: 'assistant',
+        model: 'kimi-for-coding',
+        content: [],
+        stop_reason: 'end_turn',
+        stop_sequence: null,
+        usage: {}
+      })
+    )
+
+    const client = createClient({ baseUrl, fetchImpl: fetchImpl as unknown as typeof fetch })
+    for await (const _ of client.stream(baseRequest())) {
+      // consume
+    }
+
+    expect(fetchImpl).toHaveBeenCalledWith(expectedUrl, expect.any(Object))
+  })
+
   it('builds request body with system prompt extracted to top-level', async () => {
     const fetchImpl = vi.fn()
     const body = await captureRequest(fetchImpl, baseRequest({ history: [{ kind: 'user_message', id: '1', turnId: 'u1', threadId: 't1', role: 'user', status: 'completed', createdAt: '2024-01-01T00:00:00Z', text: 'Hello' }] }))
@@ -154,6 +181,36 @@ describe('AnthropicCompatModelClient', () => {
     const textDeltas = chunks.filter((c) => c.kind === 'assistant_text_delta')
     expect(textDeltas.map((c) => c.text)).toEqual(['Hello', ' world'])
     expect(chunks.some((c) => c.kind === 'completed')).toBe(true)
+  })
+
+  it('maps Anthropic cache usage without negative misses', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(
+      sseResponse([
+        'event: message_start\ndata: {"type":"message_start","message":{"id":"msg_1","type":"message","role":"assistant","model":"kimi-for-coding","content":[],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":4,"output_tokens":0,"cache_read_input_tokens":10,"cache_creation_input_tokens":1}}}',
+        'event: content_block_start\ndata: {"type":"content_block_start","index":0,"content_block":{"type":"text","text":""}}',
+        'event: content_block_delta\ndata: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"Hello"}}',
+        'event: content_block_stop\ndata: {"type":"content_block_stop","index":0}',
+        'event: message_delta\ndata: {"type":"message_delta","delta":{"stop_reason":"end_turn"},"usage":{"output_tokens":2}}',
+        'event: message_stop\ndata: {"type":"message_stop"}'
+      ])
+    )
+
+    const client = createClient({ fetchImpl })
+    const chunks: { kind: string; usage?: Record<string, unknown> }[] = []
+    for await (const chunk of client.stream(baseRequest())) {
+      chunks.push(chunk)
+    }
+
+    const usage = chunks.find((c) => c.kind === 'usage')?.usage
+    expect(usage).toMatchObject({
+      promptTokens: 15,
+      completionTokens: 2,
+      totalTokens: 17,
+      cacheHitTokens: 10,
+      cacheMissTokens: 5,
+      cachedTokens: 10,
+      cacheHitRate: 10 / 15
+    })
   })
 
   it('streams thinking/reasoning deltas', async () => {

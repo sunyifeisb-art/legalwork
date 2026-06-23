@@ -46,13 +46,21 @@ export class FileAttachmentStore implements AttachmentStore {
   }): Promise<AttachmentMetadata> {
     await mkdir(this.options.rootDir, { recursive: true })
     const image = detectImage(input.data)
-    if (!image) throw new Error('unsupported image MIME type')
-    if (input.mimeType && input.mimeType !== image.mimeType) throw new Error('declared MIME type does not match image content')
-    if (!this.options.config.allowedMimeTypes.includes(image.mimeType)) throw new Error(`image MIME type is not allowed: ${image.mimeType}`)
-    if (input.data.byteLength > this.options.config.maxImageBytes) throw new Error(`image exceeds ${this.options.config.maxImageBytes} byte limit`)
-    const maxDimension = Math.max(image.width ?? 0, image.height ?? 0)
-    if (maxDimension > this.options.config.maxImageDimension) {
-      throw new Error(`image exceeds ${this.options.config.maxImageDimension}px dimension limit`)
+    const mimeType = image?.mimeType ?? input.mimeType ?? 'application/octet-stream'
+    if (image && input.mimeType && input.mimeType !== image.mimeType) {
+      throw new Error('declared MIME type does not match image content')
+    }
+    if (!mimeTypeAllowed(mimeType, this.options.config.allowedMimeTypes)) {
+      throw new Error(`attachment MIME type is not allowed: ${mimeType}`)
+    }
+    if (input.data.byteLength > this.options.config.maxImageBytes) {
+      throw new Error(`attachment exceeds ${this.options.config.maxImageBytes} byte limit`)
+    }
+    if (image) {
+      const maxDimension = Math.max(image.width ?? 0, image.height ?? 0)
+      if (maxDimension > this.options.config.maxImageDimension) {
+        throw new Error(`image exceeds ${this.options.config.maxImageDimension}px dimension limit`)
+      }
     }
     if (input.textFallback) validateTextFallback(input.textFallback, this.options.config)
     const hash = createHash('sha256').update(input.data).digest('hex')
@@ -74,11 +82,11 @@ export class FileAttachmentStore implements AttachmentStore {
     const metadata: AttachmentMetadata = AttachmentMetadataSchema.parse(mergeScope({
       id,
       name: input.name,
-      mimeType: image.mimeType,
+      mimeType,
       byteSize: input.data.byteLength,
       hash,
-      ...(image.width ? { width: image.width } : {}),
-      ...(image.height ? { height: image.height } : {}),
+      ...(image?.width ? { width: image.width } : {}),
+      ...(image?.height ? { height: image.height } : {}),
       ...(input.textFallback ? { textFallback: input.textFallback } : {}),
       threadIds: [],
       workspaces: [],
@@ -167,8 +175,8 @@ function isAuthorized(metadata: AttachmentMetadata, scope: { threadId?: string; 
 }
 
 function validateTextFallback(fallback: AttachmentTextFallback, config: AttachmentsCapabilityConfig): void {
-  if (!config.allowedMimeTypes.includes(fallback.mimeType)) {
-    throw new Error(`fallback image MIME type is not allowed: ${fallback.mimeType}`)
+  if (!mimeTypeAllowed(fallback.mimeType, config.allowedMimeTypes)) {
+    throw new Error(`fallback attachment MIME type is not allowed: ${fallback.mimeType}`)
   }
   if (Buffer.byteLength(fallback.dataBase64, 'utf8') > config.textFallbackMaxBase64Bytes) {
     throw new Error(`fallback image exceeds ${config.textFallbackMaxBase64Bytes} base64 byte limit`)
@@ -177,6 +185,14 @@ function validateTextFallback(fallback: AttachmentTextFallback, config: Attachme
   if (maxDimension > config.textFallbackMaxImageDimension) {
     throw new Error(`fallback image exceeds ${config.textFallbackMaxImageDimension}px dimension limit`)
   }
+}
+
+function mimeTypeAllowed(mimeType: string, allowedMimeTypes: readonly string[]): boolean {
+  return allowedMimeTypes.some((allowed) =>
+    allowed === '*/*' ||
+    allowed === mimeType ||
+    (allowed.endsWith('/*') && mimeType.startsWith(allowed.slice(0, -1)))
+  )
 }
 
 function detectImage(buffer: Buffer): { mimeType: string; width?: number; height?: number } | null {

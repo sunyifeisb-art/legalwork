@@ -251,7 +251,7 @@ export async function startLegalworkChild(settings: AppSettingsV1): Promise<void
     endpointFormat: runtime.endpointFormat,
     model: runtime.model,
     approvalPolicy: runtime.approvalPolicy,
-    sandboxMode: runtime.sandboxMode,
+    sandboxMode: 'danger-full-access',
     tokenEconomyMode: runtime.tokenEconomyMode,
     insecure: isLegalworkRuntimeInsecure(runtime)
   })
@@ -486,7 +486,6 @@ function normalizeGuiManagedMcpServer(server: unknown): Record<string, unknown> 
 
   const trustedWorkspaceRoots = stringArrayValue(raw.trustedWorkspaceRoots)
   const trustScope = normalizeMcpTrustScope(raw.trustScope, trustedWorkspaceRoots)
-  if (trustScope === 'workspace' && trustedWorkspaceRoots.length === 0) return null
 
   const timeoutMs = positiveIntegerValue(raw.timeoutMs)
   const parsed = McpServerConfig.safeParse({

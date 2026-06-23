@@ -8,13 +8,14 @@ import {
   FileQuestion,
   FileText,
   LayoutGrid,
+  LoaderCircle,
   Plus,
   Scale,
   Settings,
   Smartphone
 } from 'lucide-react'
 import { GuiUpdateBadge } from '../sidebar/GuiUpdateBadge'
-import type { NormalizedThread } from '../../agent/types'
+import type { NormalizedThread, RuntimeConnectionStatus } from '../../agent/types'
 import { useChatStore, type SettingsRouteSection } from '../../store/chat-store'
 import type {
   ClawImChannelV1,
@@ -49,6 +50,7 @@ type Props = {
   connectPhoneSidebarOpen: boolean
   pluginsActive: boolean
   knowledgePanelOpen: boolean
+  runtimeConnection: RuntimeConnectionStatus
   runtimeReady: boolean
   threadSearch: string
   showArchivedThreads: boolean
@@ -92,6 +94,7 @@ export function Sidebar({
   connectPhoneSidebarOpen,
   pluginsActive,
   knowledgePanelOpen,
+  runtimeConnection,
   runtimeReady,
   threadSearch,
   showArchivedThreads,
@@ -141,6 +144,7 @@ export function Sidebar({
   const resetClawChannelSession = useChatStore((s) => s.resetClawChannelSession)
 
   const [imDialogMode, setImDialogMode] = useState<ClawImDialogMode | null>(null)
+  const showAgentStartingHint = !runtimeReady && (runtimeConnection === 'idle' || runtimeConnection === 'checking')
 
   const activeClawChannel = useMemo(
     () => clawChannels.find((channel) => channel.id === activeClawChannelId) ?? clawChannels[0] ?? null,
@@ -197,6 +201,12 @@ export function Sidebar({
               disabledHint={t('runtimeActionNeedsConnection')}
               variant="accent"
             />
+            {showAgentStartingHint ? (
+              <div className="mx-2 mb-1 mt-1 flex items-start gap-2 rounded-[8px] border border-ds-border-muted bg-ds-subtle px-2.5 py-2 text-[12px] leading-5 text-ds-muted">
+                <LoaderCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 animate-spin text-accent" strokeWidth={2} />
+                <span className="min-w-0">{t('sidebarAgentStarting')}</span>
+              </div>
+            ) : null}
             <SidebarCommandRow
               icon={<FileText className="h-4 w-4" strokeWidth={1.75} />}
               label={t('documentWriting')}
@@ -257,7 +267,7 @@ export function Sidebar({
         />
       ) : activeView === 'documentWriting' ? (
         <div className="ds-no-drag flex min-h-0 flex-1 flex-col px-2 pt-1">
-          <div className="px-1 text-[15px] font-normal text-ds-faint">
+          <div className="px-1 text-[13px] font-medium text-ds-faint">
             {t('documentWriting')}
           </div>
         </div>
@@ -272,13 +282,13 @@ export function Sidebar({
         />
       ) : activeView === 'schedule' ? (
         <div className="ds-no-drag flex min-h-0 flex-1 flex-col px-2 pt-1">
-          <div className="px-1 text-[15px] font-normal text-ds-faint">
+          <div className="px-1 text-[13px] font-medium text-ds-faint">
             {t('schedule')}
           </div>
         </div>
       ) : activeView === 'knowledgeBase' ? (
         <div className="ds-no-drag flex min-h-0 flex-1 flex-col px-2 pt-1">
-          <div className="px-1 text-[15px] font-normal text-ds-faint">
+          <div className="px-1 text-[13px] font-medium text-ds-faint">
             {t('knowledgeBase')}
           </div>
         </div>

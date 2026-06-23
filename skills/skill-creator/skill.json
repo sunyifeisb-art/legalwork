@@ -1,0 +1,23 @@
+{
+  "name": "skill-creator",
+  "description": "创建、更新、包装和验证 Agent Skills：当用户要求新建 skill、完善现有 skill、添加脚本/引用/资产、生成可复用工作流或改造 skill 质量时使用。",
+  "version": "0.1.0",
+  "entry": "SKILL.md",
+  "triggers": {
+    "commands": [
+      "/create-skill",
+      "/skill-create"
+    ],
+    "promptPatterns": [
+      "创建.*skill|新建.*skill|完善.*skill|更新.*skill|改造.*skill|包装.*skill|skill.*质量|skill.*workflow|create.*skill|update.*skill"
+    ],
+    "fileTypes": []
+  },
+  "allowedTools": [],
+  "assets": [
+    "scripts/init_skill.py",
+    "scripts/package_skill.py",
+    "scripts/quick_validate.py"
+  ],
+  "priority": 95
+}

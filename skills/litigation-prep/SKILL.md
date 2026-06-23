@@ -266,3 +266,10 @@ python3 redact_agent.py file <input> --policy internal_legal_analysis --output <
 ---
 
 **本 Skill 基于 yxk-lawyer/litigation-prep-skill-cn 改造，内嵌于 legalwork，集成 OCR、脱敏、知识库与案例系统能力。**
+
+## Legalwork 质量检查
+
+- 是否已经识别案由、请求权基础、管辖、时效、证据链和对方抗辩？
+- 是否把附件/OCR/知识库材料转成起诉准备清单，而不是只做案情摘要？
+- 是否列出缺失证据、补证路径、起诉状/证据目录下一步动作？
+- 是否提示需要律师人工复核的高风险事项？

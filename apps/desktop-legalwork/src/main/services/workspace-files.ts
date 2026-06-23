@@ -46,6 +46,7 @@ import {
   resolveWorkspaceDirectory,
   validateEntryName
 } from './workspace-paths'
+import { isDocxPath, plainTextToDocxBuffer } from './plain-text-docx'
 
 const MAX_FILE_PREVIEW_BYTES = 1_500_000
 const MAX_IMAGE_PREVIEW_BYTES = 12 * 1024 * 1024
@@ -61,6 +62,18 @@ const WORKSPACE_IMAGE_MIME_BY_EXT = new Map([
   ['.avif', 'image/avif'],
   ['.ico', 'image/x-icon']
 ])
+
+async function writeWorkspaceTextContent(targetPath: string, content: string, options: { exclusive?: boolean } = {}): Promise<void> {
+  if (isDocxPath(targetPath)) {
+    await writeFile(targetPath, plainTextToDocxBuffer(content, { title: targetPath }), options.exclusive ? { flag: 'wx' } : undefined)
+    return
+  }
+  await writeFile(
+    targetPath,
+    content,
+    options.exclusive ? { encoding: 'utf8', flag: 'wx' } : 'utf8'
+  )
+}
 
 export async function listWorkspaceDirectory(
   payload: WorkspaceDirectoryTarget
@@ -166,7 +179,7 @@ export async function writeWorkspaceFile(
   try {
     const targetPath = await resolveTargetPathWithinWorkspace(payload.path, payload.workspaceRoot)
     await mkdir(dirname(targetPath), { recursive: true })
-    await writeFile(targetPath, payload.content, 'utf8')
+    await writeWorkspaceTextContent(targetPath, payload.content)
     return {
       ok: true,
       path: targetPath,
@@ -189,7 +202,7 @@ export async function createWorkspaceFile(
     if (await pathExists(targetPath)) {
       return { ok: false, message: 'File already exists.' }
     }
-    await writeFile(targetPath, payload.content ?? '', { encoding: 'utf8', flag: 'wx' })
+    await writeWorkspaceTextContent(targetPath, payload.content ?? '', { exclusive: true })
     return {
       ok: true,
       path: targetPath,

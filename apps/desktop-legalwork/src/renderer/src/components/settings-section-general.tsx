@@ -133,6 +133,7 @@ export function GeneralSettingsSection({ ctx }: { ctx: Record<string, any> }): R
       id: preset?.id ?? current.id,
       name: preset?.name ?? current.name,
       baseUrl: current.baseUrl || preset?.baseUrl || '',
+      endpointFormat: current.endpointFormat || preset?.endpointFormat || 'chat_completions',
       models: current.models.length > 0 ? current.models : preset?.models ?? []
     }
     update({
@@ -145,7 +146,8 @@ export function GeneralSettingsSection({ ctx }: { ctx: Record<string, any> }): R
         : { providers: buildProviderProfiles(nextProvider) },
       agents: legalworkSettingsPatch({
         providerId: nextProvider.id,
-        model: nextProvider.models[0] || legalwork.model
+        model: nextProvider.models[0] || legalwork.model,
+        endpointFormat: nextProvider.endpointFormat
       })
     })
   }

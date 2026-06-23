@@ -24,15 +24,15 @@ const ROOT = resolve(SCRIPT_DIR, '..')
 const PLATFORM_SPECS = {
   mac: {
     updateFile: 'latest-mac.yml',
-    assetPattern: /^LegalWork-.+-mac-(arm64|x64)\.(dmg|zip)(\.blockmap)?$/
+    assetPattern: /^legalwork-.+-mac-(arm64|x64)\.(dmg|zip)(\.blockmap)?$/i
   },
   win: {
     updateFile: 'latest.yml',
-    assetPattern: /^LegalWork-.+-win-x64\.exe(\.blockmap)?$/
+    assetPattern: /^legalwork-.+-win-(x64|ia32)\.exe(\.blockmap)?$/i
   },
   linux: {
     updateFile: 'latest-linux.yml',
-    assetPattern: /^LegalWork-.+-linux-x86_64\.AppImage(\.blockmap)?$/
+    assetPattern: /^legalwork-.+-linux-(x64|x86_64)\.AppImage(\.blockmap)?$/i
   }
 }
 

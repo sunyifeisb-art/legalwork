@@ -1101,7 +1101,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                             ['Web', runtimeInfo?.capabilities?.web?.status],
                             ['Skills', runtimeInfo?.capabilities?.skills?.status],
                             ['Subagents', runtimeInfo?.capabilities?.subagents?.status],
-                            ['Images', runtimeInfo?.capabilities?.attachments?.status],
+                            ['Files', runtimeInfo?.capabilities?.attachments?.status],
                             ['Memory', runtimeInfo?.capabilities?.memory?.status]
                           ].map(([label, status]) => (
                             <span
