@@ -51,7 +51,7 @@ describe('SkillRuntime', () => {
     }))
   })
 
-  it('activates nested skills from legal work keywords without explicit mention', async () => {
+  it('finds nested skills from legal work keywords without auto-injecting them', async () => {
     const skillDir = join(tempRoot, 'capital-markets', 'prepare-ipo-risk-factors')
     await mkdir(skillDir, { recursive: true })
     await writeFile(join(skillDir, 'SKILL.md'), [
@@ -73,20 +73,19 @@ describe('SkillRuntime', () => {
       legacySkillMd: true
     })
 
-    const resolution = runtime.resolveTurn({
-      prompt: '帮我 prepare IPO risk factors for this securities offering memo',
-      workspace: tempRoot
-    })
+    const query = '帮我 prepare IPO risk factors for this securities offering memo'
+    const matches = runtime.search({ query })
+    const resolution = runtime.resolveTurn({ prompt: query, workspace: tempRoot })
 
-    expect(resolution.activeSkillIds).toEqual(['capital-markets-prepare-ipo-risk-factors'])
-    expect(resolution.activations[0]).toMatchObject({
-      skillId: 'capital-markets-prepare-ipo-risk-factors',
+    expect(matches[0]).toMatchObject({
+      id: 'capital-markets-prepare-ipo-risk-factors',
       reason: 'keywords'
     })
-    expect(resolution.instructions.join('\n')).toContain('IPO Risk Factors')
+    expect(resolution.activeSkillIds).toEqual([])
+    expect(runtime.load('capital-markets-prepare-ipo-risk-factors')?.instructions).toContain('IPO Risk Factors')
   })
 
-  it('bridges Chinese legal prompts to English skill metadata', async () => {
+  it('bridges Chinese legal prompts to English skill metadata through search', async () => {
     const skillDir = join(tempRoot, 'technology-transactions', 'review-enterprise-saas-agreement')
     await mkdir(skillDir, { recursive: true })
     await writeFile(join(skillDir, 'SKILL.md'), [
@@ -106,15 +105,14 @@ describe('SkillRuntime', () => {
       legacySkillMd: true
     })
 
-    const resolution = runtime.resolveTurn({
-      prompt: '帮我审查这份 SaaS 服务协议，重点看合同条款风险',
-      workspace: tempRoot
-    })
+    const query = '帮我审查这份 SaaS 服务协议，重点看合同条款风险'
+    const matches = runtime.search({ query })
+    const resolution = runtime.resolveTurn({ prompt: query, workspace: tempRoot })
 
-    expect(resolution.activeSkillIds).toEqual(['technology-transactions-review-enterprise-saas-agreement'])
-    expect(resolution.activations[0]).toMatchObject({
-      skillId: 'technology-transactions-review-enterprise-saas-agreement',
+    expect(matches[0]).toMatchObject({
+      id: 'technology-transactions-review-enterprise-saas-agreement',
       reason: 'keywords'
     })
+    expect(resolution.activeSkillIds).toEqual([])
   })
 })

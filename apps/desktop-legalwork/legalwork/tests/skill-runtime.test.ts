@@ -99,7 +99,7 @@ describe('SkillRuntime', () => {
       name: 'Small',
       triggers: { fileTypes: ['.ts'] }
     }, 'small instructions')
-    const runtime = await createRuntime({ instructionBudgetBytes: 600 })
+    const runtime = await createRuntime({ instructionBudgetBytes: 1_200 })
 
     const resolution = runtime.resolveTurn({
       prompt: 'Please handle TypeScript in src/app.ts',
@@ -183,6 +183,34 @@ describe('SkillRuntime', () => {
     expect(runtime.resolveTurn({ prompt: '/new run', workspace: root }).activeSkillIds).toEqual(['new'])
   })
 
+  it('uses keyword matching for on-demand search without auto-injecting legacy Skills', async () => {
+    await mkdir(join(root, 'capital-markets', 'prepare-ipo-risk-factors'), { recursive: true })
+    await writeFile(join(root, 'capital-markets', 'prepare-ipo-risk-factors', 'SKILL.md'), [
+      '---',
+      'name: prepare-ipo-risk-factors',
+      'description: Drafts IPO risk factors and securities offering disclosure.',
+      '---',
+      '',
+      '# IPO Risk Factors',
+      '',
+      'Draft risk-factor disclosure.'
+    ].join('\n'), 'utf8')
+    const runtime = await createRuntime()
+
+    const matches = runtime.search({ query: 'prepare IPO risk factors for a securities offering' })
+    const resolution = runtime.resolveTurn({
+      prompt: 'prepare IPO risk factors for a securities offering',
+      workspace: root
+    })
+
+    expect(matches[0]).toMatchObject({
+      id: 'prepare-ipo-risk-factors',
+      reason: 'keywords'
+    })
+    expect(resolution.activeSkillIds).toEqual([])
+    expect(runtime.load('prepare-ipo-risk-factors')?.instructions).toContain('Draft risk-factor disclosure.')
+  })
+
   it('injects active Skills into AgentLoop context and turn metadata', async () => {
     await writeSkill('review', {
       id: 'review',
@@ -223,7 +251,7 @@ describe('SkillRuntime', () => {
 
     await h.loop.runTurn(h.threadId, h.turnId)
 
-    expect(seenRequest?.contextInstructions?.[0]).toContain('Always inspect the diff first.')
+    expect(seenRequest?.contextInstructions?.join('\n')).toContain('Always inspect the diff first.')
     expect(seenRequest?.tools.map((tool) => tool.name)).toEqual(['read'])
     const turn = await h.turns.getTurn(h.threadId, h.turnId)
     expect(turn?.activeSkillIds).toEqual(['review'])

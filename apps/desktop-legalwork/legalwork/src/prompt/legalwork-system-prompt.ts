@@ -70,5 +70,7 @@ export const LEGALWORK_SYSTEM_PROMPT = [
   '- When a user references a PDF, image, or scanned document, do not claim it cannot be read until you have actually tried extraction. First attempt `read` or `bash`. If the file has no text layer, run OCR using available command-line tools (for example python with PyMuPDF and pytesseract) and continue with the extracted text.',
   '- The Legalwork workspace includes dedicated OCR and document-processing scripts such as `ocr_agent.py`. If these scripts are present, invoke them through `bash` instead of rewriting the same logic.',
   '- Do not ask the user to manually transcribe scanned documents; perform OCR automatically and proceed with the result.',
-  '- When a user task or attached file matches an available Legalwork skill, the skill instructions will be injected into the conversation automatically. Read and follow them instead of claiming the capability is unavailable.'
+  '- Before substantial legal-work or office-work tasks, search available workflows with search_skills when that tool is advertised. Use a short task description, review the returned candidates, and load only the one most relevant skill with load_skill before following it.',
+  '- Do not assume all available skills are already loaded in context. Do not load many skills speculatively; prefer one selected skill, or a small number only when the task clearly spans distinct workflows.',
+  '- Explicit skill mentions such as /skill:<id>, $<id>, or skill-specific commands may activate a skill directly. Otherwise discover skills through search_skills and load them on demand.'
 ].join('\n')

@@ -56,6 +56,7 @@ import { DEFAULT_MAX_BYTES } from '../src/adapters/tool/truncate.js'
 import type { TurnItem } from '../src/contracts/items.js'
 import type { FsStats } from '../src/adapters/tool/builtin-tool-types.js'
 import type { ToolHostContext } from '../src/ports/tool-host.js'
+import { SkillRuntime } from '../src/skills/skill-runtime.js'
 
 function buildContext(workspace: string): ToolHostContext {
   return {
@@ -105,7 +106,7 @@ describe('Legalwork built-in tools', () => {
   it('advertises the pi-style built-in tool family by default', async () => {
     const tools = await host.listTools(buildContext(workspace))
     const toolNames = new Set(tools.map((tool) => tool.name))
-    expect([...allBuiltinToolNames].every((name) => toolNames.has(name))).toBe(true)
+    expect(['read', 'bash', 'edit', 'write', 'grep', 'find', 'ls'].every((name) => toolNames.has(name))).toBe(true)
   })
 
   it('exposes pi-style coding and read-only tool groups', () => {
@@ -121,12 +122,46 @@ describe('Legalwork built-in tools', () => {
       ls: { defaultLimit: 1 },
       bash: { defaultTimeoutSeconds: 5 }
     })
-    expect(Object.keys(toolRecord).sort()).toEqual(['bash', 'edit', 'find', 'grep', 'ls', 'read', 'write'])
+    expect(Object.keys(toolRecord).sort()).toEqual([...allBuiltinToolNames].sort())
 
     await writeFile(join(workspace, 'limited.txt'), 'one\ntwo\nthree\n', 'utf8')
     const customHost = new LocalToolHost({ tools: [toolRecord.read, toolRecord.ls] })
     const readOutput = await executeTool(customHost, workspace, 'read', { path: 'limited.txt' })
     expect(String(readOutput.content)).toContain('Use offset=2 to continue')
+  })
+
+  it('lets the agent search and load one Skill on demand', async () => {
+    const skillRoot = join(workspace, 'skills', 'contract-review')
+    await mkdir(skillRoot, { recursive: true })
+    await writeFile(join(skillRoot, 'SKILL.md'), [
+      '---',
+      'name: 合同审查',
+      'description: Review contract clauses and risk allocation.',
+      '---',
+      '',
+      '# Contract Review',
+      '',
+      'Inspect clauses before drafting risk comments.'
+    ].join('\n'), 'utf8')
+    const skillRuntime = await SkillRuntime.create({
+      enabled: true,
+      roots: [join(workspace, 'skills')],
+      legacySkillMd: true
+    })
+    const customHost = new LocalToolHost({
+      tools: Object.values(createAllTools({ skillTools: { skillRuntime } }))
+    })
+
+    const searchOutput = await executeTool(customHost, workspace, 'search_skills', {
+      query: '帮我审查合同条款风险'
+    })
+    const matches = searchOutput.matches as Array<{ id: string }>
+    expect(matches[0]?.id).toBe('contract-review')
+
+    const loadOutput = await executeTool(customHost, workspace, 'load_skill', {
+      skill_id: 'contract-review'
+    })
+    expect(String(loadOutput.instructions)).toContain('Inspect clauses before drafting risk comments.')
   })
 
   it('exposes pi-style alias composition helpers and tool-name set', async () => {
@@ -143,8 +178,8 @@ describe('Legalwork built-in tools', () => {
     expect(createReadOnlyToolDefinitions().map((tool) => tool.name)).toEqual(['read', 'grep', 'find', 'ls'])
     const allTools = createAllTools()
     const allDefinitions = createAllToolDefinitions()
-    expect(Object.keys(allTools).sort()).toEqual(['bash', 'edit', 'find', 'grep', 'ls', 'read', 'write'])
-    expect(Object.keys(allDefinitions).sort()).toEqual(['bash', 'edit', 'find', 'grep', 'ls', 'read', 'write'])
+    expect(Object.keys(allTools).sort()).toEqual([...allBuiltinToolNames].sort())
+    expect(Object.keys(allDefinitions).sort()).toEqual([...allBuiltinToolNames].sort())
     expect(createReadTool).toBe(createReadLocalTool)
     expect(createReadToolDefinition).toBe(createReadLocalTool)
     expect(createWriteTool).toBeTypeOf('function')

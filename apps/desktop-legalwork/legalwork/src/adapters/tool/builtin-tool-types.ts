@@ -100,6 +100,8 @@ export type BuiltinToolName =
   | 'find'
   | 'ls'
   | 'data_compliance'
+  | 'search_skills'
+  | 'load_skill'
   | 'refresh_skills'
   | 'install_skill'
 export const allBuiltinToolNames: Set<BuiltinToolName> = new Set([
@@ -111,6 +113,8 @@ export const allBuiltinToolNames: Set<BuiltinToolName> = new Set([
   'find',
   'ls',
   'data_compliance',
+  'search_skills',
+  'load_skill',
   'refresh_skills',
   'install_skill'
 ])

@@ -10,7 +10,12 @@ import { createEditLocalTool, createWriteLocalTool } from './builtin-file-tools.
 import { createReadLocalTool } from './builtin-read-tool.js'
 import { createDataComplianceLocalTool } from './builtin-data-compliance-tool.js'
 import { createFindLocalTool, createGrepLocalTool, createLsLocalTool } from './builtin-search-tools.js'
-import { createRefreshSkillsTool, createInstallSkillTool } from './builtin-skill-tools.js'
+import {
+  createRefreshSkillsTool,
+  createInstallSkillTool,
+  createSearchSkillsTool,
+  createLoadSkillTool
+} from './builtin-skill-tools.js'
 
 export * from './builtin-tool-types.js'
 export * from './builtin-tool-operations.js'
@@ -42,6 +47,10 @@ export function createBuiltinLocalTool(
       return createDataComplianceLocalTool(options.dataCompliance ?? {})
     case 'refresh_skills':
       return createRefreshSkillsTool(options.skillTools)
+    case 'search_skills':
+      return createSearchSkillsTool(options.skillTools)
+    case 'load_skill':
+      return createLoadSkillTool(options.skillTools)
     case 'install_skill':
       return createInstallSkillTool(options.skillTools)
   }
@@ -69,6 +78,8 @@ export function buildBuiltinLocalTools(options: BuiltinLocalToolsOptions = {}): 
     tools.push(createDataComplianceLocalTool(options.dataCompliance))
   }
   if (options.skillTools?.skillRuntime) {
+    tools.push(createSearchSkillsTool(options.skillTools))
+    tools.push(createLoadSkillTool(options.skillTools))
     tools.push(createRefreshSkillsTool(options.skillTools))
     tools.push(createInstallSkillTool(options.skillTools))
   }
@@ -117,6 +128,8 @@ export function buildBuiltinLocalToolRecord(
     find: createFindLocalTool(options.find),
     ls: createLsLocalTool(options.ls),
     data_compliance: createDataComplianceLocalTool(options.dataCompliance ?? {}),
+    search_skills: createSearchSkillsTool(options.skillTools),
+    load_skill: createLoadSkillTool(options.skillTools),
     refresh_skills: createRefreshSkillsTool(options.skillTools),
     install_skill: createInstallSkillTool(options.skillTools)
   }

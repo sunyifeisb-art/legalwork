@@ -68,6 +68,23 @@ export type SkillTurnResolution = {
   injectedBytes: number
 }
 
+export type SkillSearchResult = {
+  id: string
+  name: string
+  description?: string
+  root: string
+  entryPath: string
+  legacy: boolean
+  triggers: LoadedSkill['triggers']
+  allowedTools: string[]
+  score: number
+  reason: string
+}
+
+export type LoadedSkillInstructions = Omit<SkillSearchResult, 'score' | 'reason'> & {
+  instructions: string
+}
+
 export type SkillRuntimeDiagnostics = {
   enabled: boolean
   roots: string[]
@@ -248,6 +265,57 @@ export class SkillRuntime {
     return this.skills.length
   }
 
+  search(input: { query?: string; limit?: number } = {}): SkillSearchResult[] {
+    const query = input.query?.trim() ?? ''
+    const limit = clampLimit(input.limit, 20, 100)
+    const lowerQuery = query.toLowerCase()
+    const queryTerms = tokenizeForSkillMatch(query)
+    const matches = this.skills
+      .map((skill) => {
+        const explicit = query ? explicitSkillMention(skill, query) : undefined
+        if (explicit) return skillSearchResult(skill, 1_000 + skill.priority, explicit)
+
+        const command = query
+          ? skill.triggers.commands.find((candidate) => lowerQuery.includes(candidate.toLowerCase()))
+          : undefined
+        if (command) return skillSearchResult(skill, 900 + skill.priority, `command:${command}`)
+
+        const pattern = query
+          ? skill.triggers.promptPatterns.find((candidate) => safePatternMatches(candidate, query))
+          : undefined
+        if (pattern) return skillSearchResult(skill, 500 + skill.priority, `pattern:${pattern}`)
+
+        const keywordScore = scoreKeywordMatch(skill.keywords, queryTerms, lowerQuery)
+        if (keywordScore > 0) {
+          return skillSearchResult(skill, 100 + keywordScore + skill.priority, 'keywords')
+        }
+
+        if (!query) return skillSearchResult(skill, skill.priority, 'list')
+        return null
+      })
+      .filter((match): match is SkillSearchResult => match !== null)
+      .sort((a, b) => b.score - a.score || a.id.localeCompare(b.id))
+
+    return matches.slice(0, limit)
+  }
+
+  load(skillId: string): LoadedSkillInstructions | undefined {
+    const normalized = slug(skillId)
+    const skill = this.skills.find((candidate) => candidate.id === normalized || candidate.id === skillId)
+    if (!skill) return undefined
+    return {
+      id: skill.id,
+      name: skill.name,
+      ...(skill.description ? { description: skill.description } : {}),
+      root: skill.root,
+      entryPath: skill.entryPath,
+      legacy: skill.legacy,
+      triggers: skill.triggers,
+      allowedTools: skill.allowedTools,
+      instructions: skillInstructionText(skill, 'loaded_by_tool')
+    }
+  }
+
   private matchSkills(input: {
     prompt: string
     workspace: string
@@ -256,7 +324,6 @@ export class SkillRuntime {
     const prompt = input.prompt
     const lowerPrompt = prompt.toLowerCase()
     const fileTypes = fileTypesFrom(input.filePaths ?? [], prompt)
-    const promptTerms = tokenizeForSkillMatch(prompt)
     const matches: Array<SkillActivation & { skill: LoadedSkill }> = []
     for (const skill of this.skills) {
       const explicit = explicitSkillMention(skill, prompt)
@@ -278,15 +345,6 @@ export class SkillRuntime {
       if (fileType) {
         matches.push({ skill, skillId: skill.id, reason: `fileType:${fileType}`, score: 300 + skill.priority })
         continue
-      }
-      const keywordScore = scoreKeywordMatch(skill.keywords, promptTerms, lowerPrompt)
-      if (keywordScore > 0) {
-        matches.push({
-          skill,
-          skillId: skill.id,
-          reason: 'keywords',
-          score: 100 + keywordScore + skill.priority
-        })
       }
     }
     return matches.sort((a, b) => b.score - a.score || a.skill.id.localeCompare(b.skill.id))
@@ -415,15 +473,7 @@ function buildInjection(
   let injectedBytes = 0
   for (const match of active) {
     const skill = match.skill
-    const text = [
-      `Active Skill: ${skill.name} (${skill.id})`,
-      `Activation: ${match.reason}`,
-      LEGALWORK_SKILL_EXECUTION_CONTRACT,
-      skill.description ? `Description: ${skill.description}` : '',
-      skill.allowedTools.length ? `Allowed tools: ${skill.allowedTools.join(', ')}` : '',
-      skill.assets.length ? `Assets:\n${skill.assets.map((asset) => `- ${asset}`).join('\n')}` : '',
-      skill.entry
-    ].filter(Boolean).join('\n\n')
+    const text = skillInstructionText(skill, match.reason)
     const bytes = Buffer.byteLength(text, 'utf8')
     if (injectedBytes + bytes > budgetBytes) continue
     activeSkillIds.push(skill.id)
@@ -437,6 +487,38 @@ function buildInjection(
     ...(allowed.size > 0 ? { allowedToolNames: [...allowed].sort() } : {}),
     injectedBytes
   }
+}
+
+function skillInstructionText(skill: LoadedSkill, activation: string): string {
+  return [
+    `Active Skill: ${skill.name} (${skill.id})`,
+    `Activation: ${activation}`,
+    LEGALWORK_SKILL_EXECUTION_CONTRACT,
+    skill.description ? `Description: ${skill.description}` : '',
+    skill.allowedTools.length ? `Allowed tools: ${skill.allowedTools.join(', ')}` : '',
+    skill.assets.length ? `Assets:\n${skill.assets.map((asset) => `- ${asset}`).join('\n')}` : '',
+    skill.entry
+  ].filter(Boolean).join('\n\n')
+}
+
+function skillSearchResult(skill: LoadedSkill, score: number, reason: string): SkillSearchResult {
+  return {
+    id: skill.id,
+    name: skill.name,
+    ...(skill.description ? { description: skill.description } : {}),
+    root: skill.root,
+    entryPath: skill.entryPath,
+    legacy: skill.legacy,
+    triggers: skill.triggers,
+    allowedTools: skill.allowedTools,
+    score,
+    reason
+  }
+}
+
+function clampLimit(value: number | undefined, defaultValue: number, maxValue: number): number {
+  if (!Number.isFinite(value)) return defaultValue
+  return Math.max(1, Math.min(maxValue, Math.floor(value ?? defaultValue)))
 }
 
 function blockedToolsFor(skills: LoadedSkill[], allowedToolNames: string[] | undefined): string[] {
