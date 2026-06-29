@@ -537,100 +537,12 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
   async function downloadAndInstallPythonWindows(
     sendProgress: (progress: DataComplianceInstallProgress) => void
   ): Promise<string | null> {
-    const https = await import('node:https')
-    const { createWriteStream } = await import('node:fs')
-    const { pipeline } = await import('node:stream/promises')
-    const tmpDir = join(app.getPath('userData'), 'data-compliance', 'tmp')
-    mkdirSync(tmpDir, { recursive: true })
-
-    const pythonVersion = '3.11.9'
-    const installerName = 'python-3.11.9-amd64.exe'
-    const installerPath = join(tmpDir, installerName)
-    const url = `https://www.python.org/ftp/python/${pythonVersion}/${installerName}`
-
-    // Download installer if not cached.
-    if (!existsSync(installerPath)) {
-      sendProgress({ step: 'detecting', percent: 10, message: '未找到 Python，正在下载安装器…' })
-      await new Promise<void>((resolve, reject) => {
-        const file = createWriteStream(installerPath)
-        https
-          .get(url, (response) => {
-            if (response.statusCode !== 200) {
-              reject(new Error(`下载失败: HTTP ${response.statusCode}`))
-              return
-            }
-            const total = parseInt(response.headers['content-length'] || '0', 10)
-            let downloaded = 0
-            response.on('data', (chunk: Buffer) => {
-              downloaded += chunk.length
-              if (total > 0) {
-                const percent = Math.round((downloaded / total) * 20) // 10-30%
-                sendProgress({
-                  step: 'detecting',
-                  percent,
-                  message: `正在下载 Python 安装器 (${Math.round(downloaded / 1024 / 1024)}MB / ${Math.round(total / 1024 / 1024)}MB)…`
-                })
-              }
-            })
-            response.pipe(file)
-            file.on('finish', () => {
-              file.close()
-              resolve()
-            })
-            file.on('error', reject)
-          })
-          .on('error', reject)
-      })
-    }
-
-    // Silent install.
-    sendProgress({ step: 'detecting', percent: 32, message: '正在安装 Python（可能需要管理员权限）…' })
-    const installResult = await runCommand(installerPath, [
-      '/quiet',
-      'InstallAllUsers=0',
-      'PrependPath=1',
-      'Include_pip=1',
-      'Include_test=0'
-    ], { timeout: 300_000 })
-    if (installResult.exitCode !== 0) {
-      throw new Error(`Python 安装失败: ${installResult.stderr || installResult.stdout || `exit code ${installResult.exitCode}`}`)
-    }
-
-    // Verify installation by looking in common locations and refreshed PATH.
-    sendProgress({ step: 'detecting', percent: 33, message: '正在验证 Python 安装…' })
-
-    const userProfile = process.env.USERPROFILE
-    const localAppData = process.env.LOCALAPPDATA
-    const programFiles = process.env.PROGRAMFILES
-    const programFilesX86 = process.env['PROGRAMFILES(X86)']
-
-    const possiblePaths = [
-      join(localAppData || '', 'Programs', 'Python', 'Python311', 'python.exe'),
-      join(programFiles || '', 'Python311', 'python.exe'),
-      join(programFilesX86 || '', 'Python311', 'python.exe'),
-      join(userProfile || '', 'AppData', 'Local', 'Programs', 'Python', 'Python311', 'python.exe')
-    ]
-
-    for (const p of possiblePaths) {
-      if (existsSync(p)) return p
-    }
-
-    // Try refreshed PATH via cmd.exe.
-    const pathResult = await runCommand('cmd.exe', ['/c', 'echo %PATH%'])
-    if (pathResult.exitCode === 0) {
-      const updatedPath = pathResult.stdout.trim()
-      const env = { ...process.env, Path: updatedPath, PATH: updatedPath }
-      for (const cmd of ['python', 'python3', 'py']) {
-        try {
-          const r = await runCommand(cmd, ['--version'], { env })
-          if (r.exitCode === 0 && r.stdout.includes('Python 3')) return cmd
-        } catch {
-          // ignore
-        }
-      }
-    }
-
-    throw new Error('Python 安装后未能找到 python.exe，请重启应用后重试。')
+    // Use the portable python-build-standalone build (same as macOS/Linux) instead of the
+    // python.org silent installer. The .exe installer is fragile under /quiet — it can fail
+    // with installer exit codes (e.g. 1392 ERROR_FILE_CORRUPT) due to elevation requirements,
+    // registry state, or a corrupt cached download. The standalone tarball needs no admin
+    // rights, touches no registry/PATH, and unpacks straight into userData.
+    return downloadAndInstallPythonBuildStandalone(sendProgress, 'Windows')
   }
 
   function getPythonBuildStandaloneUrl(): string | null {
@@ -645,6 +557,12 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
       linux: {
         arm64: `${baseUrl}/cpython-${pythonVersion}+${releaseTag}-aarch64-unknown-linux-gnu-install_only.tar.gz`,
         x64: `${baseUrl}/cpython-${pythonVersion}+${releaseTag}-x86_64-unknown-linux-gnu-install_only.tar.gz`
+      },
+      win32: {
+        // python-build-standalone ships only x86_64 Windows builds for this release tag;
+        // arm64 Windows runs the x64 build transparently via emulation.
+        arm64: `${baseUrl}/cpython-${pythonVersion}+${releaseTag}-x86_64-pc-windows-msvc-install_only.tar.gz`,
+        x64: `${baseUrl}/cpython-${pythonVersion}+${releaseTag}-x86_64-pc-windows-msvc-install_only.tar.gz`
       }
     }
     const arch = process.arch === 'arm64' ? 'arm64' : 'x64'
@@ -780,9 +698,12 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
 
     // Verify.
     sendProgress({ step: 'detecting', percent: 33, message: '正在验证 Python 安装…' })
-    const pythonPath = join(installDir, 'bin', 'python3')
+    const pythonPath =
+      process.platform === 'win32'
+        ? join(installDir, 'python.exe')
+        : join(installDir, 'bin', 'python3')
     if (!existsSync(pythonPath)) {
-      throw new Error('Python 解压后未找到 python3 可执行文件')
+      throw new Error('Python 解压后未找到可执行文件')
     }
     const verify = await runCommand(pythonPath, ['--version'])
     if (verify.exitCode !== 0) {

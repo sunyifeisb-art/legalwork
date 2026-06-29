@@ -363,6 +363,31 @@
             font-size: 0.85rem;
             min-height: 1.4rem;
         }
+        .btn-download-mirror {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-top: 0.7rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-light);
+            background: var(--bg-alt);
+            color: var(--text);
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: border-color 0.2s, color 0.2s;
+        }
+        .btn-download-mirror:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .download-mirror-hint {
+            margin-top: 0.4rem;
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            line-height: 1.4;
+        }
         .download-meta code {
             background: var(--bg-alt);
             padding: 0.2rem 0.5rem;
@@ -1627,6 +1652,11 @@
                             <span id="downloadText">下载 LegalWork</span>
                         </a>
                         <p class="download-meta" id="downloadMeta">检测到您的系统：<span id="detectedOS">正在检测…</span></p>
+                        <a class="btn-download-mirror" id="mirrorDownloadBtn" href="javascript:void(0)" rel="noopener" style="display:none;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polyline></svg>
+                            <span id="mirrorDownloadText">国内加速下载</span>
+                        </a>
+                        <p class="download-mirror-hint" id="mirrorHint" style="display:none;">GitHub 直连卡住 / 下载中断时改用此入口：经国内可达的 GitHub 镜像回源，文件与官方完全一致。</p>
                     </div>
 
                     <div class="download-recommendation" id="downloadRecommendation">
@@ -2576,6 +2606,13 @@ legalwork serve --data-dir ~/.legalwork</code></pre>
         const releasePageSize = 100;
         const latestReleaseUrl = 'https://github.com/sunyifeisb-art/legalwork/releases/latest';
 
+        // 国内加速下载：文件仍托管在 GitHub Release，仅经国内可达的 GitHub 镜像回源，
+        // 解决直连 github.com 下大文件卡一半的问题。代理失效时可一行替换此前缀。
+        const GH_MIRROR_PREFIX = 'https://ghfast.top/';
+        function buildMirrorUrl(url) {
+            return url ? GH_MIRROR_PREFIX + url : '';
+        }
+
         let releaseData = null;
         let allReleases = [];
 
@@ -2657,14 +2694,17 @@ legalwork serve --data-dir ~/.legalwork</code></pre>
             return releaseData?.assets?.find(asset => profile.matcher.test(asset.name)) || null;
         }
 
-        function getCumulativeDownloadCount(platformKey) {
-            const profile = platformProfiles[platformKey];
-            if (!profile?.matcher || !Array.isArray(allReleases)) return 0;
+        function getTotalDownloadCount() {
+            if (!Array.isArray(allReleases)) return 0;
+            // 所有平台安装包(dmg/zip/exe/AppImage)的 matcher，排除 .blockmap/.yml 等更新器杂项。
+            const matchers = Object.values(platformProfiles)
+                .map(p => p.matcher)
+                .filter(Boolean);
             let total = 0;
             for (const release of allReleases) {
                 if (!Array.isArray(release.assets)) continue;
                 for (const asset of release.assets) {
-                    if (profile.matcher.test(asset.name)) {
+                    if (matchers.some(m => m.test(asset.name))) {
                         total += asset.download_count || 0;
                     }
                 }
@@ -2738,9 +2778,16 @@ legalwork serve --data-dir ~/.legalwork</code></pre>
             const recommendedTitle = document.getElementById('recommendedTitle');
             const recommendedDetail = document.getElementById('recommendedDetail');
             const releaseChip = document.getElementById('releaseChip');
+            const mirrorBtn = document.getElementById('mirrorDownloadBtn');
+            const mirrorHint = document.getElementById('mirrorHint');
             const profile = platformProfiles[currentPlatform] || platformProfiles.source;
             const asset = findReleaseAsset(currentPlatform);
             const tag = releaseData?.tag_name || '';
+
+            const hideMirror = () => {
+                if (mirrorBtn) mirrorBtn.style.display = 'none';
+                if (mirrorHint) mirrorHint.style.display = 'none';
+            };
 
             document.querySelectorAll('.platform-btn').forEach(p => {
                 p.classList.toggle('active', p.dataset.platform === currentPlatform);
@@ -2760,6 +2807,7 @@ legalwork serve --data-dir ~/.legalwork</code></pre>
                 btn.href = repoUrl;
                 btn.removeAttribute('download');
                 btn.target = '_blank';
+                hideMirror();
                 return;
             }
 
@@ -2775,16 +2823,25 @@ legalwork serve --data-dir ~/.legalwork</code></pre>
                 btn.href = releaseData?.html_url || latestReleaseUrl;
                 btn.removeAttribute('download');
                 btn.target = '_blank';
+                hideMirror();
                 return;
             }
 
             text.textContent = `下载 ${tag || '最新版'} · ${profile.label}`;
-            const dlCount = getCumulativeDownloadCount(currentPlatform);
+            const dlCount = getTotalDownloadCount();
             const dlText = dlCount > 0 ? `<span class="dl-count">累计下载 ${dlCount.toLocaleString()}</span>` : '';
             meta.innerHTML = `GitHub Release ${dlText} · <span style="color:var(--text-muted)">${asset.name}</span>`;
             btn.href = asset.browser_download_url;
             btn.removeAttribute('download');
             btn.removeAttribute('target');
+
+            // 国内加速入口：直连卡住时可改用经 GitHub 镜像回源的链接。
+            if (mirrorBtn) {
+                mirrorBtn.href = buildMirrorUrl(asset.browser_download_url);
+                mirrorBtn.target = '_blank';
+                mirrorBtn.style.display = 'inline-flex';
+            }
+            if (mirrorHint) mirrorHint.style.display = 'block';
         }
 
         function selectPlatform(platform) {

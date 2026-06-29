@@ -40,6 +40,128 @@ function compactList(values: unknown, empty: string): string {
     .join(', ')
 }
 
+type JsonRecord = Record<string, unknown>
+type McpServerSummary = {
+  id: string
+  enabled: boolean
+  transport: string
+  target: string
+  hasAuthHeader: boolean
+  needsToken: boolean
+  diagnosticStatus: string
+  toolCount: number | null
+  lastError: string
+}
+
+const YUANDIAN_MCP_SERVERS = [
+  { id: 'yuandian-law', labelKey: 'mcpYuandianLaw', url: 'https://open.chineselaw.com/mcp/law/stream' },
+  { id: 'yuandian-case', labelKey: 'mcpYuandianCase', url: 'https://open.chineselaw.com/mcp/case/stream' },
+  { id: 'yuandian-company', labelKey: 'mcpYuandianCompany', url: 'https://open.chineselaw.com/mcp/company/stream' }
+] as const
+
+function isJsonRecord(value: unknown): value is JsonRecord {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function parseMcpConfigText(content: string): { config: JsonRecord; servers: JsonRecord; error: string | null } {
+  const trimmed = content.trim()
+  if (!trimmed) return { config: {}, servers: {}, error: null }
+  try {
+    const parsed = JSON.parse(trimmed) as unknown
+    if (!isJsonRecord(parsed)) return { config: {}, servers: {}, error: 'MCP config must be a JSON object.' }
+    const directServers = isJsonRecord(parsed.servers) ? parsed.servers : null
+    if (directServers) return { config: parsed, servers: directServers, error: null }
+    const capabilities = isJsonRecord(parsed.capabilities) ? parsed.capabilities : {}
+    const mcp = isJsonRecord(capabilities.mcp) ? capabilities.mcp : {}
+    const servers = isJsonRecord(mcp.servers) ? mcp.servers : {}
+    return { config: parsed, servers, error: null }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    return { config: {}, servers: {}, error: 'MCP config must be JSON: ' + message }
+  }
+}
+
+function formatMcpConfig(config: JsonRecord, servers: JsonRecord): string {
+  const next = { ...config, servers }
+  return JSON.stringify(next, null, 2) + '\n'
+}
+
+function parseJsonObjectInput(input: string, field: string): JsonRecord {
+  const trimmed = input.trim()
+  if (!trimmed) return {}
+  const parsed = JSON.parse(trimmed) as unknown
+  if (!isJsonRecord(parsed)) throw new Error(field + ' must be a JSON object.')
+  return parsed
+}
+
+function mcpServerTarget(server: JsonRecord): string {
+  const url = typeof server.url === 'string' ? server.url : ''
+  if (url) return url
+  const command = typeof server.command === 'string' ? server.command : ''
+  const args = Array.isArray(server.args) ? server.args.filter((item): item is string => typeof item === 'string') : []
+  return [command, ...args].filter(Boolean).join(' ')
+}
+
+function legalMcpLikelyRequiresToken(id: string): boolean {
+  const normalized = id.toLowerCase()
+  return normalized.startsWith('yuandian-') ||
+    normalized.startsWith('pkulaw-') ||
+    normalized.includes('faxin')
+}
+
+function mcpDiagnosticLooksTokenRelated(diagnostic: JsonRecord): boolean {
+  const lastError = typeof diagnostic.lastError === 'string' ? diagnostic.lastError : ''
+  return /\b(401|403)\b|unauthori[sz]ed|forbidden|token|api key|apikey/i.test(lastError)
+}
+
+function summarizeMcpServers(
+  configText: string,
+  diagnostics: unknown
+): { servers: McpServerSummary[]; error: string | null } {
+  const parsed = parseMcpConfigText(configText)
+  const diagnosticServers = new Map<string, JsonRecord>()
+  const rawDiagnosticServers = isJsonRecord(diagnostics) && Array.isArray(diagnostics.mcpServers)
+    ? diagnostics.mcpServers
+    : []
+  for (const item of rawDiagnosticServers) {
+    if (!isJsonRecord(item) || typeof item.id !== 'string') continue
+    diagnosticServers.set(item.id, item)
+  }
+  const serverIds = new Set([...Object.keys(parsed.servers), ...diagnosticServers.keys()])
+  return {
+    error: parsed.error,
+    servers: [...serverIds].sort((left, right) => left.localeCompare(right)).map((id) => {
+      const rawConfig = parsed.servers[id]
+      const config = isJsonRecord(rawConfig) ? rawConfig : {}
+      const diagnostic = diagnosticServers.get(id) ?? {}
+      const headers = isJsonRecord(config.headers) ? config.headers : {}
+      const hasAuthHeader = Object.keys(headers).some((key) => key.toLowerCase() === 'authorization')
+      const transport = typeof config.transport === 'string'
+        ? config.transport
+        : typeof config.command === 'string'
+          ? 'stdio'
+          : typeof config.url === 'string'
+            ? 'streamable-http'
+            : ''
+      const toolCount = typeof diagnostic.toolCount === 'number' && Number.isFinite(diagnostic.toolCount)
+        ? diagnostic.toolCount
+        : null
+      return {
+        id,
+        enabled: config.enabled !== false && config.disabled !== true,
+        transport,
+        target: mcpServerTarget(config),
+        hasAuthHeader,
+        needsToken: (legalMcpLikelyRequiresToken(id) && !hasAuthHeader) ||
+          mcpDiagnosticLooksTokenRelated(diagnostic),
+        diagnosticStatus: typeof diagnostic.status === 'string' ? diagnostic.status : '',
+        toolCount,
+        lastError: typeof diagnostic.lastError === 'string' ? diagnostic.lastError : ''
+      }
+    })
+  }
+}
+
 type TokenEconomySavingsSummary = {
   tokens: number
   costUsd: number
@@ -247,6 +369,100 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     topKDefault: 5,
     topKMax: 10,
     minScore: 0.15
+  }
+  const mcpSummary = summarizeMcpServers(mcpConfigText, toolDiagnostics)
+  const mcpParsed = parseMcpConfigText(mcpConfigText)
+  const [mcpNewId, setMcpNewId] = useState('')
+  const [mcpNewTransport, setMcpNewTransport] = useState<'streamable-http' | 'sse' | 'stdio'>('streamable-http')
+  const [mcpNewUrl, setMcpNewUrl] = useState('')
+  const [mcpNewCommand, setMcpNewCommand] = useState('')
+  const [mcpNewArgs, setMcpNewArgs] = useState('')
+  const [mcpNewHeaders, setMcpNewHeaders] = useState('')
+  const [mcpNewEnv, setMcpNewEnv] = useState('')
+  const [mcpYuandianApiKey, setMcpYuandianApiKey] = useState('')
+  const [mcpFormError, setMcpFormError] = useState('')
+  const updateMcpServersText = (servers: JsonRecord): void => {
+    setMcpConfigText(formatMcpConfig(mcpParsed.config, servers))
+  }
+  const addMcpServer = (): void => {
+    const id = mcpNewId.trim()
+    if (!id) {
+      setMcpFormError(t('mcpCustomIdRequired'))
+      return
+    }
+    if (Object.prototype.hasOwnProperty.call(mcpParsed.servers, id)) {
+      setMcpFormError(t('mcpCustomIdExists'))
+      return
+    }
+    try {
+      const headers = parseJsonObjectInput(mcpNewHeaders, 'headers')
+      const env = parseJsonObjectInput(mcpNewEnv, 'env')
+      const args = mcpNewArgs.split('\n').map((item: string) => item.trim()).filter(Boolean)
+      const server: JsonRecord = {
+        enabled: true,
+        transport: mcpNewTransport,
+        trustScope: 'user',
+        timeoutMs: 30000
+      }
+      if (mcpNewTransport === 'stdio') {
+        server.command = mcpNewCommand.trim() || 'npx'
+        server.args = args
+        if (Object.keys(env).length > 0) server.env = env
+      } else {
+        server.url = mcpNewUrl.trim()
+        if (!server.url) {
+          setMcpFormError(t('mcpCustomUrlRequired'))
+          return
+        }
+        if (Object.keys(headers).length > 0) server.headers = headers
+      }
+      updateMcpServersText({ ...mcpParsed.servers, [id]: server })
+      setMcpNewId('')
+      setMcpNewUrl('')
+      setMcpNewCommand('')
+      setMcpNewArgs('')
+      setMcpNewHeaders('')
+      setMcpNewEnv('')
+      setMcpFormError('')
+    } catch (error) {
+      setMcpFormError(error instanceof Error ? error.message : String(error))
+    }
+  }
+  const addYuandianMcp = (): void => {
+    const apiKey = mcpYuandianApiKey.trim()
+    if (!apiKey) {
+      setMcpFormError(t('mcpYuandianKeyRequired'))
+      return
+    }
+    const authorization = 'Bearer ' + apiKey
+    const servers = { ...mcpParsed.servers }
+    for (const server of YUANDIAN_MCP_SERVERS) {
+      servers[server.id] = {
+        enabled: true,
+        transport: 'streamable-http',
+        url: server.url,
+        headers: { Authorization: authorization },
+        trustScope: 'user',
+        timeoutMs: 30000
+      }
+    }
+    updateMcpServersText(servers)
+    setMcpYuandianApiKey('')
+    setMcpFormError('')
+  }
+  const toggleMcpServer = (id: string, enabled: boolean): void => {
+    const existing = isJsonRecord(mcpParsed.servers[id]) ? mcpParsed.servers[id] as JsonRecord : {}
+    updateMcpServersText({
+      ...mcpParsed.servers,
+      [id]: {
+        ...existing,
+        enabled
+      }
+    })
+  }
+  const removeMcpServer = (id: string): void => {
+    const { [id]: _removed, ...rest } = mcpParsed.servers
+    updateMcpServersText(rest)
   }
   const tokenEconomyDefaults = {
     enabled: false,
@@ -1313,6 +1529,199 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                         checked={mcpSearch.enabled}
                         onChange={(v) => updateMcpSearch({ enabled: v })}
                       />
+                    }
+                  />
+                  <SettingRow
+                    title={t('mcpServers')}
+                    description={t('mcpServersDesc')}
+                    wideControl
+                    control={
+                      <div className="flex w-full flex-col gap-3">
+                        {mcpSummary.error ? (
+                          <div className="rounded-xl border border-red-300/50 bg-red-500/10 px-3 py-2 text-[12.5px] text-red-700 dark:text-red-200">
+                            {mcpSummary.error}
+                          </div>
+                        ) : null}
+                        <div className="grid gap-2">
+                          {mcpSummary.servers.length === 0 ? (
+                            <div className="rounded-xl border border-ds-border-muted bg-ds-main/40 px-3 py-3 text-[13px] text-ds-faint">
+                              {t('mcpServersEmpty')}
+                            </div>
+                          ) : (
+                            mcpSummary.servers.map((server: McpServerSummary) => (
+                              <div key={server.id} className="rounded-xl border border-ds-border-muted bg-ds-main/40 px-3 py-2">
+                                <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                  <div className="min-w-0">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <span className="font-mono text-[13px] font-semibold text-ds-ink">{server.id}</span>
+                                      <span className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${server.enabled ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-200' : 'bg-ds-subtle text-ds-faint'}`}>
+                                        {server.enabled ? t('mcpServerEnabled') : t('mcpServerDisabled')}
+                                      </span>
+                                      {server.diagnosticStatus ? (
+                                        <span className="rounded-md bg-ds-subtle px-2 py-0.5 text-[11px] font-semibold text-ds-muted">
+                                          {server.diagnosticStatus}
+                                        </span>
+                                      ) : null}
+                                      {server.hasAuthHeader ? (
+                                        <span className="rounded-md bg-ds-subtle px-2 py-0.5 text-[11px] font-semibold text-ds-muted">
+                                          {t('mcpServerAuth')}
+                                        </span>
+                                      ) : null}
+                                      {server.needsToken ? (
+                                        <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:text-amber-200">
+                                          {t('mcpServerTokenRequired')}
+                                        </span>
+                                      ) : null}
+                                    </div>
+                                    <div className="mt-1 truncate text-[12px] text-ds-muted">
+                                      <span className="font-mono">{server.transport || 'auto'}</span>
+                                      {server.target ? <span> · {server.target}</span> : null}
+                                      {server.toolCount != null ? <span> · {t('mcpServerTools', { count: server.toolCount })}</span> : null}
+                                    </div>
+                                    {server.lastError ? (
+                                      <div className="mt-1 truncate text-[12px] text-red-700 dark:text-red-300">{server.lastError}</div>
+                                    ) : null}
+                                    {server.needsToken ? (
+                                      <div className="mt-1 text-[12px] leading-5 text-amber-700 dark:text-amber-200">
+                                        {t('mcpServerTokenRequiredHint')}
+                                      </div>
+                                    ) : null}
+                                  </div>
+                                  <div className="flex shrink-0 items-center gap-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleMcpServer(server.id, !server.enabled)}
+                                      className="rounded-lg px-2 py-1.5 text-[12px] font-medium text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink"
+                                    >
+                                      {server.enabled ? t('mcpDisable') : t('mcpEnable')}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => removeMcpServer(server.id)}
+                                      className="rounded-lg p-1.5 text-ds-muted transition hover:bg-red-500/10 hover:text-red-600"
+                                      aria-label={t('mcpRemove')}
+                                      title={t('mcpRemove')}
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" strokeWidth={1.8} />
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    }
+                  />
+                  <SettingRow
+                    title={t('mcpYuandian')}
+                    description={t('mcpYuandianDesc')}
+                    wideControl
+                    control={
+                      <div className="grid gap-3 rounded-xl border border-ds-border-muted bg-ds-main/35 p-3">
+                        <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_auto]">
+                          <input
+                            type="password"
+                            value={mcpYuandianApiKey}
+                            onChange={(event) => setMcpYuandianApiKey(event.target.value)}
+                            placeholder={t('mcpYuandianKeyPlaceholder')}
+                            autoComplete="off"
+                            className="h-10 min-w-0 rounded-xl border border-ds-border bg-ds-card px-3 text-[13px] text-ds-ink shadow-sm outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/30"
+                          />
+                          <button
+                            type="button"
+                            onClick={addYuandianMcp}
+                            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-ds-userbubble px-3 text-[13px] font-semibold text-ds-userbubbleFg shadow-sm transition hover:opacity-90"
+                          >
+                            <Plus className="h-3.5 w-3.5" strokeWidth={1.9} />
+                            {t('mcpYuandianAdd')}
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {YUANDIAN_MCP_SERVERS.map((server) => (
+                            <span key={server.id} className="rounded-md border border-ds-border-muted bg-ds-card px-2 py-0.5 font-mono text-[11px] text-ds-muted">
+                              {server.id}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    }
+                  />
+                  <SettingRow
+                    title={t('mcpCustomAdd')}
+                    description={t('mcpCustomAddDesc')}
+                    wideControl
+                    control={
+                      <div className="grid gap-3 rounded-xl border border-ds-border-muted bg-ds-main/35 p-3">
+                        <div className="grid gap-3 md:grid-cols-3">
+                          <input
+                            value={mcpNewId}
+                            onChange={(event) => setMcpNewId(event.target.value)}
+                            placeholder={t('mcpCustomId')}
+                            className="h-10 rounded-xl border border-ds-border bg-ds-card px-3 text-[13px] text-ds-ink shadow-sm outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/30"
+                          />
+                          <select
+                            value={mcpNewTransport}
+                            onChange={(event) => setMcpNewTransport(event.target.value as 'streamable-http' | 'sse' | 'stdio')}
+                            className={selectControlClass}
+                          >
+                            <option value="streamable-http">streamable-http</option>
+                            <option value="sse">sse</option>
+                            <option value="stdio">stdio</option>
+                          </select>
+                          {mcpNewTransport === 'stdio' ? (
+                            <input
+                              value={mcpNewCommand}
+                              onChange={(event) => setMcpNewCommand(event.target.value)}
+                              placeholder={t('mcpCustomCommand')}
+                              className="h-10 rounded-xl border border-ds-border bg-ds-card px-3 text-[13px] text-ds-ink shadow-sm outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/30"
+                            />
+                          ) : (
+                            <input
+                              value={mcpNewUrl}
+                              onChange={(event) => setMcpNewUrl(event.target.value)}
+                              placeholder={t('mcpCustomUrl')}
+                              className="h-10 rounded-xl border border-ds-border bg-ds-card px-3 text-[13px] text-ds-ink shadow-sm outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/30"
+                            />
+                          )}
+                        </div>
+                        <div className="grid gap-3 md:grid-cols-3">
+                          <textarea
+                            value={mcpNewArgs}
+                            onChange={(event) => setMcpNewArgs(event.target.value)}
+                            placeholder={t('mcpCustomArgs')}
+                            spellCheck={false}
+                            className="min-h-20 rounded-xl border border-ds-border bg-ds-card px-3 py-2 font-mono text-[12px] leading-5 text-ds-ink shadow-sm outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/30"
+                          />
+                          <textarea
+                            value={mcpNewHeaders}
+                            onChange={(event) => setMcpNewHeaders(event.target.value)}
+                            placeholder={t('mcpCustomHeaders')}
+                            spellCheck={false}
+                            className="min-h-20 rounded-xl border border-ds-border bg-ds-card px-3 py-2 font-mono text-[12px] leading-5 text-ds-ink shadow-sm outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/30"
+                          />
+                          <textarea
+                            value={mcpNewEnv}
+                            onChange={(event) => setMcpNewEnv(event.target.value)}
+                            placeholder={t('mcpCustomEnv')}
+                            spellCheck={false}
+                            className="min-h-20 rounded-xl border border-ds-border bg-ds-card px-3 py-2 font-mono text-[12px] leading-5 text-ds-ink shadow-sm outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/30"
+                          />
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={addMcpServer}
+                            className="inline-flex h-9 items-center gap-2 rounded-xl bg-ds-userbubble px-3 text-[13px] font-semibold text-ds-userbubbleFg shadow-sm transition hover:opacity-90"
+                          >
+                            <Plus className="h-3.5 w-3.5" strokeWidth={1.9} />
+                            {t('mcpCustomAddButton')}
+                          </button>
+                          {mcpFormError ? (
+                            <span className="text-[12px] text-red-700 dark:text-red-300">{mcpFormError}</span>
+                          ) : null}
+                        </div>
+                      </div>
                     }
                   />
                   <div className="px-3 py-4">

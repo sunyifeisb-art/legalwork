@@ -52,6 +52,7 @@ type MarketplaceItem = {
   statusTone?: 'default' | 'success' | 'warning' | 'error'
   systemManaged?: boolean
   configurable?: boolean
+  needsToken?: boolean
   mcpConfig?: (workspaceRoot: string) => JsonRecord
   skillInstructions?: string
 }
@@ -80,14 +81,32 @@ const PKULAW_MCP_ENDPOINTS = [
   { id: 'pkulaw-doc-link', url: 'https://apim-gateway.pkulaw.com/add-doc-link', enabledByDefault: false }
 ] as const
 const PKULAW_MCP_ENDPOINT_IDS = new Set(PKULAW_MCP_ENDPOINTS.map((endpoint) => endpoint.id))
+const YUANDIAN_MCP_GROUP_ID = 'yuandian'
+const YUANDIAN_MCP_ENDPOINTS = [
+  { id: 'yuandian-law', url: 'https://open.chineselaw.com/mcp/law/stream' },
+  { id: 'yuandian-case', url: 'https://open.chineselaw.com/mcp/case/stream' },
+  { id: 'yuandian-company', url: 'https://open.chineselaw.com/mcp/company/stream' }
+] as const
+const YUANDIAN_MCP_ENDPOINT_IDS = new Set(YUANDIAN_MCP_ENDPOINTS.map((endpoint) => endpoint.id))
 
 type McpMarketplaceLabels = {
   configured: string
   connected: string
   error: string
   disabled: string
+  tokenRequired: string
+  tokenRequiredSummary: string
   pkulawTitle: string
   pkulawSummary: (values: {
+    total: number
+    connected: number
+    tools: number
+    errors: number
+    disabled: number
+    lastError: string
+  }) => string
+  yuandianTitle: string
+  yuandianSummary: (values: {
     total: number
     connected: number
     tools: number
@@ -130,6 +149,23 @@ function isJsonRecord(value: unknown): value is JsonRecord {
 
 function isPkulawMcpEndpointId(id: string): boolean {
   return PKULAW_MCP_ENDPOINT_IDS.has(id as typeof PKULAW_MCP_ENDPOINTS[number]['id'])
+}
+
+function isYuandianMcpEndpointId(id: string): boolean {
+  return YUANDIAN_MCP_ENDPOINT_IDS.has(id as typeof YUANDIAN_MCP_ENDPOINTS[number]['id'])
+}
+
+function hasAuthorizationHeader(config: JsonRecord | undefined): boolean {
+  const headers = isJsonRecord(config?.headers) ? config.headers : {}
+  return Object.keys(headers).some((key) => key.toLowerCase() === 'authorization')
+}
+
+function authErrorLooksTokenRelated(entries: Array<{ config?: JsonRecord; diagnostic?: JsonRecord }>): boolean {
+  return entries.some((entry) => {
+    const details = { ...(entry.config ?? {}), ...(entry.diagnostic ?? {}) }
+    const lastError = typeof details.lastError === 'string' ? details.lastError : ''
+    return /\b(401|403)\b|unauthori[sz]ed|forbidden|token|api key|apikey/i.test(lastError)
+  })
 }
 
 function parseMcpJsonConfig(content: string): JsonRecord {
@@ -205,6 +241,22 @@ function buildPkulawMcpConfig(token: string): JsonRecord {
   return { servers }
 }
 
+function buildYuandianMcpConfig(apiKey: string): JsonRecord {
+  const authorization = `Bearer ${apiKey.trim()}`
+  const servers: JsonRecord = {}
+  for (const { id, url } of YUANDIAN_MCP_ENDPOINTS) {
+    servers[id] = {
+      enabled: true,
+      transport: 'streamable-http',
+      url,
+      headers: { Authorization: authorization },
+      trustScope: 'user',
+      timeoutMs: 30000
+    }
+  }
+  return { servers }
+}
+
 function mcpServersFromConfig(config: JsonRecord): JsonRecord {
   if (isJsonRecord(config.servers)) return config.servers
   const capabilities = isJsonRecord(config.capabilities) ? config.capabilities : undefined
@@ -251,6 +303,9 @@ export function mcpConfigHasServer(content: string, id: string): boolean {
     const servers = mcpServersFromConfig(parseMcpJsonConfig(content))
     if (id === PKULAW_MCP_GROUP_ID) {
       return Object.keys(servers).some((serverId) => isPkulawMcpEndpointId(serverId))
+    }
+    if (id === YUANDIAN_MCP_GROUP_ID) {
+      return Object.keys(servers).some((serverId) => isYuandianMcpEndpointId(serverId))
     }
     return Object.prototype.hasOwnProperty.call(servers, id)
   } catch {
@@ -299,6 +354,30 @@ export function mergeMcpJsonConfig(content: string, fragment: JsonRecord): { alr
     }
   }
   return { alreadyExists: false, text: `${JSON.stringify(next, null, 2)}\n` }
+}
+
+export function upsertMcpJsonConfig(content: string, fragment: JsonRecord): string {
+  const current = parseMcpJsonConfig(content)
+  const currentServers = mcpServersFromConfig(current)
+  const fragmentServers = mcpServersFromConfig(fragment)
+  const fragmentServerIds = Object.keys(fragmentServers)
+  if (fragmentServerIds.length === 0) {
+    throw new Error('MCP JSON config must include at least one server.')
+  }
+  const nextServers = { ...currentServers }
+  for (const serverId of fragmentServerIds) {
+    const currentServer = isJsonRecord(nextServers[serverId]) ? nextServers[serverId] : {}
+    const fragmentServer = isJsonRecord(fragmentServers[serverId]) ? fragmentServers[serverId] : {}
+    nextServers[serverId] = {
+      ...currentServer,
+      ...fragmentServer,
+      enabled: currentServer.enabled === false ? false : fragmentServer.enabled
+    }
+  }
+  return `${JSON.stringify({
+    ...current,
+    servers: nextServers
+  }, null, 2)}\n`
 }
 
 function buildSkillContent(id: string, title: string, description: string, instructions: string): string {
@@ -374,7 +453,10 @@ export function mcpMarketplaceItemsFromConfigAndDiagnostics(
 
   const entries = [...servers.values()]
   const pkulawEntries = entries.filter((entry) => isPkulawMcpEndpointId(entry.id))
-  const normalEntries = entries.filter((entry) => !isPkulawMcpEndpointId(entry.id))
+  const yuandianEntries = entries.filter((entry) => isYuandianMcpEndpointId(entry.id))
+  const normalEntries = entries.filter((entry) =>
+    !isPkulawMcpEndpointId(entry.id) && !isYuandianMcpEndpointId(entry.id)
+  )
   const items: MarketplaceItem[] = normalEntries.map(({ id, config, diagnostic }) => {
     const status = mcpServerStatus(diagnostic, config)
     const details = { ...(config ?? {}), ...(diagnostic ?? {}) }
@@ -395,6 +477,9 @@ export function mcpMarketplaceItemsFromConfigAndDiagnostics(
   })
   if (pkulawEntries.length > 0) {
     items.push(pkulawMarketplaceItem(pkulawEntries, labels))
+  }
+  if (yuandianEntries.length > 0) {
+    items.push(yuandianMarketplaceItem(yuandianEntries, labels))
   }
   return items.sort((left, right) => (left.title ?? left.id).localeCompare(right.title ?? right.id))
 }
@@ -434,7 +519,10 @@ function pkulawMarketplaceItem(
     connected > 0 ? 'connected' :
     disabled === entries.length ? 'disabled' :
     'configured'
+  const needsToken = entries.some((entry) => !hasAuthorizationHeader(entry.config)) ||
+    authErrorLooksTokenRelated(entries)
   const sourceLabel =
+    needsToken ? labels.tokenRequired :
     status === 'connected' ? labels.connected :
     status === 'error' ? labels.error :
     status === 'disabled' ? labels.disabled :
@@ -443,17 +531,86 @@ function pkulawMarketplaceItem(
     id: PKULAW_MCP_GROUP_ID,
     kind: 'mcp',
     title: labels.pkulawTitle,
-    description: labels.pkulawSummary({
-      total: entries.length,
-      connected,
-      tools,
-      errors: errorEntries.length,
-      disabled,
-      lastError
-    }),
+    description: needsToken
+      ? labels.tokenRequiredSummary
+      : labels.pkulawSummary({
+          total: entries.length,
+          connected,
+          tools,
+          errors: errorEntries.length,
+          disabled,
+          lastError
+        }),
     group: 'personal',
+    configurable: needsToken,
+    needsToken,
     sourceLabel,
-    statusTone: mcpStatusTone(status)
+    statusTone: needsToken ? 'warning' : mcpStatusTone(status)
+  }
+}
+
+function yuandianMarketplaceItem(
+  entries: Array<{
+    id: string
+    config?: JsonRecord
+    diagnostic?: JsonRecord
+  }>,
+  labels: McpMarketplaceLabels
+): MarketplaceItem {
+  const statuses = entries.map((entry) => mcpServerStatus(entry.diagnostic, entry.config))
+  const errorEntries = entries.filter((entry) => {
+    const details = { ...(entry.config ?? {}), ...(entry.diagnostic ?? {}) }
+    return mcpServerStatus(entry.diagnostic, entry.config) === 'error' ||
+      typeof details.lastError === 'string'
+  })
+  const connected = statuses.filter((status) => status === 'connected' || status === 'available').length
+  const disabled = statuses.filter((status) => status === 'disabled').length
+  const tools = entries.reduce((sum, entry) => {
+    const count = typeof entry.diagnostic?.toolCount === 'number'
+      ? entry.diagnostic.toolCount
+      : typeof entry.config?.toolCount === 'number'
+        ? entry.config.toolCount
+        : 0
+    return Number.isFinite(count) ? sum + count : sum
+  }, 0)
+  const lastError = errorEntries
+    .map((entry) => {
+      const details = { ...(entry.config ?? {}), ...(entry.diagnostic ?? {}) }
+      return typeof details.lastError === 'string' ? details.lastError : ''
+    })
+    .find(Boolean) ?? ''
+  const status =
+    errorEntries.length > 0 ? 'error' :
+    connected > 0 ? 'connected' :
+    disabled === entries.length ? 'disabled' :
+    'configured'
+  const needsToken = entries.some((entry) => !hasAuthorizationHeader(entry.config)) ||
+    authErrorLooksTokenRelated(entries)
+  const sourceLabel =
+    needsToken ? labels.tokenRequired :
+    status === 'connected' ? labels.connected :
+    status === 'error' ? labels.error :
+    status === 'disabled' ? labels.disabled :
+    labels.configured
+  return {
+    id: YUANDIAN_MCP_GROUP_ID,
+    kind: 'mcp',
+    title: labels.yuandianTitle,
+    description: needsToken
+      ? labels.tokenRequiredSummary
+      : labels.yuandianSummary({
+          total: entries.length,
+          connected,
+          tools,
+          errors: errorEntries.length,
+          disabled,
+          lastError
+        }),
+    group: 'personal',
+    configurable: needsToken,
+    needsToken,
+    sourceLabel,
+    statusTone: needsToken ? 'warning' : mcpStatusTone(status)
   }
 }
 
@@ -536,6 +693,14 @@ const RECOMMENDED_ITEMS: MarketplaceItem[] = [
     configurable: true
   },
   {
+    id: YUANDIAN_MCP_GROUP_ID,
+    kind: 'mcp',
+    titleKey: 'pluginMcpYuandianTitle',
+    descriptionKey: 'pluginMcpYuandianDesc',
+    group: 'recommended',
+    configurable: true
+  },
+  {
     id: 'code-review',
     kind: 'skill',
     titleKey: 'pluginSkillReviewTitle',
@@ -594,6 +759,7 @@ export function PluginMarketplaceView(): ReactElement {
   const [mcpLoaded, setMcpLoaded] = useState(false)
   const [configuringItemId, setConfiguringItemId] = useState<string | null>(null)
   const [pkulawToken, setPkulawToken] = useState('')
+  const [yuandianApiKey, setYuandianApiKey] = useState('')
   const [runtimeInfo, setRuntimeInfo] = useState<CoreRuntimeInfoJson | null>(null)
   const [toolDiagnostics, setToolDiagnostics] = useState<CoreRuntimeToolDiagnosticsJson | null>(null)
   const [runtimeOverlayLoading, setRuntimeOverlayLoading] = useState(false)
@@ -735,10 +901,26 @@ export function PluginMarketplaceView(): ReactElement {
   }, [activeKind, refreshSkillList])
 
   useEffect(() => {
+    const refreshFromDisk = (): void => {
+      if (activeKind === 'mcp') {
+        void readMcpConfig().catch(() => undefined)
+        void refreshMcpRuntimeOverlay()
+        return
+      }
+      if (activeKind === 'skill') {
+        void refreshSkillList()
+      }
+    }
+    window.addEventListener('focus', refreshFromDisk)
+    return () => window.removeEventListener('focus', refreshFromDisk)
+  }, [activeKind, readMcpConfig, refreshMcpRuntimeOverlay, refreshSkillList])
+
+  useEffect(() => {
     setNotice(null)
     setCustomOpen(false)
     setConfiguringItemId(null)
     setPkulawToken('')
+    setYuandianApiKey('')
   }, [activeKind])
 
   const markInstalled = (key: string): void => {
@@ -767,8 +949,12 @@ export function PluginMarketplaceView(): ReactElement {
       connected: t('pluginMcpSourceConnected'),
       error: t('pluginMcpSourceError'),
       disabled: t('pluginMcpSourceDisabled'),
+      tokenRequired: t('pluginMcpSourceTokenRequired'),
+      tokenRequiredSummary: t('pluginMcpTokenRequiredSummary'),
       pkulawTitle: t('pluginMcpPkulawTitle'),
-      pkulawSummary: (values) => t('pluginMcpPkulawSummary', values)
+      pkulawSummary: (values) => t('pluginMcpPkulawSummary', values),
+      yuandianTitle: t('pluginMcpYuandianTitle'),
+      yuandianSummary: (values) => t('pluginMcpYuandianSummary', values)
     }).filter((item) => item.id !== LEGALWORK_SCHEDULE_MCP_SERVER_ID),
     [mcpConfigText, t, toolDiagnostics]
   )
@@ -844,6 +1030,16 @@ export function PluginMarketplaceView(): ReactElement {
     setNotice({ tone: 'success', message: t('pluginMcpAdded', { path: result.path }) })
   }
 
+  const upsertMcpConfig = async (id: string, config: JsonRecord): Promise<void> => {
+    const content = mcpLoaded ? mcpConfigText : await readMcpConfig()
+    const text = upsertMcpJsonConfig(content, config)
+    const result = await window.dsGui.setDeepseekConfigFile(text)
+    setMcpConfigText(text)
+    setMcpLoaded(true)
+    markInstalled(storageKey('mcp', id))
+    setNotice({ tone: 'success', message: t('pluginMcpTokenUpdated', { path: result.path }) })
+  }
+
   const addItem = async (item: MarketplaceItem): Promise<void> => {
     if (item.configurable) {
       setConfiguringItemId(item.id)
@@ -895,9 +1091,28 @@ export function PluginMarketplaceView(): ReactElement {
     setBusyId(storageKey('mcp', 'pkulaw'))
     setNotice(null)
     try {
-      await appendMcpConfig('pkulaw', buildPkulawMcpConfig(token))
+      await upsertMcpConfig('pkulaw', buildPkulawMcpConfig(token))
       setConfiguringItemId(null)
       setPkulawToken('')
+    } catch (e) {
+      setNotice({ tone: 'error', message: e instanceof Error ? e.message : String(e) })
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  const addYuandian = async (): Promise<void> => {
+    const apiKey = yuandianApiKey.trim()
+    if (!apiKey) {
+      setNotice({ tone: 'error', message: t('pluginMcpYuandianKeyRequired') })
+      return
+    }
+    setBusyId(storageKey('mcp', YUANDIAN_MCP_GROUP_ID))
+    setNotice(null)
+    try {
+      await upsertMcpConfig(YUANDIAN_MCP_GROUP_ID, buildYuandianMcpConfig(apiKey))
+      setConfiguringItemId(null)
+      setYuandianApiKey('')
     } catch (e) {
       setNotice({ tone: 'error', message: e instanceof Error ? e.message : String(e) })
     } finally {
@@ -955,7 +1170,7 @@ export function PluginMarketplaceView(): ReactElement {
     }
   }
 
-  const renderConfigPanel = useCallback((item: MarketplaceItem): ReactNode => {
+  const renderConfigPanel = (item: MarketplaceItem): ReactNode => {
     if (item.id === 'pkulaw') {
       return (
         <PkulawConfigPanel
@@ -971,8 +1186,23 @@ export function PluginMarketplaceView(): ReactElement {
         />
       )
     }
+    if (item.id === YUANDIAN_MCP_GROUP_ID) {
+      return (
+        <YuandianConfigPanel
+          apiKey={yuandianApiKey}
+          onApiKeyChange={setYuandianApiKey}
+          onAdd={() => void addYuandian()}
+          onCancel={() => {
+            setConfiguringItemId(null)
+            setYuandianApiKey('')
+          }}
+          busy={busyId === storageKey('mcp', YUANDIAN_MCP_GROUP_ID)}
+          t={t}
+        />
+      )
+    }
     return null
-  }, [pkulawToken, addPkulaw, busyId, t])
+  }
 
   const openManageTarget = async (): Promise<void> => {
     try {
@@ -1253,15 +1483,22 @@ function McpRuntimeOverlayPanel({
 
 function groupedMcpServerIds(serverIds: string[]): string[] {
   let hasPkulaw = false
+  let hasYuandian = false
   const grouped: string[] = []
   for (const id of serverIds) {
     if (isPkulawMcpEndpointId(id)) {
       hasPkulaw = true
       continue
     }
+    if (isYuandianMcpEndpointId(id)) {
+      hasYuandian = true
+      continue
+    }
     grouped.push(id)
   }
-  return hasPkulaw ? [...grouped, PKULAW_MCP_GROUP_ID].sort((left, right) => left.localeCompare(right)) : grouped
+  if (hasPkulaw) grouped.push(PKULAW_MCP_GROUP_ID)
+  if (hasYuandian) grouped.push(YUANDIAN_MCP_GROUP_ID)
+  return grouped.sort((left, right) => left.localeCompare(right))
 }
 
 function mcpRuntimeStatusLabel(
@@ -1352,6 +1589,7 @@ function PluginSection({
           {items.map((item) => {
             const itemKey = storageKey(item.kind, item.id)
             const installed = isInstalled(item)
+            const needsConfiguration = installed && item.configurable && item.needsToken
             const busy = busyId === itemKey
             const configuring = configuringItemId === item.id
             return (
@@ -1378,17 +1616,19 @@ function PluginSection({
                 </div>
                 <button
                   type="button"
-                  disabled={installed || busy}
+                  disabled={(installed && !needsConfiguration) || busy}
                   onClick={() => void onAdd(item)}
-                  title={installed ? t('pluginAdded') : t('pluginAdd')}
+                  title={needsConfiguration ? t('pluginConfigureToken') : installed ? t('pluginAdded') : t('pluginAdd')}
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition ${
-                    installed
+                    installed && !needsConfiguration
                       ? 'text-ds-faint'
                       : 'bg-ds-subtle text-ds-ink hover:bg-ds-hover disabled:opacity-60'
                   }`}
                 >
                   {busy ? (
                     <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
+                  ) : needsConfiguration ? (
+                    <Settings className="h-4 w-4" strokeWidth={1.9} />
                   ) : installed ? (
                     <Check className="h-4 w-4" strokeWidth={2} />
                   ) : (
@@ -1567,6 +1807,84 @@ function PkulawConfigPanel({
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} /> : <Plus className="h-4 w-4" strokeWidth={2} />}
             {t('pluginMcpPkulawAdd')}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function YuandianConfigPanel({
+  apiKey,
+  onApiKeyChange,
+  onAdd,
+  onCancel,
+  busy,
+  t
+}: {
+  apiKey: string
+  onApiKeyChange: (value: string) => void
+  onAdd: () => void
+  onCancel: () => void
+  busy: boolean
+  t: (key: string, values?: Record<string, unknown>) => string
+}): ReactElement {
+  const [showKey, setShowKey] = useState(false)
+  return (
+    <div className="rounded-2xl border border-ds-border bg-ds-card/95 p-4 shadow-sm">
+      <div className="flex flex-col gap-3 md:flex-row md:items-start">
+        <div className="min-w-0 flex-1">
+          <label className="block text-[12px] font-semibold text-ds-muted">
+            {t('pluginMcpYuandianKeyLabel')}
+          </label>
+          <div className="relative mt-1.5">
+            <input
+              type={showKey ? 'text' : 'password'}
+              value={apiKey}
+              onChange={(event) => onApiKeyChange(event.target.value)}
+              placeholder={t('pluginMcpYuandianKeyPlaceholder')}
+              autoComplete="off"
+              className="w-full rounded-xl border border-ds-border bg-ds-main/45 px-3 py-2 pr-20 text-[14px] text-ds-ink outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/30"
+            />
+            <button
+              type="button"
+              onClick={() => setShowKey((value) => !value)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1 text-[12px] font-medium text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink"
+            >
+              {showKey ? t('pluginMcpPkulawTokenHide') : t('pluginMcpPkulawTokenShow')}
+            </button>
+          </div>
+          <p className="mt-2 text-[12px] leading-5 text-ds-faint">
+            {t('pluginMcpYuandianKeyHint')}
+          </p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {YUANDIAN_MCP_ENDPOINTS.map((endpoint) => (
+              <span
+                key={endpoint.id}
+                className="rounded-md border border-ds-border-muted bg-ds-subtle px-2 py-0.5 font-mono text-[11px] text-ds-muted"
+              >
+                {endpoint.id}
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-2 md:pt-5">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={busy}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[13px] font-medium text-ds-ink shadow-sm transition hover:bg-ds-hover disabled:cursor-not-allowed disabled:opacity-55"
+          >
+            {t('pluginMcpPkulawCancel')}
+          </button>
+          <button
+            type="button"
+            onClick={onAdd}
+            disabled={busy || !apiKey.trim()}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-ds-userbubble px-3 py-2 text-[13px] font-semibold text-ds-userbubbleFg shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-55"
+          >
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} /> : <Plus className="h-4 w-4" strokeWidth={2} />}
+            {t('pluginMcpYuandianAdd')}
           </button>
         </div>
       </div>

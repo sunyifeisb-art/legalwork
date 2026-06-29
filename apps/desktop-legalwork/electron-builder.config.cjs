@@ -111,6 +111,15 @@ module.exports = {
     '!vendor/data-compliance-review-codex/data-compliance-web/output/**/*',
     '!vendor/data-compliance-review-codex/**/__pycache__/**/*',
     '!vendor/data-compliance-review-codex/**/.openclaw/**/*',
+    // 合规运行时只读 knowledge-base/local-regulations.sqlite3，下列法规源文档(md/pdf)
+    // 仅用于构建该 sqlite，运行时无引用，排除以缩小安装包(约 22M)。
+    '!vendor/data-compliance-review-codex/projects/data-compliance-ai-project-kit/knowledge-base/regulations-md/**/*',
+    '!vendor/data-compliance-review-codex/projects/data-compliance-ai-project-kit/knowledge-base/regulations-source/**/*',
+    '!vendor/data-compliance-review-codex/projects/data-compliance-ai-project-kit/knowledge-base/foreign-regulations-md/**/*',
+    '!vendor/data-compliance-review-codex/projects/data-compliance-ai-project-kit/knowledge-base/foreign-regulations-source-docs/**/*',
+    '!vendor/data-compliance-review-codex/projects/data-compliance-ai-project-kit/knowledge-base/foreign-regulations-seed/**/*',
+    '!vendor/data-compliance-review-codex/projects/data-compliance-ai-project-kit/knowledge-base/foreign-regulations/**/*',
+    '!vendor/data-compliance-review-codex/projects/data-compliance-ai-project-kit/knowledge-base/data-outbound/**/*',
     '!redaction/**/__pycache__/**/*',
     '!document/**/__pycache__/**/*',
     '!**/*.pyc',
@@ -121,7 +130,19 @@ module.exports = {
     '!**/tsconfig*.json',
     '!**/README*',
     '!**/CHANGELOG*',
-    '!**/node_modules/openclaw/**/*'
+    '!**/node_modules/openclaw/**/*',
+    // 排除 agent 子包的开发/构建依赖：运行时只跑 legalwork/dist 编译产物，
+    // 这些包不参与运行，却会被 legalwork/node_modules/**/* 整体打入，平白增大安装包。
+    '!legalwork/node_modules/typescript/**/*',
+    '!legalwork/node_modules/vite/**/*',
+    '!legalwork/node_modules/vitest/**/*',
+    '!legalwork/node_modules/@vitest/**/*',
+    '!legalwork/node_modules/@types/**/*',
+    '!legalwork/node_modules/@rolldown/**/*',
+    '!legalwork/node_modules/rolldown/**/*',
+    '!legalwork/node_modules/lightningcss*/**/*',
+    '!legalwork/node_modules/esbuild*/**/*',
+    '!legalwork/node_modules/.bin/**/*'
   ],
   artifactName: `legalwork-${artifactVersion}-\${os}-\${arch}.\${ext}`,
   publish: [

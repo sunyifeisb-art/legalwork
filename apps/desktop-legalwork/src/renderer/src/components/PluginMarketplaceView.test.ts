@@ -22,7 +22,19 @@ const mcpLabels = {
     disabled: number
     lastError: string
   }) =>
-    `${values.total} sub-services · ${values.connected} connected · ${values.tools} tools · ${values.errors} errors · ${values.disabled} disabled${values.lastError ? ` · ${values.lastError}` : ''}`
+    `${values.total} sub-services · ${values.connected} connected · ${values.tools} tools · ${values.errors} errors · ${values.disabled} disabled${values.lastError ? ` · ${values.lastError}` : ''}`,
+  yuandianTitle: 'Yuandian Legal Intelligence',
+  yuandianSummary: (values: {
+    total: number
+    connected: number
+    tools: number
+    errors: number
+    disabled: number
+    lastError: string
+  }) =>
+    `${values.total} sub-services · ${values.connected} connected · ${values.tools} tools · ${values.errors} errors · ${values.disabled} disabled${values.lastError ? ` · ${values.lastError}` : ''}`,
+  tokenRequired: 'Token required',
+  tokenRequiredSummary: 'Configure an access token to enable this MCP source.'
 }
 
 describe('PluginMarketplaceView MCP config helpers', () => {
@@ -64,6 +76,19 @@ describe('PluginMarketplaceView MCP config helpers', () => {
     })
 
     expect(mcpConfigHasServer(content, 'pkulaw')).toBe(true)
+  })
+
+  it('treats Yuandian endpoint servers as the single Yuandian install', () => {
+    const content = JSON.stringify({
+      servers: {
+        'yuandian-law': {
+          transport: 'streamable-http',
+          url: 'https://open.chineselaw.com/mcp/law/stream'
+        }
+      }
+    })
+
+    expect(mcpConfigHasServer(content, 'yuandian')).toBe(true)
   })
 
   it('detects duplicate MCP servers instead of appending old-style snippets', () => {
@@ -221,13 +246,53 @@ describe('PluginMarketplaceView MCP config helpers', () => {
       expect.objectContaining({
         id: 'pkulaw',
         title: 'PKULaw',
-        sourceLabel: 'Error',
-        statusTone: 'error',
-        description: expect.stringContaining('2 sub-services')
+        needsToken: true,
+        sourceLabel: 'Token required',
+        statusTone: 'warning',
+        description: 'Configure an access token to enable this MCP source.'
       })
     ])
     expect(items.some((item) => item.id === 'pkulaw-law-keyword')).toBe(false)
     expect(items.some((item) => item.id === 'pkulaw-case-keyword')).toBe(false)
+  })
+
+  it('groups Yuandian child endpoints into one marketplace item', () => {
+    const items = mcpMarketplaceItemsFromConfigAndDiagnostics(
+      JSON.stringify({
+        servers: {
+          'yuandian-law': {
+            enabled: true,
+            transport: 'streamable-http',
+            url: 'https://open.chineselaw.com/mcp/law/stream'
+          },
+          'yuandian-case': {
+            enabled: true,
+            transport: 'streamable-http',
+            url: 'https://open.chineselaw.com/mcp/case/stream'
+          }
+        }
+      }),
+      {
+        mcpServers: [
+          { id: 'yuandian-law', status: 'connected', toolCount: 8 },
+          { id: 'yuandian-case', status: 'connected', toolCount: 12 }
+        ]
+      },
+      mcpLabels
+    )
+
+    expect(items).toEqual([
+      expect.objectContaining({
+        id: 'yuandian',
+        title: 'Yuandian Legal Intelligence',
+        needsToken: true,
+        sourceLabel: 'Token required',
+        statusTone: 'warning',
+        description: 'Configure an access token to enable this MCP source.'
+      })
+    ])
+    expect(items.some((item) => item.id === 'yuandian-law')).toBe(false)
+    expect(items.some((item) => item.id === 'yuandian-case')).toBe(false)
   })
 })
 

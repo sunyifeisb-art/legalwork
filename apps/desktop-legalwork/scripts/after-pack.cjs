@@ -25,6 +25,18 @@ const DATA_COMPLIANCE_OPTIONAL_PATHS = [
   'vendor/data-compliance-review-codex/projects/data-compliance-ai-project-kit/knowledge-base/local-regulations.sqlite3'
 ]
 
+// legalwork 不使用相机 / 麦克风 / 蓝牙 / 相册。Electron 框架默认在 Info.plist 里塞了这些
+// 权限用途串，会导致 macOS 在相关 API 被触达时弹出无谓的权限请求（如相册访问）。
+// 打包后、签名前删掉这些键，即可从根本上避免这些与功能无关的权限弹窗。
+const MAC_UNUSED_PERMISSION_KEYS = [
+  'NSCameraUsageDescription',
+  'NSMicrophoneUsageDescription',
+  'NSBluetoothAlwaysUsageDescription',
+  'NSBluetoothPeripheralUsageDescription',
+  'NSPhotoLibraryUsageDescription',
+  'NSPhotoLibraryAddUsageDescription'
+]
+
 function normalizePlatform(platform) {
   return platform === 'win' ? 'win32' : platform
 }
@@ -139,10 +151,32 @@ function maybeAdhocSignMacApp(context) {
   )
 }
 
+function stripUnnecessaryMacPermissions(context) {
+  if (normalizePlatform(context.electronPlatformName) !== 'darwin') {
+    return
+  }
+  const infoPlist = join(appBundlePath(context), 'Contents', 'Info.plist')
+  if (!existsSync(infoPlist)) {
+    console.warn(`[after-pack] Info.plist not found, skip permission cleanup: ${infoPlist}`)
+    return
+  }
+  for (const key of MAC_UNUSED_PERMISSION_KEYS) {
+    try {
+      execFileSync('/usr/libexec/PlistBuddy', ['-c', `Delete :${key}`, infoPlist], {
+        stdio: 'ignore'
+      })
+      console.log(`[after-pack] Removed unused Info.plist permission key: ${key}`)
+    } catch {
+      // Key absent — nothing to remove.
+    }
+  }
+}
+
 async function afterPack(context) {
   prunePackedLegalworkDependencies(context)
   validateBundledLegalworkRuntime(context)
   validateBundledDataComplianceRuntime(context)
+  stripUnnecessaryMacPermissions(context)
   maybeAdhocSignMacApp(context)
 }
 
@@ -156,6 +190,7 @@ exports._internals = {
   npmCommand,
   prunePackedLegalworkDependencies,
   validateBundledLegalworkRuntime,
-  validateBundledDataComplianceRuntime
+  validateBundledDataComplianceRuntime,
+  stripUnnecessaryMacPermissions
 }
 exports.default = afterPack

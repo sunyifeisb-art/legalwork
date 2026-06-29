@@ -290,13 +290,19 @@ function createTransport(server: McpServerConfig): Transport {
 }
 
 function serverWithStartupTimeout(server: McpServerConfig, startupTimeoutMs: number): McpServerConfig {
-  // stdio servers (especially via npx) may need to download/install packages on first run,
-  // so give them a longer startup window while still respecting an explicit user timeout.
-  const effectiveStartupTimeoutMs =
-    server.transport === 'stdio' ? Math.max(startupTimeoutMs, STDIO_STARTUP_TIMEOUT_MS) : startupTimeoutMs
+  if (server.transport === 'stdio') {
+    // stdio servers (especially via npx) may need to download/install packages on first run,
+    // so guarantee a generous startup window even when the configured runtime timeout is small.
+    // A larger user-configured timeout is honored as-is.
+    return {
+      ...server,
+      timeoutMs: Math.max(server.timeoutMs, STDIO_STARTUP_TIMEOUT_MS)
+    }
+  }
+  // Non-stdio servers are capped at the global startup budget so a slow endpoint can't stall boot.
   return {
     ...server,
-    timeoutMs: Math.min(server.timeoutMs, effectiveStartupTimeoutMs)
+    timeoutMs: Math.min(server.timeoutMs, startupTimeoutMs)
   }
 }
 

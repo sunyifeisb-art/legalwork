@@ -94,6 +94,7 @@ export function SettingsView(): ReactElement {
   const [mcpLoaded, setMcpLoaded] = useState(false)
   const [mcpBusy, setMcpBusy] = useState(false)
   const [mcpNotice, setMcpNotice] = useState<InlineNotice | null>(null)
+  const [mcpConfigDirty, setMcpConfigDirty] = useState(false)
   const [runtimeInfo, setRuntimeInfo] = useState<CoreRuntimeInfoJson | null>(null)
   const [toolDiagnostics, setToolDiagnostics] = useState<CoreRuntimeToolDiagnosticsJson | null>(null)
   const [memoryRecords, setMemoryRecords] = useState<CoreMemoryRecordJson[]>([])
@@ -279,6 +280,7 @@ export function SettingsView(): ReactElement {
       setMcpConfigText(config.content)
       setMcpConfigExists(config.exists)
       setMcpLoaded(true)
+      setMcpConfigDirty(false)
     } catch (e) {
       setMcpNotice({
         tone: 'error',
@@ -293,6 +295,11 @@ export function SettingsView(): ReactElement {
     if (category !== 'agents' || mcpLoaded || mcpLoading) return
     void loadMcpConfig()
   }, [category, mcpLoaded, mcpLoading])
+
+  const updateMcpConfigText = useCallback((content: string): void => {
+    setMcpConfigText(content)
+    setMcpConfigDirty(true)
+  }, [])
 
   const openSkillRoot = async (): Promise<void> => {
     if (!selectedSkillRoot?.path || !selectedSkillRoot.available) {
@@ -315,6 +322,7 @@ export function SettingsView(): ReactElement {
       const result = await window.dsGui.setDeepseekConfigFile(mcpConfigText)
       setMcpConfigPath(result.path)
       setMcpConfigExists(true)
+      setMcpConfigDirty(false)
       setMcpNotice({
         tone: 'success',
         message: t('mcpSaved', { path: result.path })
@@ -368,6 +376,16 @@ export function SettingsView(): ReactElement {
     if (category !== 'agents') return
     void refreshLegalworkDiagnostics()
   }, [category, refreshLegalworkDiagnostics])
+
+  useEffect(() => {
+    const refreshAgentCapabilities = (): void => {
+      if (category !== 'agents') return
+      if (!mcpConfigDirty) void loadMcpConfig()
+      void refreshLegalworkDiagnostics()
+    }
+    window.addEventListener('focus', refreshAgentCapabilities)
+    return () => window.removeEventListener('focus', refreshAgentCapabilities)
+  }, [category, mcpConfigDirty, refreshLegalworkDiagnostics])
 
   const disableMemoryRecord = async (memoryId: string): Promise<void> => {
     const provider = getProvider()
@@ -645,7 +663,7 @@ export function SettingsView(): ReactElement {
     mcpConfigPath,
     mcpConfigExists,
     mcpConfigText,
-    setMcpConfigText,
+    setMcpConfigText: updateMcpConfigText,
     mcpLoading,
     mcpBusy,
     mcpNotice,

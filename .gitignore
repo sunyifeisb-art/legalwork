@@ -15,6 +15,10 @@ out/
 .cache/
 .next/
 build/
+# desktop-legalwork 的 build/ 只存打包输入(entitlements、NSIS installer.nsh)，
+# 必须随仓库进 CI，否则 mac 权限 entitlements 与 NSIS 自定义钩子在发布包里会丢失。
+!apps/desktop-legalwork/build/
+!apps/desktop-legalwork/build/**
 *.tsbuildinfo
 
 # Local runtime data

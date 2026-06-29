@@ -123,7 +123,7 @@ describe('buildMcpToolProviders', () => {
           env: {},
           trustScope: 'user',
           trustedWorkspaceRoots: [],
-          timeoutMs: 30_000
+          timeoutMs: 8_000
         }
       },
       search: {
@@ -145,6 +145,6 @@ describe('buildMcpToolProviders', () => {
       }
     })
 
-    expect(seenTimeouts).toEqual([30_000])
+    expect(seenTimeouts).toEqual([60_000])
   })
 })
