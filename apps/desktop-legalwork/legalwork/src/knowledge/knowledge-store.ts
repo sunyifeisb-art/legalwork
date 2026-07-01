@@ -246,7 +246,7 @@ export class FileKnowledgeStore implements KnowledgeStore {
     return { path: filePath }
   }
 
-  async classify(input: KnowledgeClassifyRequest = {}): Promise<KnowledgeClassifyResult> {
+  async classify(input: Partial<KnowledgeClassifyRequest> = {}): Promise<KnowledgeClassifyResult> {
     await this.ensureManagedRoot()
     const dryRun = input.dryRun ?? false
     const targetRoot = normalizeRelativePath(input.targetRoot ?? '')
