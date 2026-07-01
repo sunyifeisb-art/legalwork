@@ -131,8 +131,9 @@ describe('installGuiUpdate', () => {
     const beforeInstall = vi.fn(() => new Promise<void>((resolve) => {
       finishCleanup = resolve
     }))
+    const beforeQuitAndInstall = vi.fn()
 
-    module.initializeGuiUpdater(() => null, () => 'stable', beforeInstall)
+    module.initializeGuiUpdater(() => null, () => 'stable', beforeInstall, beforeQuitAndInstall)
     updater.emit('update-downloaded', { version: '0.2.0', releaseDate: '2026-06-06T00:00:00.000Z' })
 
     const installing = module.installGuiUpdate()
@@ -143,7 +144,11 @@ describe('installGuiUpdate', () => {
 
     finishCleanup()
     await expect(installing).resolves.toEqual({ ok: true })
+    expect(beforeQuitAndInstall).toHaveBeenCalledTimes(1)
     expect(updater.quitAndInstall).toHaveBeenCalledWith(false, true)
+    expect(beforeQuitAndInstall.mock.invocationCallOrder[0]).toBeLessThan(
+      updater.quitAndInstall.mock.invocationCallOrder[0]
+    )
   })
 
   it('reuses the same cleanup when the native updater emits before-quit-for-update', async () => {

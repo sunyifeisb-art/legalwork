@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react'
 import type { GuiUpdateInfo, GuiUpdateProgress } from '@shared/gui-update'
-import { AlertCircle, CheckCircle2, Download, Loader2, RefreshCw } from 'lucide-react'
+import { AlertCircle, CheckCircle2, Download, Github, Loader2, RefreshCw } from 'lucide-react'
 
 function formatBytes(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes <= 0) return '0 B'
@@ -84,7 +84,7 @@ export function GuiUpdateControl({
   }
 
   const releaseUrl: string | null =
-    info?.ok && info.hasUpdate && info.manualOnly
+    info?.ok && info.hasUpdate
       ? info.releaseUrl
       : !info?.ok && info?.releaseUrl
         ? info.releaseUrl
@@ -164,9 +164,10 @@ export function GuiUpdateControl({
           <button
             type="button"
             onClick={() => void window.dsGui.openExternal(releaseUrl).catch(() => undefined)}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-ds-userbubble px-3 py-2 text-[13px] font-medium text-ds-userbubbleFg shadow-sm transition hover:opacity-90"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[13px] font-medium text-ds-ink shadow-sm transition hover:bg-ds-hover"
           >
-            {t('guiUpdateOpenRelease')}
+            <Github className="h-3.5 w-3.5" strokeWidth={1.75} />
+            {t('guiUpdateGithubDownload')}
           </button>
         ) : null}
       </div>

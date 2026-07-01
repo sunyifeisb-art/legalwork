@@ -162,6 +162,7 @@ let managedRuntimesStopPromise: Promise<void> | null = null
 let appBehavior: AppBehaviorConfigV1 = normalizeAppBehaviorSettings()
 let tray: Tray | null = null
 let isQuitting = false
+let isQuittingForGuiUpdate = false
 
 type GuiUpdaterModule = typeof import('./gui-updater')
 
@@ -199,6 +200,12 @@ async function stopManagedRuntimes(): Promise<void> {
   return managedRuntimesStopPromise
 }
 
+function prepareToQuitForGuiUpdate(): void {
+  isQuitting = true
+  isQuittingForGuiUpdate = true
+  managedRuntimesStoppedForQuit = true
+}
+
 async function loadGuiUpdaterModule(): Promise<GuiUpdaterModule> {
   if (!guiUpdaterModulePromise) {
     guiUpdaterModulePromise = import('./gui-updater')
@@ -207,7 +214,8 @@ async function loadGuiUpdaterModule(): Promise<GuiUpdaterModule> {
           module.initializeGuiUpdater(
             () => mainWindow,
             async () => (await store.load()).guiUpdate.channel,
-            stopManagedRuntimesForQuit
+            stopManagedRuntimesForQuit,
+            prepareToQuitForGuiUpdate
           )
           guiUpdaterInitialized = true
         }
@@ -1046,6 +1054,7 @@ app.on('window-all-closed', () => {
 
 app.on('before-quit', (event) => {
   isQuitting = true
+  if (isQuittingForGuiUpdate) return
   if (managedRuntimesStoppedForQuit) return
   event.preventDefault()
 

@@ -449,6 +449,7 @@
   "guiUpdateCheck": "检查更新",
   "guiUpdateDownload": "下载更新",
   "guiUpdateInstall": "重启安装",
+  "guiUpdateGithubDownload": "GitHub 下载",
   "guiUpdateOpenRelease": "打开下载页",
   "settingsFooter": "偏好设置保存在本地。",
   "logTitle": "本地错误日志",

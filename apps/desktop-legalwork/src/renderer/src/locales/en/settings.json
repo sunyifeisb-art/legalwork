@@ -449,6 +449,7 @@
   "guiUpdateCheck": "Check for updates",
   "guiUpdateDownload": "Download update",
   "guiUpdateInstall": "Restart and install",
+  "guiUpdateGithubDownload": "GitHub download",
   "guiUpdateOpenRelease": "Open download page",
   "settingsFooter": "Preferences are stored locally.",
   "logTitle": "Local error log",
