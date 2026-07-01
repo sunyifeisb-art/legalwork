@@ -169,7 +169,11 @@ result = pipeline.process_text(
 - **Flask API**：`flask_api.py` RESTful 案件管理接口
 - **可扩展**：支持自定义案件字段和状态流转
 
-### 📚 法规知识库
+### 📚 知识库系统
+
+知识库分为「内置法规数据」与「可托管知识库」两层，后者提供完整的文件管理 + 语义检索 + 自动分类能力，并以 13 个 AI 工具的形式开放给 Agent 直接调用。
+
+#### 内置法规数据
 
 `projects/compliance/` 内置海量中国法律法规数据库：
 
@@ -179,6 +183,32 @@ result = pipeline.process_text(
   - 地方规范性文件（覆盖全国各省市）
 - **适用场景**：数据合规审查、AI 研发合规、个人信息保护评估
 - **持续更新**：可扩展的知识库体系
+
+#### 托管知识库与语义检索
+
+- **多目录接入**：自动扫描 `knowledge-base/`、`knowledge/`、`docs/` 及内置合规知识库等源目录，增量摄取、分块并重建检索索引（`knowledge_sync`）。
+- **语义检索**：按关键词 / 法条 / 条款 / 案件名检索，返回带来源路径、匹配分数与摘录的排序结果（`knowledge_search`），条目支持 `category` / `tags` / `keywords` 元数据与排序理由（`rankReason`）。
+- **一步自动检索**：给定问题或任务描述，自动检索相关文档、过滤过期/失效内容，并生成带来源引用、可直接注入模型的上下文块（`knowledge_auto_retrieve`）。
+- **知识库诊断**：查看文档数、分块数、上次同步时间、启用状态与源目录（`knowledge_diagnostics`）。
+
+#### 文件管理与多格式解析
+
+- **树形浏览 / 读写 / 移动 / 新建目录 / 删除**：完整的知识库文件操作（`knowledge_list_tree`、`knowledge_read_file`、`knowledge_write_file`、`knowledge_create_folder`、`knowledge_move`、`knowledge_delete`）。
+- **多格式文本抽取**：支持 Markdown、TXT、JSON/JSONL、CSV/TSV、YAML、HTML/XML 等文本格式，以及 PDF、Word（doc/docx）、Excel（xls/xlsx）等文档解析；并可托管 PPT、音频（mp3/m4a/wav/aac/flac）、图片等资料。
+
+#### 自动分类整理
+
+- **一键归档**：`knowledge_classify` 将混杂文件自动归类到实务类目文件夹——**法规规范、合同协议、诉讼仲裁、案例判例、调研报告、模板范本、音视频、图片资料、表格数据、其他资料**。
+- **可预览可选择**：支持 `dryRun` 预览规划中的移动、指定目标根目录、仅处理选中文件；每次移动附归类理由。
+
+#### 外部权威法律源
+
+- **国家法律法规数据库实时检索**：`legal-external-search` 接入 [国家法律法规数据库](https://flk.npc.gov.cn)，支持多策略查询、法规详情抓取与正文 docx 下载解析。
+- **权威来源清单**：`knowledge_legal_external_sources` 返回官方政府网站、司法数据库、学术法律平台等权威外部来源，用于查阅本地知识库之外的最新法规与案例。
+
+#### 团队写作风格库
+
+- `knowledge_writing_style` 提供团队写作风格指南：法律三段论结构、论证节奏、引注要求，以及起诉状、答辩状、法律意见书、代理意见等文书模板与风险提示模板，确保文书风格一致。
 
 ### 🧪 评估系统
 
