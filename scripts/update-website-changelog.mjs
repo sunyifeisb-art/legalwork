@@ -8,6 +8,36 @@ const apiUrl = `https://api.github.com/repos/${repository}/releases?per_page=100
 
 // Build website changelog data for end users: keep old versions, refresh matching tags,
 // and translate technical release notes into user-visible changes.
+const cumulativeReleaseOverrides = {
+  'v0.2.2': {
+    baseline: 'v0.1.8',
+    summary: '从 v0.1.8 到 v0.2.2 的累计更新：知识库、法规检索、插件技能、对话工作台、附件处理、自动更新和安装稳定性均有明显升级。',
+    categories: ['累计更新', '知识库', '插件技能', '体验优化'],
+    highlights: [
+      '法规检索接入国家法律法规数据库，可以检索现行法律、行政法规、地方性法规、司法解释、规章和规范性文件。',
+      '具体法条查询更直接：已知法规名称、关键词或条文号时，系统会优先定位官方候选结果，并给出来源链接。',
+      '知识库升级为可托管资料库，支持多目录接入、增量同步、分块索引和语义检索。',
+      '知识库支持自动分类，可把混杂文件归入法规规范、合同协议、诉讼仲裁、案例判例、调研报告、模板范本、图片资料、表格数据等类别。',
+      '知识库文件管理更完整，支持树形浏览、读取、写入、新建目录、移动、删除和一键归档。',
+      '新增知识库全局 AI 对话，可围绕整个知识库提问，适合查询法律条款、总结资料、梳理案例和形成分析思路。',
+      '外部权威来源更丰富，可查看官方政府网站、司法数据库、学术法律平台等来源，用于补充本地知识库之外的法规与案例信息。',
+      '插件和技能市场重新分类，按法律与合规、数据处理、检索研究、浏览器网页、前端设计等 15 个类目展示。',
+      '技能系统增强，新增内置 Skill 工具入口、项目技能发现与运行能力，并补充网页访问、内容抓取、技能创建等常用技能。',
+      '法律 AI 技能库扩展，新增反垄断、仲裁、银行金融、破产重整、资本市场、公司治理、税务、信托家事、白领调查等场景模板。',
+      'MCP 工具接入更方便，插件页支持 MCP 源市场和访问令牌配置，外部工具服务更容易接入 Agent。',
+      '对话时间线更清爽，请求、错误、提醒会按数量分组折叠，并显示任务已用时长。',
+      '文档和附件处理增强，新增 DOCX 纯文本提取链路，工作区文件、附件和工具调用中的文档读取更稳定。',
+      '图片附件上传体验优化，处理图片材料和数据合规任务时反馈更明确。',
+      '数据合规与脱敏流程优化，合规面板、任务运行、文件上传和相关设置体验更顺畅。',
+      '聊天工作台细节优化，包括模型选择器、浮动输入框、消息时间线、知识库视图、侧边栏和工作区模式切换。',
+      '模型兼容性增强，Anthropic / DeepSeek 兼容客户端行为更稳定。',
+      '自动更新和安装流程修复，改进更新安装兜底、Windows Python 安装、Windows 安装器关闭应用、macOS 权限等问题。',
+      'Git 分支选择的错误提示改为更清楚的中文说明。',
+      '下载页和产品介绍页更新，展示新版界面截图和更完整的功能说明。'
+    ],
+  },
+};
+
 function normalizeReleaseLine(line) {
   return String(line || '')
     .replace(/^#{1,6}\s*/, '')
@@ -126,6 +156,21 @@ async function fetchReleases() {
 }
 
 function shapeRelease(release) {
+  const override = cumulativeReleaseOverrides[release.tag_name];
+  if (override) {
+    return {
+      tag_name: release.tag_name,
+      name: `${release.name || release.tag_name} 累计更新`,
+      published_at: release.published_at,
+      html_url: release.html_url,
+      prerelease: Boolean(release.prerelease),
+      summary: override.summary,
+      highlights: override.highlights,
+      categories: override.categories,
+      baseline: override.baseline,
+      assets: getInstallAssets(release.assets),
+    };
+  }
   const highlights = extractHighlights(release.body, release);
   const categories = getCategories(highlights);
   const focus = categories.slice(0, 3).join('、');
@@ -136,7 +181,7 @@ function shapeRelease(release) {
     html_url: release.html_url,
     prerelease: Boolean(release.prerelease),
     summary: focus && focus !== '版本发布'
-      ? `本次更新主要改善 ${focus} 相关体验，帮助用户更快找到功能、处理材料并判断是否需要升级。`
+      ? `本次更新包括：${focus}。`
       : '本次发布带来功能和稳定性改进，安装最新版后即可体验。',
     highlights,
     categories,
@@ -166,6 +211,13 @@ function mergeReleases(existingReleases, fetchedReleases) {
 
 function sanitizeStoredRelease(release) {
   const { body, ...storedRelease } = release;
+  if (typeof storedRelease.summary === 'string' && /帮助用户更快找到功能|判断是否需要升级/.test(storedRelease.summary)) {
+    const categories = Array.isArray(storedRelease.categories) ? storedRelease.categories : [];
+    const focus = categories.slice(0, 3).join('、');
+    storedRelease.summary = focus && focus !== '版本发布'
+      ? `本次更新包括：${focus}。`
+      : '本次发布带来功能和稳定性改进，安装最新版后即可体验。';
+  }
   return storedRelease;
 }
 
