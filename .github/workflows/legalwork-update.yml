@@ -1,0 +1,111 @@
+name: legalwork更新工作流
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_tag:
+        description: '要发布的版本标签，例如 v0.2.3'
+        required: true
+        type: string
+      run_release:
+        description: '先运行 Release 打包发布工作流'
+        required: true
+        default: true
+        type: boolean
+  workflow_run:
+    workflows: ["Release"]
+    types: [completed]
+  release:
+    types: [published, edited]
+
+permissions:
+  actions: write
+  contents: write
+
+concurrency:
+  group: legalwork-update
+  cancel-in-progress: true
+
+jobs:
+  release-package:
+    name: 先运行 Release 打包发布工作流
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && inputs.run_release
+    steps:
+      - name: Checkout latest pushed code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Trigger Release workflow
+        id: trigger
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ inputs.version_tag }}
+          UPDATE_REF: ${{ github.ref_name }}
+        run: |
+          START_TIME="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          gh workflow run release.yml --ref "$UPDATE_REF" -f tag_name="$RELEASE_TAG"
+          echo "start_time=$START_TIME" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for Release workflow
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          START_TIME: ${{ steps.trigger.outputs.start_time }}
+        run: |
+          RUN_ID=""
+          for attempt in $(seq 1 60); do
+            RUN_ID="$(gh run list \
+              --workflow release.yml \
+              --limit 20 \
+              --json databaseId,event,createdAt \
+              --jq 'map(select(.event == "workflow_dispatch" and .createdAt >= env.START_TIME)) | sort_by(.createdAt) | last | .databaseId // ""')"
+            if [ -n "$RUN_ID" ]; then
+              break
+            fi
+            sleep 5
+          done
+
+          if [ -z "$RUN_ID" ]; then
+            echo "Could not find the triggered Release workflow run."
+            exit 1
+          fi
+
+          gh run watch "$RUN_ID" --exit-status
+
+  update-changelog:
+    name: 更新网站更新日志
+    runs-on: ubuntu-latest
+    needs: [release-package]
+    if: >
+      always() &&
+      (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') &&
+      (github.event_name != 'workflow_dispatch' || !inputs.run_release || needs.release-package.result == 'success')
+    steps:
+      - name: Checkout website branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Generate user-facing append-only changelog data
+        run: node scripts/update-website-changelog.mjs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+
+      - name: Commit user-facing changelog data
+        run: |
+          if git diff --quiet -- site-data/changelog.json; then
+            echo "Changelog data is already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add site-data/changelog.json
+          git commit -m "chore: update website changelog"
+          git push

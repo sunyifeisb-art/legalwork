@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release tag, for example v0.2.3'
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -34,7 +40,7 @@ jobs:
         id: meta
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
-          TAG_NAME="${GITHUB_REF_NAME}"
+          TAG_NAME="${{ github.event.inputs.tag_name || github.ref_name }}"
           VERSION="${TAG_NAME#v}"
           echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"

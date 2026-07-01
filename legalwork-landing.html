@@ -100,6 +100,12 @@
             border-radius: 2px;
         }
         .nav-links a:hover::after { width: 100%; }
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-left: 0.25rem;
+        }
         .nav-cta {
             display: inline-flex;
             align-items: center;
@@ -115,6 +121,18 @@
             border: 1.5px solid var(--border);
             cursor: pointer;
             box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        }
+        .nav-changelog {
+            background: rgba(59,130,246,0.08);
+            color: var(--primary);
+            border-color: rgba(59,130,246,0.18);
+            box-shadow: 0 2px 8px rgba(15,23,42,0.06);
+        }
+        .nav-changelog:hover {
+            background: rgba(59,130,246,0.12);
+            border-color: rgba(59,130,246,0.28);
+            color: var(--primary);
+            box-shadow: 0 6px 16px rgba(59,130,246,0.12);
         }
         .nav-cta:hover {
             border-color: var(--accent);
@@ -971,6 +989,260 @@
             border: 1px solid var(--border-light);
         }
 
+        /* ===== CHANGELOG ===== */
+        .changelog {
+            background: var(--bg-alt);
+            position: relative;
+            overflow: hidden;
+            scroll-margin-top: 82px;
+        }
+        .changelog::before {
+            content: '';
+            position: absolute;
+            top: -160px;
+            right: -120px;
+            width: 380px;
+            height: 380px;
+            background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 68%);
+            pointer-events: none;
+        }
+        .changelog-shell {
+            display: grid;
+            grid-template-columns: minmax(0, 0.95fr) minmax(320px, 1.05fr);
+            gap: 1.5rem;
+            align-items: start;
+            position: relative;
+            z-index: 1;
+        }
+        .release-featured {
+            background: linear-gradient(135deg, #0f172a 0%, #172554 54%, #1e293b 100%);
+            color: #fff;
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            box-shadow: var(--shadow-float);
+            position: sticky;
+            top: 6rem;
+            overflow: hidden;
+        }
+        .release-featured::after {
+            content: '';
+            position: absolute;
+            inset: auto -70px -110px auto;
+            width: 240px;
+            height: 240px;
+            border-radius: 50%;
+            background: rgba(96,165,250,0.16);
+            filter: blur(6px);
+            pointer-events: none;
+        }
+        .release-meta-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+            position: relative;
+            z-index: 1;
+        }
+        .release-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.82);
+            border: 1px solid rgba(255,255,255,0.16);
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+        .release-date {
+            color: rgba(255,255,255,0.58);
+            font-size: 0.82rem;
+            white-space: nowrap;
+        }
+        .release-featured h3 {
+            font-family: 'Noto Serif SC', serif;
+            font-size: clamp(1.65rem, 3vw, 2.35rem);
+            line-height: 1.25;
+            margin-bottom: 0.75rem;
+            position: relative;
+            z-index: 1;
+        }
+        .release-summary {
+            color: rgba(255,255,255,0.72);
+            font-size: 0.98rem;
+            line-height: 1.8;
+            margin-bottom: 1.4rem;
+            position: relative;
+            z-index: 1;
+        }
+        .release-highlights {
+            display: grid;
+            gap: 0.65rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+        .release-highlight {
+            display: flex;
+            gap: 0.65rem;
+            align-items: flex-start;
+            padding: 0.78rem 0.85rem;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.86);
+            font-size: 0.9rem;
+            line-height: 1.55;
+        }
+        .release-highlight svg {
+            width: 17px;
+            height: 17px;
+            color: var(--accent-light);
+            flex-shrink: 0;
+            margin-top: 0.14rem;
+        }
+        .release-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            position: relative;
+            z-index: 1;
+        }
+        .release-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.22s ease;
+        }
+        .release-link.primary {
+            background: #fff;
+            color: var(--primary);
+        }
+        .release-link.secondary {
+            color: rgba(255,255,255,0.9);
+            border: 1px solid rgba(255,255,255,0.22);
+            background: rgba(255,255,255,0.06);
+        }
+        .release-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+        }
+        .release-panel {
+            display: grid;
+            gap: 1rem;
+        }
+        .release-insight-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+        }
+        .release-insight {
+            padding: 1rem;
+            border-radius: 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow);
+        }
+        .release-insight strong {
+            display: block;
+            color: var(--text);
+            font-size: 1.2rem;
+            line-height: 1.2;
+            margin-bottom: 0.25rem;
+        }
+        .release-insight span {
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            line-height: 1.45;
+        }
+        .release-timeline {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 0.5rem;
+        }
+        .release-item {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 0.9rem;
+            padding: 1.1rem;
+            border-radius: 12px;
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+        .release-item + .release-item {
+            border-top: 1px solid var(--border-light);
+        }
+        .release-item:hover {
+            background: var(--bg-alt);
+            transform: translateY(-1px);
+        }
+        .release-dot {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: var(--accent-glow);
+            border: 1px solid rgba(59,130,246,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            margin-top: 0.1rem;
+        }
+        .release-item-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.75rem;
+            align-items: baseline;
+            margin-bottom: 0.35rem;
+        }
+        .release-item h4 {
+            font-size: 1rem;
+            color: var(--text);
+            line-height: 1.35;
+        }
+        .release-item time {
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            white-space: nowrap;
+        }
+        .release-item p {
+            color: var(--text-muted);
+            font-size: 0.88rem;
+            line-height: 1.65;
+            margin-bottom: 0.65rem;
+        }
+        .release-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+        }
+        .release-tag {
+            font-size: 0.72rem;
+            color: var(--accent);
+            background: rgba(59,130,246,0.09);
+            border: 1px solid rgba(59,130,246,0.14);
+            padding: 0.25rem 0.55rem;
+            border-radius: 999px;
+            font-weight: 700;
+        }
+        .release-loading,
+        .release-empty {
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-muted);
+            background: var(--bg-card);
+            border: 1px dashed var(--border);
+            border-radius: var(--radius);
+        }
+
         /* ===== CTA ===== */
         .cta {
             background: linear-gradient(135deg, var(--primary) 0%, #0d2137 100%);
@@ -1101,7 +1373,12 @@
 
         /* ===== MOBILE ===== */
         @media (max-width: 768px) {
+            .nav-inner { padding: 0.65rem 1rem; gap: 0.75rem; }
+            .nav-brand { font-size: 1rem; }
+            .nav-brand img { height: 38px; }
             .nav-links { display: none; }
+            .nav-actions { margin-left: auto; gap: 0.5rem; }
+            .nav-cta { padding: 0.5rem 0.75rem; border-radius: 9px; font-size: 0.8rem; }
             .hero-inner { grid-template-columns: 1fr; text-align: center; gap: 2rem; }
             .hero h1 { font-size: 2.2rem; }
             .hero-desc { margin-left: auto; margin-right: auto; }
@@ -1117,9 +1394,22 @@
             .testi-grid { grid-template-columns: 1fr; }
             .models-strip-inner { flex-direction: column; text-align: center; }
             .hero-typing { justify-content: center; display: flex; }
+            .changelog-shell { grid-template-columns: 1fr; }
+            .release-featured { position: relative; top: auto; padding: 1.5rem; }
+            .release-insight-grid { grid-template-columns: 1fr; }
+            .release-item-head { flex-direction: column; gap: 0.15rem; }
         }
         @media (max-width: 500px) {
+            section { padding: 4rem 1rem; }
+            .nav-inner { padding: 0.55rem 0.85rem; }
+            .nav-github { display: none; }
+            .nav-changelog span { display: inline; }
             .stats-strip { grid-template-columns: 1fr; }
+            .release-meta-row { align-items: flex-start; flex-direction: column; gap: 0.5rem; }
+            .release-actions { display: grid; grid-template-columns: 1fr; }
+            .release-link { justify-content: center; }
+            .release-item { grid-template-columns: 1fr; gap: 0.65rem; }
+            .release-dot { display: none; }
         }
         /* ===== LOADER ===== */
         .page-loader {
@@ -1614,9 +1904,15 @@
                 <a href="#capabilities">能力</a>
                 <a href="#why">优势</a>
                 <a href="#faq">FAQ</a>
-                <a href="https://github.com/sunyifeisb-art/legalwork" class="nav-cta" target="_blank" rel="noopener">
+            </div>
+            <div class="nav-actions">
+                <a href="#changelog" class="nav-cta nav-changelog">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13"></path><path d="M8 12h13"></path><path d="M8 18h13"></path><path d="M3 6h.01"></path><path d="M3 12h.01"></path><path d="M3 18h.01"></path></svg>
+                    <span>更新日志</span>
+                </a>
+                <a href="https://github.com/sunyifeisb-art/legalwork" class="nav-cta nav-github" target="_blank" rel="noopener">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
-                    GitHub
+                    <span>GitHub</span>
                 </a>
             </div>
         </div>
@@ -2490,6 +2786,46 @@ legalwork serve --data-dir ~/.legalwork</code></pre>
         </div>
     </section>
 
+    <!-- CHANGELOG -->
+    <section class="changelog" id="changelog">
+        <div class="container">
+            <div class="section-header fade-up">
+                <div class="section-label">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13"></path><path d="M8 12h13"></path><path d="M8 18h13"></path><path d="M3 6h.01"></path><path d="M3 12h.01"></path><path d="M3 18h.01"></path></svg>
+                    更新日志
+                </div>
+                <h2 class="section-title">每次发布，都看得懂重点</h2>
+                <p class="section-desc">自动同步 GitHub Release，把新功能、体验优化和安装包状态整理成适合法律专业用户阅读的版本说明。</p>
+            </div>
+            <div class="changelog-shell fade-up">
+                <article class="release-featured" id="latestReleaseCard">
+                    <div class="release-meta-row">
+                        <span class="release-kicker">正在读取最新版本</span>
+                        <span class="release-date">GitHub Release</span>
+                    </div>
+                    <h3>同步更新日志中</h3>
+                    <p class="release-summary">正在从 LegalWork 发布记录整理本次更新的主要内容。</p>
+                    <div class="release-highlights">
+                        <div class="release-highlight">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"></path></svg>
+                            版本发布后会自动归纳重点功能、体验优化与修复内容。
+                        </div>
+                    </div>
+                </article>
+                <div class="release-panel">
+                    <div class="release-insight-grid" id="releaseInsights">
+                        <div class="release-insight"><strong>--</strong><span>最新版本</span></div>
+                        <div class="release-insight"><strong>--</strong><span>已发布版本</span></div>
+                        <div class="release-insight"><strong>--</strong><span>可用安装包</span></div>
+                    </div>
+                    <div class="release-timeline" id="releaseTimeline">
+                        <div class="release-loading">正在加载历史版本...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- FAQ -->
     <section class="faq" id="faq">
         <div class="container">
@@ -2768,6 +3104,231 @@ legalwork serve --data-dir ~/.legalwork</code></pre>
                 releaseData = allReleases[0] || null;
                 if (!releaseData) console.warn('GitHub API unavailable and no cache');
             }
+        }
+
+        const changelogDataUrl = 'site-data/changelog.json';
+
+        function escapeHtml(value) {
+            return String(value || '').replace(/[&<>"']/g, char => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[char]));
+        }
+
+        function formatReleaseDate(value) {
+            if (!value) return '发布日期待同步';
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return '发布日期待同步';
+            return new Intl.DateTimeFormat('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            }).format(date);
+        }
+
+        function normalizeReleaseLine(line) {
+            return String(line || '')
+                .replace(/^#{1,6}\s*/, '')
+                .replace(/^[-*]\s+/, '')
+                .replace(/^\d+[.)]\s+/, '')
+                .replace(/\*\*/g, '')
+                .replace(/`/g, '')
+                .trim();
+        }
+
+        function extractReleaseHighlights(release) {
+            const body = release?.body || '';
+            const blocked = /^(本次更新重点[:：]?|更新内容[:：]?|full changelog|automated release|compare|https?:\/\/)/i;
+            const lines = body.split(/\r?\n/)
+                .map(normalizeReleaseLine)
+                .filter(line => line && !blocked.test(line))
+                .filter(line => !/^legalwork\s+\d/i.test(line))
+                .map(toUserFacingHighlight)
+                .filter(Boolean);
+
+            const uniqueLines = [...new Set(lines)].slice(0, 5);
+            if (uniqueLines.length) return uniqueLines;
+            if (release?.name && release.name !== release.tag_name) return [`${release.name} 已上线，安装后即可使用这一版的新能力与体验优化。`];
+            return ['新版本已经发布，可前往下载最新版安装包，获得最新功能与稳定性改进。'];
+        }
+
+        function toUserFacingHighlight(line) {
+            const text = normalizeReleaseLine(line);
+            if (!text) return '';
+            if (/TypeScript|README|blockmap|latest.*ya?ml|自动更新元数据|Automated release|commit|sha/i.test(text)) {
+                return '';
+            }
+            if (/国家法律法规数据库|flk\.npc\.gov\.cn|法规知识库.*实时检索|法规.*实时检索/.test(text)) {
+                return '法规检索更及时：可以直接查询国家法律法规数据库，查找法律依据更方便。';
+            }
+            if (/知识库自动分类|语义检索|多格式解析|外部权威源|团队写作风格库/.test(text)) {
+                return '知识库更好用：资料可自动分类、语义检索，并支持沉淀团队写作风格。';
+            }
+            if (/插件市场|15\s*个类目|访问令牌|Skill 工具入口|项目技能/.test(text)) {
+                return '插件和技能更容易找到：按使用场景分类展示，扩展能力接入更清晰。';
+            }
+            if (/对话时间线|折叠输入请求|错误\/提醒|已用时长|任务已用时长/.test(text)) {
+                return '对话记录更清楚：请求、错误、提醒和任务耗时会分组展示，复盘更省力。';
+            }
+            if (/Git 分支|中文错误提示/.test(text)) {
+                return '问题提示更易懂：遇到 Git 分支相关问题时，会看到更清楚的中文说明。';
+            }
+            if (/数据合规|图片附件|附件上传|上传交互/.test(text)) {
+                return '数据合规和附件上传体验优化，处理图片和材料时操作反馈更明确。';
+            }
+            if (/文件脱敏|脱敏|敏感/.test(text)) {
+                return '文件脱敏能力优化，处理客户材料和敏感信息时更稳妥。';
+            }
+            if (/OCR|识别|扫描/.test(text)) {
+                return '文档识别能力优化，扫描件和图片材料的处理更顺畅。';
+            }
+            if (/运行时版本同步|桌面端.*升级|升级到\s*v?\d/i.test(text)) {
+                return '桌面端已升级，安装最新版后即可使用新的功能与稳定性改进。';
+            }
+            if (/修复|错误|失败|异常|bug/i.test(text)) {
+                return `修复了使用中的稳定性问题：${text}`;
+            }
+            if (/新增|支持|增强|优化|完善|改进/.test(text)) {
+                return text
+                    .replace(/^新增/, '新增可用能力：')
+                    .replace(/^支持/, '现在支持：')
+                    .replace(/^增强/, '体验增强：')
+                    .replace(/^优化/, '体验优化：')
+                    .replace(/^完善/, '体验完善：')
+                    .replace(/^改进/, '体验改进：');
+            }
+            return `使用体验更新：${text}`;
+        }
+
+        function getReleaseTags(highlights) {
+            const buckets = [
+                { label: '法规知识库', test: /法规|知识库|检索|语义|解析|权威|数据库/ },
+                { label: '插件市场', test: /插件|市场|令牌|skill|技能/i },
+                { label: '对话体验', test: /对话|时间线|输入|错误|提醒|任务|分组/ },
+                { label: '数据合规', test: /合规|脱敏|隐私|附件|上传|图片/ },
+                { label: '桌面端', test: /桌面|安装包|mac|windows|linux|运行时|版本/i },
+                { label: '修复优化', test: /修复|优化|完善|增强|改进|错误/ }
+            ];
+            const text = highlights.join(' ');
+            const tags = buckets.filter(bucket => bucket.test.test(text)).map(bucket => bucket.label);
+            return tags.length ? tags.slice(0, 4) : ['版本发布'];
+        }
+
+        function getInstallAssets(release) {
+            const assets = Array.isArray(release?.assets) ? release.assets : [];
+            return assets.filter(asset => /\.(dmg|zip|exe|AppImage)$/i.test(asset.name || ''));
+        }
+
+        function summarizeRelease(release) {
+            const highlights = extractReleaseHighlights(release);
+            const tags = getReleaseTags(highlights);
+            const focus = tags.slice(0, 3).join('、');
+            const summary = focus && focus !== '版本发布'
+                ? `本次更新主要改善 ${focus} 相关体验，帮助用户更快找到功能、处理材料并判断是否需要升级。`
+                : '本次发布带来功能和稳定性改进，安装最新版后即可体验。';
+            return { highlights, tags, summary };
+        }
+
+        async function loadStaticChangelog() {
+            try {
+                const response = await fetch(changelogDataUrl, { cache: 'no-store' });
+                if (!response.ok) throw new Error('Static changelog unavailable');
+                const data = await response.json();
+                return Array.isArray(data?.releases) ? data.releases : [];
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function renderReleaseInsights(releases) {
+            const insightEl = document.getElementById('releaseInsights');
+            if (!insightEl) return;
+            const latest = releases[0];
+            const assetCount = getInstallAssets(latest).length;
+            insightEl.innerHTML = `
+                <div class="release-insight"><strong>${escapeHtml(latest?.tag_name || '--')}</strong><span>最新版本</span></div>
+                <div class="release-insight"><strong>${releases.length || '--'}</strong><span>已同步历史版本</span></div>
+                <div class="release-insight"><strong>${assetCount || '--'}</strong><span>最新安装包入口</span></div>
+            `;
+        }
+
+        function renderLatestRelease(release) {
+            const card = document.getElementById('latestReleaseCard');
+            if (!card) return;
+            if (!release) {
+                card.innerHTML = `
+                    <div class="release-meta-row">
+                        <span class="release-kicker">暂未读取到版本</span>
+                        <span class="release-date">GitHub Release</span>
+                    </div>
+                    <h3>更新日志暂不可用</h3>
+                    <p class="release-summary">当前网络未能读取 GitHub Release，稍后刷新即可自动恢复。</p>
+                `;
+                return;
+            }
+            const view = summarizeRelease(release);
+            const highlights = view.highlights.map(item => `
+                <div class="release-highlight">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"></path></svg>
+                    <span>${escapeHtml(item)}</span>
+                </div>
+            `).join('');
+            card.innerHTML = `
+                <div class="release-meta-row">
+                    <span class="release-kicker">${escapeHtml(release.tag_name || 'latest')}</span>
+                    <span class="release-date">${formatReleaseDate(release.published_at)}</span>
+                </div>
+                <h3>${escapeHtml(release.name || release.tag_name || 'LegalWork 最新版本')}</h3>
+                <p class="release-summary">${escapeHtml(view.summary)}</p>
+                <div class="release-highlights">${highlights}</div>
+                <div class="release-actions">
+                    <a class="release-link primary" href="${escapeHtml(release.html_url || latestReleaseUrl)}" target="_blank" rel="noopener">
+                        查看完整 Release
+                    </a>
+                    <a class="release-link secondary" href="#hero">
+                        下载对应安装包
+                    </a>
+                </div>
+            `;
+        }
+
+        function renderReleaseTimeline(releases) {
+            const timeline = document.getElementById('releaseTimeline');
+            if (!timeline) return;
+            if (!releases.length) {
+                timeline.innerHTML = '<div class="release-empty">暂未读取到历史版本。发布新的 GitHub Release 后，这里会自动同步。</div>';
+                return;
+            }
+            timeline.innerHTML = releases.slice(0, 7).map(release => {
+                const view = summarizeRelease(release);
+                const tags = view.tags.map(tag => `<span class="release-tag">${escapeHtml(tag)}</span>`).join('');
+                return `
+                    <article class="release-item">
+                        <div class="release-dot">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+                        </div>
+                        <div>
+                            <div class="release-item-head">
+                                <h4>${escapeHtml(release.name || release.tag_name || 'LegalWork Release')}</h4>
+                                <time>${formatReleaseDate(release.published_at)}</time>
+                            </div>
+                            <p>${escapeHtml(view.highlights[0] || view.summary)}</p>
+                            <div class="release-tags">${tags}</div>
+                        </div>
+                    </article>
+                `;
+            }).join('');
+        }
+
+        async function renderChangelogFromSources() {
+            let releases = Array.isArray(allReleases) && allReleases.length ? allReleases : [];
+            if (!releases.length) releases = await loadStaticChangelog();
+            renderReleaseInsights(releases);
+            renderLatestRelease(releases[0]);
+            renderReleaseTimeline(releases);
         }
 
         function updateDownloadUI() {
@@ -3087,6 +3648,15 @@ legalwork serve --data-dir ~/.legalwork</code></pre>
         }
         initHeroParallax();
 
+        function syncHashScroll() {
+            if (!window.location.hash) return;
+            const target = document.querySelector(window.location.hash);
+            if (!target) return;
+            setTimeout(() => target.scrollIntoView({ block: 'start' }), 120);
+        }
+        window.addEventListener('load', syncHashScroll);
+        window.addEventListener('hashchange', syncHashScroll);
+
         // ===== BUTTON PULSE =====
         function initButtonPulse() {
             document.querySelectorAll('.btn, .btn-download').forEach(btn => {
@@ -3193,8 +3763,9 @@ legalwork serve --data-dir ~/.legalwork</code></pre>
                 if (raw) {
                     const cached = JSON.parse(raw);
                     if (Date.now() - cached.ts < 60 * 60 * 1000) {
-                        releaseData = cached.data;
-                        cachedTag = cached.data?.tag_name;
+                        allReleases = Array.isArray(cached.data) ? cached.data : [];
+                        releaseData = allReleases[0] || null;
+                        cachedTag = releaseData?.tag_name;
                     }
                 }
             } catch (e) {}
@@ -3205,6 +3776,7 @@ legalwork serve --data-dir ~/.legalwork</code></pre>
             }
             updateBadgeVersion(cachedTag);
             updateDownloadUI();
+            renderChangelogFromSources();
             await loadReleases();
             // Check if new version detected
             const newTag = releaseData?.tag_name;
@@ -3230,6 +3802,7 @@ legalwork serve --data-dir ~/.legalwork</code></pre>
                 }, 4000);
             }
             updateDownloadUI();
+            renderChangelogFromSources();
         })();
         // ===== TAB SWITCH =====
         function switchTab(tab) {
