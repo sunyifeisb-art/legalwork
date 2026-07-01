@@ -364,7 +364,7 @@ legalwork/
 
 > 每次代码更新在此追加条目，正式发布 release 时以对应版本号归档。
 
-### 未发布（开发中）
+### v0.2.1
 
 - **法规知识库接入国家法律法规数据库**：`legal-external-search` 从静态站点清单升级为实时检索 [国家法律法规数据库](https://flk.npc.gov.cn)，支持多策略查询、法规详情抓取与正文 docx 下载解析。
 - **知识库自动分类**：新增 `KnowledgeClassify` 契约与接口，可按类目自动归档知识库文件，条目支持 `category` / `tags` / `keywords` 元数据及排序理由（`rankReason`）。
@@ -373,6 +373,7 @@ legalwork/
 - **Git 分支选择与错误提示**：补充未选工作目录、非 Git 仓库、缺少 Git 可执行文件等中文错误提示。
 - **数据合规面板与图片附件上传**：交互与上传逻辑完善，新增对应单元测试。
 - **技能更新**：`chinese_law_verifier`、`legal_article_retrieval`、`legal_research` 说明与检索逻辑同步更新。
+- **文档更新**：README 新增「知识库系统」完整章节，覆盖语义检索、文件管理、多格式解析、自动分类、外部权威源、写作风格库。
 
 ---
 

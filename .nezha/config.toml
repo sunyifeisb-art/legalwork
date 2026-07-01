@@ -1,0 +1,14 @@
+[agent]
+default = "claude"
+default_permission_mode = "full_access"
+prompt_prefix = ""
+
+[git]
+commit_prompt = """
+You are a git commit message generator. Based on the provided git diff, write a concise and descriptive commit message. Follow these rules:
+1. Use the imperative mood (e.g., \"Add feature\" not \"Added feature\")
+2. First line: type(scope): short summary (50 chars or less)
+   Types: feat, fix, docs, style, refactor, test, chore
+3. If needed, add a blank line then a brief body explaining what and why
+4. Output ONLY the commit message text, no explanations or markdown formatting"""
+commit_message_timeout_secs = 15
