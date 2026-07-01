@@ -116,6 +116,8 @@ type PendingSddPlanTarget = {
 
 const COMPOSER_FILE_CONTEXT_MAX_CHARS_PER_FILE = 60_000
 const COMPOSER_FILE_CONTEXT_MAX_TOTAL_CHARS = 180_000
+const WINDOW_RESUME_RECOVERY_MIN_HIDDEN_MS = 1000
+const WINDOW_RESUME_RECOVERY_DEBOUNCE_MS = 1500
 const DESKTOP_SHORTCUT_COMMANDS: Partial<Record<KeyboardShortcutCommandId, DesktopCommand>> = {
   quit: 'quit',
   undo: 'undo',
@@ -365,12 +367,14 @@ export function Workbench(): ReactElement {
   const [attachmentUploadError, setAttachmentUploadError] = useState<string | null>(null)
   const [connectPhoneSidebarOpen, setConnectPhoneSidebarOpen] = useState(false)
   const [runtimeLogPath, setRuntimeLogPath] = useState('')
+  const hiddenAtRef = useRef<number | null>(document.hidden ? Date.now() : null)
+  const lastWindowResumeRecoveryRef = useRef(0)
   const writeAssistantOpen = useWriteWorkspaceStore((s) => s.assistantOpen)
   const setWriteAssistantOpen = useWriteWorkspaceStore((s) => s.setAssistantOpen)
   const writeAssistantModel = useWriteWorkspaceStore((s) => s.assistantModel)
   const setWriteAssistantModel = useWriteWorkspaceStore((s) => s.setAssistantModel)
   const [dataComplianceSection, setDataComplianceSection] = useState<DataComplianceSection>('review')
-  const [desensitizeSection, setDesensitizeSection] = useState<DesensitizeSection>('info')
+  const [desensitizeSection, setDesensitizeSection] = useState<DesensitizeSection>('material')
   const activeSddDraft = useSddDraftStore((s) => s.activeDraft)
   const sddDraftOperationStatus = useSddDraftStore((s) => s.operationStatus)
   const stageInsetClass = 'ds-stage-inset'
@@ -385,6 +389,65 @@ export function Workbench(): ReactElement {
   const inputRef = useRef('')
   const sddUpgradeInFlightRef = useRef(false)
   const sddUpgradeTargetRef = useRef<PendingSddPlanTarget | null>(null)
+
+  useEffect(() => {
+    let recoveryTimer: ReturnType<typeof setTimeout> | null = null
+
+    const clearRecoveryTimer = (): void => {
+      if (!recoveryTimer) return
+      clearTimeout(recoveryTimer)
+      recoveryTimer = null
+    }
+
+    const scheduleRecovery = (force = false): void => {
+      if (document.hidden) return
+      const now = Date.now()
+      const hiddenAt = hiddenAtRef.current
+      if (!force && hiddenAt !== null && now - hiddenAt < WINDOW_RESUME_RECOVERY_MIN_HIDDEN_MS) return
+      if (now - lastWindowResumeRecoveryRef.current < WINDOW_RESUME_RECOVERY_DEBOUNCE_MS) return
+      lastWindowResumeRecoveryRef.current = now
+      clearRecoveryTimer()
+      recoveryTimer = setTimeout(() => {
+        recoveryTimer = null
+        const state = useChatStore.getState()
+        if (!state.activeThreadId) return
+        void (async () => {
+          if (state.runtimeConnection !== 'ready') {
+            await state.probeRuntime('background')
+          }
+          const next = useChatStore.getState()
+          if (next.runtimeConnection !== 'ready' || !next.activeThreadId) return
+          await next.recoverActiveTurn()
+        })()
+      }, 250)
+    }
+
+    const onVisibilityChange = (): void => {
+      if (document.hidden) {
+        hiddenAtRef.current = Date.now()
+        clearRecoveryTimer()
+        return
+      }
+      scheduleRecovery()
+    }
+    const onPageShow = (event: PageTransitionEvent): void => {
+      scheduleRecovery(event.persisted)
+    }
+    const onOnline = (): void => {
+      scheduleRecovery(true)
+    }
+
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    window.addEventListener('pageshow', onPageShow)
+    window.addEventListener('online', onOnline)
+    return () => {
+      clearRecoveryTimer()
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+      window.removeEventListener('pageshow', onPageShow)
+      window.removeEventListener('online', onOnline)
+    }
+  }, [])
+
   const timelineBlocks = blocks
   const timelineLiveReasoning = liveReasoning
   const timelineLiveAssistant = liveAssistant

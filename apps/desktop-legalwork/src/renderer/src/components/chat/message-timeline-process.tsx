@@ -1,7 +1,19 @@
 import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent as ReactMouseEvent, ReactElement, RefObject } from 'react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronDown, ChevronRight, Minimize2 } from 'lucide-react'
+import {
+  AlertTriangle,
+  Brain,
+  CheckSquare,
+  ChevronDown,
+  ChevronRight,
+  FileEdit,
+  MessageSquareReply,
+  Minimize2,
+  ShieldCheck,
+  Terminal,
+  Wrench
+} from 'lucide-react'
 import type { ChatBlock, ToolBlock } from '../../agent/types'
 import { extractUnifiedDiffText } from '../../lib/diff-stats'
 import { useDeferredRender } from '../../hooks/use-deferred-render'
@@ -247,6 +259,37 @@ function processBlockHasError(block: ChatBlock): boolean {
   )
 }
 
+function ProcessBlockIcon({
+  block,
+  active,
+  error
+}: {
+  block: ChatBlock
+  active: boolean
+  error: boolean
+}): ReactElement | null {
+  const iconClass = `mt-1 h-3.5 w-3.5 shrink-0 ${
+    error
+      ? 'text-red-500 dark:text-red-300'
+      : active
+        ? 'text-accent'
+        : 'text-ds-faint'
+  }`
+
+  if (block.kind === 'reasoning') return <Brain className={iconClass} strokeWidth={1.85} />
+  if (block.kind === 'system') return <AlertTriangle className={iconClass} strokeWidth={1.85} />
+  if (block.kind === 'approval') return <ShieldCheck className={iconClass} strokeWidth={1.85} />
+  if (block.kind === 'user_input') return <MessageSquareReply className={iconClass} strokeWidth={1.85} />
+  if (block.kind === 'compaction') return <Minimize2 className={iconClass} strokeWidth={1.85} />
+  if (block.kind === 'tool') {
+    if (block.toolKind === 'file_change') return <FileEdit className={iconClass} strokeWidth={1.85} />
+    if (block.toolKind === 'command_execution') return <Terminal className={iconClass} strokeWidth={1.85} />
+    return <Wrench className={iconClass} strokeWidth={1.85} />
+  }
+  if (block.kind === 'assistant') return <CheckSquare className={iconClass} strokeWidth={1.85} />
+  return null
+}
+
 function ProcessStackRows({
   blocks,
   processing
@@ -286,12 +329,13 @@ function ProcessStackRows({
               tabIndex={canToggle ? 0 : undefined}
               onClick={handleToggle}
               onKeyDown={handleKeyDown}
-              className={`group flex w-full min-w-0 items-center gap-1.5 rounded-md px-1 py-0.5 text-left text-[13.5px] leading-6 transition ${
+              className={`group flex w-full min-w-0 items-start gap-2 rounded-md px-1.5 py-1 text-left text-[13.5px] leading-6 transition ${
                 isError
                   ? 'text-red-600 dark:text-red-300'
                   : 'text-ds-faint hover:text-ds-muted'
               } ${canToggle ? 'cursor-pointer hover:bg-ds-hover/45' : 'cursor-default'}`}
             >
+              <ProcessBlockIcon block={block} active={rowActive} error={isError} />
               <span className={`min-w-0 flex-1 truncate ${rowActive && !isError ? 'ds-shiny-text' : ''}`}>
                 <ProcessSummaryText block={block} summary={summary} />
               </span>
@@ -375,9 +419,7 @@ function ProcessEntryRow({
             : 'cursor-default'
         }`}
       >
-        {!rowActive && block.kind === 'compaction' ? (
-          <Minimize2 className="mt-1 h-3 w-3 shrink-0 opacity-70" strokeWidth={2} />
-        ) : null}
+        <ProcessBlockIcon block={block} active={rowActive} error={isError} />
         <span
           className={`min-w-0 flex-1 ${wrapSummary ? 'whitespace-pre-wrap break-words' : 'truncate'} ${
             rowActive && !isError ? 'ds-shiny-text' : ''

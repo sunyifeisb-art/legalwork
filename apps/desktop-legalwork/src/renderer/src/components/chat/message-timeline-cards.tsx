@@ -302,6 +302,7 @@ export function TurnChangeSummary({
 export function WorkMetaRow({
   processing,
   stepCount,
+  summary,
   durationMs,
   reasoningDurationMs,
   expanded,
@@ -309,20 +310,23 @@ export function WorkMetaRow({
 }: {
   processing: boolean
   stepCount: number
+  summary?: string
   durationMs?: number
   reasoningDurationMs?: number
   expanded: boolean
   onToggle: () => void
 }): ReactElement {
   const { t } = useTranslation('common')
+  const durationLabel =
+    typeof durationMs === 'number'
+      ? processing
+        ? t('workingFor', { duration: formatDuration(durationMs) })
+        : t('workedFor', { duration: formatDuration(durationMs) })
+      : ''
 
   const mainLabel = processing
-    ? typeof durationMs === 'number'
-      ? `${t('processing')} ${formatDuration(durationMs)}`
-      : t('processing')
-    : typeof durationMs === 'number'
-      ? `${t('processed')} ${formatDuration(durationMs)}`
-      : t('processSteps', { count: stepCount })
+    ? [t('processing'), summary, durationLabel].filter(Boolean).join(' · ')
+    : [summary || t('processSteps', { count: stepCount }), durationLabel].filter(Boolean).join(' · ')
 
   const showThoughtSuffix =
     !processing &&

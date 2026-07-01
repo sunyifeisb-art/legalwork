@@ -45,6 +45,7 @@ import {
 } from './memory.js'
 import {
   agentKnowledgeSources,
+  knowledgeClassify,
   knowledgeAbsolutePath,
   knowledgeCreateFolder,
   knowledgeDelete,
@@ -52,6 +53,7 @@ import {
   knowledgeExtractText,
   knowledgeMove,
   knowledgeReadFile,
+  retrieveKnowledge,
   knowledgeTree,
   knowledgeWriteFile,
   searchKnowledge,
@@ -171,6 +173,10 @@ export function buildRouter(runtime: ServerRuntime): Router {
     if (!authorize(request, runtime)) return ERRORS.unauthorized()
     return agentKnowledgeSources(runtime.knowledgeStore, request)
   })
+  router.add('GET', '/v1/knowledge/retrieve', async (request) => {
+    if (!authorize(request, runtime)) return ERRORS.unauthorized()
+    return retrieveKnowledge(runtime.knowledgeStore, request)
+  })
   router.add('GET', '/v1/knowledge/diagnostics', async (request) => {
     if (!authorize(request, runtime)) return ERRORS.unauthorized()
     return knowledgeDiagnostics(runtime.knowledgeStore)
@@ -202,6 +208,10 @@ export function buildRouter(runtime: ServerRuntime): Router {
   router.add('POST', '/v1/knowledge/move', async (request) => {
     if (!authorize(request, runtime)) return ERRORS.unauthorized()
     return knowledgeMove(runtime.knowledgeStore, request)
+  })
+  router.add('POST', '/v1/knowledge/classify', async (request) => {
+    if (!authorize(request, runtime)) return ERRORS.unauthorized()
+    return knowledgeClassify(runtime.knowledgeStore, request)
   })
   router.add('DELETE', '/v1/knowledge/file', async (request) => {
     if (!authorize(request, runtime)) return ERRORS.unauthorized()

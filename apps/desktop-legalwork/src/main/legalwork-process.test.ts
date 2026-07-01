@@ -211,8 +211,37 @@ describe('syncGuiManagedLegalworkConfig', () => {
     expect(parsed.runtime.toolStorm).toMatchObject({ enabled: true, windowSize: 8, threshold: 3 })
     expect(parsed.runtime.toolArgumentRepair).toMatchObject({ maxStringBytes: 524288 })
     expect(parsed.capabilities.attachments).toMatchObject({ enabled: true })
+    expect(parsed.capabilities.attachments.allowedMimeTypes).toEqual(expect.arrayContaining([
+      'image/*',
+      'text/*',
+      'application/pdf'
+    ]))
     expect(parsed.capabilities.web).toMatchObject({ enabled: true, fetchEnabled: true })
     expect(parsed.capabilities.mcp.search).toMatchObject({ enabled: false, mode: 'auto' })
+  })
+
+  it('migrates image-only attachment MIME types to include document uploads', async () => {
+    if (!tempRoot) throw new Error('temp root not initialized')
+    const configPath = join(tempRoot, 'config.json')
+    writeFileSync(configPath, JSON.stringify({
+      capabilities: {
+        attachments: {
+          enabled: true,
+          allowedMimeTypes: ['image/png']
+        }
+      }
+    }), 'utf8')
+    const module = await import('./legalwork-process')
+
+    await module.syncGuiManagedLegalworkConfig(tempRoot, defaultLegalworkRuntimeSettings())
+
+    const parsed = JSON.parse(readFileSync(configPath, 'utf8')) as any
+    expect(parsed.capabilities.attachments.allowedMimeTypes).toEqual(expect.arrayContaining([
+      'image/png',
+      'image/*',
+      'text/*',
+      'application/pdf'
+    ]))
   })
 
   it('adds the built-in schedule MCP server to Legalwork runtime capabilities', async () => {

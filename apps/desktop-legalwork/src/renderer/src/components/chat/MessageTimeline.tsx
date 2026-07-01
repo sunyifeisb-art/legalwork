@@ -10,6 +10,11 @@ import { MessageTimelineEmptyHero, ThreadForkBanner, ThreadForkPoint } from './m
 import { MessageBubble } from './message-timeline-bubbles'
 import { ReviewPlanCard, ReviewSummaryCard, TurnChangeSummary, WorkMetaRow } from './message-timeline-cards'
 import { ProcessSectionRow, groupProcessSections } from './message-timeline-process'
+import {
+  defaultWorkExpanded,
+  processBlockNeedsAttention,
+  summarizeProcessBlocks
+} from './message-timeline-process-summary'
 import { AnimatedWorkLogo } from './AnimatedWorkLogo'
 import { brandForModel } from '../../lib/model-brand'
 import {
@@ -272,6 +277,7 @@ function MessageTurn({
   viewportRef: RefObject<HTMLDivElement | null>
   modelBrand: ReturnType<typeof brandForModel>
 }): ReactElement {
+  const { t } = useTranslation('common')
   const workspaceRoot = useChatStore((s) => s.workspaceRoot)
   // Inline Review Plan card: surfaced under a turn that produced a
   // successful `create_plan` result so the user can open/build the plan
@@ -289,7 +295,10 @@ function MessageTurn({
   const { think: liveThink, content: liveContent } = splitThink(live)
   const liveProcessText = [liveReasoning, liveThink].filter(Boolean).join('\n\n')
   const [workExpandedOverride, setWorkExpandedOverride] = useState<boolean | null>(null)
-  const workExpanded = workExpandedOverride ?? isProcessing
+  const workExpanded = workExpandedOverride ?? defaultWorkExpanded()
+  const turnModelBrand = turn.user?.modelLabel
+    ? brandForModel(turn.user.modelLabel)
+    : modelBrand
 
   const { processBlocks, assistantContentBlocks, turnFileChanges } = useMemo(
     () =>
@@ -311,6 +320,14 @@ function MessageTurn({
     () => (workExpanded ? groupProcessSections(processBlocks) : []),
     [processBlocks, workExpanded]
   )
+  const attentionProcessBlocks = useMemo(
+    () => (workExpanded ? [] : processBlocks.filter(processBlockNeedsAttention)),
+    [processBlocks, workExpanded]
+  )
+  const processSummary = useMemo(
+    () => summarizeProcessBlocks(processBlocks, (key, opts) => t(key, opts)),
+    [processBlocks, t]
+  )
   const reasoningSectionCount = useMemo(
     () => processSections.filter((section) => section.kind === 'reasoning').length,
     [processSections]
@@ -331,11 +348,19 @@ function MessageTurn({
           <WorkMetaRow
             processing={isProcessing}
             stepCount={processBlocks.length}
+            summary={processSummary}
             durationMs={durationMs}
             reasoningDurationMs={reasoningDurationMs}
             expanded={workExpanded}
-            onToggle={() => setWorkExpandedOverride((value) => !(value ?? isProcessing))}
+            onToggle={() => setWorkExpandedOverride((value) => !(value ?? defaultWorkExpanded()))}
           />
+          {!workExpanded && attentionProcessBlocks.length > 0 ? (
+            <div className="mt-1 flex flex-col gap-2">
+              {attentionProcessBlocks.map((block) => (
+                <MessageBubble key={block.id} block={block} nested />
+              ))}
+            </div>
+          ) : null}
           {workExpanded && processSections.length > 0 ? (
             <div className="flex flex-col gap-1">
               {processSections.map((section) => (
@@ -365,7 +390,7 @@ function MessageTurn({
         <ReviewSummaryCard key={review.id} review={review} />
       ))}
 
-      {isProcessing ? <LiveTurnProgressRow modelBrand={modelBrand} /> : null}
+      {isProcessing ? <LiveTurnProgressRow modelBrand={turnModelBrand} /> : null}
 
       {!isProcessing && devPreviewCard ? devPreviewCard : null}
 
@@ -410,5 +435,6 @@ const MemoMessageTurn = memo(MessageTurn, (prev, next) => (
   prev.planActionsBusy === next.planActionsBusy &&
   prev.onBuildPlan === next.onBuildPlan &&
   prev.onOpenPlan === next.onOpenPlan &&
-  prev.viewportRef === next.viewportRef
+  prev.viewportRef === next.viewportRef &&
+  prev.modelBrand === next.modelBrand
 ))

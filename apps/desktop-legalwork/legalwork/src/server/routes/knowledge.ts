@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import type { KnowledgeStore } from '../../knowledge/knowledge-store.js'
-import { KnowledgeCreateFolderRequest, KnowledgeFileContent, KnowledgeMoveRequest, KnowledgeSyncRequest } from '../../contracts/knowledge.js'
+import { KnowledgeRetrievalPipeline } from '../../knowledge/knowledge-retrieval-pipeline.js'
+import { KnowledgeClassifyRequest, KnowledgeCreateFolderRequest, KnowledgeFileContent, KnowledgeMoveRequest, KnowledgeSyncRequest } from '../../contracts/knowledge.js'
 import { jsonResponse, type JsonResponse } from '../response.js'
 import { readJsonBody } from '../read-json-body.js'
 import { ERRORS } from './runtime-error.js'
@@ -9,6 +10,12 @@ const KnowledgeSearchQuery = z.object({
   q: z.string().trim().min(1),
   top_k: z.coerce.number().int().positive().max(20).default(8),
   include_content: z.coerce.boolean().default(false)
+}).strict()
+
+const KnowledgeRetrieveQuery = z.object({
+  q: z.string().trim().min(1),
+  max_chars: z.coerce.number().int().positive().max(20000).default(8000),
+  exclude_expired: z.coerce.boolean().default(true)
 }).strict()
 
 export async function syncKnowledge(store: KnowledgeStore | undefined, request: Request): Promise<JsonResponse> {
@@ -52,6 +59,22 @@ export async function agentKnowledgeSources(store: KnowledgeStore | undefined, r
     includeContent: true
   })
   return jsonResponse({ query: parsed.data.q, sources })
+}
+
+export async function retrieveKnowledge(store: KnowledgeStore | undefined, request: Request): Promise<JsonResponse> {
+  if (!store) return ERRORS.unavailable('knowledge store is unavailable')
+  const url = new URL(request.url)
+  const parsed = KnowledgeRetrieveQuery.safeParse({
+    q: url.searchParams.get('q') ?? '',
+    max_chars: url.searchParams.get('max_chars') ?? undefined,
+    exclude_expired: url.searchParams.get('exclude_expired') ?? undefined
+  })
+  if (!parsed.success) return ERRORS.validation('invalid knowledge retrieve query', parsed.error.issues)
+  const pipeline = new KnowledgeRetrievalPipeline(store)
+  return jsonResponse(await pipeline.retrieve(parsed.data.q, {
+    maxChars: parsed.data.max_chars,
+    excludeExpired: parsed.data.exclude_expired
+  }))
 }
 
 export async function knowledgeDiagnostics(store: KnowledgeStore | undefined): Promise<JsonResponse> {
@@ -124,6 +147,16 @@ export async function knowledgeMove(store: KnowledgeStore | undefined, request: 
   const parsed = KnowledgeMoveRequest.safeParse(body.value)
   if (!parsed.success) return ERRORS.validation('invalid move request', parsed.error.issues)
   return jsonResponse(await store.move(parsed.data))
+}
+
+/** POST /v1/knowledge/classify — auto-classify selected managed files into folders */
+export async function knowledgeClassify(store: KnowledgeStore | undefined, request: Request): Promise<JsonResponse> {
+  if (!store) return ERRORS.unavailable('knowledge store is unavailable')
+  const body = await readJsonBody(request)
+  if (!body.ok) return body.response
+  const parsed = KnowledgeClassifyRequest.safeParse(body.value)
+  if (!parsed.success) return ERRORS.validation('invalid classify request', parsed.error.issues)
+  return jsonResponse(await store.classify(parsed.data))
 }
 
 /** DELETE /v1/knowledge/file — delete a file or folder */

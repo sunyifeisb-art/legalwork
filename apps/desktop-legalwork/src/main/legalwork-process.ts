@@ -55,6 +55,19 @@ const LEGALWORK_STOP_GRACE_MS = 800
 const LEGALWORK_STOP_FORCE_MS = 400
 const STDERR_TAIL_MAX_CHARS = 4_000
 const LEGALWORK_SCHEDULE_MCP_TIMEOUT_MS = 5_000
+const GUI_ATTACHMENT_ALLOWED_MIME_TYPES = [
+  'image/*',
+  'text/*',
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-powerpoint',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'application/json',
+  'application/zip'
+]
 const DEFAULT_LEGALWORK_MODEL_PROFILES: Record<string, Record<string, unknown>> = {
   'deepseek-v4-pro': {
     contextWindowTokens: 1_000_000,
@@ -351,7 +364,12 @@ export async function syncGuiManagedLegalworkConfig(
       ...capabilities,
       attachments: {
         ...attachments,
-        enabled: attachments.enabled === false ? false : true
+        enabled: attachments.enabled === false ? false : true,
+        ...(attachments.enabled === false
+          ? {}
+          : {
+              allowedMimeTypes: mergeGuiManagedAttachmentMimeTypes(attachments.allowedMimeTypes)
+            })
       },
       web: {
         ...web,
@@ -642,6 +660,14 @@ function runtimeTuningConfigForRuntime(
       maxStringBytes: runtimeTuning.toolArgumentRepair.maxStringBytes
     }
   }
+}
+
+function mergeGuiManagedAttachmentMimeTypes(existing: unknown): string[] {
+  const current = Array.isArray(existing)
+    ? existing.filter((mimeType): mimeType is string => typeof mimeType === 'string' && mimeType.trim().length > 0)
+    : []
+  if (current.some((mimeType) => mimeType === '*/*')) return current
+  return [...new Set([...current, ...GUI_ATTACHMENT_ALLOWED_MIME_TYPES])]
 }
 
 async function readJsonObjectIfExists(path: string): Promise<Record<string, unknown> | null> {

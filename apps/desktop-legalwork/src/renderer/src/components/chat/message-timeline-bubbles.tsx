@@ -16,6 +16,20 @@ import { readNumber, formatDuration, formatToolTitle } from './message-timeline-
 
 const COPY_FEEDBACK_RESET_MS = 1600
 
+function MarkdownBlock({
+  text,
+  className = ''
+}: {
+  text: string
+  className?: string
+}): ReactElement {
+  return (
+    <div className={`ds-markdown ${className}`.trim()}>
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
+    </div>
+  )
+}
+
 /**
  * User message bubble with hover affordance to rewind/edit. Click the rewind
  * pill, the bubble flips into a textarea, and Resend submits an edited
@@ -605,9 +619,10 @@ function UserInputBubble({
                   })}
                 </div>
               </div>
-              <p className="mt-1.5 whitespace-pre-wrap text-[14px] font-medium text-ds-ink">
-                {question.question}
-              </p>
+              <MarkdownBlock
+                text={question.question}
+                className="mt-1.5 text-[14px] font-medium text-ds-ink"
+              />
               <div className="mt-3 grid gap-2">
                 {question.options.map((option) => {
                   const selected = answer?.label === option.label && answer.value === option.label
@@ -795,9 +810,9 @@ export function MessageBubble({ block, nested = false }: { block: ChatBlock; nes
             {t('approvalTool', { name: block.toolName })}
           </div>
         ) : null}
-        <p className="mt-2 whitespace-pre-wrap text-[14px] text-ds-ink">{block.summary}</p>
+        <MarkdownBlock text={block.summary} className="mt-2 text-[14px] text-ds-ink" />
         {block.errorMessage ? (
-          <p className="mt-2 text-[12px] text-red-700 dark:text-red-300">{block.errorMessage}</p>
+          <MarkdownBlock text={block.errorMessage} className="mt-2 text-[12px] text-red-700 dark:text-red-300" />
         ) : null}
         {!done ? (
           <div className="mt-3 flex flex-wrap gap-2">
@@ -825,14 +840,14 @@ export function MessageBubble({ block, nested = false }: { block: ChatBlock; nes
   if (block.kind === 'compaction') {
     return (
       <div className="ds-card-soft rounded-[18px] px-3 py-2 text-[13.5px] text-ds-muted">
-        {block.detail || block.summary}
+        <MarkdownBlock text={block.detail || block.summary} />
       </div>
     )
   }
   if (block.kind === 'review') {
     return (
       <div className="ds-card-soft rounded-[18px] px-3 py-2 text-[13.5px] text-ds-muted">
-        {block.reviewText || block.title}
+        <MarkdownBlock text={block.reviewText || block.title} />
       </div>
     )
   }
@@ -849,7 +864,7 @@ export function MessageBubble({ block, nested = false }: { block: ChatBlock; nes
               : 'border-ds-border bg-ds-subtle text-ds-muted'
         }`}
       >
-        <p className="whitespace-pre-wrap break-words">{block.text}</p>
+        <MarkdownBlock text={block.text} />
         {block.code ? (
           <p className="mt-1 font-mono text-[11px] opacity-70">{block.code}</p>
         ) : null}

@@ -48,6 +48,8 @@ export const LEGALWORK_KNOWLEDGE_SEARCH_PATH = '/v1/knowledge/search'
 export const LEGALWORK_KNOWLEDGE_SEARCH_TEMPLATE = '/v1/knowledge/search'
 export const LEGALWORK_KNOWLEDGE_AGENT_SOURCES_PATH = '/v1/knowledge/agent-sources'
 export const LEGALWORK_KNOWLEDGE_AGENT_SOURCES_TEMPLATE = '/v1/knowledge/agent-sources'
+export const LEGALWORK_KNOWLEDGE_RETRIEVE_PATH = '/v1/knowledge/retrieve'
+export const LEGALWORK_KNOWLEDGE_RETRIEVE_TEMPLATE = '/v1/knowledge/retrieve'
 export const LEGALWORK_KNOWLEDGE_DIAGNOSTICS_PATH = '/v1/knowledge/diagnostics'
 export const LEGALWORK_KNOWLEDGE_DIAGNOSTICS_TEMPLATE = '/v1/knowledge/diagnostics'
 
@@ -65,6 +67,8 @@ export const LEGALWORK_KNOWLEDGE_ABSOLUTE_PATH_PATH = '/v1/knowledge/file/absolu
 export const LEGALWORK_KNOWLEDGE_ABSOLUTE_PATH_TEMPLATE = '/v1/knowledge/file/absolute-path'
 export const LEGALWORK_KNOWLEDGE_MOVE_PATH = '/v1/knowledge/move'
 export const LEGALWORK_KNOWLEDGE_MOVE_TEMPLATE = '/v1/knowledge/move'
+export const LEGALWORK_KNOWLEDGE_CLASSIFY_PATH = '/v1/knowledge/classify'
+export const LEGALWORK_KNOWLEDGE_CLASSIFY_TEMPLATE = '/v1/knowledge/classify'
 export const LEGALWORK_KNOWLEDGE_DELETE_FILE_PATH = '/v1/knowledge/file'
 export const LEGALWORK_KNOWLEDGE_DELETE_FILE_TEMPLATE = '/v1/knowledge/file'
 

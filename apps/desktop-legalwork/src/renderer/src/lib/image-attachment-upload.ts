@@ -3,6 +3,21 @@ import type { CoreAttachmentTextFallbackJson } from '../agent/legalwork-contract
 export const DEFAULT_ATTACHMENT_TEXT_FALLBACK_MAX_BASE64_BYTES = 512 * 1024
 export const DEFAULT_ATTACHMENT_TEXT_FALLBACK_MAX_IMAGE_DIMENSION = 1280
 export const DEFAULT_ATTACHMENT_TEXT_FALLBACK_PREFERRED_MIME_TYPE = 'image/webp'
+const MIME_TYPE_BY_EXTENSION = new Map<string, string>([
+  ['.pdf', 'application/pdf'],
+  ['.txt', 'text/plain'],
+  ['.md', 'text/markdown'],
+  ['.markdown', 'text/markdown'],
+  ['.csv', 'text/csv'],
+  ['.json', 'application/json'],
+  ['.doc', 'application/msword'],
+  ['.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+  ['.xls', 'application/vnd.ms-excel'],
+  ['.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+  ['.ppt', 'application/vnd.ms-powerpoint'],
+  ['.pptx', 'application/vnd.openxmlformats-officedocument.presentationml.presentation'],
+  ['.zip', 'application/zip']
+])
 
 export type ImageAttachmentUploadCapabilities = {
   maxImageBytes: number
@@ -57,16 +72,20 @@ export async function prepareAttachmentUpload(
   if (isImageFile(file)) {
     return prepareImageAttachmentUpload(file, capabilities, encoder)
   }
+  const mimeType = resolveAttachmentMimeType(file)
+  if (capabilities.allowedMimeTypes?.length && !mimeTypeAllowed(mimeType, capabilities.allowedMimeTypes)) {
+    throw new Error(`Attachment type is not allowed: ${mimeType}`)
+  }
   const dataBase64 = arrayBufferToBase64(await file.arrayBuffer())
   return {
     dataBase64,
-    mimeType: file.type || 'application/octet-stream',
+    mimeType,
     textFallback: base64ByteLength(dataBase64) <= (
       capabilities.textFallbackMaxBase64Bytes ?? DEFAULT_ATTACHMENT_TEXT_FALLBACK_MAX_BASE64_BYTES
     )
       ? {
           dataBase64,
-          mimeType: file.type || 'application/octet-stream',
+          mimeType,
           byteSize: file.size,
           wasCompressed: false
         }
@@ -124,7 +143,7 @@ export async function prepareImageAttachmentUpload(
 }
 
 export function isImageFile(file: File): boolean {
-  return file.type.toLowerCase().startsWith('image/')
+  return resolveAttachmentMimeType(file).toLowerCase().startsWith('image/')
 }
 
 export async function encodeImageWithCanvas(
@@ -178,7 +197,7 @@ async function encodeImageWithBitmap(
   originalBase64: string,
   options: ImageAttachmentEncoderOptions
 ): Promise<EncodedAttachmentImage | null> {
-  const sourceMimeType = file.type || options.preferredMimeType
+  const sourceMimeType = resolveAttachmentMimeType(file) || options.preferredMimeType
     if (imageFitsLimits({
       base64: originalBase64,
       byteSize: file.size,
@@ -259,6 +278,16 @@ function resolvePreferredMimeType(capabilities: ImageAttachmentUploadCapabilitie
   return capabilities.allowedMimeTypes.includes(preferred)
     ? preferred
     : capabilities.allowedMimeTypes[0]!
+}
+
+function resolveAttachmentMimeType(file: File): string {
+  const declared = file.type.trim()
+  if (declared) return declared
+  const lowerName = file.name.toLowerCase()
+  for (const [extension, mimeType] of MIME_TYPE_BY_EXTENSION) {
+    if (lowerName.endsWith(extension)) return mimeType
+  }
+  return 'application/octet-stream'
 }
 
 function imageFitsLimits(input: {

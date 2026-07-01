@@ -31,8 +31,8 @@ import type {
 import { useChatStore } from '../../store/chat-store'
 import { formatWorkspacePickerError } from '../../lib/format-workspace-picker-error'
 
-export type DataComplianceSection = 'review' | 'history' | 'results'
-export type DesensitizeSection = 'info' | 'material' | 'history'
+export type DataComplianceSection = 'review' | 'desensitize' | 'history' | 'results'
+export type DesensitizeSection = 'material' | 'history'
 
 type ComplianceTask = {
   id?: string
@@ -72,7 +72,7 @@ type ComplianceResult = {
 }
 
 type SubmitMode = 'review' | 'desensitize'
-type DesensitizeKind = Exclude<DesensitizeSection, 'history'>
+type DesensitizeKind = 'info' | 'material'
 type ReviewType = 'document' | 'code'
 type Notice = { tone: 'info' | 'error' | 'success'; text: string }
 
@@ -80,6 +80,7 @@ const FALLBACK_API_BASE = ''
 
 const sectionMeta: Record<DataComplianceSection, { title: string; kicker: string }> = {
   review: { title: '合规审查', kicker: '文档、代码与数据处理链路风险识别' },
+  desensitize: { title: '数据脱敏', kicker: '敏感数据识别、替换与脱敏报告' },
   history: { title: '历史任务', kicker: '查看已提交的合规审查任务' },
   results: { title: '结果中心', kicker: '按任务编号查询报告和整改包' }
 }
@@ -1123,6 +1124,7 @@ export function DataComplianceSidebarNav({
 }): ReactElement {
   const items: Array<{ section: DataComplianceSection; label: string; icon: ReactElement }> = [
     { section: 'review', label: '合规审查', icon: <ShieldCheck className="h-4 w-4" strokeWidth={1.8} /> },
+    { section: 'desensitize', label: '数据脱敏', icon: <ScanEye className="h-4 w-4" strokeWidth={1.8} /> },
     { section: 'history', label: '历史任务', icon: <History className="h-4 w-4" strokeWidth={1.8} /> },
     { section: 'results', label: '结果中心', icon: <FileSearch className="h-4 w-4" strokeWidth={1.8} /> }
   ]
@@ -1164,7 +1166,6 @@ export function DesensitizeSidebarNav({
   onSectionChange: (section: DesensitizeSection) => void
 }): ReactElement {
   const items: Array<{ section: DesensitizeSection; label: string; icon: ReactElement }> = [
-    { section: 'info', label: '个人信息脱敏', icon: <ScanEye className="h-4 w-4" strokeWidth={1.8} /> },
     { section: 'material', label: '材料脱敏', icon: <FileText className="h-4 w-4" strokeWidth={1.8} /> },
     { section: 'history', label: '脱敏记录', icon: <History className="h-4 w-4" strokeWidth={1.8} /> }
   ]
@@ -1304,12 +1305,18 @@ export function DataCompliancePanel({
   const resolvedActiveSection: DataComplianceSection = Object.prototype.hasOwnProperty.call(sectionMeta, activeSection)
     ? activeSection
     : 'review'
+  const effectiveModeScope: SubmitMode = modeScope === 'desensitize' || resolvedActiveSection === 'desensitize'
+    ? 'desensitize'
+    : 'review'
+  const effectiveDesensitizeKind: DesensitizeKind = resolvedActiveSection === 'desensitize'
+    ? 'info'
+    : desensitizeKind
   const meta = modeScope === 'desensitize'
     ? resolvedActiveSection === 'history'
-      ? { title: '脱敏记录', kicker: '查看个人信息与材料脱敏任务' }
-      : desensitizeKind === 'material'
+      ? { title: '脱敏记录', kicker: '查看材料脱敏任务' }
+      : effectiveDesensitizeKind === 'material'
         ? { title: '材料脱敏', kicker: '文档材料批量脱敏处理' }
-        : { title: '个人信息脱敏', kicker: '个人敏感信息识别、替换与脱敏报告' }
+        : { title: '数据脱敏', kicker: '敏感数据识别、替换与脱敏报告' }
     : sectionMeta[resolvedActiveSection]
   const selectedTaskId = taskId.trim()
   const [progressDismissed, setProgressDismissed] = useState(false)
@@ -1507,7 +1514,7 @@ export function DataCompliancePanel({
         reviewType: reviewType === 'code' ? 'code' : 'document',
         file: filePayload
       }
-      if (mode === 'desensitize' && desensitizeKind === 'material') {
+      if (mode === 'desensitize' && effectiveDesensitizeKind === 'material') {
         payload.outputDir = outputDir.trim() || workspaceRoot
         if (outputFormat.trim()) {
           payload.outputFormat = outputFormat.trim() as 'md' | 'docx' | 'txt'
@@ -1611,19 +1618,19 @@ export function DataCompliancePanel({
   const renderSubmitForm = (mode: SubmitMode): ReactElement => {
     const submitTitle = mode === 'review'
       ? '提交审查材料'
-      : desensitizeKind === 'material'
+      : effectiveDesensitizeKind === 'material'
         ? '提交材料脱敏'
-        : '提交个人信息脱敏'
+        : '提交数据脱敏'
     const namePlaceholder = mode === 'review'
       ? '例如：隐私政策合规审查'
-      : desensitizeKind === 'material'
+      : effectiveDesensitizeKind === 'material'
         ? '例如：合同材料脱敏'
-        : '例如：客户个人信息脱敏'
+        : '例如：客户数据脱敏'
     const textPlaceholder = mode === 'review'
       ? '粘贴待审查的制度文本、隐私政策或代码片段...'
-      : desensitizeKind === 'material'
+      : effectiveDesensitizeKind === 'material'
         ? '粘贴待脱敏的合同、证据材料或业务文档...'
-        : '粘贴待脱敏的姓名、身份证号、手机号、地址等个人信息...'
+        : '粘贴待脱敏的个人信息、业务数据或结构化文本...'
 
     return (
       <section className="rounded-[16px] border border-ds-border bg-ds-card p-4 shadow-[0_14px_36px_rgba(15,23,42,0.06)]">
@@ -1732,7 +1739,7 @@ export function DataCompliancePanel({
             className="mt-1.5 w-full resize-none rounded-[14px] border border-ds-border bg-ds-card px-3 py-2 text-[13.5px] leading-6 text-ds-ink outline-none transition focus:border-accent/40 focus:ring-2 focus:ring-accent/15"
           />
         </label>
-        {mode === 'desensitize' && desensitizeKind === 'material' ? (
+        {mode === 'desensitize' && effectiveDesensitizeKind === 'material' ? (
           <>
             <label className="block">
               <span className="text-[12px] font-medium text-ds-muted">输出格式</span>
@@ -1866,7 +1873,8 @@ export function DataCompliancePanel({
             }}
           />
 
-          {resolvedActiveSection === 'review' ? renderSubmitForm(modeScope) : null}
+          {resolvedActiveSection === 'review' ? renderSubmitForm(effectiveModeScope) : null}
+          {resolvedActiveSection === 'desensitize' ? renderSubmitForm('desensitize') : null}
 
           {resolvedActiveSection === 'history' ? (
             <section className="rounded-[16px] border border-ds-border bg-ds-card p-4 shadow-[0_14px_36px_rgba(15,23,42,0.06)]">
@@ -2098,7 +2106,7 @@ export function DesensitizationPanel({
         if (section === 'history') onSectionChange('history')
       }}
       modeScope="desensitize"
-      desensitizeKind={activeSection === 'material' ? 'material' : 'info'}
+      desensitizeKind="material"
     />
   )
 }

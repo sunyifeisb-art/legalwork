@@ -32,6 +32,38 @@ describe('image attachment upload preparation', () => {
     expect(prepared.previewUrl).toBeUndefined()
   })
 
+  it('infers PDF MIME type from the file name when the drag payload omits it', async () => {
+    const file = new File(['%PDF'], 'contract.pdf', { type: '' })
+    const prepared = await prepareAttachmentUpload(file, {
+      maxImageBytes: 100,
+      maxImageDimension: 100,
+      allowedMimeTypes: ['application/pdf'],
+      textFallbackMaxBase64Bytes: 100
+    })
+
+    expect(prepared).toMatchObject({
+      dataBase64: 'JVBERg==',
+      mimeType: 'application/pdf',
+      textFallback: {
+        dataBase64: 'JVBERg==',
+        mimeType: 'application/pdf',
+        byteSize: 4,
+        wasCompressed: false
+      }
+    })
+  })
+
+  it('rejects arbitrary files before upload when the runtime MIME list does not allow them', async () => {
+    const file = new File(['%PDF'], 'contract.pdf', { type: '' })
+
+    await expect(prepareAttachmentUpload(file, {
+      maxImageBytes: 100,
+      maxImageDimension: 100,
+      allowedMimeTypes: ['image/*'],
+      textFallbackMaxBase64Bytes: 100
+    })).rejects.toThrow(/application\/pdf/)
+  })
+
   it('omits oversized arbitrary file text fallback while keeping upload data', async () => {
     const file = new File(['hello'], 'notes.txt', { type: 'text/plain' })
     const prepared = await prepareAttachmentUpload(file, {

@@ -270,6 +270,7 @@ export function WindowsTitleBar({ platform, actions }: Props): ReactElement | nu
   }, [resolvedActions])
 
   if (!supportsDesktopTitleBar(resolvedPlatform)) return null
+  const showDesktopMenu = resolvedPlatform === 'linux'
 
   const runMenuAction = (item: Exclude<WindowsTitleBarMenuItem, { kind: 'separator' }>): void => {
     setActiveMenuId(null)
@@ -280,48 +281,54 @@ export function WindowsTitleBar({ platform, actions }: Props): ReactElement | nu
     <div ref={rootRef} className="ds-windows-titlebar ds-drag">
       <div className="ds-windows-titlebar-content">
         <img src={appLogo} alt="" aria-hidden="true" className="ds-windows-titlebar-icon" />
-        <nav className="ds-windows-menu ds-no-drag" aria-label={t('windowsMenuAriaLabel')}>
-          {menus.map((menu) => {
-            const open = activeMenuId === menu.id
-            return (
-              <div key={menu.id} className="ds-windows-menu-slot">
-                <button
-                  type="button"
-                  className={`ds-windows-menu-button ${open ? 'is-open' : ''}`}
-                  aria-haspopup="menu"
-                  aria-expanded={open}
-                  onClick={() => setActiveMenuId(open ? null : menu.id)}
-                  onMouseEnter={() => {
-                    if (activeMenuId) setActiveMenuId(menu.id)
-                  }}
-                >
-                  {menu.label}
-                </button>
-                {open ? (
-                  <div className="ds-windows-menu-popover" role="menu" aria-label={menu.label}>
-                    {menu.items.map((item) => {
-                      if (item.kind === 'separator') {
-                        return <div key={item.id} className="ds-windows-menu-separator" role="separator" />
-                      }
-                      return (
-                        <button
-                          key={item.id}
-                          type="button"
-                          role="menuitem"
-                          className="ds-windows-menu-item"
-                          onClick={() => runMenuAction(item)}
-                        >
-                          <span className="truncate">{item.label}</span>
-                          {item.shortcut ? <span className="ds-windows-menu-shortcut">{item.shortcut}</span> : null}
-                        </button>
-                      )
-                    })}
-                  </div>
-                ) : null}
-              </div>
-            )
-          })}
-        </nav>
+        {showDesktopMenu ? (
+          <nav className="ds-windows-menu ds-no-drag" aria-label={t('windowsMenuAriaLabel')}>
+            {menus.map((menu) => {
+              const open = activeMenuId === menu.id
+              return (
+                <div key={menu.id} className="ds-windows-menu-slot">
+                  <button
+                    type="button"
+                    className={`ds-windows-menu-button ${open ? 'is-open' : ''}`}
+                    aria-haspopup="menu"
+                    aria-expanded={open}
+                    onClick={() => setActiveMenuId(open ? null : menu.id)}
+                    onMouseEnter={() => {
+                      if (activeMenuId) setActiveMenuId(menu.id)
+                    }}
+                  >
+                    {menu.label}
+                  </button>
+                  {open ? (
+                    <div className="ds-windows-menu-popover" role="menu" aria-label={menu.label}>
+                      {menu.items.map((item) => {
+                        if (item.kind === 'separator') {
+                          return <div key={item.id} className="ds-windows-menu-separator" role="separator" />
+                        }
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            role="menuitem"
+                            className="ds-windows-menu-item"
+                            onClick={() => runMenuAction(item)}
+                          >
+                            <span className="truncate">{item.label}</span>
+                            {item.shortcut ? <span className="ds-windows-menu-shortcut">{item.shortcut}</span> : null}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  ) : null}
+                </div>
+              )
+            })}
+          </nav>
+        ) : (
+          <div className="ds-windows-titlebar-title" aria-label={t('appName')}>
+            {t('appName')}
+          </div>
+        )}
       </div>
       <div className="ds-window-controls ds-no-drag">
         <button

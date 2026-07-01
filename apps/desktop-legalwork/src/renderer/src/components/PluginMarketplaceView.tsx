@@ -37,6 +37,22 @@ import {
 type PluginKind = 'mcp' | 'skill'
 type PluginFilter = 'all' | 'recommended' | 'installed'
 type NoticeTone = 'success' | 'error' | 'info'
+type PluginCategory =
+  | 'legal'
+  | 'data'
+  | 'coding'
+  | 'frontend'
+  | 'browser'
+  | 'files'
+  | 'research'
+  | 'automation'
+  | 'communication'
+  | 'media'
+  | 'documents'
+  | 'security'
+  | 'productivity'
+  | 'system'
+  | 'other'
 
 type Notice = MarketplaceNotice
 
@@ -50,6 +66,7 @@ type MarketplaceItem = {
   group: 'recommended' | 'personal'
   sourceLabel?: string
   statusTone?: 'default' | 'success' | 'warning' | 'error'
+  category?: PluginCategory
   systemManaged?: boolean
   configurable?: boolean
   needsToken?: boolean
@@ -88,6 +105,41 @@ const YUANDIAN_MCP_ENDPOINTS = [
   { id: 'yuandian-company', url: 'https://open.chineselaw.com/mcp/company/stream' }
 ] as const
 const YUANDIAN_MCP_ENDPOINT_IDS = new Set(YUANDIAN_MCP_ENDPOINTS.map((endpoint) => endpoint.id))
+
+const CATEGORY_ORDER: PluginCategory[] = [
+  'legal',
+  'data',
+  'coding',
+  'frontend',
+  'browser',
+  'files',
+  'documents',
+  'research',
+  'automation',
+  'communication',
+  'media',
+  'security',
+  'productivity',
+  'system',
+  'other'
+]
+
+const CATEGORY_SCORE_RULES: Array<{ category: PluginCategory; pattern: RegExp; weight?: number }> = [
+  { category: 'legal', pattern: /\b(law|legal|case|court|contract|pkulaw|yuandian|clause)\b|法律|法规|案例|合同|诉讼|律师|法宝|元典/i, weight: 3 },
+  { category: 'data', pattern: /\b(data|dataset|database|sql|excel|sheet|csv|etl|analytics|redact|redaction|desensiti[sz]e|pii|privacy|compliance)\b|数据|脱敏|表格|数据库|隐私|合规/i, weight: 3 },
+  { category: 'coding', pattern: /\b(code|coding|review|bug|debug|test|ci|github|git|repo|backend|api|python|typescript|javascript|node|fastapi|prisma|lint)\b|代码|编程|调试|测试|仓库|后端|接口/i, weight: 3 },
+  { category: 'frontend', pattern: /\b(frontend|ui|ux|react|vue|svelte|css|html|tailwind|design|figma|framer|gsap|component)\b|前端|界面|设计|组件|交互/i, weight: 3 },
+  { category: 'browser', pattern: /\b(browser|chrome|playwright|selenium|web|scrape|crawler|crawl|fetch)\b|浏览器|网页|爬取|抓取/i, weight: 2 },
+  { category: 'files', pattern: /\b(file|filesystem|folder|directory|path|workspace|storage)\b|文件|目录|工作区/i, weight: 2 },
+  { category: 'documents', pattern: /\b(doc|docs|document|pdf|word|docx|ppt|pptx|markdown|md|ocr|invoice)\b|文档|材料|合同|PDF|发票|简历|简报/i, weight: 2 },
+  { category: 'research', pattern: /\b(research|search|academic|paper|scholar|market|news|digest|literature|knowledge|context7)\b|研究|搜索|检索|论文|文献|市场|新闻|知识库/i, weight: 2 },
+  { category: 'automation', pattern: /\b(auto|automation|workflow|schedule|cron|task|agent|mcp|runner|pipeline)\b|自动化|工作流|定时|任务|智能体/i, weight: 2 },
+  { category: 'communication', pattern: /\b(gmail|mail|email|lark|feishu|discord|slack|social|calendar|im|message|chat)\b|邮箱|邮件|飞书|日历|消息|社交/i, weight: 2 },
+  { category: 'media', pattern: /\b(image|video|audio|ffmpeg|photo|poster|banner|animation|animate|three|3d)\b|图片|图像|视频|音频|海报|动画/i, weight: 2 },
+  { category: 'security', pattern: /\b(security|secure|audit|harden|secret|token|auth|vulnerability|compliance)\b|安全|审计|加固|密钥|漏洞/i, weight: 2 },
+  { category: 'productivity', pattern: /\b(write|writing|blog|copy|note|notion|obsidian|todo|plan|presentation|slides)\b|写作|笔记|博客|计划|演示|效率/i, weight: 1 },
+  { category: 'system', pattern: /\b(system|linux|service|runtime|server|mcp|plugin|connector|install|config)\b|系统|服务|运行时|插件|配置|安装/i, weight: 1 }
+]
 
 type McpMarketplaceLabels = {
   configured: string
@@ -401,11 +453,72 @@ function itemDescription(item: MarketplaceItem, t: (key: string) => string): str
   return item.description ?? (item.descriptionKey ? t(item.descriptionKey) : '')
 }
 
+function marketplaceCategoryLabel(category: PluginCategory, t: (key: string) => string): string {
+  return t(`pluginCategory_${category}`)
+}
+
+function categoryRank(category: PluginCategory): number {
+  const index = CATEGORY_ORDER.indexOf(category)
+  return index >= 0 ? index : CATEGORY_ORDER.length
+}
+
+function inferCategoryFromText(text: string): PluginCategory {
+  const scores = new Map<PluginCategory, number>()
+  for (const rule of CATEGORY_SCORE_RULES) {
+    const matches = text.match(rule.pattern)
+    if (!matches) continue
+    scores.set(rule.category, (scores.get(rule.category) ?? 0) + (rule.weight ?? 1))
+  }
+  let best: PluginCategory = 'other'
+  let bestScore = 0
+  for (const category of CATEGORY_ORDER) {
+    const score = scores.get(category) ?? 0
+    if (score > bestScore) {
+      best = category
+      bestScore = score
+    }
+  }
+  return best
+}
+
+export function inferMarketplaceCategory(item: Pick<MarketplaceItem, 'id' | 'kind' | 'title' | 'description' | 'titleKey' | 'descriptionKey' | 'sourceLabel' | 'category'>): PluginCategory {
+  if (item.category) return item.category
+  const haystack = [
+    item.kind,
+    item.id,
+    item.title,
+    item.description,
+    item.titleKey,
+    item.descriptionKey,
+    item.sourceLabel
+  ].filter(Boolean).join(' ')
+  return inferCategoryFromText(haystack)
+}
+
+function sortMarketplaceItems(items: MarketplaceItem[]): MarketplaceItem[] {
+  return [...items].sort((left, right) => {
+    const categoryDelta = categoryRank(inferMarketplaceCategory(left)) - categoryRank(inferMarketplaceCategory(right))
+    if (categoryDelta !== 0) return categoryDelta
+    return (left.title ?? left.titleKey ?? left.id).localeCompare(right.title ?? right.titleKey ?? right.id)
+  })
+}
+
+function groupMarketplaceItemsByCategory(items: MarketplaceItem[]): Array<{ category: PluginCategory; items: MarketplaceItem[] }> {
+  const groups = new Map<PluginCategory, MarketplaceItem[]>()
+  for (const item of sortMarketplaceItems(items)) {
+    const category = inferMarketplaceCategory(item)
+    groups.set(category, [...(groups.get(category) ?? []), item])
+  }
+  return [...groups.entries()]
+    .sort(([left], [right]) => categoryRank(left) - categoryRank(right))
+    .map(([category, groupedItems]) => ({ category, items: groupedItems }))
+}
+
 export function skillMarketplaceItemsFromDiscoveredSkills(
   skills: SkillListItem[],
   labels: { project: string; global: string; builtin: string }
 ): MarketplaceItem[] {
-  return skills.map((skill) => ({
+  return sortMarketplaceItems(skills.map((skill) => ({
     id: skill.id,
     kind: 'skill' as const,
     title: skill.name,
@@ -414,8 +527,13 @@ export function skillMarketplaceItemsFromDiscoveredSkills(
     sourceLabel:
       skill.scope === 'builtin' ? labels.builtin :
       skill.scope === 'project' ? labels.project : labels.global,
-    systemManaged: skill.scope === 'builtin'
-  }))
+    systemManaged: skill.scope === 'builtin',
+    category: inferCategoryFromText([
+      skill.id,
+      skill.name,
+      skill.description
+    ].filter(Boolean).join(' '))
+  })))
 }
 
 export function mcpMarketplaceItemsFromConfigAndDiagnostics(
@@ -472,7 +590,15 @@ export function mcpMarketplaceItemsFromConfigAndDiagnostics(
       description: mcpServerDescription(details, labels.configured),
       group: 'personal' as const,
       sourceLabel,
-      statusTone: mcpStatusTone(status)
+      statusTone: mcpStatusTone(status),
+      category: inferCategoryFromText([
+        id,
+        details.transport,
+        details.command,
+        details.url,
+        details.status,
+        details.lastError
+      ].filter((value): value is string => typeof value === 'string').join(' '))
     }
   })
   if (pkulawEntries.length > 0) {
@@ -542,6 +668,7 @@ function pkulawMarketplaceItem(
           lastError
         }),
     group: 'personal',
+    category: 'legal',
     configurable: needsToken,
     needsToken,
     sourceLabel,
@@ -607,6 +734,7 @@ function yuandianMarketplaceItem(
           lastError
         }),
     group: 'personal',
+    category: 'legal',
     configurable: needsToken,
     needsToken,
     sourceLabel,
@@ -626,6 +754,7 @@ const RECOMMENDED_ITEMS: MarketplaceItem[] = [
     titleKey: 'pluginMcpGuiScheduleTitle',
     descriptionKey: 'pluginMcpGuiScheduleDesc',
     group: 'recommended',
+    category: 'automation',
     systemManaged: true
   },
   {
@@ -634,6 +763,7 @@ const RECOMMENDED_ITEMS: MarketplaceItem[] = [
     titleKey: 'pluginMcpFilesystemTitle',
     descriptionKey: 'pluginMcpFilesystemDesc',
     group: 'recommended',
+    category: 'files',
     mcpConfig: (workspaceRoot) =>
       buildMcpConfig(
         'filesystem',
@@ -651,6 +781,7 @@ const RECOMMENDED_ITEMS: MarketplaceItem[] = [
     titleKey: 'pluginMcpPlaywrightTitle',
     descriptionKey: 'pluginMcpPlaywrightDesc',
     group: 'recommended',
+    category: 'browser',
     mcpConfig: () =>
       buildMcpConfig(
         'playwright',
@@ -664,6 +795,7 @@ const RECOMMENDED_ITEMS: MarketplaceItem[] = [
     titleKey: 'pluginMcpGithubTitle',
     descriptionKey: 'pluginMcpGithubDesc',
     group: 'recommended',
+    category: 'coding',
     mcpConfig: () =>
       buildMcpConfig(
         'github',
@@ -677,6 +809,7 @@ const RECOMMENDED_ITEMS: MarketplaceItem[] = [
     titleKey: 'pluginMcpContext7Title',
     descriptionKey: 'pluginMcpContext7Desc',
     group: 'recommended',
+    category: 'research',
     mcpConfig: () =>
       buildMcpConfig(
         'context7',
@@ -690,6 +823,7 @@ const RECOMMENDED_ITEMS: MarketplaceItem[] = [
     titleKey: 'pluginMcpPkulawTitle',
     descriptionKey: 'pluginMcpPkulawDesc',
     group: 'recommended',
+    category: 'legal',
     configurable: true
   },
   {
@@ -698,6 +832,7 @@ const RECOMMENDED_ITEMS: MarketplaceItem[] = [
     titleKey: 'pluginMcpYuandianTitle',
     descriptionKey: 'pluginMcpYuandianDesc',
     group: 'recommended',
+    category: 'legal',
     configurable: true
   },
   {
@@ -706,6 +841,7 @@ const RECOMMENDED_ITEMS: MarketplaceItem[] = [
     titleKey: 'pluginSkillReviewTitle',
     descriptionKey: 'pluginSkillReviewDesc',
     group: 'recommended',
+    category: 'coding',
     skillInstructions:
       'Use this skill when reviewing a code change. Prioritize correctness, regressions, security, performance, and missing tests. Lead with concrete findings and file references.'
   },
@@ -715,6 +851,7 @@ const RECOMMENDED_ITEMS: MarketplaceItem[] = [
     titleKey: 'pluginSkillFrontendTitle',
     descriptionKey: 'pluginSkillFrontendDesc',
     group: 'recommended',
+    category: 'frontend',
     skillInstructions:
       'Use this skill when improving UI. Preserve the product style, check responsive states, avoid generic layouts, and verify the result visually before handing it back.'
   },
@@ -724,6 +861,7 @@ const RECOMMENDED_ITEMS: MarketplaceItem[] = [
     titleKey: 'pluginSkillBugTitle',
     descriptionKey: 'pluginSkillBugDesc',
     group: 'recommended',
+    category: 'coding',
     skillInstructions:
       'Use this skill when investigating bugs. Reproduce or narrow the symptom, trace the data flow, identify the smallest fix, and add focused verification where possible.'
   },
@@ -733,6 +871,7 @@ const RECOMMENDED_ITEMS: MarketplaceItem[] = [
     titleKey: 'pluginSkillReleaseTitle',
     descriptionKey: 'pluginSkillReleaseDesc',
     group: 'recommended',
+    category: 'productivity',
     skillInstructions:
       'Use this skill when preparing release notes. Group user-facing changes by outcome, call out migrations or risks, and keep wording concise and scannable.'
   }
@@ -987,9 +1126,11 @@ export function PluginMarketplaceView(): ReactElement {
         const title = itemTitle(item, t).toLowerCase()
         const description = itemDescription(item, t).toLowerCase()
         const source = item.sourceLabel?.toLowerCase() ?? ''
+        const category = marketplaceCategoryLabel(inferMarketplaceCategory(item), t).toLowerCase()
         return !normalizedQuery ||
           title.includes(normalizedQuery) ||
           description.includes(normalizedQuery) ||
+          category.includes(normalizedQuery) ||
           source.includes(normalizedQuery) ||
           item.id.includes(normalizedQuery)
       })
@@ -997,6 +1138,11 @@ export function PluginMarketplaceView(): ReactElement {
         if (filter === 'recommended') return item.group === 'recommended'
         if (filter === 'installed') return isInstalled(item)
         return true
+      })
+      .sort((left, right) => {
+        const categoryDelta = categoryRank(inferMarketplaceCategory(left)) - categoryRank(inferMarketplaceCategory(right))
+        if (categoryDelta !== 0) return categoryDelta
+        return itemTitle(left, t).localeCompare(itemTitle(right, t))
       })
   }, [activeKind, filter, isInstalled, marketplaceItems, query, t])
 
@@ -1577,6 +1723,7 @@ function PluginSection({
   renderConfig?: (item: MarketplaceItem) => ReactNode
   t: (key: string, values?: Record<string, unknown>) => string
 }): ReactElement {
+  const categoryGroups = groupMarketplaceItemsByCategory(items)
   return (
     <section className="mt-8">
       <h2 className="border-b border-ds-border-muted pb-3 text-[20px] font-semibold text-ds-ink">
@@ -1585,62 +1732,76 @@ function PluginSection({
       {items.length === 0 ? (
         <div className="py-8 text-[14px] text-ds-faint">{emptyText}</div>
       ) : (
-        <div className="grid gap-x-14 md:grid-cols-2">
-          {items.map((item) => {
-            const itemKey = storageKey(item.kind, item.id)
-            const installed = isInstalled(item)
-            const needsConfiguration = installed && item.configurable && item.needsToken
-            const busy = busyId === itemKey
-            const configuring = configuringItemId === item.id
-            return (
-              <div
-                key={itemKey}
-                className={`flex flex-wrap items-center gap-5 border-b border-ds-border-muted py-5 ${configuring ? 'col-span-full md:col-span-2' : 'min-h-[92px]'}`}
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <span className="truncate text-[17px] font-semibold text-ds-ink">
-                      {itemTitle(item, t)}
-                    </span>
-                    {item.sourceLabel ? (
-                      <span
-                        className={`shrink-0 rounded-md px-2 py-0.5 text-[11px] font-semibold ${marketplaceSourceTone(item.statusTone)}`}
-                      >
-                        {item.sourceLabel}
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="mt-1 line-clamp-2 text-[14px] leading-5 text-ds-muted">
-                    {itemDescription(item, t)}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  disabled={(installed && !needsConfiguration) || busy}
-                  onClick={() => void onAdd(item)}
-                  title={needsConfiguration ? t('pluginConfigureToken') : installed ? t('pluginAdded') : t('pluginAdd')}
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition ${
-                    installed && !needsConfiguration
-                      ? 'text-ds-faint'
-                      : 'bg-ds-subtle text-ds-ink hover:bg-ds-hover disabled:opacity-60'
-                  }`}
-                >
-                  {busy ? (
-                    <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
-                  ) : needsConfiguration ? (
-                    <Settings className="h-4 w-4" strokeWidth={1.9} />
-                  ) : installed ? (
-                    <Check className="h-4 w-4" strokeWidth={2} />
-                  ) : (
-                    <Plus className="h-4 w-4" strokeWidth={2} />
-                  )}
-                </button>
-                {configuring && renderConfig ? (
-                  <div className="mt-4 w-full">{renderConfig(item)}</div>
-                ) : null}
+        <div className="space-y-6">
+          {categoryGroups.map((group) => (
+            <div key={group.category} className="pt-1">
+              <div className="mb-1 flex items-center gap-2">
+                <h3 className="text-[12px] font-semibold uppercase tracking-[0.04em] text-ds-faint">
+                  {marketplaceCategoryLabel(group.category, t)}
+                </h3>
+                <span className="rounded-full bg-ds-subtle px-2 py-0.5 text-[11px] font-medium text-ds-faint">
+                  {group.items.length}
+                </span>
               </div>
-            )
-          })}
+              <div className="grid gap-x-14 md:grid-cols-2">
+                {group.items.map((item) => {
+                  const itemKey = storageKey(item.kind, item.id)
+                  const installed = isInstalled(item)
+                  const needsConfiguration = installed && item.configurable && item.needsToken
+                  const busy = busyId === itemKey
+                  const configuring = configuringItemId === item.id
+                  return (
+                    <div
+                      key={itemKey}
+                      className={`flex flex-wrap items-center gap-5 border-b border-ds-border-muted py-5 ${configuring ? 'col-span-full md:col-span-2' : 'min-h-[92px]'}`}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <span className="truncate text-[17px] font-semibold text-ds-ink">
+                            {itemTitle(item, t)}
+                          </span>
+                          {item.sourceLabel ? (
+                            <span
+                              className={`shrink-0 rounded-md px-2 py-0.5 text-[11px] font-semibold ${marketplaceSourceTone(item.statusTone)}`}
+                            >
+                              {item.sourceLabel}
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className="mt-1 line-clamp-2 text-[14px] leading-5 text-ds-muted">
+                          {itemDescription(item, t)}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        disabled={(installed && !needsConfiguration) || busy}
+                        onClick={() => void onAdd(item)}
+                        title={needsConfiguration ? t('pluginConfigureToken') : installed ? t('pluginAdded') : t('pluginAdd')}
+                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition ${
+                          installed && !needsConfiguration
+                            ? 'text-ds-faint'
+                            : 'bg-ds-subtle text-ds-ink hover:bg-ds-hover disabled:opacity-60'
+                        }`}
+                      >
+                        {busy ? (
+                          <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
+                        ) : needsConfiguration ? (
+                          <Settings className="h-4 w-4" strokeWidth={1.9} />
+                        ) : installed ? (
+                          <Check className="h-4 w-4" strokeWidth={2} />
+                        ) : (
+                          <Plus className="h-4 w-4" strokeWidth={2} />
+                        )}
+                      </button>
+                      {configuring && renderConfig ? (
+                        <div className="mt-4 w-full">{renderConfig(item)}</div>
+                      ) : null}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </section>

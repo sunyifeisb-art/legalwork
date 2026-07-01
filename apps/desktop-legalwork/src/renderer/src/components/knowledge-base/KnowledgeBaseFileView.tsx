@@ -16,7 +16,7 @@ import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url'
 import {
   LEGALWORK_KNOWLEDGE_EXTRACT_TEXT_PATH,
   LEGALWORK_KNOWLEDGE_READ_FILE_PATH,
-  LEGALWORK_KNOWLEDGE_SEARCH_PATH,
+  LEGALWORK_KNOWLEDGE_RETRIEVE_PATH,
   legalworkThreadTurnsPath,
   legalworkThreadTurnPath
 } from '../../../../shared/legalwork-endpoints'
@@ -269,17 +269,17 @@ function DocumentPreview({ text, fileName }: { text: string; fileName: string })
   )
 }
 
-// ── Knowledge search result type ──
-
-type KnowledgeHit = {
-  documentId: string
-  chunkId: string
-  title: string
+type KnowledgeRetrievalSource = {
   path: string
-  relativePath: string
-  score: number
-  snippet: string
-  content?: string
+  title: string
+  relevanceScore: number
+  citation: string
+}
+
+type KnowledgeRetrievalResult = {
+  contextText: string
+  sources: KnowledgeRetrievalSource[]
+  latencyMs: number
 }
 
 // ── Main component ──
@@ -442,31 +442,12 @@ export function KnowledgeBaseFileView({ node, onBack }: Props): ReactElement {
     setChatError(null)
 
     try {
-      // Step 1: Retrieve relevant chunks from the knowledge base (RAG)
-      const searchResult = await requestJson<{ hits: KnowledgeHit[] }>(
-        `${LEGALWORK_KNOWLEDGE_SEARCH_PATH}?q=${encodeURIComponent(question.trim())}&top_k=8&include_content=true`
+      const retrievalQuery = `${question.trim()} ${node.name} ${node.path}`
+      const retrieval = await requestJson<KnowledgeRetrievalResult>(
+        `${LEGALWORK_KNOWLEDGE_RETRIEVE_PATH}?q=${encodeURIComponent(retrievalQuery)}&max_chars=9000&exclude_expired=true`
       )
-      const hits = searchResult.hits ?? []
-
-      // Step 2: Prioritize chunks from the current file, then include others
-      const fileHits = hits.filter((h) => h.path === node.path || h.relativePath === node.path)
-      const otherHits = hits.filter((h) => h.path !== node.path && h.relativePath !== node.path)
-      const topHits = [...fileHits, ...otherHits].slice(0, 6)
-
-      // Step 3: Build context from retrieved chunks
-      let context = ''
-      if (topHits.length > 0) {
-        context = topHits
-          .map(
-            (hit, i) =>
-              `[来源 ${i + 1}] ${hit.title || hit.path}\n` +
-              (hit.content
-                ? `相关内容：\n${hit.content.slice(0, 2000)}`
-                : `摘要：${hit.snippet}`)
-          )
-          .join('\n\n---\n\n')
-      } else {
-        // Fallback: use file content directly if no search results
+      let context = retrieval.contextText
+      if (!context) {
         const rawContent = fileContent?.encoding === 'utf8'
           ? fileContent.content.slice(0, 4000)
           : ''
@@ -474,25 +455,31 @@ export function KnowledgeBaseFileView({ node, onBack }: Props): ReactElement {
           ? `文件内容：\n${rawContent}`
           : `文件：${node.name}（${fileTypeLabel(node)}，${formatBytes(node.sizeBytes)}）`
       }
+      const citations = retrieval.sources.length
+        ? retrieval.sources
+          .slice(0, 8)
+          .map((source, index) => `[来源 ${index + 1}] ${source.citation || source.title}（${source.path}，相关度 ${Math.round(source.relevanceScore * 100)}%）`)
+          .join('\n')
+        : '无'
+      const hasCurrentFileSource = retrieval.sources.some((source) => source.path === node.path)
 
       const prompt = `你是一个专业的法律知识助手。请基于以下检索到的相关内容回答用户的问题。
 
 ## 当前文件
 ${node.name}（${fileTypeLabel(node)}）
 
-## 检索到的相关内容
+## RAG 检索上下文
 ${context}
 
-${
-  fileHits.length === 0 && topHits.length > 0
-    ? '\n（注：以上内容来自知识库中其他相关文件，可能与当前文件无直接关联）\n'
-    : ''
-}
+## 可引用来源
+${citations}
+
+${!hasCurrentFileSource && retrieval.sources.length > 0 ? '（注：检索结果主要来自知识库中其他相关文件，可能与当前文件无直接关联。）' : ''}
 
 ## 用户问题
 ${question.trim()}
 
-请基于检索到的内容给出准确、专业的回答。如果内容不足以回答问题，请明确说明。引用来源时请标注 [来源编号]。`
+请基于检索到的内容给出准确、专业的回答。如果内容不足以回答问题，请明确说明。引用来源时请标注对应的 [来源编号]，不要编造未出现在上下文中的依据。`
 
       // Step 4: Create a thread with the current workspace
       const workspace = await getWorkspaceRoot()

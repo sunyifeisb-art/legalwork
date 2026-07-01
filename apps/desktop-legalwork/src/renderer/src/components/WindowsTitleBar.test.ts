@@ -28,7 +28,7 @@ describe('WindowsTitleBar', () => {
     await i18n.changeLanguage('en')
   })
 
-  it('renders the desktop menu on Windows and Linux only', () => {
+  it('renders native-feeling chrome on Windows and keeps the desktop menu on Linux only', () => {
     const winHtml = renderToStaticMarkup(
       createElement(WindowsTitleBar, { platform: 'win32', actions: testActions() })
     )
@@ -41,12 +41,18 @@ describe('WindowsTitleBar', () => {
 
     expect(winHtml).toContain('ds-windows-titlebar')
     expect(linuxHtml).toContain('ds-windows-titlebar')
-    expect(winHtml).toContain('File')
+    expect(winHtml).toContain('ds-windows-titlebar-title')
+    expect(winHtml).toContain('legalwork')
+    expect(winHtml).not.toContain('File')
+    expect(winHtml).not.toContain('Edit')
+    expect(winHtml).not.toContain('View')
+    expect(winHtml).not.toContain('Window')
+    expect(winHtml).not.toContain('Help')
     expect(linuxHtml).toContain('File')
-    expect(winHtml).toContain('Edit')
-    expect(winHtml).toContain('View')
-    expect(winHtml).toContain('Window')
-    expect(winHtml).toContain('Help')
+    expect(linuxHtml).toContain('Edit')
+    expect(linuxHtml).toContain('View')
+    expect(linuxHtml).toContain('Window')
+    expect(linuxHtml).toContain('Help')
     expect(macHtml).toBe('')
   })
 

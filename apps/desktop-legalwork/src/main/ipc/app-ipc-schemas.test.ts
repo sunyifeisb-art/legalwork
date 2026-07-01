@@ -91,6 +91,10 @@ describe('app-ipc-schemas', () => {
       method: 'GET'
     }).path).toBe('/v1/knowledge/agent-sources?q=合同&top_k=3')
     expect(runtimeRequestPayloadSchema.parse({
+      path: '/v1/knowledge/retrieve?q=合同&max_chars=5000',
+      method: 'GET'
+    }).path).toBe('/v1/knowledge/retrieve?q=合同&max_chars=5000')
+    expect(runtimeRequestPayloadSchema.parse({
       path: '/v1/knowledge/diagnostics',
       method: 'GET'
     }).path).toBe('/v1/knowledge/diagnostics')
@@ -121,6 +125,11 @@ describe('app-ipc-schemas', () => {
       method: 'POST',
       body: '{"from":"a.pdf","to":"论文/a.pdf"}'
     }).path).toBe('/v1/knowledge/move')
+    expect(runtimeRequestPayloadSchema.parse({
+      path: '/v1/knowledge/classify',
+      method: 'POST',
+      body: '{"paths":["a.pdf"]}'
+    }).path).toBe('/v1/knowledge/classify')
     expect(runtimeRequestPayloadSchema.parse({
       path: '/v1/knowledge/file?path=%E8%AE%BA%E6%96%87%2Fa.pdf',
       method: 'DELETE'

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   buildMcpConfig,
   customMcpConfigFragment,
+  inferMarketplaceCategory,
   mcpConfigHasServer,
   mcpMarketplaceItemsFromConfigAndDiagnostics,
   mergeMcpJsonConfig,
@@ -167,6 +168,21 @@ describe('PluginMarketplaceView MCP config helpers', () => {
     ])
   })
 
+  it('infers practical categories for MCP marketplace items', () => {
+    expect(inferMarketplaceCategory({
+      id: 'pkulaw',
+      kind: 'mcp',
+      title: 'PKULaw',
+      description: 'Legal database and case search'
+    })).toBe('legal')
+    expect(inferMarketplaceCategory({
+      id: 'playwright',
+      kind: 'mcp',
+      title: 'Playwright',
+      description: 'Browser automation'
+    })).toBe('browser')
+  })
+
   it('overlays MCP runtime diagnostics onto configured marketplace items', () => {
     const items = mcpMarketplaceItemsFromConfigAndDiagnostics(
       JSON.stringify({
@@ -309,17 +325,17 @@ describe('skillMarketplaceItemsFromDiscoveredSkills', () => {
         legacy: true
       },
       {
-        id: 'remotion-best-practices',
-        name: 'Remotion Best Practices',
-        description: 'Best practices for Remotion.',
-        root: '/Users/demo/.agents/skills/remotion-best-practices',
-        entryPath: '/Users/demo/.agents/skills/remotion-best-practices/SKILL.md',
+        id: 'frontend-polish',
+        name: 'Frontend Polish',
+        description: 'Improve React UI details and responsive CSS.',
+        root: '/Users/demo/.agents/skills/frontend-polish',
+        entryPath: '/Users/demo/.agents/skills/frontend-polish/SKILL.md',
         scope: 'global',
         legacy: true
       }
     ], { project: 'Project', global: 'Global', builtin: 'Builtin' })
 
-    expect(items).toEqual([
+    expect(items).toEqual(expect.arrayContaining([
       expect.objectContaining({
         id: 'openspec-apply-change',
         group: 'personal',
@@ -327,11 +343,31 @@ describe('skillMarketplaceItemsFromDiscoveredSkills', () => {
         sourceLabel: 'Project'
       }),
       expect.objectContaining({
-        id: 'remotion-best-practices',
+        id: 'frontend-polish',
         group: 'personal',
-        title: 'Remotion Best Practices',
-        sourceLabel: 'Global'
+        title: 'Frontend Polish',
+        sourceLabel: 'Global',
+        category: 'frontend'
       })
-    ])
+    ]))
+  })
+
+  it('automatically categorizes newly discovered coding skills', () => {
+    const items = skillMarketplaceItemsFromDiscoveredSkills([
+      {
+        id: 'bug-hunt',
+        name: 'Bug Hunt',
+        description: 'Debug TypeScript regressions and add focused tests.',
+        root: '/Users/demo/.agents/skills/bug-hunt',
+        entryPath: '/Users/demo/.agents/skills/bug-hunt/SKILL.md',
+        scope: 'global',
+        legacy: true
+      }
+    ], { project: 'Project', global: 'Global', builtin: 'Builtin' })
+
+    expect(items[0]).toEqual(expect.objectContaining({
+      id: 'bug-hunt',
+      category: 'coding'
+    }))
   })
 })

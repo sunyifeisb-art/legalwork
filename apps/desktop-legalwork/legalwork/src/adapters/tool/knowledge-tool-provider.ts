@@ -159,6 +159,37 @@ export function buildKnowledgeToolProviders(store: KnowledgeStore | undefined): 
         }
       }),
       LocalToolHost.defineTool({
+        name: 'knowledge_classify',
+        description: 'Automatically classify managed knowledge-base files into practical category folders such as 法规规范, 合同协议, 诉讼仲裁, 案例判例, 调研报告, 模板范本, 音视频, 图片资料, 表格数据, and 其他资料. Use this after uploading mixed files or when the user asks to整理/分类 the knowledge base.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            paths: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Optional selected relative file/folder paths. Omit to classify all managed files.'
+            },
+            targetRoot: { type: 'string', description: 'Optional root folder under which category folders should be created.' },
+            dryRun: { type: 'boolean', description: 'Preview planned moves without changing files.' }
+          },
+          additionalProperties: false
+        },
+        policy: 'auto',
+        execute: async (args) => {
+          const paths = Array.isArray(args.paths)
+            ? args.paths.filter((path): path is string => typeof path === 'string' && path.trim().length > 0)
+            : undefined
+          const targetRoot = typeof args.targetRoot === 'string' ? args.targetRoot.trim() : undefined
+          const dryRun = args.dryRun === true
+          try {
+            const result = await store.classify({ paths, targetRoot, dryRun })
+            return { output: result }
+          } catch (error) {
+            return { output: { error: `failed to classify: ${error instanceof Error ? error.message : String(error)}` }, isError: true }
+          }
+        }
+      }),
+      LocalToolHost.defineTool({
         name: 'knowledge_delete',
         description: 'Delete a file or folder from the managed knowledge base. Folder deletion is recursive. Use this to clean up outdated or incorrect documents. Cannot be undone.',
         inputSchema: {

@@ -66,8 +66,8 @@ export function WorkspaceModeTabs({
     <div
       ref={containerRef}
       role="tablist"
-      aria-label="工作 / 脱敏 / 合规"
-      className="relative mb-2 flex rounded-[10px] bg-[#f1f5f9] p-1 dark:bg-white/[0.06]"
+      aria-label="work / 脱敏 / 合规"
+      className="relative mb-2 flex flex-row rounded-[10px] bg-[#f1f5f9] p-1 dark:bg-white/[0.06]"
     >
       {/* 滑动背景指示器 — 纯白 pill，完全在 padding 内 */}
       <div
@@ -88,7 +88,7 @@ export function WorkspaceModeTabs({
             data-tab={tab.key}
             aria-selected={isActive}
             onClick={tab.onClick}
-            className={`group relative z-10 inline-flex min-h-[32px] flex-1 items-center justify-center gap-1.5 rounded-[8px] px-3 text-left text-[14px] outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-black/10 dark:focus-visible:ring-white/20 ${
+            className={`group relative z-10 inline-flex min-h-[32px] min-w-fit flex-1 items-center justify-center gap-1.5 rounded-[8px] px-3 text-left text-[14px] outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-black/10 dark:focus-visible:ring-white/20 ${
               isActive
                 ? 'font-semibold text-[#1f2937] dark:text-white'
                 : 'font-medium text-[#6b7280] hover:text-[#374151] dark:text-white/55 dark:hover:text-white/80'

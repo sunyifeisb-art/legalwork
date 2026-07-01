@@ -1,9 +1,11 @@
 import { createHash } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { mkdir, readFile, readdir, rename, rm, stat, writeFile } from 'node:fs/promises'
-import { basename, dirname, extname, join, relative, resolve } from 'node:path'
+import { basename, dirname, extname, join, relative, resolve, sep } from 'node:path'
 import { extractDocumentText, EXTRACTABLE_EXTENSIONS } from './text-extractor.js'
 import type {
+  KnowledgeClassifyRequest,
+  KnowledgeClassifyResult,
   KnowledgeChunk,
   KnowledgeCreateFolderRequest,
   KnowledgeDiagnostics,
@@ -37,6 +39,8 @@ export interface KnowledgeStore {
   move(input: KnowledgeMoveRequest): Promise<{ sourcePath: string; destPath: string }>
   /** Delete a file or folder under managed root. */
   delete(path: string): Promise<{ path: string }>
+  /** Automatically classify managed files into category folders. */
+  classify(input?: KnowledgeClassifyRequest): Promise<KnowledgeClassifyResult>
 }
 
 type KnowledgeIndex = {
@@ -89,6 +93,15 @@ const DEFAULT_MAX_FILE_BYTES = 2 * 1024 * 1024
 const DEFAULT_MAX_FILES = 1500
 const CHUNK_SIZE = 2400
 const CHUNK_OVERLAP = 240
+const RERANK_POOL_SIZE = 80
+const MAX_PER_DOCUMENT = 2
+
+type ScoredChunk = {
+  chunk: KnowledgeChunk
+  score: number
+  rankReason: string
+  terms: Set<string>
+}
 
 export class FileKnowledgeStore implements KnowledgeStore {
   private lastSelectedIds: string[] = []
@@ -119,7 +132,8 @@ export class FileKnowledgeStore implements KnowledgeStore {
   /** Resolve a relative path inside managedRoot, preventing directory escape. */
   private resolveManaged(relativePath: string): string {
     const absolute = resolve(join(this.managedRoot, relativePath))
-    if (!absolute.startsWith(this.managedRoot)) {
+    const managedRoot = resolve(this.managedRoot)
+    if (absolute !== managedRoot && !absolute.startsWith(`${managedRoot}${sep}`)) {
       throw new Error(`Path "${relativePath}" escapes managed root`)
     }
     return absolute
@@ -232,6 +246,52 @@ export class FileKnowledgeStore implements KnowledgeStore {
     return { path: filePath }
   }
 
+  async classify(input: KnowledgeClassifyRequest = {}): Promise<KnowledgeClassifyResult> {
+    await this.ensureManagedRoot()
+    const dryRun = input.dryRun ?? false
+    const targetRoot = normalizeRelativePath(input.targetRoot ?? '')
+    const selected = input.paths?.length
+      ? input.paths.map((path) => normalizeRelativePath(path)).filter(Boolean)
+      : ['']
+    const files: string[] = []
+    for (const selectedPath of selected) {
+      const absolute = selectedPath ? this.resolveManaged(selectedPath) : this.managedRoot
+      files.push(...await collectManagedFiles(this.managedRoot, absolute))
+    }
+
+    const moved: KnowledgeClassifyResult['moved'] = []
+    const skipped: KnowledgeClassifyResult['skipped'] = []
+    const uniqueFiles = [...new Set(files)]
+    for (const absolute of uniqueFiles) {
+      const relPath = relative(this.managedRoot, absolute).replaceAll('\\', '/')
+      const name = basename(absolute)
+      const classification = classifyKnowledgeFile(name, relPath)
+      const currentFolder = dirname(relPath).replaceAll('\\', '/')
+      const destFolder = joinKnowledgeRelative(targetRoot, classification.category)
+      if (currentFolder === destFolder) {
+        skipped.push({ path: relPath, reason: '已在目标分类中' })
+        continue
+      }
+      const destPath = await this.uniqueManagedPath(joinKnowledgeRelative(destFolder, name))
+      moved.push({
+        sourcePath: relPath,
+        destPath,
+        category: classification.category,
+        reason: classification.reason
+      })
+      if (!dryRun) {
+        const destAbsolute = this.resolveManaged(destPath)
+        await mkdir(dirname(destAbsolute), { recursive: true })
+        await rename(absolute, destAbsolute)
+      }
+    }
+
+    if (!dryRun && moved.length > 0) {
+      await this.sync()
+    }
+    return { moved, skipped, dryRun }
+  }
+
   async sync(input: KnowledgeSyncRequest = {}): Promise<KnowledgeSyncResult> {
     await mkdir(this.options.rootDir, { recursive: true })
     await this.ensureManagedRoot()
@@ -268,12 +328,18 @@ export class FileKnowledgeStore implements KnowledgeStore {
         }
         const documentId = hashId(filePath)
         const relPath = relative(root, filePath) || basename(filePath)
+        const category = inferCategory(filePath, relPath, content)
+        const keywords = extractKeywords(`${relPath}\n${content}`, 16)
+        const tags = inferTags(filePath, relPath, content, category, keywords)
         const document: KnowledgeDocument = {
           id: documentId,
           title: titleFromPath(filePath),
           path: filePath,
           sourceRoot: root,
           relativePath: relPath,
+          category,
+          tags,
+          keywords,
           extension: extname(filePath).toLowerCase(),
           sizeBytes: info.size,
           updatedAt: info.mtime.toISOString()
@@ -306,21 +372,23 @@ export class FileKnowledgeStore implements KnowledgeStore {
     }
     const terms = queryTerms(query)
     const lowerQuery = query.toLowerCase()
-    const hits = index.chunks
-      .map((chunk) => {
-        const score = scoreChunk(chunk, lowerQuery, terms)
-        return { chunk, score }
-      })
+    const queryTermSet = new Set(terms)
+    const hits = rerankChunks(index.chunks
+      .map((chunk) => scoreChunk(chunk, lowerQuery, terms, queryTermSet))
       .filter((entry) => entry.score > 0)
       .sort((a, b) => b.score - a.score || a.chunk.relativePath.localeCompare(b.chunk.relativePath))
-      .slice(0, Math.max(1, input.limit))
-      .map(({ chunk, score }) => ({
+      .slice(0, RERANK_POOL_SIZE), Math.max(1, input.limit))
+      .map(({ chunk, score, rankReason }) => ({
         documentId: chunk.documentId,
         chunkId: chunk.id,
         title: chunk.title,
         path: chunk.path,
         relativePath: chunk.relativePath,
+        ...(chunk.category ? { category: chunk.category } : {}),
+        ...(chunk.tags?.length ? { tags: chunk.tags } : {}),
+        ...(chunk.keywords?.length ? { keywords: chunk.keywords } : {}),
         score,
+        rankReason,
         snippet: makeSnippet(chunk.content, lowerQuery, terms),
         ...(input.includeContent ? { content: chunk.content } : {})
       }))
@@ -363,6 +431,17 @@ export class FileKnowledgeStore implements KnowledgeStore {
 
   private async writeIndex(index: KnowledgeIndex): Promise<void> {
     await writeFile(this.indexPath(), JSON.stringify(index, null, 2), 'utf8')
+  }
+
+  private async uniqueManagedPath(relativePath: string): Promise<string> {
+    const normalized = normalizeRelativePath(relativePath)
+    const parsedExt = extname(normalized)
+    const base = normalized.slice(0, normalized.length - parsedExt.length)
+    let candidate = normalized
+    for (let index = 1; existsSync(this.resolveManaged(candidate)); index += 1) {
+      candidate = `${base} (${index})${parsedExt}`
+    }
+    return candidate
   }
 
   private indexPath(): string {
@@ -435,17 +514,42 @@ async function collectFiles(root: string, remaining: number): Promise<{ files: s
   return { files, skippedCount }
 }
 
+async function collectManagedFiles(managedRoot: string, absolute: string): Promise<string[]> {
+  const info = await stat(absolute).catch(() => null)
+  if (!info) return []
+  if (info.isFile()) {
+    return MANAGED_FILE_EXTENSIONS.has(extname(absolute).toLowerCase()) ? [absolute] : []
+  }
+  if (!info.isDirectory()) return []
+  const files: string[] = []
+  const entries = await readdir(absolute, { withFileTypes: true }).catch(() => [])
+  for (const entry of entries) {
+    const child = join(absolute, entry.name)
+    if (entry.isDirectory()) {
+      files.push(...await collectManagedFiles(managedRoot, child))
+    } else if (entry.isFile() && MANAGED_FILE_EXTENSIONS.has(extname(entry.name).toLowerCase())) {
+      const rel = relative(managedRoot, child)
+      if (rel && !rel.startsWith('..')) files.push(child)
+    }
+  }
+  return files
+}
+
 function chunkDocument(document: KnowledgeDocument, content: string): KnowledgeChunk[] {
   const chunks: KnowledgeChunk[] = []
   for (let start = 0, index = 0; start < content.length; index += 1) {
     const slice = content.slice(start, start + CHUNK_SIZE).trim()
     if (slice) {
+      const keywords = extractKeywords(`${document.title}\n${document.relativePath}\n${slice}`, 12)
       chunks.push({
         id: `${document.id}_${index}`,
         documentId: document.id,
         title: document.title,
         path: document.path,
         relativePath: document.relativePath,
+        category: document.category,
+        tags: document.tags,
+        keywords,
         content: slice
       })
     }
@@ -455,19 +559,115 @@ function chunkDocument(document: KnowledgeDocument, content: string): KnowledgeC
   return chunks
 }
 
-function scoreChunk(chunk: KnowledgeChunk, lowerQuery: string, terms: string[]): number {
-  const haystack = `${chunk.title}\n${chunk.relativePath}\n${chunk.content}`.toLowerCase()
-  let score = haystack.includes(lowerQuery) ? 8 : 0
+function scoreChunk(chunk: KnowledgeChunk, lowerQuery: string, terms: string[], queryTermSet: Set<string>): ScoredChunk {
+  const haystack = `${chunk.title}\n${chunk.relativePath}\n${chunk.category ?? ''}\n${chunk.keywords?.join(' ') ?? ''}\n${chunk.content}`.toLowerCase()
+  let score = haystack.includes(lowerQuery) ? 12 : 0
+  const reasons: string[] = []
+  if (score > 0) reasons.push('短语匹配')
+  const matchedTerms = new Set<string>()
   for (const term of terms) {
     let position = haystack.indexOf(term)
     while (position >= 0) {
-      score += term.length >= 4 ? 2 : 1
+      matchedTerms.add(term)
+      score += term.length >= 4 ? 2.4 : 1.2
       position = haystack.indexOf(term, position + term.length)
     }
   }
-  if (chunk.title.toLowerCase().includes(lowerQuery)) score += 6
-  if (chunk.relativePath.toLowerCase().includes(lowerQuery)) score += 4
-  return score
+  const title = chunk.title.toLowerCase()
+  const relativePath = chunk.relativePath.toLowerCase()
+  const category = (chunk.category ?? '').toLowerCase()
+  const keywords = new Set((chunk.keywords ?? []).map((keyword) => keyword.toLowerCase()))
+  const coverage = terms.length ? matchedTerms.size / terms.length : 0
+  if (coverage > 0) {
+    score += coverage * 12
+    reasons.push(`覆盖${Math.round(coverage * 100)}%`)
+  }
+  for (const term of queryTermSet) {
+    if (title.includes(term)) score += 5
+    if (relativePath.includes(term)) score += 3
+    if (category.includes(term)) score += 4
+    if (keywords.has(term)) score += 4
+  }
+  const vectorScore = cosineScore(queryTermSet, termFrequency(haystack))
+  if (vectorScore > 0) {
+    score += vectorScore * 18
+    reasons.push('关键词向量')
+  }
+  const proximity = proximityScore(haystack, terms)
+  if (proximity > 0) {
+    score += proximity
+    reasons.push('邻近匹配')
+  }
+  return {
+    chunk,
+    score,
+    rankReason: reasons.slice(0, 3).join(' · ') || '关键词匹配',
+    terms: new Set([...matchedTerms, ...keywords].filter((term) => queryTermSet.has(term)))
+  }
+}
+
+function rerankChunks(entries: ScoredChunk[], limit: number): ScoredChunk[] {
+  const selected: ScoredChunk[] = []
+  const documentCounts = new Map<string, number>()
+  const remaining = [...entries]
+  while (selected.length < limit && remaining.length > 0) {
+    let bestIndex = 0
+    let bestScore = Number.NEGATIVE_INFINITY
+    for (let i = 0; i < remaining.length; i += 1) {
+      const entry = remaining[i]
+      const docPenalty = (documentCounts.get(entry.chunk.documentId) ?? 0) >= MAX_PER_DOCUMENT ? 14 : 0
+      const diversityPenalty = selected.some((item) => item.chunk.category && item.chunk.category === entry.chunk.category) ? 1.5 : 0
+      const mmrPenalty = selected.reduce((total, item) => total + jaccard(item.terms, entry.terms), 0) * 4
+      const adjusted = entry.score - docPenalty - diversityPenalty - mmrPenalty
+      if (adjusted > bestScore) {
+        bestScore = adjusted
+        bestIndex = i
+      }
+    }
+    const [next] = remaining.splice(bestIndex, 1)
+    selected.push(next)
+    documentCounts.set(next.chunk.documentId, (documentCounts.get(next.chunk.documentId) ?? 0) + 1)
+  }
+  return selected
+}
+
+function cosineScore(queryTerms: Set<string>, frequencies: Map<string, number>): number {
+  if (queryTerms.size === 0 || frequencies.size === 0) return 0
+  let dot = 0
+  let docMagnitude = 0
+  for (const value of frequencies.values()) {
+    docMagnitude += value * value
+  }
+  for (const term of queryTerms) {
+    dot += frequencies.get(term) ?? 0
+  }
+  return dot / (Math.sqrt(queryTerms.size) * Math.sqrt(docMagnitude || 1))
+}
+
+function proximityScore(text: string, terms: string[]): number {
+  const positions = terms.map((term) => text.indexOf(term)).filter((position) => position >= 0)
+  if (positions.length < 2) return 0
+  const spread = Math.max(...positions) - Math.min(...positions)
+  if (spread <= 120) return 6
+  if (spread <= 360) return 3
+  return 1
+}
+
+function jaccard(left: Set<string>, right: Set<string>): number {
+  if (left.size === 0 || right.size === 0) return 0
+  let intersection = 0
+  for (const term of left) {
+    if (right.has(term)) intersection += 1
+  }
+  return intersection / (left.size + right.size - intersection)
+}
+
+function termFrequency(text: string): Map<string, number> {
+  const result = new Map<string, number>()
+  for (const term of queryTerms(text)) {
+    result.set(term, (result.get(term) ?? 0) + 1)
+  }
+  return result
 }
 
 function makeSnippet(content: string, lowerQuery: string, terms: string[]): string {
@@ -491,7 +691,7 @@ function queryTerms(query: string): string[] {
   }
   const cjk = lower.match(/[\u3400-\u9fff]{2,}/g) ?? []
   for (const text of cjk) {
-    terms.add(text)
+    if (text.length <= 12) terms.add(text)
     for (let size = 2; size <= Math.min(4, text.length); size += 1) {
       for (let i = 0; i <= text.length - size; i += 1) {
         terms.add(text.slice(i, i + size))
@@ -499,6 +699,66 @@ function queryTerms(query: string): string[] {
     }
   }
   return [...terms]
+}
+
+function extractKeywords(text: string, limit: number): string[] {
+  return [...termFrequency(text).entries()]
+    .filter(([term]) => term.length >= 2 && !STOP_WORDS.has(term))
+    .sort((a, b) => b[1] - a[1] || b[0].length - a[0].length)
+    .slice(0, limit)
+    .map(([term]) => term)
+}
+
+const STOP_WORDS = new Set([
+  'the', 'and', 'for', 'with', 'this', 'that', 'from',
+  '以及', '或者', '可以', '应当', '进行', '相关', '文件', '材料', '内容'
+])
+
+function inferCategory(filePath: string, relativePath: string, content: string): string {
+  const folder = dirname(relativePath).replaceAll('\\', '/')
+  if (folder && folder !== '.') return folder
+  return classifyKnowledgeFile(basename(filePath), `${relativePath}\n${content.slice(0, 2000)}`).category
+}
+
+function inferTags(filePath: string, relativePath: string, content: string, category: string, keywords: string[]): string[] {
+  const ext = extname(filePath).toLowerCase().replace(/^\./, '')
+  const tags = new Set<string>([category, ext, ...keywords.slice(0, 6)])
+  const text = `${relativePath}\n${content}`.toLowerCase()
+  if (/民法典|公司法|劳动法|刑法|行政|司法解释|法规|条例/.test(text)) tags.add('法规')
+  if (/合同|协议|条款|违约|解除|履行/.test(text)) tags.add('合同')
+  if (/起诉|答辩|证据|仲裁|诉讼|庭审|判决|裁定/.test(text)) tags.add('诉讼')
+  if (/案例|判例|裁判|指导案例/.test(text)) tags.add('案例')
+  return [...tags].filter(Boolean).slice(0, 20)
+}
+
+function classifyKnowledgeFile(name: string, relativePath: string): { category: string; reason: string } {
+  const ext = extname(name).toLowerCase()
+  const haystack = `${relativePath}/${name}`.toLowerCase()
+  if (['.mp3', '.m4a', '.wav', '.aac', '.flac', '.ogg'].includes(ext)) return { category: '音视频', reason: '音频格式' }
+  if (['.png', '.jpg', '.jpeg', '.webp', '.gif'].includes(ext)) return { category: '图片资料', reason: '图片格式' }
+  if (['.xls', '.xlsx', '.csv', '.tsv'].includes(ext)) return { category: '表格数据', reason: '表格格式' }
+  if (['.zip', '.rar', '.7z'].includes(ext)) return { category: '压缩包', reason: '压缩文件' }
+  if (/模板|范本|样本|sample|template/.test(haystack)) return { category: '模板范本', reason: '文件名包含模板线索' }
+  if (/合同|协议|条款|nda|contract|agreement/.test(haystack)) return { category: '合同协议', reason: '文件名包含合同线索' }
+  if (/起诉|答辩|上诉|仲裁|诉讼|证据|庭审|pleading|litigation/.test(haystack)) return { category: '诉讼仲裁', reason: '文件名包含争议解决线索' }
+  if (/案例|判例|裁判|判决|裁定|case/.test(haystack)) return { category: '案例判例', reason: '文件名包含案例线索' }
+  if (/法规|法律|条例|办法|司法解释|民法典|公司法|保护法|法典|law|regulation/.test(haystack)) return { category: '法规规范', reason: '文件名包含法规线索' }
+  if (/调研|研究|报告|memo|research/.test(haystack)) return { category: '调研报告', reason: '文件名包含调研报告线索' }
+  if (/会议|纪要|记录|meeting/.test(haystack)) return { category: '会议记录', reason: '文件名包含会议线索' }
+  return { category: '其他资料', reason: '默认分类' }
+}
+
+function joinKnowledgeRelative(base: string, child: string): string {
+  return normalizeRelativePath([base, child].filter(Boolean).join('/'))
+}
+
+function normalizeRelativePath(path: string): string {
+  return path
+    .replaceAll('\\', '/')
+    .split('/')
+    .map((part) => part.trim())
+    .filter((part) => part && part !== '.')
+    .join('/')
 }
 
 function normalizeText(text: string): string {

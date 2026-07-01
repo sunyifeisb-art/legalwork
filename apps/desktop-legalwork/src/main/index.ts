@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, Notification, powerSaveBlocker, Tray } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, Notification, powerMonitor, powerSaveBlocker, Tray } from 'electron'
 import { existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -54,7 +54,7 @@ import {
   startFeishuInstallQrcode,
   startWeixinInstallQrcode
 } from './claw-platform-install'
-import { registerRuntimeSseIpc } from './runtime-sse-ipc'
+import { registerRuntimeSseIpc, stopAllRuntimeSse, stopRuntimeSseForWebContents } from './runtime-sse-ipc'
 import {
   configureWeixinBridgeRuntimeContextProvider,
   ensureWeixinBridgeRpcUrl,
@@ -187,6 +187,7 @@ async function stopManagedRuntimesForQuit(): Promise<void> {
 async function stopManagedRuntimes(): Promise<void> {
   if (!managedRuntimesStopPromise) {
     managedRuntimesStopPromise = (async () => {
+      stopAllRuntimeSse()
       scheduleRuntime?.stop()
       clawRuntime?.stop()
       stopWeixinBridgeRuntime()
@@ -656,7 +657,11 @@ function createWindow(options: { suppressInitialShow?: boolean } = {}): void {
       preload: preloadPath,
       contextIsolation: true,
       sandbox: true,
-      webviewTag: true
+      webviewTag: true,
+      // 窗口最小化/被遮挡时不要节流渲染层。否则定时器、轮询、fetch 与 SSE 事件消费
+      // 会被 Electron 暂停，导致到 Legalwork 运行时的连接在最小化后处于半死状态、
+      // 恢复时表现为“重新连接”却连不上，必须完全退出重启。
+      backgroundThrottling: false
     }
   })
   if (usesDesktopTitleBar) {
@@ -680,6 +685,15 @@ function createWindow(options: { suppressInitialShow?: boolean } = {}): void {
   })
   mainWindow.on('closed', () => {
     mainWindow = null
+  })
+  const webContentsId = mainWindow.webContents.id
+  const stopWindowSse = (): void => {
+    stopRuntimeSseForWebContents(webContentsId)
+  }
+  mainWindow.on('restore', stopWindowSse)
+  mainWindow.on('show', stopWindowSse)
+  mainWindow.webContents.on('destroyed', () => {
+    stopRuntimeSseForWebContents(webContentsId)
   })
   const devUrl = devServerHintUrl()
   traceStartup('createWindow:load', { devUrl: devUrl ?? 'file' })
@@ -974,6 +988,13 @@ app.whenReady().then(async () => {
 
   registerRuntimeSseIpc({ ipcMain, store, ensureRuntime, logError })
   traceStartup('ipc registration:done')
+
+  powerMonitor.on('suspend', () => {
+    stopAllRuntimeSse()
+  })
+  powerMonitor.on('resume', () => {
+    stopAllRuntimeSse()
+  })
 
   createWindow({ suppressInitialShow: shouldStartHidden(initial) })
   traceStartup('createWindow:returned')

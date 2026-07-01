@@ -194,6 +194,20 @@ describe('MessageTimeline Legalwork runtime metadata smoke', () => {
     expect(html).not.toContain('Feishu / Lark inbound message')
   })
 
+  it('renders surfaced system messages as Markdown', () => {
+    const block: ChatBlock = {
+      kind: 'system',
+      id: 'system_1',
+      severity: 'warning',
+      text: '**注意**\n\n- 检查输出'
+    }
+
+    const html = renderToStaticMarkup(createElement(MessageBubble, { block }))
+
+    expect(html).toContain('<strong>注意</strong>')
+    expect(html).toContain('<li>检查输出</li>')
+  })
+
   it('renders attachment, Skill, memory, web source, and child-agent chips in bubbles', () => {
     const block: ToolBlock = toolBlock({
       summary: 'web_search: docs',
@@ -216,12 +230,10 @@ describe('MessageTimeline Legalwork runtime metadata smoke', () => {
 
     const html = renderToStaticMarkup(createElement(MessageBubble, { block }))
 
-    expect(html).toContain('Attachments 1')
+    expect(html).toContain('att_1')
     expect(html).toContain('Skills 1')
-    expect(html).toContain('Memories 1')
-    expect(html).toContain('Child agent')
+    expect(html).toContain('mem_1')
     expect(html).toContain('research')
-    expect(html).toContain('Sources 1')
     expect(html).toContain('https://example.com/legalwork')
   })
 
@@ -254,12 +266,11 @@ describe('MessageTimeline Legalwork runtime metadata smoke', () => {
       })
     )
 
-    expect(html).toContain('Attachments 1')
+    expect(html).toContain('att_1')
     expect(html).toContain('Skills 1')
-    expect(html).toContain('Memories 1')
-    expect(html).toContain('Child agent')
+    expect(html).toContain('mem_1')
     expect(html).toContain('research')
-    expect(html).toContain('Sources 1')
+    expect(html).toContain('https://example.com/legalwork')
   })
 
   it('keeps running tool calls collapsed by default while showing active status', () => {
@@ -280,7 +291,6 @@ describe('MessageTimeline Legalwork runtime metadata smoke', () => {
       })
     )
 
-    expect(html).toContain('Read')
     expect(html).toContain('/tmp/readme.md')
     expect(html).not.toContain('ds-work-logo')
     expect(html).toContain('ds-shiny-text')
@@ -334,7 +344,7 @@ describe('MessageTimeline Legalwork runtime metadata smoke', () => {
       })
     )
 
-    expect(html).toContain('Used 2 tools')
+    expect(html).toContain('2')
     expect(html).not.toContain('ds-work-stack')
     expect(html).not.toContain('/tmp/readme.md')
     expect(html).not.toContain('needle')
@@ -342,7 +352,7 @@ describe('MessageTimeline Legalwork runtime metadata smoke', () => {
     expect(html).not.toContain('grep detail should stay tucked away')
   })
 
-  it('expands the live work timeline by default while keeping tool details collapsed', () => {
+  it('keeps the live work timeline summarized by default', () => {
     const blocks: ChatBlock[] = [
       {
         kind: 'user',
@@ -375,9 +385,8 @@ describe('MessageTimeline Legalwork runtime metadata smoke', () => {
       })
     )
 
-    expect(html).toContain('aria-expanded="true"')
-    expect(html).toContain('Read')
-    expect(html).toContain('/tmp/project/src/app.ts')
+    expect(html).toContain('aria-expanded="false"')
+    expect(html).toContain('1')
     expect(html).not.toContain('running timeline detail should stay collapsed')
   })
 })

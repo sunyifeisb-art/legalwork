@@ -6,6 +6,9 @@ export const KnowledgeDocument = z.object({
   path: z.string().min(1),
   sourceRoot: z.string().min(1),
   relativePath: z.string().min(1),
+  category: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  keywords: z.array(z.string()).optional(),
   extension: z.string().min(1),
   sizeBytes: z.number().int().nonnegative(),
   updatedAt: z.string()
@@ -18,6 +21,9 @@ export const KnowledgeChunk = z.object({
   title: z.string().min(1),
   path: z.string().min(1),
   relativePath: z.string().min(1),
+  category: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  keywords: z.array(z.string()).optional(),
   content: z.string().min(1)
 }).strict()
 export type KnowledgeChunk = z.infer<typeof KnowledgeChunk>
@@ -28,7 +34,11 @@ export const KnowledgeSearchHit = z.object({
   title: z.string().min(1),
   path: z.string().min(1),
   relativePath: z.string().min(1),
+  category: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  keywords: z.array(z.string()).optional(),
   score: z.number().nonnegative(),
+  rankReason: z.string().optional(),
   snippet: z.string(),
   content: z.string().optional()
 }).strict()
@@ -99,3 +109,28 @@ export const KnowledgeFileContent = z.object({
   encoding: z.enum(['utf8', 'base64']).default('utf8')
 }).strict()
 export type KnowledgeFileContent = z.infer<typeof KnowledgeFileContent>
+
+export const KnowledgeClassifyRequest = z.object({
+  paths: z.array(z.string().min(1)).max(500).optional(),
+  targetRoot: z.string().optional(),
+  dryRun: z.boolean().default(false)
+}).strict()
+export type KnowledgeClassifyRequest = z.infer<typeof KnowledgeClassifyRequest>
+
+export const KnowledgeClassifyMove = z.object({
+  sourcePath: z.string().min(1),
+  destPath: z.string().min(1),
+  category: z.string().min(1),
+  reason: z.string().min(1)
+}).strict()
+export type KnowledgeClassifyMove = z.infer<typeof KnowledgeClassifyMove>
+
+export const KnowledgeClassifyResult = z.object({
+  moved: z.array(KnowledgeClassifyMove),
+  skipped: z.array(z.object({
+    path: z.string().min(1),
+    reason: z.string().min(1)
+  })),
+  dryRun: z.boolean()
+}).strict()
+export type KnowledgeClassifyResult = z.infer<typeof KnowledgeClassifyResult>

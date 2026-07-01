@@ -27,13 +27,20 @@ export function GitBranchPicker({ workspaceRoot }: Props): ReactElement | null {
     try {
       const next = await window.dsGui.getGitBranches(root)
       setResult(next)
-      if (!next.ok) setError(next.message)
+      if (!next.ok) {
+        const localized =
+          next.reason === 'no_workspace' ? t('gitErrorNoWorkspace') :
+          next.reason === 'not_git_repo' ? t('gitErrorNotGitRepo') :
+          next.reason === 'git_unavailable' ? t('gitErrorGitUnavailable') :
+          next.message
+        setError(localized)
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally {
       setLoading(false)
     }
-  }, [root])
+  }, [root, t])
 
   useEffect(() => {
     setOpen(false)

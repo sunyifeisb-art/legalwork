@@ -33,11 +33,12 @@ import {
 import * as pdfjsLib from 'pdfjs-dist'
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url'
 import {
+  LEGALWORK_KNOWLEDGE_CLASSIFY_PATH,
   LEGALWORK_KNOWLEDGE_CREATE_FOLDER_PATH,
   LEGALWORK_KNOWLEDGE_DELETE_FILE_PATH,
   LEGALWORK_KNOWLEDGE_MOVE_PATH,
   LEGALWORK_KNOWLEDGE_READ_FILE_PATH,
-  LEGALWORK_KNOWLEDGE_SEARCH_PATH,
+  LEGALWORK_KNOWLEDGE_RETRIEVE_PATH,
   LEGALWORK_KNOWLEDGE_SYNC_PATH,
   LEGALWORK_KNOWLEDGE_TREE_PATH,
   LEGALWORK_KNOWLEDGE_WRITE_FILE_PATH
@@ -298,15 +299,33 @@ type ChatMessage = {
   timestamp: number
 }
 
-type KnowledgeHit = {
-  documentId: string
-  chunkId: string
-  title: string
+type KnowledgeRetrievalSource = {
   path: string
-  relativePath: string
-  score: number
-  snippet: string
-  content?: string
+  title: string
+  relevanceScore: number
+  excerpt: string
+  citation: string
+  tags?: string[]
+}
+
+type KnowledgeRetrievalResult = {
+  contextText: string
+  sources: KnowledgeRetrievalSource[]
+  latencyMs: number
+}
+
+type KnowledgeClassifyResult = {
+  moved: Array<{
+    sourcePath: string
+    destPath: string
+    category: string
+    reason: string
+  }>
+  skipped: Array<{
+    path: string
+    reason: string
+  }>
+  dryRun: boolean
 }
 
 type PdfRenderedPage = {
@@ -563,6 +582,7 @@ export function KnowledgeBaseView(): ReactElement {
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState<UploadSummary | null>(null)
   const [syncing, setSyncing] = useState(false)
+  const [classifying, setClassifying] = useState(false)
   const [dragActive, setDragActive] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
@@ -627,6 +647,22 @@ export function KnowledgeBaseView(): ReactElement {
     void loadTree()
   }, [loadTree])
 
+  const syncKnowledgeIndex = useCallback(async (showToast = true) => {
+    setSyncing(true)
+    setError(null)
+    try {
+      await requestJson(LEGALWORK_KNOWLEDGE_SYNC_PATH, 'POST', { maxFiles: 5000 })
+      if (showToast) {
+        setToast('知识库索引已同步')
+        window.setTimeout(() => setToast(null), 2200)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '同步失败')
+    } finally {
+      setSyncing(false)
+    }
+  }, [])
+
   const visibleNodes = useMemo(() => {
     if (query.trim()) return flattenNodes(filterNodes(tree, query))
     const folder = findFolder(tree, currentPath)
@@ -655,6 +691,7 @@ export function KnowledgeBaseView(): ReactElement {
         setUploading({ done: i + 1, total: files.length })
       }
       await loadTree()
+      await syncKnowledgeIndex(false)
       setToast(`已上传 ${files.length} 个文件`)
       window.setTimeout(() => setToast(null), 2200)
     } catch (err) {
@@ -664,7 +701,7 @@ export function KnowledgeBaseView(): ReactElement {
       if (fileInputRef.current) fileInputRef.current.value = ''
       if (folderInputRef.current) folderInputRef.current.value = ''
     }
-  }, [currentPath, loadTree])
+  }, [currentPath, loadTree, syncKnowledgeIndex])
 
   const startCreateFolder = useCallback(() => {
     setNewFolderName('')
@@ -698,18 +735,8 @@ export function KnowledgeBaseView(): ReactElement {
   }, [currentPath, loadTree, newFolderName, cancelCreateFolder])
 
   const syncIndex = useCallback(async () => {
-    setSyncing(true)
-    setError(null)
-    try {
-      await requestJson(LEGALWORK_KNOWLEDGE_SYNC_PATH, 'POST', { maxFiles: 5000 })
-      setToast('知识库索引已同步')
-      window.setTimeout(() => setToast(null), 2200)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '同步失败')
-    } finally {
-      setSyncing(false)
-    }
-  }, [])
+    await syncKnowledgeIndex(true)
+  }, [syncKnowledgeIndex])
 
   const closePreview = useCallback(() => {
     if (preview?.objectUrl) {
@@ -889,32 +916,29 @@ export function KnowledgeBaseView(): ReactElement {
     setChatError(null)
 
     try {
-      // Search all knowledge base files
-      const searchResult = await requestJson<{ hits: KnowledgeHit[] }>(
-        `${LEGALWORK_KNOWLEDGE_SEARCH_PATH}?q=${encodeURIComponent(question.trim())}&top_k=8&include_content=true`
+      const retrieval = await requestJson<KnowledgeRetrievalResult>(
+        `${LEGALWORK_KNOWLEDGE_RETRIEVE_PATH}?q=${encodeURIComponent(question.trim())}&max_chars=9000&exclude_expired=true`
       )
-      const hits = searchResult.hits ?? []
-
-      // Build context from retrieved chunks
-      const context = hits.length > 0
-        ? hits.slice(0, 6).map(
-            (hit, i) =>
-              `[来源 ${i + 1}] ${hit.title || hit.path}\n` +
-              (hit.content
-                ? `相关内容：\n${hit.content.slice(0, 2000)}`
-                : `摘要：${hit.snippet}`)
-          ).join('\n\n---\n\n')
-        : '（未检索到相关知识库内容）'
+      const context = retrieval.contextText || '（未检索到相关知识库内容）'
+      const citations = retrieval.sources.length
+        ? retrieval.sources
+          .slice(0, 8)
+          .map((source, index) => `[来源 ${index + 1}] ${source.citation || source.title}（${source.path}，相关度 ${Math.round(source.relevanceScore * 100)}%）`)
+          .join('\n')
+        : '无'
 
       const prompt = `你是一个专业的法律知识助手。请基于以下从知识库中检索到的相关内容回答用户的问题。
 
-## 知识库检索结果
+## RAG 检索上下文
 ${context}
+
+## 可引用来源
+${citations}
 
 ## 用户问题
 ${question.trim()}
 
-请基于检索到的内容给出准确、专业的回答。如果内容不足以回答问题，请明确说明。引用来源时请标注 [来源编号]。`
+请基于检索到的内容给出准确、专业的回答。如果内容不足以回答问题，请明确说明。引用来源时请标注对应的 [来源编号]，不要编造未出现在上下文中的依据。`
 
       // Create thread with workspace
       const workspace = await getWorkspaceRoot()
@@ -999,13 +1023,14 @@ ${question.trim()}
         )
       )
       await loadTree()
+      await syncKnowledgeIndex(false)
       clearSelection()
       setToast(`已删除 ${paths.length} 项`)
       window.setTimeout(() => setToast(null), 2200)
     } catch (err) {
       setError(err instanceof Error ? err.message : '删除失败')
     }
-  }, [loadTree, clearSelection])
+  }, [loadTree, clearSelection, syncKnowledgeIndex])
 
   const openMoveModal = useCallback(() => {
     const folders = collectFolders(tree)
@@ -1041,6 +1066,7 @@ ${question.trim()}
         })
       )
       await loadTree()
+      await syncKnowledgeIndex(false)
       clearSelection()
       setMoveModal((prev) => ({ ...prev, visible: false }))
       setToast(`已移动 ${paths.length} 项`)
@@ -1048,7 +1074,31 @@ ${question.trim()}
     } catch (err) {
       setError(err instanceof Error ? err.message : '移动失败')
     }
-  }, [selectedPaths, moveModal.targetPath, loadTree, clearSelection])
+  }, [selectedPaths, moveModal.targetPath, loadTree, clearSelection, syncKnowledgeIndex])
+
+  const classifyPaths = useCallback(async (paths: string[]) => {
+    const selected = paths.length > 0 ? paths : visibleNodes.map((node) => node.path)
+    if (selected.length === 0 || classifying) return
+    setClassifying(true)
+    setError(null)
+    closeContextMenu()
+    try {
+      const result = await requestJson<KnowledgeClassifyResult>(
+        LEGALWORK_KNOWLEDGE_CLASSIFY_PATH,
+        'POST',
+        { paths: selected }
+      )
+      await loadTree()
+      clearSelection()
+      const skippedText = result.skipped.length ? `，跳过 ${result.skipped.length} 项` : ''
+      setToast(`已智能分类 ${result.moved.length} 项${skippedText}`)
+      window.setTimeout(() => setToast(null), 2600)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '智能分类失败')
+    } finally {
+      setClassifying(false)
+    }
+  }, [classifying, visibleNodes, closeContextMenu, loadTree, clearSelection])
 
   const openBreadcrumb = (index: number): void => {
     setCurrentPath(breadcrumbs.slice(0, index + 1).join('/'))
@@ -1092,6 +1142,7 @@ ${question.trim()}
             </div>
             <h1 className="mt-3 text-[34px] font-bold leading-tight tracking-tight text-[var(--ds-ink)]">知识库</h1>
             <p className="mt-2 text-[15px] text-[var(--ds-muted)]">按文件夹管理法律资料、论文、案例、录音与内部文档。</p>
+            <p className="mt-1 text-[13px] leading-5 text-[var(--ds-muted)]">知识库内容由agent执行任务时自动阅读引用，无需额外指令</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -1119,6 +1170,16 @@ ${question.trim()}
             >
               <FolderPlus className="h-3.5 w-3.5" strokeWidth={1.8} />
               <span>新建</span>
+            </button>
+            <button
+              type="button"
+              disabled={classifying || visibleNodes.length === 0}
+              onClick={() => void classifyPaths([])}
+              className="inline-flex h-9 items-center gap-1.5 rounded-[8px] border border-ds-border bg-ds-card px-3 text-[13px] font-medium text-[var(--ds-muted)] transition hover:bg-ds-hover hover:text-[var(--ds-ink)] disabled:opacity-50"
+              title="按文件类型与名称线索智能分类当前列表"
+            >
+              <Sparkles className={`h-3.5 w-3.5 ${classifying ? 'animate-pulse' : ''}`} strokeWidth={1.8} />
+              <span>{classifying ? '整理中' : '智能分类'}</span>
             </button>
             <button
               type="button"
@@ -1223,6 +1284,15 @@ ${question.trim()}
                 <span className="font-medium">已选择 {selectedPaths.size} 项</span>
               </div>
               <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={classifying}
+                  onClick={() => void classifyPaths(Array.from(selectedPaths))}
+                  className="inline-flex h-8 items-center gap-1.5 rounded-[6px] border border-ds-border bg-ds-card px-3 text-[12px] font-medium text-[var(--ds-ink)] transition hover:bg-ds-hover disabled:opacity-50"
+                >
+                  <Sparkles className={`h-3.5 w-3.5 ${classifying ? 'animate-pulse' : ''}`} strokeWidth={1.8} />
+                  <span>{classifying ? '整理中' : '智能分类'}</span>
+                </button>
                 <button
                   type="button"
                   onClick={openMoveModal}
