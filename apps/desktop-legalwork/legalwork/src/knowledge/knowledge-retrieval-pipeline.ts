@@ -1,29 +1,31 @@
 import { readFileSync, existsSync } from 'node:fs'
-import { join, dirname } from 'node:path'
-import type { KnowledgeStore } from '../knowledge/knowledge-store.js'
-import type { KnowledgeContextRecord, KnowledgeRetrievalResult, KnowledgeLayer } from '../contracts/knowledge-retrieval.js'
+import type { KnowledgeStore } from './knowledge-store.js'
+import type {
+  KnowledgeContextRecord,
+  KnowledgeRetrievalResult,
+  KnowledgeLayer
+} from '../contracts/knowledge-retrieval.js'
 import { KnowledgeMeta, DEFAULT_KNOWLEDGE_META } from '../contracts/knowledge-retrieval.js'
-import { fieldsFromKnowledgeMeta, formatGbt7714, buildBibliography } from './citation-engine.js'
-import { route, LAYER_LABEL } from './knowledge-pyramid-router.js'
+import { fieldsFromKnowledgeMeta, formatGbt7714 } from './citation-engine.js'
+import {
+  getKnowledgeRetrievalCache,
+  knowledgeRetrievalCacheKey,
+  setKnowledgeRetrievalCache
+} from './knowledge-retrieval-cache.js'
 
 const MAX_CONTEXT_CHARS = 8_000
 const MAX_SOURCES = 12
 
 /**
- * Auto-retrieval pipeline that, given a user query, automatically:
- * 1. Searches the local knowledge base for relevant content
- * 2. Checks metadata for expiry/deprecation status
- * 3. Formats a compact context block for model injection
- * 4. Returns source records for citation tracking
+ * Local knowledge retrieval pipeline.
+ *
+ * Ordinary retrieval no longer auto-routes through the old software-engineering
+ * L1-L5 pyramid. Layer filtering is only applied when a caller explicitly asks
+ * for it. This keeps legal retrieval from silently excluding relevant sources.
  */
 export class KnowledgeRetrievalPipeline {
   constructor(private readonly store: KnowledgeStore) {}
 
-  /**
-   * Run the full retrieval pipeline for a user query.
-   * Supports pyramid layer routing when `layer` is specified or auto-detected.
-   * Returns formatted context text + source citations.
-   */
   async retrieve(query: string, options?: {
     maxChars?: number
     excludeExpired?: boolean
@@ -35,12 +37,26 @@ export class KnowledgeRetrievalPipeline {
     const startedAt = Date.now()
     const maxChars = options?.maxChars ?? MAX_CONTEXT_CHARS
     const excludeExpired = options?.excludeExpired ?? true
+    const targetLayers = options?.layers ?? (options?.layer ? [options.layer] : [])
+    const diagnostics = await this.store.diagnostics()
+    const cacheKey = knowledgeRetrievalCacheKey({
+      rootDir: diagnostics.rootDir,
+      revision: diagnostics.revision,
+      query,
+      maxChars,
+      excludeExpired,
+      layers: targetLayers,
+      pathPrefix: options?.pathPrefix
+    })
+    const cached = getKnowledgeRetrievalCache(cacheKey)
+    if (cached) {
+      return {
+        ...cached,
+        cacheHit: true,
+        latencyMs: Date.now() - startedAt
+      }
+    }
 
-    // Pyramid layer routing: determine target layers
-    const routeResult = route(query)
-    const targetLayers = options?.layers ?? (options?.layer ? [options.layer] : undefined) ?? routeResult.targetLayers
-
-    // 1. Search local knowledge base (with layer filter if applicable)
     const rawHits = await this.store.search({
       query,
       limit: MAX_SOURCES,
@@ -48,50 +64,57 @@ export class KnowledgeRetrievalPipeline {
       ...(options?.pathPrefix ? { pathPrefix: options.pathPrefix } : {}),
       ...(targetLayers.length > 0 ? { layers: targetLayers } : {})
     })
-    const hits = rawHits.filter((hit, index) =>
-      rawHits.findIndex((candidate) => candidate.relativePath === hit.relativePath) === index
-    )
 
-    // 2. Filter by expiry and deprecation if requested
     const filtered = excludeExpired
-      ? await this.filterExpired(hits.map((h) => h.path))
+      ? await this.filterExpired(rawHits.map((hit) => hit.path))
       : new Set<string>()
 
-    // 3. Build context records with metadata enrichment
     const records: KnowledgeContextRecord[] = []
     const contextEntries: string[] = []
-    let totalChars = 0
     const bibliographyEntries: Array<{ title: string; citation: string }> = []
+    let totalChars = 0
 
-    for (const hit of hits) {
+    for (const hit of rawHits) {
       if (filtered.has(hit.path)) continue
 
-      // Read sidecar .meta.json if available
       const meta = this.readMetadata(hit.path)
       const citation = this.buildCitationWithMeta(hit.title, hit.relativePath, meta)
-      const confidenceTag = meta.confidence === 'high' ? 'high_confidence' : meta.confidence === 'deprecated' ? 'deprecated' : ''
+      const confidenceTag = meta.confidence === 'high'
+        ? 'high_confidence'
+        : meta.confidence === 'deprecated'
+          ? 'deprecated'
+          : ''
       const tags = [...meta.tags]
       if (meta.deprecated) tags.push('deprecated')
       if (meta.expiresAt) tags.push('has_expiry')
       if (confidenceTag) tags.push(confidenceTag)
 
-      // Build GB/T 7714 citation from metadata
       const citationFields = fieldsFromKnowledgeMeta(
         hit.title,
         hit.relativePath,
-        { source: meta.source, author: meta.author, category: meta.category, tags: meta.tags, confidence: meta.confidence },
+        {
+          source: meta.source,
+          author: meta.author,
+          category: meta.category,
+          tags: meta.tags,
+          confidence: meta.confidence
+        },
         hit.category,
         hit.content
       )
       const gbt7714Citation = formatGbt7714(citationFields)
-
+      const citationNumber = records.length + 1
+      const documentHash = hit.documentHash ?? hit.documentId
+      const chunkHash = hit.chunkHash ?? hit.chunkId
+      const provenanceId = hit.provenanceId ?? `legacy_${hit.chunkId}`
       const record: KnowledgeContextRecord = {
         path: hit.relativePath,
         title: hit.title,
-        relevanceScore: Math.min(1, hit.score / 30),
+        relevanceScore: Math.min(1, Math.max(0, hit.score / 40)),
         excerpt: hit.snippet,
         content: hit.content,
         citation,
+        citationNumber,
         tags,
         sourceKind: 'local',
         gbt7714Citation,
@@ -99,45 +122,44 @@ export class KnowledgeRetrievalPipeline {
         publicationYear: citationFields.year,
         publicationName: citationFields.journalName,
         doi: citationFields.doi,
-        layer: hit.layer
+        layer: hit.layer,
+        documentId: hit.documentId,
+        chunkId: hit.chunkId,
+        provenanceId,
+        documentHash,
+        chunkHash,
+        headingPath: hit.headingPath ?? [],
+        articleNumber: hit.articleNumber,
+        charStart: hit.charStart,
+        charEnd: hit.charEnd
       }
+      const entry = this.formatEntry(record)
+      if (totalChars + entry.length > maxChars) continue
+
       records.push(record)
       bibliographyEntries.push({ title: hit.title, citation: gbt7714Citation })
-
-      // Accumulate context text up to the limit
-      const entry = this.formatEntry(record)
-      if (totalChars + entry.length <= maxChars) {
-        contextEntries.push(entry)
-        totalChars += entry.length
-      }
+      contextEntries.push(entry)
+      totalChars += entry.length
     }
 
-    // 4. Format the final context text
-    const contextText = this.formatContextText(contextEntries, query, routeResult)
-    const bibliography = buildBibliography(
-      bibliographyEntries.map((e, i) => {
-        // Parse citation back from stored format
-        const fields = fieldsFromKnowledgeMeta(e.title, e.title, { source: '', author: '', category: '', tags: [], confidence: 'medium' })
-        return fields
-      })
-    )
-
-    return {
-      contextText,
+    const result: KnowledgeRetrievalResult = {
+      contextText: this.formatContextText(contextEntries, query),
       sources: records,
       consultedExternal: false,
       latencyMs: Date.now() - startedAt,
-      bibliography,
-      citations: bibliographyEntries.map((e) => e.citation)
+      bibliography: bibliographyEntries
+        .map((entry, index) => `[${index + 1}] ${entry.citation}`)
+        .join('\n'),
+      citations: bibliographyEntries.map((entry) => entry.citation),
+      cacheHit: false,
+      revision: diagnostics.revision,
+      retrieverVersion: diagnostics.retrieverVersion
     }
+    setKnowledgeRetrievalCache(cacheKey, result)
+    return result
   }
 
-  /**
-   * Read sidecar metadata file if present.
-   */
   private readMetadata(filePath: string): KnowledgeMeta {
-    // Derive .meta.json path from the document path
-    // KnowledgeStore stores absolute paths, so we look for .meta.json alongside
     const metaPath = filePath.replace(/\.\w+$/, '.meta.json')
     if (existsSync(metaPath)) {
       try {
@@ -146,57 +168,52 @@ export class KnowledgeRetrievalPipeline {
         const result = KnowledgeMeta.safeParse(parsed)
         if (result.success) return result.data
       } catch {
-        // Fall through to default
+        // Fall through to default.
       }
     }
     return { ...DEFAULT_KNOWLEDGE_META }
   }
 
-  /**
-   * Build a citation string enriched with metadata info.
-   */
   private buildCitationWithMeta(title: string, relativePath: string, meta: KnowledgeMeta): string {
     const parts = relativePath.replace(/\\/g, '/').split('/').filter(Boolean)
     const folder = parts.slice(0, -1).join(' › ')
     const fileName = parts.at(-1)?.replace(/\.[^/.]+$/, '') ?? title
     const base = folder ? `${folder} › ${fileName}` : fileName
-    if (meta.category) {
-      return `[${meta.category}] ${base}`
-    }
-    return base
+    return meta.category ? `[${meta.category}] ${base}` : base
   }
 
-  /**
-   * Format a single entry for the context block.
-   */
   private formatEntry(record: KnowledgeContextRecord): string {
     const badges: string[] = []
-    if (record.layer) badges.push(LAYER_LABEL[record.layer])
     if (record.tags.includes('has_expiry')) badges.push('⚠️ 有时效性')
     if (record.tags.includes('deprecated')) badges.push('⚠️ 已废弃')
     if (record.tags.includes('high_confidence')) badges.push('可信度高')
     if (record.tags.includes('经验分享')) badges.push('经验分享')
+    if (record.articleNumber) badges.push(record.articleNumber)
     const badgeStr = badges.length ? ` [${badges.join('][')}]` : ''
-    return `[${record.citation}]${badgeStr}\n${record.excerpt.slice(0, 600)}\n\n`
+    const heading = record.headingPath.length
+      ? `\n位置：${record.headingPath.join(' › ')}`
+      : ''
+    return [
+      `[${record.citationNumber}] ${record.citation}${badgeStr}`,
+      `source_id: ${record.provenanceId}`,
+      `chunk_id: ${record.chunkId}${heading}`,
+      record.excerpt.slice(0, 700),
+      ''
+    ].join('\n')
   }
 
-  /**
-   * Format context records into a compact block for model injection.
-   */
-  private formatContextText(entries: string[], query: string, routeResult?: { primaryLayer?: string; primaryLabel?: string }): string {
+  private formatContextText(entries: string[], query: string): string {
     if (!entries.length) return ''
-
-    let header = `【知识库检索结果】\n查询：${query}\n匹配 ${entries.length} 个来源`
-    if (routeResult?.primaryLabel) {
-      header += `\n主要检索层级：${routeResult.primaryLabel}`
-    }
-    header += '\n\n'
-    return header + entries.join('\n\n')
+    return [
+      '【知识库检索结果】',
+      `查询：${query}`,
+      `匹配 ${entries.length} 个证据片段`,
+      '引用这些材料时请使用对应的 [N] 编号；编号与 source_id/chunk_id 的映射由系统保留用于核验。',
+      '',
+      entries.join('\n')
+    ].join('\n')
   }
 
-  /**
-   * Check which documents are expired/deprecated using sidecar metadata.
-   */
   private async filterExpired(filePaths: string[]): Promise<Set<string>> {
     const expired = new Set<string>()
     const now = Date.now()
@@ -208,12 +225,9 @@ export class KnowledgeRetrievalPipeline {
       }
       if (meta.expiresAt) {
         try {
-          const expiresAt = new Date(meta.expiresAt).getTime()
-          if (now > expiresAt) {
-            expired.add(filePath)
-          }
+          if (now > new Date(meta.expiresAt).getTime()) expired.add(filePath)
         } catch {
-          // Invalid date string, skip
+          // Invalid date string; do not silently exclude the document.
         }
       }
     }
@@ -221,7 +235,6 @@ export class KnowledgeRetrievalPipeline {
   }
 }
 
-/** Detect if a query likely relates to legal/time-sensitive information. */
 export function isLegalQuery(query: string): boolean {
   const legalTerms = [
     '法', '法规', '条例', '规定', '办法', '通知', '公告',
