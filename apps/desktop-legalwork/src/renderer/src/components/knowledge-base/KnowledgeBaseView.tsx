@@ -630,7 +630,7 @@ export function KnowledgeBaseView({
         candidateFileCount?: number
         truncatedFileCount?: number
         truncated?: boolean
-      }>(LEGALWORK_KNOWLEDGE_SYNC_PATH, 'POST', { maxFiles: 5000 })
+      }>(LEGALWORK_KNOWLEDGE_SYNC_PATH, 'POST', { maxFiles: 50000 })
       if (result.truncated) {
         const total = result.candidateFileCount ?? result.documentCount + (result.truncatedFileCount ?? 0)
         const omitted = result.truncatedFileCount ?? Math.max(0, total - result.documentCount)

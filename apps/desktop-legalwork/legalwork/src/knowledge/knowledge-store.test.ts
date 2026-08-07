@@ -129,7 +129,7 @@ describe('FileKnowledgeStore', () => {
     }
   })
 
-  it('returns one citation source when several chunks match the same file', async () => {
+  it('keeps multiple relevant evidence chunks from the same long source', async () => {
     const root = await mkdtemp(join(tmpdir(), 'legalwork-kb-source-dedupe-'))
     const indexRoot = join(root, 'index')
     try {
@@ -149,8 +149,9 @@ describe('FileKnowledgeStore', () => {
         pathPrefix: '论文'
       })
 
-      expect(result.sources).toHaveLength(1)
-      expect(result.sources[0]?.path).toBe('论文/长篇行政法研究.md')
+      expect(result.sources.length).toBeGreaterThan(1)
+      expect(result.sources.every((source) => source.path === '论文/长篇行政法研究.md')).toBe(true)
+      expect(result.sources.every((source) => Boolean(source.provenanceId && source.chunkId))).toBe(true)
     } finally {
       await rm(root, { recursive: true, force: true })
     }
@@ -285,6 +286,40 @@ describe('FileKnowledgeStore', () => {
 
       expect(result.moved[0]?.destPath).toBe('论文/材料.md')
       expect(result.moved[0]?.reason).toBe('正文包含论文结构')
+    } finally {
+      await rm(root, { recursive: true, force: true })
+    }
+  })
+
+  it('reuses unchanged documents by hash and invalidates retrieval cache on content revision', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'legalwork-kb-incremental-'))
+    const sourceRoot = join(root, 'knowledge-base')
+    const indexRoot = join(root, 'index')
+    try {
+      await mkdir(sourceRoot, { recursive: true })
+      const filePath = join(sourceRoot, '规则.md')
+      await writeFile(filePath, '第一条 原始行政程序规则。', 'utf8')
+      const store = new FileKnowledgeStore({ rootDir: indexRoot, sourceRoots: [sourceRoot] })
+
+      const firstSync = await store.sync()
+      expect(firstSync.updatedFileCount).toBe(1)
+      expect(firstSync.unchangedFileCount).toBe(0)
+      const first = await new KnowledgeRetrievalPipeline(store).retrieve('行政程序规则')
+      expect(first.cacheHit).toBe(false)
+      const cached = await new KnowledgeRetrievalPipeline(store).retrieve('行政程序规则')
+      expect(cached.cacheHit).toBe(true)
+
+      const secondSync = await store.sync()
+      expect(secondSync.updatedFileCount).toBe(0)
+      expect(secondSync.unchangedFileCount).toBe(1)
+      expect(secondSync.revision).toBe(firstSync.revision)
+
+      await writeFile(filePath, '第一条 修改后的行政程序规则与听证要求。', 'utf8')
+      const thirdSync = await store.sync()
+      expect(thirdSync.updatedFileCount).toBe(1)
+      expect(thirdSync.revision).not.toBe(firstSync.revision)
+      const refreshed = await new KnowledgeRetrievalPipeline(store).retrieve('行政程序规则')
+      expect(refreshed.cacheHit).toBe(false)
     } finally {
       await rm(root, { recursive: true, force: true })
     }
