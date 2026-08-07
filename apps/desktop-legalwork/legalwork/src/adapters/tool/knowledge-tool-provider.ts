@@ -3,6 +3,7 @@ import { LocalToolHost } from './local-tool-host.js'
 import type { KnowledgeStore } from '../../knowledge/knowledge-store.js'
 import type { KnowledgeLayer } from '../../contracts/knowledge.js'
 import { readKnowledgeFileText } from '../../knowledge/knowledge-file-reader.js'
+import { verifyKnowledgeCitationProvenance } from '../../knowledge/knowledge-citation-verifier.js'
 
 export function buildKnowledgeToolProviders(store: KnowledgeStore | undefined): CapabilityToolProvider[] {
   if (!store) return []
@@ -274,19 +275,19 @@ export function buildKnowledgeToolProviders(store: KnowledgeStore | undefined): 
       // ── Maintain ───────────────────────────────────────────────
       LocalToolHost.defineTool({
         name: 'knowledge_sync',
-        description: 'Trigger a full sync of the knowledge base. Scans source directories, ingests new/modified text files, chunks them, and rebuilds the search index. Use this after adding files externally (e.g. via the file system) to make them searchable.',
+        description: 'Synchronize the local knowledge index. The SQLite index hashes files and only re-extracts/re-chunks changed documents; unchanged documents are retained without rebuild. Use after adding, changing, moving, or deleting knowledge files.',
         inputSchema: {
           type: 'object',
           properties: {
-            maxFiles: { type: 'number', minimum: 1, maximum: 5000, description: 'Max files to process (default 1500)' }
+            maxFiles: { type: 'number', minimum: 1, maximum: 100000, description: 'Max files to process (default 50000)' }
           },
           additionalProperties: false
         },
         policy: 'auto',
         execute: async (args) => {
           const maxFiles = typeof args.maxFiles === 'number' && Number.isFinite(args.maxFiles)
-            ? Math.max(1, Math.min(5000, Math.floor(args.maxFiles)))
-            : 1500
+            ? Math.max(1, Math.min(100000, Math.floor(args.maxFiles)))
+            : 50000
           return {
             output: await store.sync({ maxFiles })
           }
@@ -380,58 +381,53 @@ export function buildKnowledgeToolProviders(store: KnowledgeStore | undefined): 
       // ── Citation Verification ──────────────────────────────────────
       LocalToolHost.defineTool({
         name: 'knowledge_citation_verify',
-        description: 'Verify all citations in a completed paper draft against the knowledge base index. Extracts citation markers ([1], [2,3], [1-3]), cross-references each one against stored documents, and reports any unverifiable or misattributed citations. Use this AFTER drafting a paper or legal document and BEFORE delivering it. Only works on drafts that use [N] format citation markers.',
+        description: 'Verify [N] citations against the explicit source provenance returned by knowledge retrieval. Requires citationNumber + chunkId + provenanceId mappings; never guesses a source from the numeric marker text.',
         inputSchema: {
-          type: 'object',
-          properties: {
-            draft: { type: 'string', description: 'The complete paper or document draft text containing [N] format citation markers' }
-          },
-          required: ['draft'],
-          additionalProperties: false
+type: 'object',
+properties: {
+  draft: { type: 'string', description: 'Completed draft containing [N], [1,2], or [1-3] citation markers.' },
+  sources: {
+    type: 'array',
+    description: 'Source map from the retrieval result. Each entry binds a numeric citation to one indexed chunk provenance ID.',
+    items: {
+      type: 'object',
+      properties: {
+        citationNumber: { type: 'number' },
+        chunkId: { type: 'string' },
+        provenanceId: { type: 'string' }
+      },
+      required: ['citationNumber', 'chunkId', 'provenanceId'],
+      additionalProperties: false
+    }
+  }
+},
+required: ['draft', 'sources'],
+additionalProperties: false
         },
         policy: 'auto',
         execute: async (args) => {
-          const draft = typeof args.draft === 'string' ? args.draft : ''
-          if (!draft) return { output: { error: 'draft is required' }, isError: true }
-
-          const diagnostics = await store.diagnostics()
-          if (diagnostics.documentCount === 0) {
-            return {
-              output: {
-                documentStats: { totalCitations: 0, verified: 0, notFound: 0, contentMismatch: 0, suspicious: 0 },
-                checks: [],
-                recommendations: ['知识库为空，无法核验引用。请先同步知识库。']
-              }
-            }
-          }
-
-          // Extract citations, then search KB for each one
-          const { extractCitations, verifyPaperCitations } = await import('../../knowledge/citation-verifier.js')
-          const citations = extractCitations(draft)
-          const uniqueCitations = [...new Set(citations.map((c) => c.rawText))]
-
-          // Build a lightweight index from search results
-          const allDocs: Array<{ title: string; relativePath: string; keywords?: string[] }> = []
-          for (const rawText of uniqueCitations.slice(0, 20)) {
-            const cleanText = rawText.replace(/[[\]\d]/g, '').trim()
-            if (cleanText.length < 2) continue
-            const hits = await store.search({ query: cleanText, limit: 5 })
-            for (const hit of hits) {
-              if (!allDocs.some((d) => d.relativePath === hit.relativePath)) {
-                allDocs.push({
-                  title: hit.title,
-                  relativePath: hit.relativePath,
-                  keywords: hit.keywords
-                })
-              }
-            }
-          }
-
-          const result = verifyPaperCitations(draft, {
-            documents: allDocs as any,
-            chunks: []
-          })
-          return { output: result }
+const draft = typeof args.draft === 'string' ? args.draft : ''
+const sources = Array.isArray(args.sources)
+  ? args.sources.flatMap((source) => {
+      if (!source || typeof source !== 'object') return []
+      const record = source as Record<string, unknown>
+      const citationNumber = Number(record.citationNumber)
+      const chunkId = typeof record.chunkId === 'string' ? record.chunkId : ''
+      const provenanceId = typeof record.provenanceId === 'string' ? record.provenanceId : ''
+      return Number.isInteger(citationNumber) && citationNumber > 0 && chunkId && provenanceId
+        ? [{ citationNumber, chunkId, provenanceId }]
+        : []
+    })
+  : []
+const result = await verifyKnowledgeCitationProvenance(store, draft, sources)
+return {
+  output: {
+    valid: result.valid,
+    citation_count: result.citationCount,
+    verified_count: result.verifiedCount,
+    checks: result.checks
+  }
+}
         }
       }),
       LocalToolHost.defineTool({

@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { existsSync } from 'node:fs'
+import { createReadStream, existsSync } from 'node:fs'
 import { mkdir, readFile, readdir, rename, rm, stat, writeFile } from 'node:fs/promises'
 import { basename, dirname, extname, join, normalize, relative, resolve, sep } from 'node:path'
 import { extractDocumentText, EXTRACTABLE_EXTENSIONS } from './text-extractor.js'
@@ -12,7 +12,6 @@ import type {
   KnowledgeCreateFolderRequest,
   KnowledgeDiagnostics,
   KnowledgeDocument,
-  KnowledgeEdge,
   KnowledgeFileContent,
   KnowledgeLayer,
   KnowledgeMoveRequest,
@@ -22,10 +21,15 @@ import type {
   KnowledgeTreeNode
 } from '../contracts/knowledge.js'
 import { inferLayerFromMeta } from './knowledge-pyramid-router.js'
+import { KnowledgeSqliteIndex } from './knowledge-sqlite-index.js'
+import { chunkKnowledgeDocument } from './knowledge-structured-chunker.js'
+import type { KnowledgeVectorRetriever } from './knowledge-vector-retriever.js'
+import { reciprocalRankFuseKnowledgeCandidates } from './knowledge-vector-retriever.js'
 
 export interface KnowledgeStore {
   sync(input?: KnowledgeSyncRequest): Promise<KnowledgeSyncResult>
   search(input: { query: string; limit: number; includeContent?: boolean; layer?: KnowledgeLayer; layers?: KnowledgeLayer[]; pathPrefix?: string }): Promise<KnowledgeSearchHit[]>
+  lookupChunks(chunkIds: string[]): Promise<KnowledgeSearchHit[]>
   diagnostics(): Promise<KnowledgeDiagnostics>
   setLastSelected(ids: string[]): void
   /** List managed file/folder tree. */
@@ -46,19 +50,6 @@ export interface KnowledgeStore {
   delete(path: string): Promise<{ path: string }>
   /** Automatically classify managed files into category folders. */
   classify(input?: KnowledgeClassifyRequest): Promise<KnowledgeClassifyResult>
-}
-
-type KnowledgeIndex = {
-  syncedAt?: string
-  roots: string[]
-  documents: KnowledgeDocument[]
-  chunks: KnowledgeChunk[]
-  edges: KnowledgeEdge[]
-  skippedCount: number
-  candidateFileCount: number
-  attemptedFileCount: number
-  failedFileCount: number
-  truncatedFileCount: number
 }
 
 const TEXT_EXTENSIONS = new Set([
@@ -99,11 +90,9 @@ const MANAGED_FILE_EXTENSIONS = new Set([
   '.7z'
 ])
 const SKIP_DIRS = new Set(['.git', 'node_modules', 'dist', 'build', 'out', '.next', '.vite'])
-const DEFAULT_MAX_FILES = 1500
-const CHUNK_SIZE = 2400
-const CHUNK_OVERLAP = 240
-const RERANK_POOL_SIZE = 80
-const MAX_PER_DOCUMENT = 2
+const DEFAULT_MAX_FILES = 50_000
+const RERANK_POOL_SIZE = 160
+const MAX_PER_DOCUMENT = 3
 const CLASSIFY_TEXT_LIMIT = 6000
 const CLASSIFY_MODEL_TIMEOUT_MS = 18_000
 const MAX_CLASSIFICATION_CACHE_SIZE = 500
@@ -139,6 +128,7 @@ export class FileKnowledgeStore implements KnowledgeStore {
    * 有界缓存，避免无限增长。
    */
   private readonly classificationCache = new Map<string, KnowledgeClassification>()
+  private readonly sqliteIndex: KnowledgeSqliteIndex
 
   constructor(
     private readonly options: {
@@ -148,8 +138,10 @@ export class FileKnowledgeStore implements KnowledgeStore {
       managedRoot?: string
       model?: ModelClient
       classifyModel?: string
+      vectorRetriever?: KnowledgeVectorRetriever
     }
   ) {
+    this.sqliteIndex = new KnowledgeSqliteIndex(this.options.rootDir)
     // Default managed root: {rootDir}/files
     if (!this.options.managedRoot) {
       this.options.managedRoot = join(this.options.rootDir, 'files')
@@ -371,162 +363,232 @@ export class FileKnowledgeStore implements KnowledgeStore {
     const uniqueCandidates = [...new Set(candidateFiles.map((filePath) => resolve(filePath)))]
     const uniqueFiles = uniqueCandidates.slice(0, maxFiles)
     const truncatedFileCount = Math.max(0, uniqueCandidates.length - uniqueFiles.length)
-    const documents: KnowledgeDocument[] = []
-    const chunks: KnowledgeChunk[] = []
+    const syncedAt = this.now()
+    const keepDocumentIds: string[] = []
+    let failedFileCount = 0
+    let unchangedFileCount = 0
+    let updatedFileCount = 0
+
     for (const filePath of uniqueFiles) {
+      const documentId = hashId(filePath)
+      keepDocumentIds.push(documentId)
       const root = roots
         .filter((candidate) => isInside(filePath, candidate))
         .sort((left, right) => right.length - left.length)[0] ?? roots[0] ?? resolve('.')
       try {
         const info = await stat(filePath)
+        const documentHash = await hashFileSha256(filePath)
+        const existing = await this.sqliteIndex.documentState(documentId)
+        if (existing?.documentHash === documentHash) {
+unchangedFileCount += 1
+await this.sqliteIndex.touchDocument({
+  documentId,
+  sizeBytes: info.size,
+  sourceMtimeMs: info.mtimeMs,
+  updatedAt: info.mtime.toISOString()
+})
+continue
+        }
+
         const ext = extname(filePath).toLowerCase()
         const content = TEXT_EXTENSIONS.has(ext)
-          ? normalizeText(await readFile(filePath, 'utf8'))
-          : (await extractDocumentText(filePath)).text
+? normalizeText(await readFile(filePath, 'utf8'))
+: normalizeText((await extractDocumentText(filePath)).text)
         if (!content.trim()) {
-          skippedCount += 1
-          continue
+failedFileCount += 1
+skippedCount += 1
+await this.sqliteIndex.deleteDocument(documentId)
+continue
         }
-        const documentId = hashId(filePath)
+
         const relPath = relative(root, filePath) || basename(filePath)
         const category = inferCategory(filePath, relPath, content)
         const keywords = extractKeywords(`${relPath}\n${content}`, 16)
         const tags = inferTags(filePath, relPath, content, category, keywords)
         const layer = inferLayerFromMeta(relPath, category, tags, ext, content.slice(0, 2000))
         const document: KnowledgeDocument = {
-          id: documentId,
-          title: titleFromPath(filePath),
-          path: filePath,
-          sourceRoot: root,
-          relativePath: relPath,
-          category,
-          tags,
-          keywords,
-          extension: ext,
-          sizeBytes: info.size,
-          updatedAt: info.mtime.toISOString(),
-          layer
+id: documentId,
+title: titleFromPath(filePath),
+path: filePath,
+sourceRoot: root,
+relativePath: relPath,
+category,
+tags,
+keywords,
+extension: ext,
+sizeBytes: info.size,
+updatedAt: info.mtime.toISOString(),
+layer,
+documentHash,
+sourceMtimeMs: info.mtimeMs,
+indexedAt: syncedAt
         }
-        documents.push(document)
-        chunks.push(...chunkDocument(document, content))
+        const chunks = chunkKnowledgeDocument(document, content, documentHash)
+        await this.sqliteIndex.upsertDocument(document, chunks)
+        updatedFileCount += 1
       } catch {
+        failedFileCount += 1
         skippedCount += 1
+        await this.sqliteIndex.deleteDocument(documentId).catch(() => false)
       }
     }
 
-    // Build edge index for pyramid graph
-    const { buildEdgeIndex } = await import('./knowledge-graph.js')
-    const edges = buildEdgeIndex(documents)
-
-    const syncedAt = this.now()
-    const failedFileCount = Math.max(0, uniqueFiles.length - documents.length)
-    const coverage = {
+    const deletedFileCount = await this.sqliteIndex.deleteDocumentsNotIn(keepDocumentIds)
+    await this.sqliteIndex.setSyncMetadata({
+      syncedAt,
+      roots,
+      skippedCount,
       candidateFileCount: uniqueCandidates.length,
       attemptedFileCount: uniqueFiles.length,
       failedFileCount,
       truncatedFileCount
-    }
-    await this.writeIndex({
-      syncedAt,
-      roots,
-      documents,
-      chunks,
-      edges,
-      skippedCount,
-      ...coverage
     })
+    const revision = await this.sqliteIndex.recomputeRevision()
+    const diagnostics = await this.sqliteIndex.diagnostics()
     return {
       syncedAt,
       roots,
-      documentCount: documents.length,
-      chunkCount: chunks.length,
+      documentCount: diagnostics.documentCount,
+      chunkCount: diagnostics.chunkCount,
       skippedCount,
-      ...coverage,
-      truncated: truncatedFileCount > 0
+      candidateFileCount: uniqueCandidates.length,
+      attemptedFileCount: uniqueFiles.length,
+      failedFileCount,
+      truncatedFileCount,
+      truncated: truncatedFileCount > 0,
+      unchangedFileCount,
+      updatedFileCount,
+      deletedFileCount,
+      revision,
+      backend: 'sqlite-fts5',
+      retrieverVersion: diagnostics.retrieverVersion
     }
   }
 
   async search(input: { query: string; limit: number; includeContent?: boolean; layer?: KnowledgeLayer; layers?: KnowledgeLayer[]; pathPrefix?: string }): Promise<KnowledgeSearchHit[]> {
     const query = input.query.trim()
     if (!query) return []
-    let index = await this.readIndex()
-    if (index.chunks.length === 0 && (this.options.sourceRoots?.length ?? 0) > 0) {
+
+    let indexDiagnostics = await this.sqliteIndex.diagnostics()
+    if (indexDiagnostics.documentCount === 0) {
       await this.sync()
-      index = await this.readIndex()
+      indexDiagnostics = await this.sqliteIndex.diagnostics()
     }
 
-    // Layer filtering
     const targetLayers = new Set<KnowledgeLayer>()
     if (input.layer) targetLayers.add(input.layer)
-    if (input.layers) input.layers.forEach((l) => targetLayers.add(l))
-    const filterByLayer = targetLayers.size > 0
+    if (input.layers) input.layers.forEach((layer) => targetLayers.add(layer))
+    const lexical = await this.sqliteIndex.searchCandidates({
+      query,
+      limit: Math.max(RERANK_POOL_SIZE * 2, Math.max(1, input.limit) * 12),
+      ...(targetLayers.size ? { layers: [...targetLayers] } : {}),
+      ...(input.pathPrefix ? { pathPrefix: input.pathPrefix } : {})
+    })
 
-    let candidates = index.chunks
-    const pathPrefix = normalizeRelativePath(input.pathPrefix ?? '')
-    if (pathPrefix) {
-      candidates = candidates.filter((chunk) => {
-        const chunkPath = knowledgeSearchRelativePath(chunk, this.managedRoot)
-        return chunkPath === pathPrefix || chunkPath.startsWith(`${pathPrefix}/`)
-      })
+    let candidates = lexical
+    if (this.options.vectorRetriever) {
+      const vectorHits = await this.options.vectorRetriever.search({
+        query,
+        limit: Math.max(RERANK_POOL_SIZE, Math.max(1, input.limit) * 8),
+        ...(targetLayers.size ? { layers: [...targetLayers] } : {}),
+        ...(input.pathPrefix ? { pathPrefix: input.pathPrefix } : {})
+      }).catch(() => [])
+      if (vectorHits.length) {
+        const vectorChunks = await this.sqliteIndex.lookupChunks(vectorHits.map((hit) => hit.chunkId))
+        const vectorScores = new Map(vectorHits.map((hit) => [hit.chunkId, hit.score]))
+        candidates = reciprocalRankFuseKnowledgeCandidates({
+lexical,
+vector: vectorChunks.map((chunk) => ({
+  chunk,
+  score: vectorScores.get(chunk.id) ?? 0
+})),
+limit: RERANK_POOL_SIZE * 2
+        })
+      }
     }
-    if (filterByLayer) {
-      // Layer filtering must NOT exclude unlabeled chunks: most user-uploaded
-      // documents carry no pyramid layer, and excluding them made retrieval
-      // return only the handful of labeled chunks (often one large file),
-      // drowning out the actually relevant documents. Unlabeled chunks are
-      // treated as universal and always remain candidates; labeled chunks are
-      // only included when they match a target layer.
-      candidates = candidates.filter(
-        (chunk) => !chunk.layer || targetLayers.has(chunk.layer)
-      )
-    }
+
     candidates = [...new Map(candidates.map((chunk) => [chunk.id, chunk])).values()]
-
     const terms = queryTerms(query)
     const lowerQuery = query.toLowerCase()
     const queryTermSet = new Set(terms)
-    // Primary layer for layer-aware scoring boost
     const primaryLayer = input.layer ?? (targetLayers.size === 1 ? [...targetLayers][0] : undefined)
     const hits = rerankChunks(candidates
       .map((chunk) => scoreChunk(chunk, lowerQuery, terms, queryTermSet, primaryLayer))
       .filter((entry) => entry.score > 0)
       .sort((a, b) => b.score - a.score || a.chunk.relativePath.localeCompare(b.chunk.relativePath))
       .slice(0, RERANK_POOL_SIZE), Math.max(1, input.limit))
-      .map(({ chunk, score, rankReason }) => {
-        const relativePath = knowledgeSearchRelativePath(chunk, this.managedRoot)
-        return {
-          documentId: chunk.documentId,
-          chunkId: chunk.id,
-          title: chunk.title,
-          path: chunk.path,
-          relativePath,
-          ...(chunk.category ? { category: chunk.category } : {}),
-          ...(chunk.tags?.length ? { tags: chunk.tags } : {}),
-          ...(chunk.keywords?.length ? { keywords: chunk.keywords } : {}),
-          ...(chunk.layer ? { layer: chunk.layer } : {}),
-          score,
-          rankReason,
-          snippet: makeSnippet(chunk.content, lowerQuery, terms),
-          ...(input.includeContent ? { content: chunk.content } : {})
-        }
-      })
+      .map(({ chunk, score, rankReason }) => ({
+        documentId: chunk.documentId,
+        chunkId: chunk.id,
+        title: chunk.title,
+        path: chunk.path,
+        relativePath: chunk.relativePath,
+        ...(chunk.category ? { category: chunk.category } : {}),
+        ...(chunk.tags?.length ? { tags: chunk.tags } : {}),
+        ...(chunk.keywords?.length ? { keywords: chunk.keywords } : {}),
+        ...(chunk.layer ? { layer: chunk.layer } : {}),
+        ...(typeof chunk.chunkIndex === 'number' ? { chunkIndex: chunk.chunkIndex } : {}),
+        ...(chunk.documentHash ? { documentHash: chunk.documentHash } : {}),
+        ...(chunk.chunkHash ? { chunkHash: chunk.chunkHash } : {}),
+        ...(chunk.provenanceId ? { provenanceId: chunk.provenanceId } : {}),
+        ...(chunk.headingPath?.length ? { headingPath: chunk.headingPath } : {}),
+        ...(chunk.articleNumber ? { articleNumber: chunk.articleNumber } : {}),
+        ...(typeof chunk.charStart === 'number' ? { charStart: chunk.charStart } : {}),
+        ...(typeof chunk.charEnd === 'number' ? { charEnd: chunk.charEnd } : {}),
+        ...(chunk.chunkerVersion ? { chunkerVersion: chunk.chunkerVersion } : {}),
+        score,
+        rankReason,
+        snippet: makeSnippet(chunk.content, lowerQuery, terms),
+        ...(input.includeContent ? { content: chunk.content } : {})
+      }))
     this.setLastSelected(hits.map((hit) => hit.documentId))
     return hits
   }
 
+  async lookupChunks(chunkIds: string[]): Promise<KnowledgeSearchHit[]> {
+    const chunks = await this.sqliteIndex.lookupChunks(chunkIds)
+    return chunks.map((chunk) => ({
+      documentId: chunk.documentId,
+      chunkId: chunk.id,
+      title: chunk.title,
+      path: chunk.path,
+      relativePath: chunk.relativePath,
+      ...(chunk.category ? { category: chunk.category } : {}),
+      ...(chunk.tags?.length ? { tags: chunk.tags } : {}),
+      ...(chunk.keywords?.length ? { keywords: chunk.keywords } : {}),
+      ...(chunk.layer ? { layer: chunk.layer } : {}),
+      ...(typeof chunk.chunkIndex === 'number' ? { chunkIndex: chunk.chunkIndex } : {}),
+      ...(chunk.documentHash ? { documentHash: chunk.documentHash } : {}),
+      ...(chunk.chunkHash ? { chunkHash: chunk.chunkHash } : {}),
+      ...(chunk.provenanceId ? { provenanceId: chunk.provenanceId } : {}),
+      ...(chunk.headingPath?.length ? { headingPath: chunk.headingPath } : {}),
+      ...(chunk.articleNumber ? { articleNumber: chunk.articleNumber } : {}),
+      ...(typeof chunk.charStart === 'number' ? { charStart: chunk.charStart } : {}),
+      ...(typeof chunk.charEnd === 'number' ? { charEnd: chunk.charEnd } : {}),
+      ...(chunk.chunkerVersion ? { chunkerVersion: chunk.chunkerVersion } : {}),
+      score: 1,
+      rankReason: 'provenance lookup',
+      snippet: chunk.content.slice(0, 480).replace(/\s+/g, ' ').trim(),
+      content: chunk.content
+    }))
+  }
+
   async diagnostics(): Promise<KnowledgeDiagnostics> {
-    const index = await this.readIndex()
+    const index = await this.sqliteIndex.diagnostics()
     return {
       enabled: true,
       rootDir: this.options.rootDir,
       sourceRoots: normalizeRoots(this.options.sourceRoots ?? []),
-      documentCount: index.documents.length,
-      chunkCount: index.chunks.length,
+      documentCount: index.documentCount,
+      chunkCount: index.chunkCount,
       candidateFileCount: index.candidateFileCount,
       attemptedFileCount: index.attemptedFileCount,
       failedFileCount: index.failedFileCount,
       truncatedFileCount: index.truncatedFileCount,
       truncated: index.truncatedFileCount > 0,
+      revision: index.revision,
+      backend: 'sqlite-fts5',
+      retrieverVersion: index.retrieverVersion,
       ...(index.syncedAt ? { syncedAt: index.syncedAt } : {}),
       lastSelectedIds: [...this.lastSelectedIds]
     }
@@ -534,54 +596,6 @@ export class FileKnowledgeStore implements KnowledgeStore {
 
   setLastSelected(ids: string[]): void {
     this.lastSelectedIds = [...new Set(ids)].slice(0, 20)
-  }
-
-  private async readIndex(): Promise<KnowledgeIndex> {
-    try {
-      const text = await readFile(this.indexPath(), 'utf8')
-      const parsed = JSON.parse(text) as Partial<KnowledgeIndex>
-      const documents = Array.isArray(parsed.documents) ? parsed.documents as KnowledgeDocument[] : []
-      const candidateFileCount = typeof parsed.candidateFileCount === 'number'
-        ? parsed.candidateFileCount
-        : documents.length
-      const attemptedFileCount = typeof parsed.attemptedFileCount === 'number'
-        ? parsed.attemptedFileCount
-        : documents.length
-      const failedFileCount = typeof parsed.failedFileCount === 'number'
-        ? parsed.failedFileCount
-        : Math.max(0, attemptedFileCount - documents.length)
-      const truncatedFileCount = typeof parsed.truncatedFileCount === 'number'
-        ? parsed.truncatedFileCount
-        : 0
-      return {
-        syncedAt: parsed.syncedAt,
-        roots: Array.isArray(parsed.roots) ? parsed.roots.filter((root): root is string => typeof root === 'string') : [],
-        documents,
-        chunks: Array.isArray(parsed.chunks) ? parsed.chunks as KnowledgeChunk[] : [],
-        edges: Array.isArray(parsed.edges) ? parsed.edges as import('../contracts/knowledge.js').KnowledgeEdge[] : [],
-        skippedCount: typeof parsed.skippedCount === 'number' ? parsed.skippedCount : 0,
-        candidateFileCount,
-        attemptedFileCount,
-        failedFileCount,
-        truncatedFileCount
-      }
-    } catch {
-      return {
-        roots: [],
-        documents: [],
-        chunks: [],
-        edges: [],
-        skippedCount: 0,
-        candidateFileCount: 0,
-        attemptedFileCount: 0,
-        failedFileCount: 0,
-        truncatedFileCount: 0
-      }
-    }
-  }
-
-  private async writeIndex(index: KnowledgeIndex): Promise<void> {
-    await writeFile(this.indexPath(), JSON.stringify(index, null, 2), 'utf8')
   }
 
   private async uniqueManagedPath(relativePath: string): Promise<string> {
@@ -593,10 +607,6 @@ export class FileKnowledgeStore implements KnowledgeStore {
       candidate = `${base} (${index})${parsedExt}`
     }
     return candidate
-  }
-
-  private indexPath(): string {
-    return join(this.options.rootDir, 'index.json')
   }
 
   private now(): string {
@@ -858,31 +868,6 @@ async function directChildFolders(absolute: string): Promise<string[]> {
     .filter(Boolean)
 }
 
-function chunkDocument(document: KnowledgeDocument, content: string): KnowledgeChunk[] {
-  const chunks: KnowledgeChunk[] = []
-  for (let start = 0, index = 0; start < content.length; index += 1) {
-    const slice = content.slice(start, start + CHUNK_SIZE).trim()
-    if (slice) {
-      const keywords = extractKeywords(`${document.title}\n${document.relativePath}\n${slice}`, 12)
-      chunks.push({
-        id: `${document.id}_${index}`,
-        documentId: document.id,
-        title: document.title,
-        path: document.path,
-        relativePath: document.relativePath,
-        category: document.category,
-        tags: document.tags,
-        keywords,
-        content: slice,
-        layer: document.layer
-      })
-    }
-    if (start + CHUNK_SIZE >= content.length) break
-    start += CHUNK_SIZE - CHUNK_OVERLAP
-  }
-  return chunks
-}
-
 function scoreChunk(chunk: KnowledgeChunk, lowerQuery: string, terms: string[], queryTermSet: Set<string>, primaryLayer?: KnowledgeLayer): ScoredChunk {
   const haystack = `${chunk.title}\n${chunk.relativePath}\n${chunk.category ?? ''}\n${chunk.keywords?.join(' ') ?? ''}\n${chunk.content}`.toLowerCase()
   let score = haystack.includes(lowerQuery) ? 12 : 0
@@ -1138,6 +1123,16 @@ function knowledgeSearchRelativePath(chunk: KnowledgeChunk, managedRoot: string)
     return normalizeRelativePath(relative(managedRoot, chunk.path))
   }
   return normalizeRelativePath(chunk.relativePath)
+}
+
+async function hashFileSha256(filePath: string): Promise<string> {
+  return await new Promise<string>((resolveHash, rejectHash) => {
+    const hash = createHash('sha256')
+    const stream = createReadStream(filePath)
+    stream.on('data', (chunk) => hash.update(chunk))
+    stream.on('error', rejectHash)
+    stream.on('end', () => resolveHash(hash.digest('hex')))
+  })
 }
 
 function normalizeText(text: string): string {
