@@ -2,6 +2,7 @@ import type { CapabilityToolProvider } from './capability-registry.js'
 import { LocalToolHost } from './local-tool-host.js'
 import type { KnowledgeStore } from '../../knowledge/knowledge-store.js'
 import type { KnowledgeLayer } from '../../contracts/knowledge.js'
+import { readKnowledgeFileText } from '../../knowledge/knowledge-file-reader.js'
 
 export function buildKnowledgeToolProviders(store: KnowledgeStore | undefined): CapabilityToolProvider[] {
   if (!store) return []
@@ -85,11 +86,11 @@ export function buildKnowledgeToolProviders(store: KnowledgeStore | undefined): 
       }),
       LocalToolHost.defineTool({
         name: 'knowledge_read_file',
-        description: 'Read content from a specific file in the managed knowledge base by relative path. Returns at most the first 200 lines (or a page via offset/limit) to bound token cost; use offset to continue reading a large document page by page. Use after knowledge_list_tree or knowledge_search to get document text for analysis, summarization, or citation.',
+        description: 'Read model-consumable text from a specific file in the managed knowledge base by relative path. Text files are read as UTF-8; PDF/Office/image documents use the same extraction/OCR pipeline as indexing. Returns at most the first 200 lines (or a page via offset/limit) to bound token cost; use offset to continue reading a large document page by page.',
         inputSchema: {
           type: 'object',
           properties: {
-            path: { type: 'string', description: 'Relative file path within the knowledge base (e.g. "contracts/NDA.md" or "法规/民法典.md")' },
+            path: { type: 'string', description: 'Relative file path within the knowledge base (e.g. "contracts/NDA.md" or "法规/民法典.pdf")' },
             offset: { type: 'number', description: '1-based starting line. Default 1.' },
             limit: { type: 'number', description: 'Max lines to return. Default 200, max 500.' }
           },
@@ -101,9 +102,8 @@ export function buildKnowledgeToolProviders(store: KnowledgeStore | undefined): 
           const filePath = typeof args.path === 'string' ? args.path.trim() : ''
           if (!filePath) return { output: { error: 'path is required' }, isError: true }
           try {
-            const result = await store.readFile(filePath)
-            const raw = typeof result.content === 'string' ? result.content : String(result.content ?? '')
-            const allLines = raw.split('\n')
+            const result = await readKnowledgeFileText(store, filePath)
+            const allLines = result.content.split('\n')
             const offset = Math.max(1, Math.floor(Number(args.offset) || 1))
             const limit = Math.max(1, Math.min(500, Math.floor(Number(args.limit) || 200)))
             if (offset > allLines.length) {
@@ -123,6 +123,7 @@ export function buildKnowledgeToolProviders(store: KnowledgeStore | undefined): 
             const output = {
               path: result.path,
               encoding: result.encoding,
+              extraction_method: result.extractionMethod,
               content,
               start_line: offset,
               end_line: endLine,
@@ -252,7 +253,7 @@ export function buildKnowledgeToolProviders(store: KnowledgeStore | undefined): 
         inputSchema: {
           type: 'object',
           properties: {
-            path: { type: 'string', description: 'Relative path of the file or folder to delete' }
+            path: { type: 'string', description: 'Relative path of the file or folder' }
           },
           required: ['path'],
           additionalProperties: false

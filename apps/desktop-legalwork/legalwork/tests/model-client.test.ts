@@ -998,7 +998,7 @@ describe('DeepseekCompatModelClient', () => {
     expect(messages[2]).toMatchObject({ role: 'user', content: 'continue' })
   })
 
-  it('preserves the latest compaction summary when applying history limits', async () => {
+  it('preserves compaction history without provider-side sliding limits', async () => {
     const sentBodies: Array<{ messages?: Array<Record<string, unknown>> }> = []
     const response = {
       id: 'r1',

@@ -55,6 +55,10 @@ type KnowledgeIndex = {
   chunks: KnowledgeChunk[]
   edges: KnowledgeEdge[]
   skippedCount: number
+  candidateFileCount: number
+  attemptedFileCount: number
+  failedFileCount: number
+  truncatedFileCount: number
 }
 
 const TEXT_EXTENSIONS = new Set([
@@ -355,19 +359,20 @@ export class FileKnowledgeStore implements KnowledgeStore {
     const defaultRoots = [...(this.options.sourceRoots ?? []), this.managedRoot]
     const roots = normalizeRoots(input.roots?.length ? input.roots : defaultRoots)
     const maxFiles = input.maxFiles ?? DEFAULT_MAX_FILES
-    const files: string[] = []
+    const candidateFiles: string[] = []
     let skippedCount = 0
 
     for (const root of roots) {
-      const result = await collectFiles(root, maxFiles - files.length)
-      files.push(...result.files)
+      const result = await collectFiles(root)
+      candidateFiles.push(...result.files)
       skippedCount += result.skippedCount
-      if (files.length >= maxFiles) break
     }
 
+    const uniqueCandidates = [...new Set(candidateFiles.map((filePath) => resolve(filePath)))]
+    const uniqueFiles = uniqueCandidates.slice(0, maxFiles)
+    const truncatedFileCount = Math.max(0, uniqueCandidates.length - uniqueFiles.length)
     const documents: KnowledgeDocument[] = []
     const chunks: KnowledgeChunk[] = []
-    const uniqueFiles = [...new Set(files.map((filePath) => resolve(filePath)))]
     for (const filePath of uniqueFiles) {
       const root = roots
         .filter((candidate) => isInside(filePath, candidate))
@@ -414,13 +419,30 @@ export class FileKnowledgeStore implements KnowledgeStore {
     const edges = buildEdgeIndex(documents)
 
     const syncedAt = this.now()
-    await this.writeIndex({ syncedAt, roots, documents, chunks, edges, skippedCount })
+    const failedFileCount = Math.max(0, uniqueFiles.length - documents.length)
+    const coverage = {
+      candidateFileCount: uniqueCandidates.length,
+      attemptedFileCount: uniqueFiles.length,
+      failedFileCount,
+      truncatedFileCount
+    }
+    await this.writeIndex({
+      syncedAt,
+      roots,
+      documents,
+      chunks,
+      edges,
+      skippedCount,
+      ...coverage
+    })
     return {
       syncedAt,
       roots,
       documentCount: documents.length,
       chunkCount: chunks.length,
-      skippedCount
+      skippedCount,
+      ...coverage,
+      truncated: truncatedFileCount > 0
     }
   }
 
@@ -500,6 +522,11 @@ export class FileKnowledgeStore implements KnowledgeStore {
       sourceRoots: normalizeRoots(this.options.sourceRoots ?? []),
       documentCount: index.documents.length,
       chunkCount: index.chunks.length,
+      candidateFileCount: index.candidateFileCount,
+      attemptedFileCount: index.attemptedFileCount,
+      failedFileCount: index.failedFileCount,
+      truncatedFileCount: index.truncatedFileCount,
+      truncated: index.truncatedFileCount > 0,
       ...(index.syncedAt ? { syncedAt: index.syncedAt } : {}),
       lastSelectedIds: [...this.lastSelectedIds]
     }
@@ -513,16 +540,43 @@ export class FileKnowledgeStore implements KnowledgeStore {
     try {
       const text = await readFile(this.indexPath(), 'utf8')
       const parsed = JSON.parse(text) as Partial<KnowledgeIndex>
+      const documents = Array.isArray(parsed.documents) ? parsed.documents as KnowledgeDocument[] : []
+      const candidateFileCount = typeof parsed.candidateFileCount === 'number'
+        ? parsed.candidateFileCount
+        : documents.length
+      const attemptedFileCount = typeof parsed.attemptedFileCount === 'number'
+        ? parsed.attemptedFileCount
+        : documents.length
+      const failedFileCount = typeof parsed.failedFileCount === 'number'
+        ? parsed.failedFileCount
+        : Math.max(0, attemptedFileCount - documents.length)
+      const truncatedFileCount = typeof parsed.truncatedFileCount === 'number'
+        ? parsed.truncatedFileCount
+        : 0
       return {
         syncedAt: parsed.syncedAt,
         roots: Array.isArray(parsed.roots) ? parsed.roots.filter((root): root is string => typeof root === 'string') : [],
-        documents: Array.isArray(parsed.documents) ? parsed.documents as KnowledgeDocument[] : [],
+        documents,
         chunks: Array.isArray(parsed.chunks) ? parsed.chunks as KnowledgeChunk[] : [],
         edges: Array.isArray(parsed.edges) ? parsed.edges as import('../contracts/knowledge.js').KnowledgeEdge[] : [],
-        skippedCount: typeof parsed.skippedCount === 'number' ? parsed.skippedCount : 0
+        skippedCount: typeof parsed.skippedCount === 'number' ? parsed.skippedCount : 0,
+        candidateFileCount,
+        attemptedFileCount,
+        failedFileCount,
+        truncatedFileCount
       }
     } catch {
-      return { roots: [], documents: [], chunks: [], edges: [], skippedCount: 0 }
+      return {
+        roots: [],
+        documents: [],
+        chunks: [],
+        edges: [],
+        skippedCount: 0,
+        candidateFileCount: 0,
+        attemptedFileCount: 0,
+        failedFileCount: 0,
+        truncatedFileCount: 0
+      }
     }
   }
 
@@ -740,14 +794,12 @@ function normalizeRoots(roots: string[]): string[] {
   return result
 }
 
-async function collectFiles(root: string, remaining: number): Promise<{ files: string[]; skippedCount: number }> {
+async function collectFiles(root: string): Promise<{ files: string[]; skippedCount: number }> {
   const files: string[] = []
   let skippedCount = 0
   async function visit(dir: string): Promise<void> {
-    if (files.length >= remaining) return
     const entries = await readdir(dir, { withFileTypes: true }).catch(() => [])
     for (const entry of entries) {
-      if (files.length >= remaining) return
       const path = join(dir, entry.name)
       if (entry.isDirectory()) {
         if (SKIP_DIRS.has(entry.name)) {

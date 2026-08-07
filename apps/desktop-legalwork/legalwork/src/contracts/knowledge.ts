@@ -98,7 +98,12 @@ export const KnowledgeSyncResult = z.object({
   roots: z.array(z.string()),
   documentCount: z.number().int().nonnegative(),
   chunkCount: z.number().int().nonnegative(),
-  skippedCount: z.number().int().nonnegative()
+  skippedCount: z.number().int().nonnegative(),
+  candidateFileCount: z.number().int().nonnegative(),
+  attemptedFileCount: z.number().int().nonnegative(),
+  failedFileCount: z.number().int().nonnegative(),
+  truncatedFileCount: z.number().int().nonnegative(),
+  truncated: z.boolean()
 }).strict()
 export type KnowledgeSyncResult = z.infer<typeof KnowledgeSyncResult>
 
@@ -108,6 +113,11 @@ export const KnowledgeDiagnostics = z.object({
   sourceRoots: z.array(z.string()),
   documentCount: z.number().int().nonnegative(),
   chunkCount: z.number().int().nonnegative(),
+  candidateFileCount: z.number().int().nonnegative(),
+  attemptedFileCount: z.number().int().nonnegative(),
+  failedFileCount: z.number().int().nonnegative(),
+  truncatedFileCount: z.number().int().nonnegative(),
+  truncated: z.boolean(),
   syncedAt: z.string().optional(),
   lastSelectedIds: z.array(z.string()).default([])
 }).strict()

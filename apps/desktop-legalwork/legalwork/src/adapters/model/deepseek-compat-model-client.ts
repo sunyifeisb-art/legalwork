@@ -487,10 +487,9 @@ export class DeepseekCompatModelClient implements ModelClient {
     if (request.modeInstruction) {
       out.push({ role: 'system', content: request.modeInstruction })
     }
-    const windowSize = this.config.historyLimit ?? resolveHistoryLimit()
-    const history = windowSize
-      ? limitHistoryPreservingCompaction(request.history, windowSize)
-      : request.history
+    // AgentLoop/ContextCompactor is the sole owner of history folding.
+    // Provider-side sliding changes the prompt prefix and defeats prefix-cache reuse.
+    const history = request.history
     const thinkingMode = requiresReasoningRoundTrip(
       request.reasoningEffort,
       model,
