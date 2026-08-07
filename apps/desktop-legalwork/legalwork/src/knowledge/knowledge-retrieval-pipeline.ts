@@ -190,8 +190,9 @@ export class KnowledgeRetrievalPipeline {
     if (record.tags.includes('经验分享')) badges.push('经验分享')
     if (record.articleNumber) badges.push(record.articleNumber)
     const badgeStr = badges.length ? ` [${badges.join('][')}]` : ''
-    const heading = record.headingPath.length
-      ? `\n位置：${record.headingPath.join(' › ')}`
+    const headingPath = record.headingPath ?? []
+    const heading = headingPath.length
+      ? `\n位置：${headingPath.join(' › ')}`
       : ''
     return [
       `[${record.citationNumber}] ${record.citation}${badgeStr}`,
