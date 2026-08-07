@@ -71,6 +71,17 @@ jobs:
                   raise SystemExit(f'{path}: end marker not found: {end_marker!r}')
               p.write_text(text[:start] + text[end:], encoding='utf-8')
 
+          def replace_between(path: str, start_marker: str, end_marker: str, replacement: str) -> None:
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              start = text.find(start_marker)
+              if start < 0:
+                  raise SystemExit(f'{path}: start marker not found: {start_marker!r}')
+              end = text.find(end_marker, start)
+              if end < 0:
+                  raise SystemExit(f'{path}: end marker not found: {end_marker!r}')
+              p.write_text(text[:start] + replacement + text[end:], encoding='utf-8')
+
           store = 'apps/desktop-legalwork/legalwork/src/knowledge/knowledge-store.ts'
           replace_once(store, '  KnowledgeDocument,\n  KnowledgeEdge,\n  KnowledgeFileContent,', '  KnowledgeDocument,\n  KnowledgeFileContent,')
           remove_between(store, 'type KnowledgeIndex = {\n', 'const TEXT_EXTENSIONS = new Set([')
@@ -80,39 +91,9 @@ jobs:
           remove_between(store, 'function chunkDocument(document: KnowledgeDocument, content: string): KnowledgeChunk[] {\n', 'function scoreChunk(')
 
           sqlite = 'apps/desktop-legalwork/legalwork/src/knowledge/knowledge-sqlite-index.ts'
-          old = r'''    try {
-      db.exec(`
-        CREATE VIRTUAL TABLE IF NOT EXISTS chunks_fts USING fts5(
-          chunk_id UNINDEXED,
-          title,
-          relative_path,
-          category,
-          keywords,
-          heading_path,
-          article_number,
-          content,
-          tokenize='trigram'
-        );
-      `)
-      this.ftsTokenizer = 'trigram'
-    } catch {
-      db.exec(`DROP TABLE IF EXISTS chunks_fts;`)
-      db.exec(`
-        CREATE VIRTUAL TABLE chunks_fts USING fts5(
-          chunk_id UNINDEXED,
-          title,
-          relative_path,
-          category,
-          keywords,
-          heading_path,
-          article_number,
-          content,
-          tokenize='unicode61'
-        );
-      `)
-      this.ftsTokenizer = 'unicode61'
-    }'''
-          new = r'''    const existingFts = db.prepare(`
+          fts_start = "    try {\n      db.exec(`\n        CREATE VIRTUAL TABLE IF NOT EXISTS chunks_fts USING fts5("
+          fts_end = "    this.setMeta(db, 'schemaVersion', KNOWLEDGE_INDEX_SCHEMA_VERSION)"
+          fts_replacement = r'''    const existingFts = db.prepare(`
       SELECT sql FROM sqlite_master
       WHERE type = 'table' AND name = 'chunks_fts'
     `).get() as { sql?: string } | undefined
@@ -151,8 +132,9 @@ jobs:
         `)
         this.ftsTokenizer = 'unicode61'
       }
-    }'''
-          replace_once(sqlite, old, new)
+    }
+'''
+          replace_between(sqlite, fts_start, fts_end, fts_replacement)
 
           test = 'apps/desktop-legalwork/legalwork/src/knowledge/knowledge-sqlite-index.test.ts'
           marker = "  it('deletes documents that are no longer in the current indexed set', async () => {"
@@ -208,7 +190,7 @@ jobs:
 
       - name: Run phase-two knowledge regression tests
         working-directory: apps/desktop-legalwork/legalwork
-        run: npx vitest run src/knowledge/knowledge-store.test.ts src/knowledge/knowledge-structured-chunker.test.ts src/knowledge/knowledge-sqlite-index.test.ts src/knowledge/knowledge-citation-verifier.test.ts src/knowledge/knowledge-vector-retriever.test.ts src/knowledge/knowledge-index-version.test.ts src/knowledge/knowledge-retrieval-cache.test.ts src/knowledge/knowledge-file-reader.test.ts src/loop/knowledge-qa-mode.test.ts tests/model-client.test.ts src/loop/context-compactor.test.ts
+        run: npx vitest run src/knowledge/knowledge-store.test.ts src/knowledge/knowledge-structured-chunker.test.ts src/knowledge/knowledge-sqlite-index.test.ts src/knowledge/knowledge-sqlite-short-query.test.ts src/knowledge/knowledge-citation-verifier.test.ts src/knowledge/knowledge-vector-retriever.test.ts src/knowledge/knowledge-index-version.test.ts src/knowledge/knowledge-retrieval-cache.test.ts src/knowledge/knowledge-file-reader.test.ts src/loop/knowledge-qa-mode.test.ts tests/model-client.test.ts src/loop/context-compactor.test.ts
 
       - name: Install desktop dependencies
         working-directory: apps/desktop-legalwork
