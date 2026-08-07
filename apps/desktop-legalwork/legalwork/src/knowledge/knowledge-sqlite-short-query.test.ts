@@ -7,7 +7,7 @@ import { chunkKnowledgeDocument } from './knowledge-structured-chunker.js'
 import { KnowledgeSqliteIndex } from './knowledge-sqlite-index.js'
 
 describe('KnowledgeSqliteIndex Chinese queries', () => {
-  it('falls back safely for a two-character legal term such as 合同', async () => {
+  it('supports both two-character terms and longer natural-language legal queries', async () => {
     const root = await mkdtemp(join(tmpdir(), 'legalwork-kb-short-query-'))
     const index = new KnowledgeSqliteIndex(root)
     try {
@@ -39,7 +39,9 @@ describe('KnowledgeSqliteIndex Chinese queries', () => {
         query: '合同解除以后违约责任应该如何承担',
         limit: 10
       })
-      expect(naturalLanguageHits.some((hit) => hit.content.includes('违约责任'))).toBe(true)
+      const naturalLanguageHit = naturalLanguageHits.find((hit) => hit.content.includes('违约责任'))
+      expect(naturalLanguageHit).toBeTruthy()
+      expect(naturalLanguageHit?.provenanceId).toMatch(/^kb_[a-f0-9]{24}$/)
     } finally {
       index.close()
       await rm(root, { recursive: true, force: true })
