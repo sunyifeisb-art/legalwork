@@ -118,16 +118,17 @@ function parseHeadingMarker(line: string): HeadingMarker | null {
   const chineseLegal = /^第([零〇一二三四五六七八九十百千万两\d]+)(编|章|节|条)(之[零〇一二三四五六七八九十百千万两\d]+)?\s*(.*)$/.exec(trimmed)
   if (chineseLegal) {
     const unit = chineseLegal[2]
-    const articleNumber = unit === '条'
-      ? `第${chineseLegal[1]}条${chineseLegal[3] ?? ''}`
-      : undefined
+    const baseLabel = `第${chineseLegal[1]}${unit}${chineseLegal[3] ?? ''}`
+    const articleNumber = unit === '条' ? baseLabel : undefined
     const level = unit === '编' ? 1 : unit === '章' ? 2 : unit === '节' ? 3 : 4
     const suffix = chineseLegal[4]?.trim()
     return {
       level,
-      label: [articleNumber ?? `第${chineseLegal[1]}${unit}${chineseLegal[3] ?? ''}`, suffix]
-        .filter(Boolean)
-        .join(' '),
+      // For legal articles the text after “第N条” is substantive rule text,
+      // not a structural heading. Chapters/sections may legitimately carry a title.
+      label: unit === '条'
+        ? baseLabel
+        : [baseLabel, suffix].filter(Boolean).join(' '),
       ...(articleNumber ? { articleNumber } : {})
     }
   }
