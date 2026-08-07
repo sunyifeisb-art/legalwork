@@ -31,6 +31,7 @@ describe('KnowledgeSqliteIndex short Chinese queries', () => {
 
       const hits = await index.searchCandidates({ query: '合同', limit: 10 })
       expect(hits.some((hit) => hit.content.includes('合同解除'))).toBe(true)
+      expect(hits.find((hit) => hit.content.includes('合同解除'))?.provenanceId).toMatch(/^kb_[a-f0-9]{24}$/)
     } finally {
       index.close()
       await rm(root, { recursive: true, force: true })
