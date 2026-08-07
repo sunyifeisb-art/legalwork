@@ -313,6 +313,8 @@ describe('FileKnowledgeStore', () => {
       expect(secondSync.updatedFileCount).toBe(0)
       expect(secondSync.unchangedFileCount).toBe(1)
       expect(secondSync.revision).toBe(firstSync.revision)
+      const afterSync = await new KnowledgeRetrievalPipeline(store).retrieve('行政程序规则')
+      expect(afterSync.cacheHit).toBe(false)
 
       await writeFile(filePath, '第一条 修改后的行政程序规则与听证要求。', 'utf8')
       const thirdSync = await store.sync()

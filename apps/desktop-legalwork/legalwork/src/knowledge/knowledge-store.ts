@@ -25,6 +25,7 @@ import { KnowledgeSqliteIndex } from './knowledge-sqlite-index.js'
 import { chunkKnowledgeDocument } from './knowledge-structured-chunker.js'
 import type { KnowledgeVectorRetriever } from './knowledge-vector-retriever.js'
 import { reciprocalRankFuseKnowledgeCandidates } from './knowledge-vector-retriever.js'
+import { clearKnowledgeRetrievalCache } from './knowledge-retrieval-cache.js'
 
 export interface KnowledgeStore {
   sync(input?: KnowledgeSyncRequest): Promise<KnowledgeSyncResult>
@@ -364,41 +365,58 @@ export class FileKnowledgeStore implements KnowledgeStore {
     const uniqueFiles = uniqueCandidates.slice(0, maxFiles)
     const truncatedFileCount = Math.max(0, uniqueCandidates.length - uniqueFiles.length)
     const syncedAt = this.now()
-    const keepDocumentIds: string[] = []
+    const indexedDocumentIds: string[] = []
     let failedFileCount = 0
     let unchangedFileCount = 0
     let updatedFileCount = 0
 
     for (const filePath of uniqueFiles) {
       const documentId = hashId(filePath)
-      keepDocumentIds.push(documentId)
+      indexedDocumentIds.push(documentId)
       const root = roots
         .filter((candidate) => isInside(filePath, candidate))
         .sort((left, right) => right.length - left.length)[0] ?? roots[0] ?? resolve('.')
       try {
         const info = await stat(filePath)
-        const documentHash = await hashFileSha256(filePath)
         const existing = await this.sqliteIndex.documentState(documentId)
+        const metadataUnchanged = existing
+          && existing.sizeBytes === info.size
+          && Math.abs(existing.sourceMtimeMs - info.mtimeMs) < 1
+        if (metadataUnchanged) {
+          unchangedFileCount += 1
+          await this.sqliteIndex.touchDocument({
+            documentId,
+            sizeBytes: info.size,
+            sourceMtimeMs: info.mtimeMs,
+            updatedAt: info.mtime.toISOString()
+          })
+          continue
+        }
+
+        // Only hash file bytes when size/mtime changed. This keeps a repeated
+        // sync over a 10k-50k document library metadata-bound instead of doing
+        // a full disk read of every unchanged file.
+        const documentHash = await hashFileSha256(filePath)
         if (existing?.documentHash === documentHash) {
-unchangedFileCount += 1
-await this.sqliteIndex.touchDocument({
-  documentId,
-  sizeBytes: info.size,
-  sourceMtimeMs: info.mtimeMs,
-  updatedAt: info.mtime.toISOString()
-})
-continue
+          unchangedFileCount += 1
+          await this.sqliteIndex.touchDocument({
+            documentId,
+            sizeBytes: info.size,
+            sourceMtimeMs: info.mtimeMs,
+            updatedAt: info.mtime.toISOString()
+          })
+          continue
         }
 
         const ext = extname(filePath).toLowerCase()
         const content = TEXT_EXTENSIONS.has(ext)
-? normalizeText(await readFile(filePath, 'utf8'))
-: normalizeText((await extractDocumentText(filePath)).text)
+          ? normalizeText(await readFile(filePath, 'utf8'))
+          : normalizeText((await extractDocumentText(filePath)).text)
         if (!content.trim()) {
-failedFileCount += 1
-skippedCount += 1
-await this.sqliteIndex.deleteDocument(documentId)
-continue
+          failedFileCount += 1
+          skippedCount += 1
+          await this.sqliteIndex.deleteDocument(documentId)
+          continue
         }
 
         const relPath = relative(root, filePath) || basename(filePath)
@@ -407,21 +425,21 @@ continue
         const tags = inferTags(filePath, relPath, content, category, keywords)
         const layer = inferLayerFromMeta(relPath, category, tags, ext, content.slice(0, 2000))
         const document: KnowledgeDocument = {
-id: documentId,
-title: titleFromPath(filePath),
-path: filePath,
-sourceRoot: root,
-relativePath: relPath,
-category,
-tags,
-keywords,
-extension: ext,
-sizeBytes: info.size,
-updatedAt: info.mtime.toISOString(),
-layer,
-documentHash,
-sourceMtimeMs: info.mtimeMs,
-indexedAt: syncedAt
+          id: documentId,
+          title: titleFromPath(filePath),
+          path: filePath,
+          sourceRoot: root,
+          relativePath: relPath,
+          category,
+          tags,
+          keywords,
+          extension: ext,
+          sizeBytes: info.size,
+          updatedAt: info.mtime.toISOString(),
+          layer,
+          documentHash,
+          sourceMtimeMs: info.mtimeMs,
+          indexedAt: syncedAt
         }
         const chunks = chunkKnowledgeDocument(document, content, documentHash)
         await this.sqliteIndex.upsertDocument(document, chunks)
@@ -433,7 +451,7 @@ indexedAt: syncedAt
       }
     }
 
-    const deletedFileCount = await this.sqliteIndex.deleteDocumentsNotIn(keepDocumentIds)
+    const deletedFileCount = await this.sqliteIndex.deleteDocumentsNotIn(indexedDocumentIds)
     await this.sqliteIndex.setSyncMetadata({
       syncedAt,
       roots,
@@ -444,6 +462,10 @@ indexedAt: syncedAt
       truncatedFileCount
     })
     const revision = await this.sqliteIndex.recomputeRevision()
+    // Sync can change sidecar metadata or expiry/deprecation state without
+    // changing document bytes/revision, so process-local retrieval cache must
+    // be invalidated after every completed sync.
+    clearKnowledgeRetrievalCache()
     const diagnostics = await this.sqliteIndex.diagnostics()
     return {
       syncedAt,
@@ -497,12 +519,12 @@ indexedAt: syncedAt
         const vectorChunks = await this.sqliteIndex.lookupChunks(vectorHits.map((hit) => hit.chunkId))
         const vectorScores = new Map(vectorHits.map((hit) => [hit.chunkId, hit.score]))
         candidates = reciprocalRankFuseKnowledgeCandidates({
-lexical,
-vector: vectorChunks.map((chunk) => ({
-  chunk,
-  score: vectorScores.get(chunk.id) ?? 0
-})),
-limit: RERANK_POOL_SIZE * 2
+          lexical,
+          vector: vectorChunks.map((chunk) => ({
+            chunk,
+            score: vectorScores.get(chunk.id) ?? 0
+          })),
+          limit: RERANK_POOL_SIZE * 2
         })
       }
     }

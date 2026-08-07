@@ -288,20 +288,27 @@ export class KnowledgeSqliteIndex {
     }
 
     if (rows.length === 0) {
-      const like = `%${escapeLike(input.query.trim().toLowerCase())}%`
-      rows = db.prepare(`
-        SELECT c.*
-        FROM chunks c
-        WHERE (
-          lower(c.title) LIKE @like ESCAPE '\\'
-          OR lower(c.relative_path) LIKE @like ESCAPE '\\'
-          OR lower(c.category) LIKE @like ESCAPE '\\'
-          OR lower(c.content) LIKE @like ESCAPE '\\'
-        )
-        ${filters.sql}
-        ORDER BY c.rowid ASC
-        LIMIT @limit
-      `).all({ like, limit, ...filters.params }) as ChunkRow[]
+      const fallbackTerms = buildFallbackLikeTerms(input.query)
+      if (fallbackTerms.length > 0) {
+        const params: Record<string, unknown> = { limit, ...filters.params }
+        const predicates = fallbackTerms.map((term, index) => {
+          params[`like${index}`] = `%${escapeLike(term)}%`
+          return `(
+            lower(c.title) LIKE @like${index} ESCAPE '\\'
+            OR lower(c.relative_path) LIKE @like${index} ESCAPE '\\'
+            OR lower(c.category) LIKE @like${index} ESCAPE '\\'
+            OR lower(c.content) LIKE @like${index} ESCAPE '\\'
+          )`
+        })
+        rows = db.prepare(`
+          SELECT c.*
+          FROM chunks c
+          WHERE (${predicates.join(' OR ')})
+          ${filters.sql}
+          ORDER BY c.rowid ASC
+          LIMIT @limit
+        `).all(params) as ChunkRow[]
+      }
     }
 
     return rows.map(chunkFromRow)
@@ -569,11 +576,44 @@ function buildFilters(layers?: KnowledgeLayer[], pathPrefix?: string): {
 
 function buildFtsQuery(query: string, tokenizer: 'trigram' | 'unicode61'): string {
   const normalized = query.normalize('NFKC').toLowerCase()
-  const matches = normalized.match(/[\p{L}\p{N}_]{2,}/gu) ?? []
-  const terms = [...new Set(matches)]
-    .filter((term) => tokenizer === 'unicode61' || [...term].length >= 3)
-    .slice(0, 12)
-  return terms.map((term) => `"${term.replaceAll('"', '""')}"`).join(' OR ')
+  const terms = new Set<string>()
+  for (const term of normalized.match(/[a-z0-9_]{2,}/g) ?? []) {
+    terms.add(term)
+  }
+  for (const sequence of normalized.match(/[\u3400-\u9fff]{2,}/g) ?? []) {
+    const chars = [...sequence]
+    if (tokenizer === 'trigram') {
+      for (let index = 0; index <= chars.length - 3 && terms.size < 20; index += 1) {
+        terms.add(chars.slice(index, index + 3).join(''))
+      }
+    } else {
+      terms.add(sequence)
+    }
+  }
+  return [...terms]
+    .slice(0, 20)
+    .map((term) => `"${term.replaceAll('"', '""')}"`)
+    .join(' OR ')
+}
+
+function buildFallbackLikeTerms(query: string): string[] {
+  const normalized = query.normalize('NFKC').toLowerCase()
+  const terms = new Set<string>()
+  for (const term of normalized.match(/[a-z0-9_]{2,}/g) ?? []) {
+    terms.add(term)
+  }
+  for (const sequence of normalized.match(/[\u3400-\u9fff]{2,}/g) ?? []) {
+    const chars = [...sequence]
+    if (chars.length <= 4) {
+      terms.add(sequence)
+      continue
+    }
+    for (let index = 0; index <= chars.length - 3 && terms.size < 10; index += 1) {
+      terms.add(chars.slice(index, index + 3).join(''))
+    }
+  }
+  if (terms.size === 0 && normalized.trim()) terms.add(normalized.trim())
+  return [...terms].slice(0, 10)
 }
 
 function escapeLike(value: string): string {
