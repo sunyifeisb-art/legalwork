@@ -49,7 +49,7 @@ export const KnowledgeContextRecord = z.object({
   provenanceId: z.string().min(1).optional(),
   documentHash: z.string().min(1).optional(),
   chunkHash: z.string().min(1).optional(),
-  headingPath: z.array(z.string()).default([]),
+  headingPath: z.array(z.string()).optional(),
   articleNumber: z.string().optional(),
   charStart: z.number().int().nonnegative().optional(),
   charEnd: z.number().int().nonnegative().optional()
