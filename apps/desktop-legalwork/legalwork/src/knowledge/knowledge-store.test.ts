@@ -289,4 +289,34 @@ describe('FileKnowledgeStore', () => {
       await rm(root, { recursive: true, force: true })
     }
   })
+
+  it('reports explicit coverage when maxFiles truncates the candidate set', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'legalwork-kb-coverage-'))
+    const sourceRoot = join(root, 'knowledge-base')
+    const indexRoot = join(root, 'index')
+    try {
+      await mkdir(sourceRoot, { recursive: true })
+      await writeFile(join(sourceRoot, 'a.md'), '劳动合同解除规则 A', 'utf8')
+      await writeFile(join(sourceRoot, 'b.md'), '劳动合同解除规则 B', 'utf8')
+      await writeFile(join(sourceRoot, 'c.md'), '劳动合同解除规则 C', 'utf8')
+      const store = new FileKnowledgeStore({ rootDir: indexRoot, sourceRoots: [sourceRoot] })
+
+      const sync = await store.sync({ maxFiles: 2 })
+      expect(sync.candidateFileCount).toBe(3)
+      expect(sync.attemptedFileCount).toBe(2)
+      expect(sync.documentCount).toBe(2)
+      expect(sync.failedFileCount).toBe(0)
+      expect(sync.truncatedFileCount).toBe(1)
+      expect(sync.truncated).toBe(true)
+
+      const diagnostics = await store.diagnostics()
+      expect(diagnostics.candidateFileCount).toBe(3)
+      expect(diagnostics.attemptedFileCount).toBe(2)
+      expect(diagnostics.truncatedFileCount).toBe(1)
+      expect(diagnostics.truncated).toBe(true)
+    } finally {
+      await rm(root, { recursive: true, force: true })
+    }
+  })
+
 })

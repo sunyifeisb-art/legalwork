@@ -625,9 +625,19 @@ export function KnowledgeBaseView({
     setSyncing(true)
     setError(null)
     try {
-      await requestJson(LEGALWORK_KNOWLEDGE_SYNC_PATH, 'POST', { maxFiles: 5000 })
-      if (showToast) {
-        setToast('知识库索引已同步')
+      const result = await requestJson<{
+        documentCount: number
+        candidateFileCount?: number
+        truncatedFileCount?: number
+        truncated?: boolean
+      }>(LEGALWORK_KNOWLEDGE_SYNC_PATH, 'POST', { maxFiles: 5000 })
+      if (result.truncated) {
+        const total = result.candidateFileCount ?? result.documentCount + (result.truncatedFileCount ?? 0)
+        const omitted = result.truncatedFileCount ?? Math.max(0, total - result.documentCount)
+        setToast(`索引未覆盖全部文件：已索引 ${result.documentCount}/${total}，${omitted} 个文件受当前上限限制`)
+        window.setTimeout(() => setToast(null), 6000)
+      } else if (showToast) {
+        setToast(`知识库索引已同步（${result.documentCount} 个文件）`)
         window.setTimeout(() => setToast(null), 2200)
       }
     } catch (err) {
