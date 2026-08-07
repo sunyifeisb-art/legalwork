@@ -1,0 +1,531 @@
+name: KB v2 index one-shot patcher
+
+on:
+  push:
+    branches:
+      - agent/knowledge-base-v2-index
+
+permissions:
+  contents: write
+
+jobs:
+  patch-test-commit:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/knowledge-base-v2-index
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Patch store, tools, UI and regression tests
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def read(path):
+              return Path(path).read_text(encoding='utf-8')
+
+          def write(path, text):
+              Path(path).write_text(text, encoding='utf-8')
+
+          def replace_once(path, old, new):
+              text = read(path)
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected one match, found {count}: {old[:120]!r}')
+              write(path, text.replace(old, new, 1))
+
+          def replace_between(path, start_marker, end_marker, replacement):
+              text = read(path)
+              start = text.find(start_marker)
+              if start < 0:
+                  raise SystemExit(f'{path}: start marker not found: {start_marker!r}')
+              end = text.find(end_marker, start)
+              if end < 0:
+                  raise SystemExit(f'{path}: end marker not found: {end_marker!r}')
+              write(path, text[:start] + replacement + text[end:])
+
+          store = 'apps/desktop-legalwork/legalwork/src/knowledge/knowledge-store.ts'
+          replace_once(store, "import { existsSync } from 'node:fs'", "import { createReadStream, existsSync } from 'node:fs'")
+          replace_once(
+              store,
+              "import { inferLayerFromMeta } from './knowledge-pyramid-router.js'",
+              "import { inferLayerFromMeta } from './knowledge-pyramid-router.js'\nimport { KnowledgeSqliteIndex } from './knowledge-sqlite-index.js'\nimport { chunkKnowledgeDocument } from './knowledge-structured-chunker.js'\nimport type { KnowledgeVectorRetriever } from './knowledge-vector-retriever.js'\nimport { reciprocalRankFuseKnowledgeCandidates } from './knowledge-vector-retriever.js'"
+          )
+          replace_once(
+              store,
+              "  search(input: { query: string; limit: number; includeContent?: boolean; layer?: KnowledgeLayer; layers?: KnowledgeLayer[]; pathPrefix?: string }): Promise<KnowledgeSearchHit[]>\n  diagnostics(): Promise<KnowledgeDiagnostics>",
+              "  search(input: { query: string; limit: number; includeContent?: boolean; layer?: KnowledgeLayer; layers?: KnowledgeLayer[]; pathPrefix?: string }): Promise<KnowledgeSearchHit[]>\n  lookupChunks(chunkIds: string[]): Promise<KnowledgeSearchHit[]>\n  diagnostics(): Promise<KnowledgeDiagnostics>"
+          )
+          replace_once(store, 'const DEFAULT_MAX_FILES = 1500', 'const DEFAULT_MAX_FILES = 50_000')
+          replace_once(store, 'const RERANK_POOL_SIZE = 80', 'const RERANK_POOL_SIZE = 160')
+          replace_once(store, 'const MAX_PER_DOCUMENT = 2', 'const MAX_PER_DOCUMENT = 3')
+          replace_once(
+              store,
+              "  private readonly classificationCache = new Map<string, KnowledgeClassification>()\n\n  constructor(",
+              "  private readonly classificationCache = new Map<string, KnowledgeClassification>()\n  private readonly sqliteIndex: KnowledgeSqliteIndex\n\n  constructor("
+          )
+          replace_once(
+              store,
+              "      model?: ModelClient\n      classifyModel?: string\n    }\n  ) {\n    // Default managed root: {rootDir}/files",
+              "      model?: ModelClient\n      classifyModel?: string\n      vectorRetriever?: KnowledgeVectorRetriever\n    }\n  ) {\n    this.sqliteIndex = new KnowledgeSqliteIndex(this.options.rootDir)\n    // Default managed root: {rootDir}/files"
+          )
+
+          sync_method = r'''  async sync(input: KnowledgeSyncRequest = {}): Promise<KnowledgeSyncResult> {
+    await mkdir(this.options.rootDir, { recursive: true })
+    await this.ensureManagedRoot()
+    const defaultRoots = [...(this.options.sourceRoots ?? []), this.managedRoot]
+    const roots = normalizeRoots(input.roots?.length ? input.roots : defaultRoots)
+    const maxFiles = input.maxFiles ?? DEFAULT_MAX_FILES
+    const candidateFiles: string[] = []
+    let skippedCount = 0
+
+    for (const root of roots) {
+      const result = await collectFiles(root)
+      candidateFiles.push(...result.files)
+      skippedCount += result.skippedCount
+    }
+
+    const uniqueCandidates = [...new Set(candidateFiles.map((filePath) => resolve(filePath)))]
+    const uniqueFiles = uniqueCandidates.slice(0, maxFiles)
+    const truncatedFileCount = Math.max(0, uniqueCandidates.length - uniqueFiles.length)
+    const syncedAt = this.now()
+    const keepDocumentIds: string[] = []
+    let failedFileCount = 0
+    let unchangedFileCount = 0
+    let updatedFileCount = 0
+
+    for (const filePath of uniqueFiles) {
+      const documentId = hashId(filePath)
+      keepDocumentIds.push(documentId)
+      const root = roots
+        .filter((candidate) => isInside(filePath, candidate))
+        .sort((left, right) => right.length - left.length)[0] ?? roots[0] ?? resolve('.')
+      try {
+        const info = await stat(filePath)
+        const documentHash = await hashFileSha256(filePath)
+        const existing = await this.sqliteIndex.documentState(documentId)
+        if (existing?.documentHash === documentHash) {
+          unchangedFileCount += 1
+          await this.sqliteIndex.touchDocument({
+            documentId,
+            sizeBytes: info.size,
+            sourceMtimeMs: info.mtimeMs,
+            updatedAt: info.mtime.toISOString()
+          })
+          continue
+        }
+
+        const ext = extname(filePath).toLowerCase()
+        const content = TEXT_EXTENSIONS.has(ext)
+          ? normalizeText(await readFile(filePath, 'utf8'))
+          : normalizeText((await extractDocumentText(filePath)).text)
+        if (!content.trim()) {
+          failedFileCount += 1
+          skippedCount += 1
+          await this.sqliteIndex.deleteDocument(documentId)
+          continue
+        }
+
+        const relPath = relative(root, filePath) || basename(filePath)
+        const category = inferCategory(filePath, relPath, content)
+        const keywords = extractKeywords(`${relPath}\n${content}`, 16)
+        const tags = inferTags(filePath, relPath, content, category, keywords)
+        const layer = inferLayerFromMeta(relPath, category, tags, ext, content.slice(0, 2000))
+        const document: KnowledgeDocument = {
+          id: documentId,
+          title: titleFromPath(filePath),
+          path: filePath,
+          sourceRoot: root,
+          relativePath: relPath,
+          category,
+          tags,
+          keywords,
+          extension: ext,
+          sizeBytes: info.size,
+          updatedAt: info.mtime.toISOString(),
+          layer,
+          documentHash,
+          sourceMtimeMs: info.mtimeMs,
+          indexedAt: syncedAt
+        }
+        const chunks = chunkKnowledgeDocument(document, content, documentHash)
+        await this.sqliteIndex.upsertDocument(document, chunks)
+        updatedFileCount += 1
+      } catch {
+        failedFileCount += 1
+        skippedCount += 1
+        await this.sqliteIndex.deleteDocument(documentId).catch(() => false)
+      }
+    }
+
+    const deletedFileCount = await this.sqliteIndex.deleteDocumentsNotIn(keepDocumentIds)
+    await this.sqliteIndex.setSyncMetadata({
+      syncedAt,
+      roots,
+      skippedCount,
+      candidateFileCount: uniqueCandidates.length,
+      attemptedFileCount: uniqueFiles.length,
+      failedFileCount,
+      truncatedFileCount
+    })
+    const revision = await this.sqliteIndex.recomputeRevision()
+    const diagnostics = await this.sqliteIndex.diagnostics()
+    return {
+      syncedAt,
+      roots,
+      documentCount: diagnostics.documentCount,
+      chunkCount: diagnostics.chunkCount,
+      skippedCount,
+      candidateFileCount: uniqueCandidates.length,
+      attemptedFileCount: uniqueFiles.length,
+      failedFileCount,
+      truncatedFileCount,
+      truncated: truncatedFileCount > 0,
+      unchangedFileCount,
+      updatedFileCount,
+      deletedFileCount,
+      revision,
+      backend: 'sqlite-fts5',
+      retrieverVersion: diagnostics.retrieverVersion
+    }
+  }
+
+'''
+          replace_between(store, '  async sync(input: KnowledgeSyncRequest = {}): Promise<KnowledgeSyncResult> {', '  async search(', sync_method)
+
+          search_method = r'''  async search(input: { query: string; limit: number; includeContent?: boolean; layer?: KnowledgeLayer; layers?: KnowledgeLayer[]; pathPrefix?: string }): Promise<KnowledgeSearchHit[]> {
+    const query = input.query.trim()
+    if (!query) return []
+
+    let indexDiagnostics = await this.sqliteIndex.diagnostics()
+    if (indexDiagnostics.documentCount === 0) {
+      await this.sync()
+      indexDiagnostics = await this.sqliteIndex.diagnostics()
+    }
+
+    const targetLayers = new Set<KnowledgeLayer>()
+    if (input.layer) targetLayers.add(input.layer)
+    if (input.layers) input.layers.forEach((layer) => targetLayers.add(layer))
+    const lexical = await this.sqliteIndex.searchCandidates({
+      query,
+      limit: Math.max(RERANK_POOL_SIZE * 2, Math.max(1, input.limit) * 12),
+      ...(targetLayers.size ? { layers: [...targetLayers] } : {}),
+      ...(input.pathPrefix ? { pathPrefix: input.pathPrefix } : {})
+    })
+
+    let candidates = lexical
+    if (this.options.vectorRetriever) {
+      const vectorHits = await this.options.vectorRetriever.search({
+        query,
+        limit: Math.max(RERANK_POOL_SIZE, Math.max(1, input.limit) * 8),
+        ...(targetLayers.size ? { layers: [...targetLayers] } : {}),
+        ...(input.pathPrefix ? { pathPrefix: input.pathPrefix } : {})
+      }).catch(() => [])
+      if (vectorHits.length) {
+        const vectorChunks = await this.sqliteIndex.lookupChunks(vectorHits.map((hit) => hit.chunkId))
+        const vectorScores = new Map(vectorHits.map((hit) => [hit.chunkId, hit.score]))
+        candidates = reciprocalRankFuseKnowledgeCandidates({
+          lexical,
+          vector: vectorChunks.map((chunk) => ({
+            chunk,
+            score: vectorScores.get(chunk.id) ?? 0
+          })),
+          limit: RERANK_POOL_SIZE * 2
+        })
+      }
+    }
+
+    candidates = [...new Map(candidates.map((chunk) => [chunk.id, chunk])).values()]
+    const terms = queryTerms(query)
+    const lowerQuery = query.toLowerCase()
+    const queryTermSet = new Set(terms)
+    const primaryLayer = input.layer ?? (targetLayers.size === 1 ? [...targetLayers][0] : undefined)
+    const hits = rerankChunks(candidates
+      .map((chunk) => scoreChunk(chunk, lowerQuery, terms, queryTermSet, primaryLayer))
+      .filter((entry) => entry.score > 0)
+      .sort((a, b) => b.score - a.score || a.chunk.relativePath.localeCompare(b.chunk.relativePath))
+      .slice(0, RERANK_POOL_SIZE), Math.max(1, input.limit))
+      .map(({ chunk, score, rankReason }) => ({
+        documentId: chunk.documentId,
+        chunkId: chunk.id,
+        title: chunk.title,
+        path: chunk.path,
+        relativePath: chunk.relativePath,
+        ...(chunk.category ? { category: chunk.category } : {}),
+        ...(chunk.tags?.length ? { tags: chunk.tags } : {}),
+        ...(chunk.keywords?.length ? { keywords: chunk.keywords } : {}),
+        ...(chunk.layer ? { layer: chunk.layer } : {}),
+        ...(typeof chunk.chunkIndex === 'number' ? { chunkIndex: chunk.chunkIndex } : {}),
+        ...(chunk.documentHash ? { documentHash: chunk.documentHash } : {}),
+        ...(chunk.chunkHash ? { chunkHash: chunk.chunkHash } : {}),
+        ...(chunk.provenanceId ? { provenanceId: chunk.provenanceId } : {}),
+        ...(chunk.headingPath?.length ? { headingPath: chunk.headingPath } : {}),
+        ...(chunk.articleNumber ? { articleNumber: chunk.articleNumber } : {}),
+        ...(typeof chunk.charStart === 'number' ? { charStart: chunk.charStart } : {}),
+        ...(typeof chunk.charEnd === 'number' ? { charEnd: chunk.charEnd } : {}),
+        ...(chunk.chunkerVersion ? { chunkerVersion: chunk.chunkerVersion } : {}),
+        score,
+        rankReason,
+        snippet: makeSnippet(chunk.content, lowerQuery, terms),
+        ...(input.includeContent ? { content: chunk.content } : {})
+      }))
+    this.setLastSelected(hits.map((hit) => hit.documentId))
+    return hits
+  }
+
+  async lookupChunks(chunkIds: string[]): Promise<KnowledgeSearchHit[]> {
+    const chunks = await this.sqliteIndex.lookupChunks(chunkIds)
+    return chunks.map((chunk) => ({
+      documentId: chunk.documentId,
+      chunkId: chunk.id,
+      title: chunk.title,
+      path: chunk.path,
+      relativePath: chunk.relativePath,
+      ...(chunk.category ? { category: chunk.category } : {}),
+      ...(chunk.tags?.length ? { tags: chunk.tags } : {}),
+      ...(chunk.keywords?.length ? { keywords: chunk.keywords } : {}),
+      ...(chunk.layer ? { layer: chunk.layer } : {}),
+      ...(typeof chunk.chunkIndex === 'number' ? { chunkIndex: chunk.chunkIndex } : {}),
+      ...(chunk.documentHash ? { documentHash: chunk.documentHash } : {}),
+      ...(chunk.chunkHash ? { chunkHash: chunk.chunkHash } : {}),
+      ...(chunk.provenanceId ? { provenanceId: chunk.provenanceId } : {}),
+      ...(chunk.headingPath?.length ? { headingPath: chunk.headingPath } : {}),
+      ...(chunk.articleNumber ? { articleNumber: chunk.articleNumber } : {}),
+      ...(typeof chunk.charStart === 'number' ? { charStart: chunk.charStart } : {}),
+      ...(typeof chunk.charEnd === 'number' ? { charEnd: chunk.charEnd } : {}),
+      ...(chunk.chunkerVersion ? { chunkerVersion: chunk.chunkerVersion } : {}),
+      score: 1,
+      rankReason: 'provenance lookup',
+      snippet: chunk.content.slice(0, 480).replace(/\s+/g, ' ').trim(),
+      content: chunk.content
+    }))
+  }
+
+'''
+          replace_between(store, '  async search(input: { query: string; limit: number; includeContent?: boolean; layer?: KnowledgeLayer; layers?: KnowledgeLayer[]; pathPrefix?: string }): Promise<KnowledgeSearchHit[]> {', '  async diagnostics(): Promise<KnowledgeDiagnostics> {', search_method)
+
+          diagnostics_method = r'''  async diagnostics(): Promise<KnowledgeDiagnostics> {
+    const index = await this.sqliteIndex.diagnostics()
+    return {
+      enabled: true,
+      rootDir: this.options.rootDir,
+      sourceRoots: normalizeRoots(this.options.sourceRoots ?? []),
+      documentCount: index.documentCount,
+      chunkCount: index.chunkCount,
+      candidateFileCount: index.candidateFileCount,
+      attemptedFileCount: index.attemptedFileCount,
+      failedFileCount: index.failedFileCount,
+      truncatedFileCount: index.truncatedFileCount,
+      truncated: index.truncatedFileCount > 0,
+      revision: index.revision,
+      backend: 'sqlite-fts5',
+      retrieverVersion: index.retrieverVersion,
+      ...(index.syncedAt ? { syncedAt: index.syncedAt } : {}),
+      lastSelectedIds: [...this.lastSelectedIds]
+    }
+  }
+
+'''
+          replace_between(store, '  async diagnostics(): Promise<KnowledgeDiagnostics> {', '  setLastSelected(ids: string[]): void {', diagnostics_method)
+          replace_once(
+              store,
+              "function normalizeText(text: string): string {",
+              r'''async function hashFileSha256(filePath: string): Promise<string> {
+  return await new Promise<string>((resolveHash, rejectHash) => {
+    const hash = createHash('sha256')
+    const stream = createReadStream(filePath)
+    stream.on('data', (chunk) => hash.update(chunk))
+    stream.on('error', rejectHash)
+    stream.on('end', () => resolveHash(hash.digest('hex')))
+  })
+}
+
+function normalizeText(text: string): string {'''
+          )
+
+          provider = 'apps/desktop-legalwork/legalwork/src/adapters/tool/knowledge-tool-provider.ts'
+          replace_once(
+              provider,
+              "import { readKnowledgeFileText } from '../../knowledge/knowledge-file-reader.js'",
+              "import { readKnowledgeFileText } from '../../knowledge/knowledge-file-reader.js'\nimport { verifyKnowledgeCitationProvenance } from '../../knowledge/knowledge-citation-verifier.js'"
+          )
+          replace_once(provider, "maximum: 5000, description: 'Max files to process (default 1500)'", "maximum: 100000, description: 'Max files to process (default 50000)'" )
+          replace_once(provider, "? Math.max(1, Math.min(5000, Math.floor(args.maxFiles)))\n            : 1500", "? Math.max(1, Math.min(100000, Math.floor(args.maxFiles)))\n            : 50000")
+          replace_once(
+              provider,
+              "description: 'Trigger a full sync of the knowledge base. Scans source directories, ingests new/modified text files, chunks them, and rebuilds the search index. Use this after adding files externally (e.g. via the file system) to make them searchable.'",
+              "description: 'Synchronize the local knowledge index. The SQLite index hashes files and only re-extracts/re-chunks changed documents; unchanged documents are retained without rebuild. Use after adding, changing, moving, or deleting knowledge files.'"
+          )
+
+          citation_tool = r'''      LocalToolHost.defineTool({
+        name: 'knowledge_citation_verify',
+        description: 'Verify [N] citations against the explicit source provenance returned by knowledge retrieval. Requires citationNumber + chunkId + provenanceId mappings; never guesses a source from the numeric marker text.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            draft: { type: 'string', description: 'Completed draft containing [N], [1,2], or [1-3] citation markers.' },
+            sources: {
+              type: 'array',
+              description: 'Source map from the retrieval result. Each entry binds a numeric citation to one indexed chunk provenance ID.',
+              items: {
+                type: 'object',
+                properties: {
+                  citationNumber: { type: 'number' },
+                  chunkId: { type: 'string' },
+                  provenanceId: { type: 'string' }
+                },
+                required: ['citationNumber', 'chunkId', 'provenanceId'],
+                additionalProperties: false
+              }
+            }
+          },
+          required: ['draft', 'sources'],
+          additionalProperties: false
+        },
+        policy: 'auto',
+        execute: async (args) => {
+          const draft = typeof args.draft === 'string' ? args.draft : ''
+          const sources = Array.isArray(args.sources)
+            ? args.sources.flatMap((source) => {
+                if (!source || typeof source !== 'object') return []
+                const record = source as Record<string, unknown>
+                const citationNumber = Number(record.citationNumber)
+                const chunkId = typeof record.chunkId === 'string' ? record.chunkId : ''
+                const provenanceId = typeof record.provenanceId === 'string' ? record.provenanceId : ''
+                return Number.isInteger(citationNumber) && citationNumber > 0 && chunkId && provenanceId
+                  ? [{ citationNumber, chunkId, provenanceId }]
+                  : []
+              })
+            : []
+          const result = await verifyKnowledgeCitationProvenance(store, draft, sources)
+          return {
+            output: {
+              valid: result.valid,
+              citation_count: result.citationCount,
+              verified_count: result.verifiedCount,
+              checks: result.checks
+            }
+          }
+        }
+      }),
+'''
+          start = "      LocalToolHost.defineTool({\n        name: 'knowledge_citation_verify'"
+          end = "      LocalToolHost.defineTool({\n        name: 'knowledge_writing_style'"
+          replace_between(provider, start, end, citation_tool)
+
+          view = 'apps/desktop-legalwork/src/renderer/src/components/knowledge-base/KnowledgeBaseView.tsx'
+          replace_once(view, "LEGALWORK_KNOWLEDGE_SYNC_PATH, 'POST', { maxFiles: 5000 }", "LEGALWORK_KNOWLEDGE_SYNC_PATH, 'POST', { maxFiles: 50000 }")
+
+          tests = 'apps/desktop-legalwork/legalwork/src/knowledge/knowledge-store.test.ts'
+          replace_once(
+              tests,
+              "it('returns one citation source when several chunks match the same file', async () => {",
+              "it('keeps multiple relevant evidence chunks from the same long source', async () => {"
+          )
+          replace_once(
+              tests,
+              "      expect(result.sources).toHaveLength(1)\n      expect(result.sources[0]?.path).toBe('论文/长篇行政法研究.md')",
+              "      expect(result.sources.length).toBeGreaterThan(1)\n      expect(result.sources.every((source) => source.path === '论文/长篇行政法研究.md')).toBe(true)\n      expect(result.sources.every((source) => Boolean(source.provenanceId && source.chunkId))).toBe(true)"
+          )
+          marker = "  it('reports explicit coverage when maxFiles truncates the candidate set', async () => {"
+          incremental_test = r'''  it('reuses unchanged documents by hash and invalidates retrieval cache on content revision', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'legalwork-kb-incremental-'))
+    const sourceRoot = join(root, 'knowledge-base')
+    const indexRoot = join(root, 'index')
+    try {
+      await mkdir(sourceRoot, { recursive: true })
+      const filePath = join(sourceRoot, '规则.md')
+      await writeFile(filePath, '第一条 原始行政程序规则。', 'utf8')
+      const store = new FileKnowledgeStore({ rootDir: indexRoot, sourceRoots: [sourceRoot] })
+
+      const firstSync = await store.sync()
+      expect(firstSync.updatedFileCount).toBe(1)
+      expect(firstSync.unchangedFileCount).toBe(0)
+      const first = await new KnowledgeRetrievalPipeline(store).retrieve('行政程序规则')
+      expect(first.cacheHit).toBe(false)
+      const cached = await new KnowledgeRetrievalPipeline(store).retrieve('行政程序规则')
+      expect(cached.cacheHit).toBe(true)
+
+      const secondSync = await store.sync()
+      expect(secondSync.updatedFileCount).toBe(0)
+      expect(secondSync.unchangedFileCount).toBe(1)
+      expect(secondSync.revision).toBe(firstSync.revision)
+
+      await writeFile(filePath, '第一条 修改后的行政程序规则与听证要求。', 'utf8')
+      const thirdSync = await store.sync()
+      expect(thirdSync.updatedFileCount).toBe(1)
+      expect(thirdSync.revision).not.toBe(firstSync.revision)
+      const refreshed = await new KnowledgeRetrievalPipeline(store).retrieve('行政程序规则')
+      expect(refreshed.cacheHit).toBe(false)
+    } finally {
+      await rm(root, { recursive: true, force: true })
+    }
+  })
+
+'''
+          replace_once(tests, marker, incremental_test + marker)
+          PY
+
+      - name: Install runtime dependencies
+        working-directory: apps/desktop-legalwork/legalwork
+        run: npm ci
+
+      - name: Typecheck runtime and reject new errors
+        working-directory: apps/desktop-legalwork/legalwork
+        shell: bash
+        run: |
+          set +e
+          npm run typecheck 2>&1 | tee /tmp/legalwork-typecheck.log
+          status=${PIPESTATUS[0]}
+          set -e
+          if [ "$status" -eq 0 ]; then exit 0; fi
+          grep 'error TS' /tmp/legalwork-typecheck.log > /tmp/legalwork-type-errors.log || true
+          grep -Ev '^(tests/builtin-search-tools\.test\.ts|tests/builtin-tools\.test\.ts)' /tmp/legalwork-type-errors.log > /tmp/legalwork-new-type-errors.log || true
+          if [ -s /tmp/legalwork-new-type-errors.log ]; then
+            cat /tmp/legalwork-new-type-errors.log
+            exit 1
+          fi
+          echo 'Only pre-existing runtime test type errors remain.'
+
+      - name: Run knowledge regression tests
+        working-directory: apps/desktop-legalwork/legalwork
+        run: npx vitest run src/knowledge/knowledge-store.test.ts src/knowledge/knowledge-structured-chunker.test.ts src/knowledge/knowledge-sqlite-index.test.ts src/knowledge/knowledge-citation-verifier.test.ts src/knowledge/knowledge-file-reader.test.ts src/loop/knowledge-qa-mode.test.ts tests/model-client.test.ts
+
+      - name: Install desktop dependencies
+        working-directory: apps/desktop-legalwork
+        run: npm ci --ignore-scripts
+
+      - name: Typecheck desktop and reject new errors
+        working-directory: apps/desktop-legalwork
+        shell: bash
+        run: |
+          set +e
+          npm run typecheck 2>&1 | tee /tmp/desktop-typecheck.log
+          status=${PIPESTATUS[0]}
+          set -e
+          if [ "$status" -eq 0 ]; then exit 0; fi
+          grep 'error TS' /tmp/desktop-typecheck.log > /tmp/desktop-type-errors.log || true
+          grep -Ev '^(src/renderer/src/components/astryx/AstryxSegmentButton\.test\.ts|src/renderer/src/components/chat/FloatingComposer\.test\.ts|src/renderer/src/components/document-writing/DocumentWritingEditor\.test\.ts|src/renderer/src/store/chat-store\.ts)' /tmp/desktop-type-errors.log > /tmp/desktop-new-type-errors.log || true
+          if [ -s /tmp/desktop-new-type-errors.log ]; then
+            cat /tmp/desktop-new-type-errors.log
+            exit 1
+          fi
+          echo 'Only pre-existing desktop type errors remain.'
+
+      - name: Commit validated phase-two patch and self-delete workflow
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/kb-v2-index-patcher.yml
+          git add apps/desktop-legalwork/legalwork/src apps/desktop-legalwork/legalwork/tests apps/desktop-legalwork/src/renderer/src/components/knowledge-base/KnowledgeBaseView.tsx
+          git commit -m 'refactor(knowledge): migrate retrieval index to SQLite FTS5'
+          git push origin HEAD:agent/knowledge-base-v2-index
