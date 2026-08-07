@@ -3,6 +3,7 @@ name: KB v2 index PR patcher
 on:
   pull_request:
     branches:
+      - main
       - agent/knowledge-base-v2
 
 permissions:
@@ -53,7 +54,7 @@ jobs:
           if [ -s /tmp/legalwork-new-type-errors.log ]; then cat /tmp/legalwork-new-type-errors.log; exit 1; fi
       - name: Run knowledge regression tests
         working-directory: apps/desktop-legalwork/legalwork
-        run: npx vitest run src/knowledge/knowledge-store.test.ts src/knowledge/knowledge-structured-chunker.test.ts src/knowledge/knowledge-sqlite-index.test.ts src/knowledge/knowledge-citation-verifier.test.ts src/knowledge/knowledge-vector-retriever.test.ts src/knowledge/knowledge-file-reader.test.ts src/loop/knowledge-qa-mode.test.ts tests/model-client.test.ts
+        run: npx vitest run src/knowledge/knowledge-store.test.ts src/knowledge/knowledge-structured-chunker.test.ts src/knowledge/knowledge-sqlite-index.test.ts src/knowledge/knowledge-citation-verifier.test.ts src/knowledge/knowledge-vector-retriever.test.ts src/knowledge/knowledge-index-version.test.ts src/knowledge/knowledge-retrieval-cache.test.ts src/knowledge/knowledge-file-reader.test.ts src/loop/knowledge-qa-mode.test.ts tests/model-client.test.ts
       - name: Install desktop dependencies
         working-directory: apps/desktop-legalwork
         run: npm ci --ignore-scripts
