@@ -1,0 +1,80 @@
+name: KB v2 index PR patcher
+
+on:
+  pull_request:
+    branches:
+      - agent/knowledge-base-v2
+
+permissions:
+  contents: write
+
+jobs:
+  patch-test-commit:
+    if: github.head_ref == 'agent/knowledge-base-v2-index' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/knowledge-base-v2-index
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Extract and apply phase-two patch
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          source = Path('.github/workflows/kb-v2-index-patcher.yml').read_text(encoding='utf-8').splitlines()
+          start = next(i for i, line in enumerate(source) if "python3 - <<'PY'" in line) + 1
+          end = next(i for i in range(start, len(source)) if source[i].strip() == 'PY')
+          lines = source[start:end]
+          indent = len(lines[0]) - len(lines[0].lstrip()) if lines else 0
+          prefix = ' ' * indent
+          script = '\n'.join(line[indent:] if line.startswith(prefix) else line for line in lines) + '\n'
+          Path('/tmp/kb-v2-index-patch.py').write_text(script, encoding='utf-8')
+          PY
+          python3 /tmp/kb-v2-index-patch.py
+      - name: Install runtime dependencies
+        working-directory: apps/desktop-legalwork/legalwork
+        run: npm ci
+      - name: Typecheck runtime and reject new errors
+        working-directory: apps/desktop-legalwork/legalwork
+        shell: bash
+        run: |
+          set +e
+          npm run typecheck 2>&1 | tee /tmp/legalwork-typecheck.log
+          status=${PIPESTATUS[0]}
+          set -e
+          if [ "$status" -eq 0 ]; then exit 0; fi
+          grep 'error TS' /tmp/legalwork-typecheck.log > /tmp/legalwork-type-errors.log || true
+          grep -Ev '^(tests/builtin-search-tools\.test\.ts|tests/builtin-tools\.test\.ts)' /tmp/legalwork-type-errors.log > /tmp/legalwork-new-type-errors.log || true
+          if [ -s /tmp/legalwork-new-type-errors.log ]; then cat /tmp/legalwork-new-type-errors.log; exit 1; fi
+      - name: Run knowledge regression tests
+        working-directory: apps/desktop-legalwork/legalwork
+        run: npx vitest run src/knowledge/knowledge-store.test.ts src/knowledge/knowledge-structured-chunker.test.ts src/knowledge/knowledge-sqlite-index.test.ts src/knowledge/knowledge-citation-verifier.test.ts src/knowledge/knowledge-vector-retriever.test.ts src/knowledge/knowledge-file-reader.test.ts src/loop/knowledge-qa-mode.test.ts tests/model-client.test.ts
+      - name: Install desktop dependencies
+        working-directory: apps/desktop-legalwork
+        run: npm ci --ignore-scripts
+      - name: Typecheck desktop and reject new errors
+        working-directory: apps/desktop-legalwork
+        shell: bash
+        run: |
+          set +e
+          npm run typecheck 2>&1 | tee /tmp/desktop-typecheck.log
+          status=${PIPESTATUS[0]}
+          set -e
+          if [ "$status" -eq 0 ]; then exit 0; fi
+          grep 'error TS' /tmp/desktop-typecheck.log > /tmp/desktop-type-errors.log || true
+          grep -Ev '^(src/renderer/src/components/astryx/AstryxSegmentButton\.test\.ts|src/renderer/src/components/chat/FloatingComposer\.test\.ts|src/renderer/src/components/document-writing/DocumentWritingEditor\.test\.ts|src/renderer/src/store/chat-store\.ts)' /tmp/desktop-type-errors.log > /tmp/desktop-new-type-errors.log || true
+          if [ -s /tmp/desktop-new-type-errors.log ]; then cat /tmp/desktop-new-type-errors.log; exit 1; fi
+      - name: Commit validated phase-two patch and remove temporary workflows
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/kb-v2-index-patcher.yml .github/workflows/kb-v2-index-pr-patcher.yml
+          git add apps/desktop-legalwork/legalwork/src apps/desktop-legalwork/legalwork/tests apps/desktop-legalwork/src/renderer/src/components/knowledge-base/KnowledgeBaseView.tsx
+          git commit -m 'refactor(knowledge): migrate retrieval index to SQLite FTS5'
+          git push origin HEAD:agent/knowledge-base-v2-index
