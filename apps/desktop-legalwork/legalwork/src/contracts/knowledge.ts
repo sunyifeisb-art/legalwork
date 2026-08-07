@@ -17,13 +17,13 @@ export type KnowledgeLayer = z.infer<typeof KnowledgeLayer>
  * Edge types for cross-document graph relationships.
  */
 export const KnowledgeEdgeRelation = z.enum([
-  'governs',       // L1→L2   原则约束架构
-  'defines',       // L1→L2/L3 概念定义边界
-  'constrains',    // L2→L3   架构约束规范
-  'implements',    // L2/L3→L4 规范/架构的具体实现
-  'validates',     // L4→L5   实现产生验证经验
-  'feedback',      // L5→L3/L4 经验反哺改进
-  'cross_ref',     // 任意     同层或跨层的横向引用
+  'governs',
+  'defines',
+  'constrains',
+  'implements',
+  'validates',
+  'feedback',
+  'cross_ref',
 ])
 export type KnowledgeEdgeRelation = z.infer<typeof KnowledgeEdgeRelation>
 
@@ -49,8 +49,10 @@ export const KnowledgeDocument = z.object({
   extension: z.string().min(1),
   sizeBytes: z.number().int().nonnegative(),
   updatedAt: z.string(),
-  /** Pyramid knowledge layer (L1-L5). Undefined for legacy documents. */
-  layer: KnowledgeLayer.optional()
+  layer: KnowledgeLayer.optional(),
+  documentHash: z.string().min(1).optional(),
+  sourceMtimeMs: z.number().nonnegative().optional(),
+  indexedAt: z.string().optional()
 }).strict()
 export type KnowledgeDocument = z.infer<typeof KnowledgeDocument>
 
@@ -64,8 +66,16 @@ export const KnowledgeChunk = z.object({
   tags: z.array(z.string()).optional(),
   keywords: z.array(z.string()).optional(),
   content: z.string().min(1),
-  /** Pyramid knowledge layer inherited from parent document. */
-  layer: KnowledgeLayer.optional()
+  layer: KnowledgeLayer.optional(),
+  chunkIndex: z.number().int().nonnegative().optional(),
+  documentHash: z.string().min(1).optional(),
+  chunkHash: z.string().min(1).optional(),
+  provenanceId: z.string().min(1).optional(),
+  headingPath: z.array(z.string()).optional(),
+  articleNumber: z.string().optional(),
+  charStart: z.number().int().nonnegative().optional(),
+  charEnd: z.number().int().nonnegative().optional(),
+  chunkerVersion: z.string().optional()
 }).strict()
 export type KnowledgeChunk = z.infer<typeof KnowledgeChunk>
 
@@ -82,14 +92,22 @@ export const KnowledgeSearchHit = z.object({
   rankReason: z.string().optional(),
   snippet: z.string(),
   content: z.string().optional(),
-  /** Pyramid knowledge layer from the parent document. */
-  layer: KnowledgeLayer.optional()
+  layer: KnowledgeLayer.optional(),
+  chunkIndex: z.number().int().nonnegative().optional(),
+  documentHash: z.string().min(1).optional(),
+  chunkHash: z.string().min(1).optional(),
+  provenanceId: z.string().min(1).optional(),
+  headingPath: z.array(z.string()).optional(),
+  articleNumber: z.string().optional(),
+  charStart: z.number().int().nonnegative().optional(),
+  charEnd: z.number().int().nonnegative().optional(),
+  chunkerVersion: z.string().optional()
 }).strict()
 export type KnowledgeSearchHit = z.infer<typeof KnowledgeSearchHit>
 
 export const KnowledgeSyncRequest = z.object({
   roots: z.array(z.string().min(1)).max(20).optional(),
-  maxFiles: z.number().int().positive().max(5000).optional()
+  maxFiles: z.number().int().positive().max(100_000).optional()
 }).strict()
 export type KnowledgeSyncRequest = z.infer<typeof KnowledgeSyncRequest>
 
@@ -103,7 +121,13 @@ export const KnowledgeSyncResult = z.object({
   attemptedFileCount: z.number().int().nonnegative(),
   failedFileCount: z.number().int().nonnegative(),
   truncatedFileCount: z.number().int().nonnegative(),
-  truncated: z.boolean()
+  truncated: z.boolean(),
+  unchangedFileCount: z.number().int().nonnegative(),
+  updatedFileCount: z.number().int().nonnegative(),
+  deletedFileCount: z.number().int().nonnegative(),
+  revision: z.string(),
+  backend: z.literal('sqlite-fts5'),
+  retrieverVersion: z.string()
 }).strict()
 export type KnowledgeSyncResult = z.infer<typeof KnowledgeSyncResult>
 
@@ -118,12 +142,14 @@ export const KnowledgeDiagnostics = z.object({
   failedFileCount: z.number().int().nonnegative(),
   truncatedFileCount: z.number().int().nonnegative(),
   truncated: z.boolean(),
+  revision: z.string(),
+  backend: z.literal('sqlite-fts5'),
+  retrieverVersion: z.string(),
   syncedAt: z.string().optional(),
   lastSelectedIds: z.array(z.string()).default([])
 }).strict()
 export type KnowledgeDiagnostics = z.infer<typeof KnowledgeDiagnostics>
 
-/** A node in the knowledge file tree. */
 export type KnowledgeTreeNode = {
   name: string
   path: string
