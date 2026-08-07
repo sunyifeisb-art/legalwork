@@ -6,7 +6,7 @@ import type { KnowledgeDocument } from '../contracts/knowledge.js'
 import { chunkKnowledgeDocument } from './knowledge-structured-chunker.js'
 import { KnowledgeSqliteIndex } from './knowledge-sqlite-index.js'
 
-describe('KnowledgeSqliteIndex short Chinese queries', () => {
+describe('KnowledgeSqliteIndex Chinese queries', () => {
   it('falls back safely for a two-character legal term such as 合同', async () => {
     const root = await mkdtemp(join(tmpdir(), 'legalwork-kb-short-query-'))
     const index = new KnowledgeSqliteIndex(root)
@@ -26,14 +26,20 @@ describe('KnowledgeSqliteIndex short Chinese queries', () => {
       }
       await index.upsertDocument(
         doc,
-        chunkKnowledgeDocument(doc, '第一条 合同解除应当符合约定或者法律规定。', 'contract-hash')
+        chunkKnowledgeDocument(doc, '第一条 合同解除应当符合约定或者法律规定。解除后仍可能承担违约责任。', 'contract-hash')
       )
 
-      const hits = await index.searchCandidates({ query: '合同', limit: 10 })
-      const contractHit = hits.find((hit) => hit.content.includes('合同解除'))
+      const shortHits = await index.searchCandidates({ query: '合同', limit: 10 })
+      const contractHit = shortHits.find((hit) => hit.content.includes('合同解除'))
       expect(contractHit).toBeTruthy()
       expect(contractHit?.provenanceId).toMatch(/^kb_[a-f0-9]{24}$/)
       expect(contractHit?.documentHash).toBe('contract-hash')
+
+      const naturalLanguageHits = await index.searchCandidates({
+        query: '合同解除以后违约责任应该如何承担',
+        limit: 10
+      })
+      expect(naturalLanguageHits.some((hit) => hit.content.includes('违约责任'))).toBe(true)
     } finally {
       index.close()
       await rm(root, { recursive: true, force: true })
