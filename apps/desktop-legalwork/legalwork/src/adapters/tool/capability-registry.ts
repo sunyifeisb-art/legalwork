@@ -5,6 +5,7 @@ import type {
 } from '../../ports/tool-host.js'
 import type { LocalTool } from './local-tool-host.js'
 import {
+  LEGAL_DOCUMENT_FORMATTING_SKILL_ID,
   OFFICECLI_TOOL_NAME,
   isOfficeFallbackGranted
 } from './office-fallback-policy.js'
@@ -114,6 +115,18 @@ export class CapabilityRegistry {
   }
 
   private canUseTool(toolName: string, context?: ToolHostContext): boolean {
+    // When legal-document-formatting is active, shell-level Office probing or
+    // generation (pandoc/python/pip/soffice/sed) is a bypass around the trusted
+    // deterministic executor. Hide bash entirely for that turn; research can
+    // still use read/search/MCP tools and final Office output must use
+    // document_skill_execute.
+    if (
+      toolName === 'bash' &&
+      context?.activeSkillIds?.includes(LEGAL_DOCUMENT_FORMATTING_SKILL_ID)
+    ) {
+      return false
+    }
+
     // OfficeCLI is absent from the normal Agent tool catalog. The trusted
     // document Skill executor must first record a genuine local capability
     // boundary, then request_office_fallback grants a turn-scoped exception.
