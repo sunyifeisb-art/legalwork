@@ -3,6 +3,10 @@ import { LocalToolHost } from './local-tool-host.js'
 import type { KnowledgeStore } from '../../knowledge/knowledge-store.js'
 import type { KnowledgeLayer } from '../../contracts/knowledge.js'
 import { readKnowledgeFileText } from '../../knowledge/knowledge-file-reader.js'
+import {
+  compactKnowledgeAutoRetrieveToolOutput,
+  compactKnowledgeSearchToolOutput
+} from './knowledge-tool-output.js'
 
 export function buildKnowledgeToolProviders(store: KnowledgeStore | undefined): CapabilityToolProvider[] {
   if (!store) return []
@@ -15,12 +19,12 @@ export function buildKnowledgeToolProviders(store: KnowledgeStore | undefined): 
       // ── Read / Browse ──────────────────────────────────────────
       LocalToolHost.defineTool({
         name: 'knowledge_search',
-        description: 'Search the local legal knowledge base for relevant source files and excerpts by semantic keyword query. Returns ranked chunk snippets with source metadata (file path, score, layer, excerpt). Supports pyramid layer filtering — pass a layer (principle, architecture, standard, implementation, experience) to narrow results to a specific abstraction level. Use this when you need to find relevant legal provisions, contract clauses, or case materials.',
+        description: 'Search the local legal knowledge base for relevant source files and compact excerpts by semantic keyword query. Returns ranked source references and snippets; use knowledge_read_file only when the exact full passage is needed. Supports pyramid layer filtering — pass a layer (principle, architecture, standard, implementation, experience) to narrow results. Do not call this again for the same question when knowledge_auto_retrieve already returned usable local evidence.',
         inputSchema: {
           type: 'object',
           properties: {
             query: { type: 'string', description: 'Search query for legal terms, clauses, case names, or keywords' },
-            limit: { type: 'number', minimum: 1, maximum: 20, description: 'Max results (default 8, max 20)' },
+            limit: { type: 'number', minimum: 1, maximum: 20, description: 'Max results considered by retrieval (default 8, max 20); model-facing output is compacted further' },
             layer: { type: 'string', enum: ['principle', 'architecture', 'standard', 'implementation', 'experience'], description: 'Optional: restrict to a specific knowledge layer. The knowledge base has 5 layers: L1原则, L2架构, L3规范, L4实现, L5经验. Use this when you know what abstraction level you need.' }
           },
           required: ['query'],
@@ -37,30 +41,12 @@ export function buildKnowledgeToolProviders(store: KnowledgeStore | undefined): 
             ? args.layer as KnowledgeLayer
             : undefined
           const sources = await store.search({ query, limit, includeContent: true, layer })
-          // Cap the number of returned sources (in addition to per-source body
-          // truncation) so a large result set cannot balloon the tool result and
-          // defeat prefix-cache hits. The model can read full documents via
-          // knowledge_read_file when it needs more than these top sources.
-          const cappedSources = sources.slice(0, 8)
-          // Truncate the full chunk body so each tool result stays small. The
-          // snippet already carries the hit context; the truncated body is enough
-          // for most answers, and the model can call knowledge_read_file for the
-          // full document when it needs the complete text. Keeping results small
-          // is what lets DeepSeek's prefix cache hit on later tool-loop turns.
-          const truncatedSources = cappedSources.map((source) => ({
-            ...source,
-            ...(source.content && source.content.length > 500
-              ? {
-                  content: `${source.content.slice(0, 500)}\n…[截断，完整内容请用 knowledge_read_file 读取 ${source.relativePath}]`
-                }
-              : {})
-          }))
           return {
-            output: {
+            output: compactKnowledgeSearchToolOutput({
               query,
               layer: layer ?? 'all',
-              sources: truncatedSources
-            }
+              sources
+            })
           }
         }
       }),
@@ -174,12 +160,11 @@ export function buildKnowledgeToolProviders(store: KnowledgeStore | undefined): 
           properties: {
             path: { type: 'string', description: 'Relative folder path (e.g. "项目文档/2024")' }
           },
-          required: ['path'],
           additionalProperties: false
         },
         policy: 'auto',
         execute: async (args) => {
-          const folderPath = typeof args.path === 'string' ? args.path.trim() : ''
+          const folderPath = typeof args.path === 'string' ? args.path.trim() : undefined
           if (!folderPath) return { output: { error: 'path is required' }, isError: true }
           try {
             const result = await store.createFolder({ path: folderPath })
@@ -311,7 +296,7 @@ export function buildKnowledgeToolProviders(store: KnowledgeStore | undefined): 
       // ── Auto Retrieval ──────────────────────────────────────────
       LocalToolHost.defineTool({
         name: 'knowledge_auto_retrieve',
-        description: 'One-step auto-retrieval: given a user question or task description, automatically searches the knowledge base for relevant documents, checks for expired/deprecated content, and returns a formatted context block with source citations ready for model injection. Supports pyramid layer routing — optionally specify a knowledge layer (principle, architecture, standard, implementation, experience) to narrow results to a specific abstraction level. Use this at the start of any legal writing or QA task to gather all relevant team knowledge.',
+        description: 'One-step compact local knowledge retrieval for a user question or task. Returns one bounded context block plus lightweight source references; call knowledge_read_file only when an exact full passage is required. Choose this OR knowledge_search for the initial local retrieval instead of calling both with near-identical queries. Supports pyramid layer routing — optionally specify principle, architecture, standard, implementation, or experience.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -335,23 +320,7 @@ export function buildKnowledgeToolProviders(store: KnowledgeStore | undefined): 
           const { KnowledgeRetrievalPipeline } = await import('../../knowledge/knowledge-retrieval-pipeline.js')
           const pipeline = new KnowledgeRetrievalPipeline(store)
           const result = await pipeline.retrieve(query, { excludeExpired, layer })
-          // Cap source count (in addition to per-source body truncation) so a
-          // large result set stays small and keeps the DeepSeek prefix cache
-          // hitting on later tool-loop turns.
-          const cappedSources = result.sources.slice(0, 8)
-          // Trim per-source full content so each tool result stays small and the
-          // DeepSeek prefix cache can keep hitting on later tool-loop turns.
-          // contextText (already capped) carries the answerable context; the full
-          // document body is available via knowledge_read_file when needed.
-          const trimmedSources = cappedSources.map((source) => ({
-            ...source,
-            ...(source.content && source.content.length > 500
-              ? {
-                  content: `${source.content.slice(0, 500)}\n…[截断，完整内容请用 knowledge_read_file 读取]`
-                }
-              : {})
-          }))
-          return { output: { ...result, sources: trimmedSources } }
+          return { output: compactKnowledgeAutoRetrieveToolOutput(result) }
         }
       }),
       LocalToolHost.defineTool({
