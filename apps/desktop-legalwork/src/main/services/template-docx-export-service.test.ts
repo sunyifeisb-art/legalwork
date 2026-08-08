@@ -122,7 +122,7 @@ describe('format-preserving template DOCX export', () => {
     expect(outputDocument).not.toContain('https://example.com/civil-code/584')
     expect(outputDocument).not.toContain('原姓名')
     expect(outputDocument).not.toContain('原标题')
-    expect(result.generatedBlockCount).toBe(9)
+    expect(result.generatedBlockCount).toBe(10)
     expect(result.sourceSlotCount).toBeGreaterThanOrEqual(7)
   })
 
