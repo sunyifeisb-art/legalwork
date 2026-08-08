@@ -40,7 +40,7 @@ export function buildKnowledgeToolProviders(store: KnowledgeStore | undefined): 
           const layer = ['principle', 'architecture', 'standard', 'implementation', 'experience'].includes(args.layer as string)
             ? args.layer as KnowledgeLayer
             : undefined
-          const sources = await store.search({ query, limit, includeContent: true, layer })
+          const sources = await store.search({ query, limit, includeContent: false, layer })
           return {
             output: compactKnowledgeSearchToolOutput({
               query,
@@ -160,11 +160,12 @@ export function buildKnowledgeToolProviders(store: KnowledgeStore | undefined): 
           properties: {
             path: { type: 'string', description: 'Relative folder path (e.g. "项目文档/2024")' }
           },
+          required: ['path'],
           additionalProperties: false
         },
         policy: 'auto',
         execute: async (args) => {
-          const folderPath = typeof args.path === 'string' ? args.path.trim() : undefined
+          const folderPath = typeof args.path === 'string' ? args.path.trim() : ''
           if (!folderPath) return { output: { error: 'path is required' }, isError: true }
           try {
             const result = await store.createFolder({ path: folderPath })
