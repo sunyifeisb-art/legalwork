@@ -264,7 +264,7 @@ export function Sidebar({
         ) : null}
       </div>
 
-      <div className="ds-no-drag mx-1 my-3" />
+      <div className={`ds-no-drag mx-1 ${activeView === 'documentWriting' ? 'my-1' : 'my-3'}`} />
 
       {connectPhoneSidebarOpen ? (
         <ConnectPhoneSidebarPanel

@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import { BookOpen, Clock, Database, Upload } from 'lucide-react'
+import { BookOpen, Clock, Database } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { AstryxSegmentedControl } from '../astryx/AstryxSegmentedControl'
 import { DocumentHistorySidebar } from './DocumentHistorySidebar'
@@ -12,8 +12,8 @@ export function DocumentWritingSidebarContent(): ReactElement {
   const documentWriting = useDocumentWriting()
 
   return (
-    <div className="ds-no-drag flex min-h-0 flex-1 flex-col pt-1">
-      <div className="flex items-center gap-2 px-1 pb-3">
+    <div className="ds-no-drag flex min-h-0 flex-1 flex-col pt-0">
+      <div className="flex items-center gap-2 px-1 pb-1">
         <AstryxSegmentedControl
           value={documentWriting.leftTab}
           items={[
@@ -31,7 +31,7 @@ export function DocumentWritingSidebarContent(): ReactElement {
           onChange={documentWriting.setLeftTab}
           ariaLabel={`${t('documentWritingTemplateLibrary')} / ${t('documentWritingHistory')}`}
           className="flex min-w-0 flex-1 rounded-[8px] bg-[var(--ds-sidebar-field-bg)] p-1"
-          buttonClassName="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-[7px] text-[12px] font-medium"
+          buttonClassName="flex h-7 flex-1 items-center justify-center gap-1.5 rounded-[7px] text-[12px] font-medium"
           indicatorClassName="rounded-[7px] bg-ds-card shadow-sm"
           activeClassName="text-[var(--ds-ink)]"
           inactiveClassName="text-[var(--ds-muted)] hover:text-[var(--ds-ink)]"
@@ -41,7 +41,7 @@ export function DocumentWritingSidebarContent(): ReactElement {
           onClick={documentWriting.handleKnowledgeToggle}
           title={t('knowledgeBase')}
           aria-pressed={documentWriting.knowledgePanelOpen}
-          className={`astryx-button flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] border border-[var(--ds-sidebar-row-ring)] text-[12px] font-medium transition ${
+          className={`astryx-button flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] border border-[var(--ds-sidebar-row-ring)] text-[12px] font-medium transition ${
             documentWriting.knowledgePanelOpen
               ? 'bg-ds-card text-[var(--ds-ink)] shadow-sm'
               : 'text-[var(--ds-muted)] hover:text-[var(--ds-ink)]'
@@ -59,25 +59,15 @@ export function DocumentWritingSidebarContent(): ReactElement {
               activeCategory={documentWriting.activeCategory}
               activeTemplateId={documentWriting.activeTemplateId}
               searchQuery={documentWriting.searchQuery}
-              showUserTemplates={documentWriting.showUserTemplates}
               onSelectTemplate={documentWriting.handleSelectTemplate}
               onCategoryChange={documentWriting.handleCategoryChange}
               onSearchQueryChange={documentWriting.setSearchQuery}
+              onUploadTemplate={() => documentWriting.setUploaderOpen(true)}
               onDeleteUserTemplate={(id) => void documentWriting.handleDeleteUserTemplate(id)}
               onRetryUserTemplate={(id) => void documentWriting.handleRetryTemplateLearning(id)}
               deletingTemplateId={documentWriting.deletingTemplateId}
               loadingUserTemplates={documentWriting.loadingTemplates}
             />
-            <div className="shrink-0 border-t border-[var(--ds-sidebar-divider)] px-4 py-3">
-              <button
-                type="button"
-                onClick={() => documentWriting.setUploaderOpen(true)}
-                className="flex w-full items-center justify-center gap-2 rounded-[8px] border border-[var(--ds-sidebar-row-ring)] bg-[var(--ds-sidebar-field-bg)] px-4 py-2 text-[13px] font-medium text-[var(--ds-ink)] transition hover:bg-[color-mix(in_srgb,var(--ds-sidebar-field-focus)_56%,transparent)]"
-              >
-                <Upload className="h-4 w-4" strokeWidth={1.75} />
-                <span>{t('documentWritingUploadTemplate')}</span>
-              </button>
-            </div>
           </div>
         ) : (
           <DocumentHistorySidebar

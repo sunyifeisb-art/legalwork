@@ -1503,7 +1503,7 @@
   "appErrorReload": "重新加载",
   "learningIteration": "学习迭代",
   "learningIterationOverview": "学习迭代总览",
-  "learningIterationSubtitle": "在空闲时从交互证据中提炼记忆与工作方法",
+  "learningIterationSubtitle": "空闲时自动复盘最近的对话和操作，整理成可复用的记忆、Skill 与工作方法",
   "learningIterationRecordSubtitle": "用直观方式看看这次学到了什么",
   "learningReportTitle": "学习成果报告",
   "learningReportEyebrow": "本轮学习已完成",
