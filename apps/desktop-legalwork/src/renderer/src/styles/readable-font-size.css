@@ -1,0 +1,21 @@
+/*
+ * Keep LegalWork feature pages readable at Codex-like scale.
+ * Some views use fine-grained Tailwind arbitrary sizes for dense controls;
+ * normalize those small text utilities globally so every feature page starts
+ * from a consistent 14px floor without rewriting each screen one by one.
+ */
+:where(
+  .text-\[9px\],
+  .text-\[9\.5px\],
+  .text-\[10px\],
+  .text-\[10\.5px\],
+  .text-\[11px\],
+  .text-\[11\.5px\],
+  .text-\[12px\],
+  .text-\[12\.5px\],
+  .text-\[13px\],
+  .text-\[13\.5px\]
+) {
+  font-size: 14px !important;
+}
+

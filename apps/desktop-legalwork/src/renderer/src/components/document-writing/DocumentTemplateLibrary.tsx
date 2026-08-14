@@ -158,20 +158,20 @@ export function DocumentTemplateLibrary({
                     data-control-active={activeTemplateId === tmpl.id ? 'true' : undefined}
                     onClick={() => onSelectTemplate(tmpl)}
                     title={tmpl.name}
-                    className={`ds-no-drag flex h-8 w-full min-w-0 items-center gap-1.5 rounded-[8px] px-2 text-left transition duration-150 ${
+                    className={`ds-no-drag flex h-9 w-full min-w-0 items-center gap-1.5 rounded-[8px] px-2 text-left transition duration-150 ${
                       activeTemplateId === tmpl.id
                         ? 'bg-[var(--ds-sidebar-row-active)] text-[var(--ds-ink)] shadow-[inset_0_0_0_1px_var(--ds-sidebar-row-ring)]'
                         : 'text-[var(--ds-muted)] hover:bg-[var(--ds-sidebar-row-hover)] hover:text-[var(--ds-ink)]'
                     }`}
                   >
-                    <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-[6px] ${
+                    <span className={`flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[6px] ${
                       activeTemplateId === tmpl.id
                         ? 'bg-[var(--ds-accent-soft)] text-[var(--ds-accent)]'
                         : 'bg-[var(--ds-sidebar-field-focus)] text-[var(--ds-muted)]'
                     }`}>
-                      {categoryIcons[tmpl.category] ?? <FileText className="h-3.5 w-3.5" strokeWidth={1.75} />}
+                      {categoryIcons[tmpl.category] ?? <FileText className="h-4 w-4" strokeWidth={1.75} />}
                     </span>
-                    <span className="min-w-0 flex-1 truncate text-[12px] font-medium text-[var(--ds-ink)]">
+                    <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium text-[var(--ds-ink)]">
                       {tmpl.name}
                     </span>
                     {isCustom && tmpl.learningStatus === 'analyzing' ? (
