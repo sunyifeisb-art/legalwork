@@ -3,7 +3,9 @@ import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { afterEach, describe, expect, it } from 'vitest'
 import {
+  CORE_REQUIRED_PYTHON_PACKAGES,
   DataComplianceTaskService,
+  OPTIONAL_OCR_PYTHON_PACKAGES,
   isSupportedDataCompliancePythonVersion,
   parsePythonVersionOutput
 } from './data-compliance-task-service.js'
@@ -26,6 +28,12 @@ describe('data compliance Python version helpers', () => {
     expect(isSupportedDataCompliancePythonVersion('Python 3.9.18')).toBe(false)
     expect(isSupportedDataCompliancePythonVersion('Python 3.10.0')).toBe(true)
     expect(isSupportedDataCompliancePythonVersion('Python 3.12.1')).toBe(true)
+  })
+
+  it('does not block core workflows when optional OCR imports are unavailable', () => {
+    expect(CORE_REQUIRED_PYTHON_PACKAGES).not.toContain('paddle')
+    expect(CORE_REQUIRED_PYTHON_PACKAGES).not.toContain('paddleocr')
+    expect(OPTIONAL_OCR_PYTHON_PACKAGES).toEqual(['paddle', 'paddleocr', 'pytesseract'])
   })
 })
 

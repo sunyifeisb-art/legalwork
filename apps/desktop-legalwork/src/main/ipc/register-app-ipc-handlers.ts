@@ -177,6 +177,32 @@ import {
   startPkulawAutoClaimScheduler
 } from '../pkulaw-auto-claim'
 
+export const DATA_COMPLIANCE_CORE_IMPORTS = [
+  'flask',
+  'docx',
+  'fitz',
+  'openpyxl',
+  'pptx',
+  'pypdf',
+  'pandas',
+  'PIL',
+  'presidio_analyzer',
+  'presidio_anonymizer'
+] as const
+
+export const DATA_COMPLIANCE_OPTIONAL_OCR_IMPORTS = [
+  'paddle',
+  'paddleocr',
+  'pytesseract'
+] as const
+
+export function shouldAutoInstallDataCompliance(
+  installing: boolean,
+  lastInstallError: string | null
+): boolean {
+  return !installing && !lastInstallError
+}
+
 // ── IMA Cookie 自动刷新定时器 + 按需触发 ──
 
 let imaRefreshTimer: ReturnType<typeof setInterval> | null = null
@@ -543,6 +569,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
   }
 
   let dataComplianceInstalling = false
+  let dataComplianceLastInstallError: string | null = null
 
   async function installDataComplianceEnvironment(
     event: Electron.IpcMainInvokeEvent,
@@ -553,6 +580,12 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     }
 
     const sendProgress = (progress: DataComplianceInstallProgress): void => {
+      if (progress.step === 'error') {
+        dataComplianceLastInstallError = progress.message
+        console.error('[data-compliance:install]', progress.message)
+      } else if (progress.step === 'done') {
+        dataComplianceLastInstallError = null
+      }
       const win = getMainWindow()
       const contents = win && !win.isDestroyed() ? win.webContents : event.sender
       if (!contents.isDestroyed()) {
@@ -561,6 +594,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     }
 
     if (getInstallingFlag()) return true
+    dataComplianceLastInstallError = null
     setInstalling(true)
 
     try {
@@ -606,26 +640,9 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
         return false
       }
 
-      // 2. Create venv, install deps, verify imports. Paddle 2.x/3.x mixed
-      //    installs (orphan files from an old paddle that pip cannot remove)
-      //    fail import verification with bwd_graph_utils; rebuild the venv
-      //    once automatically so the user needs no manual cleanup step.
-      const requiredImports = [
-        'flask',
-        'docx',
-        'fitz',
-        'openpyxl',
-        'pptx',
-        'pypdf',
-        'pandas',
-        'PIL',
-        'paddle',
-        'paddleocr',
-        'pytesseract',
-        'presidio_analyzer',
-        'presidio_anonymizer'
-      ]
-      let rebuildCount = 0
+      // 2. Create venv, install dependencies, and verify core imports.
+      // OCR imports are checked separately because native Paddle wheels are
+      // optional for text-based review and desensitization.
       for (;;) {
         if (existsSync(venvPython) && !(await isSupportedPythonExecutable(venvPython))) {
           sendProgress({ step: 'venv', percent: 34, message: '检测到旧版 Python 虚拟环境，正在重建…' })
@@ -699,35 +716,30 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
         sendProgress({ step: 'installing', percent: 92, message: '正在校验数据合规运行环境…' })
         const verifyResult = await runCommand(
           venvPython,
-          ['-c', requiredImports.map((name) => `import ${name}`).join('\n')],
+          ['-c', DATA_COMPLIANCE_CORE_IMPORTS.map((name) => `import ${name}`).join('\n')],
           { cwd: webRoot, timeout: 120_000 }
         )
         if (verifyResult.exitCode !== 0) {
           const verifyText = verifyResult.stderr || verifyResult.stdout || '未知错误'
-          // Paddle 新旧版本文件残留混装（2.x 与 3.x 并存）会报
-          // "cannot import name 'capture_backward_subgraph_guard' from 'paddle.utils.bwd_graph_utils'"。
-          // pip 升级无法清理不属于新 wheel 清单的孤儿文件，必须重建 venv 才能修复。
-          const isPaddleMixedInstall =
-            /cannot import name [\s\S]{0,120}bwd_graph_utils|capture_backward_subgraph_guard/.test(verifyText)
-          if (isPaddleMixedInstall && rebuildCount === 0) {
-            rebuildCount += 1
-            sendProgress({
-              step: 'venv',
-              percent: 34,
-              message: '检测到 PaddleOCR 依赖损坏（paddle 新旧版本混装），正在自动重建 Python 环境并重新安装，请稍候…'
-            })
-            killProcessesUsingDirectory(venvDir)
-            await rmPathWithRetry(venvDir)
-            continue
-          }
           sendProgress({
             step: 'error',
             percent: 0,
-            message: isPaddleMixedInstall
-              ? `PaddleOCR 依赖损坏，自动重建后仍无法恢复，请删除目录 ${venvDir} 后重试。`
-              : `Python 依赖校验失败: ${verifyText}`
+            message: `Python 核心依赖校验失败: ${verifyText}`
           })
           return false
+        }
+
+        // OCR is an enhancement for images and scanned PDFs. Native Paddle
+        // wheels can fail to load on a subset of Windows machines even after
+        // pip succeeds; do not make text/document desensitization unusable.
+        const optionalOcrResult = await runCommand(
+          venvPython,
+          ['-c', DATA_COMPLIANCE_OPTIONAL_OCR_IMPORTS.map((name) => `import ${name}`).join('\n')],
+          { cwd: webRoot, timeout: 120_000 }
+        )
+        if (optionalOcrResult.exitCode !== 0) {
+          const optionalOcrText = optionalOcrResult.stderr || optionalOcrResult.stdout || '未知错误'
+          console.warn('[data-compliance:install] optional OCR unavailable:', optionalOcrText)
         }
         break
       }
@@ -1170,9 +1182,10 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
       const result = await runtimeRequest('/data-compliance/environment', 'GET')
       if (!result.ok) {
         const parsed = JSON.parse(result.body || '{}') as { error?: string; fix?: string }
-        // Auto-trigger silent install whenever the environment is not ready.
-        // The install function itself will skip already-completed steps (Python, venv, deps).
-        if (!dataComplianceInstalling) {
+        // Auto-install once per app process. If an attempt fails, preserve the
+        // real error and wait for an explicit Retry instead of starting over at
+        // 5% whenever the renderer asks for status again.
+        if (shouldAutoInstallDataCompliance(dataComplianceInstalling, dataComplianceLastInstallError)) {
           void installDataComplianceEnvironment(event, () => dataComplianceInstalling)
             .then((ok) => {
               if (!ok) {
@@ -1195,7 +1208,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
           running: false,
           installing: dataComplianceInstalling,
           baseUrl: '',
-          message: parsed.error || '数据合规服务不可用'
+          message: dataComplianceLastInstallError || parsed.error || '数据合规服务不可用'
         }
       }
       const parsed = JSON.parse(result.body || '{}') as { python?: string }
@@ -1219,6 +1232,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
 
   ipcMain.handle('data-compliance:install', async (event): Promise<boolean> => {
     if (dataComplianceInstalling) return true
+    dataComplianceLastInstallError = null
     return installDataComplianceEnvironment(event, () => dataComplianceInstalling)
   })
 

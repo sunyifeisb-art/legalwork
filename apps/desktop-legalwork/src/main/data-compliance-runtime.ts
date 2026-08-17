@@ -71,10 +71,7 @@ const REQUIRED_PYTHON_IMPORTS = [
   'odf',
   'pptx',
   'fitz',
-  'PIL',
-  'paddle',
-  'paddleocr',
-  'pytesseract'
+  'PIL'
 ]
 const COMMON_BINARY_DIRS = [
   '/opt/homebrew/bin',

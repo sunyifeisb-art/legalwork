@@ -132,14 +132,12 @@ export type DataComplianceFileKey =
   | 'subject_mapping_md'
   | 'subject_mapping_json'
 
-const CORE_REQUIRED_PYTHON_PACKAGES = [
+export const CORE_REQUIRED_PYTHON_PACKAGES = [
   'flask',
   'docx',
   'fitz',
   'openai',
   'openpyxl',
-  'paddle',
-  'paddleocr',
   'pptx',
   'pypdf',
   'pandas',
@@ -148,7 +146,9 @@ const CORE_REQUIRED_PYTHON_PACKAGES = [
   'presidio_anonymizer'
 ]
 
-const OPTIONAL_OCR_PYTHON_PACKAGES = [
+export const OPTIONAL_OCR_PYTHON_PACKAGES = [
+  'paddle',
+  'paddleocr',
   'pytesseract'
 ]
 
@@ -379,10 +379,9 @@ export class DataComplianceTaskService {
   }
 
   private async ensurePythonEnvironment(): Promise<void> {
-    // Paddle 2.x/3.x 混装残留（旧 paddle 孤儿文件，pip 无法清理）会让
-    // import paddle 持续失败，表现为"缺少 paddle/paddleocr"。自动重建一次
-    // venv 即可修复，用户无需手动删除目录。
-    let rebuildCount = 0
+    // PaddleOCR is optional: native Paddle wheels may be unavailable or fail
+    // to load on some Windows machines, while text/document workflows remain
+    // fully usable. Only the platform-neutral core gates environment readiness.
     for (;;) {
       const venvPython = this.venvPythonPath()
       const requirementsPath = join(this.webRoot, 'requirements.txt')
@@ -403,20 +402,6 @@ export class DataComplianceTaskService {
 
       if (!existsSync(requirementsPath)) return
       if (existsSync(markerPath)) {
-        // marker 可能来自旧版安装（残留 paddle 2.x 孤儿文件）。快速探测 paddle：
-        // 若为混装则自动重建一次，避免"标记已装好但实际损坏"的假阳性。
-        const probe = await this.runCommand(venvPython, ['-c', 'import paddle'], {
-          timeoutMs: PYTHON_IMPORT_TIMEOUT_MS
-        })
-        if (probe.exitCode === 0) return
-        const probeText = `${probe.stdout}\n${probe.stderr}`
-        if (/cannot import name [\s\S]{0,120}bwd_graph_utils|capture_backward_subgraph_guard/.test(probeText)) {
-          if (rebuildCount === 0) {
-            rebuildCount += 1
-            await rm(this.venvDir, { recursive: true, force: true })
-            continue
-          }
-        }
         return
       }
 
@@ -462,18 +447,6 @@ export class DataComplianceTaskService {
           optional_ocr_packages: OPTIONAL_OCR_PYTHON_PACKAGES
         }, null, 2), 'utf-8')
         return
-      }
-      // paddle/paddleocr 装完仍 import 失败 → 探测是否混装，混装则自动重建 venv
-      if (rebuildCount === 0 && stillMissing.includes('paddle')) {
-        const probe = await this.runCommand(venvPython, ['-c', 'import paddle'], {
-          timeoutMs: PYTHON_IMPORT_TIMEOUT_MS
-        })
-        const probeText = `${probe.stdout}\n${probe.stderr}`
-        if (/cannot import name [\s\S]{0,120}bwd_graph_utils|capture_backward_subgraph_guard/.test(probeText)) {
-          rebuildCount += 1
-          await rm(this.venvDir, { recursive: true, force: true })
-          continue
-        }
       }
       throw new Error(`安装依赖后仍缺少核心包: ${stillMissing.join(', ')}`)
     }

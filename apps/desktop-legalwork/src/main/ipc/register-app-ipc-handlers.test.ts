@@ -103,14 +103,23 @@ describe('registerAppIpcHandlers', () => {
 
   it('requires Python 3.10 or newer for data compliance installs', async () => {
     const {
+      DATA_COMPLIANCE_CORE_IMPORTS,
+      DATA_COMPLIANCE_OPTIONAL_OCR_IMPORTS,
       isSupportedDataCompliancePythonVersion,
-      parsePythonVersionOutput
+      parsePythonVersionOutput,
+      shouldAutoInstallDataCompliance
     } = await import('./register-app-ipc-handlers')
 
     expect(parsePythonVersionOutput('Python 3.11.9')).toEqual({ major: 3, minor: 11, patch: 9 })
     expect(isSupportedDataCompliancePythonVersion('Python 3.9.18')).toBe(false)
     expect(isSupportedDataCompliancePythonVersion('Python 3.10.0')).toBe(true)
     expect(isSupportedDataCompliancePythonVersion('Python 3.11.9')).toBe(true)
+    expect(DATA_COMPLIANCE_CORE_IMPORTS).not.toContain('paddle')
+    expect(DATA_COMPLIANCE_CORE_IMPORTS).not.toContain('paddleocr')
+    expect(DATA_COMPLIANCE_OPTIONAL_OCR_IMPORTS).toEqual(['paddle', 'paddleocr', 'pytesseract'])
+    expect(shouldAutoInstallDataCompliance(false, null)).toBe(true)
+    expect(shouldAutoInstallDataCompliance(true, null)).toBe(false)
+    expect(shouldAutoInstallDataCompliance(false, 'PaddleOCR DLL load failed')).toBe(false)
   })
 
   it('passes valid settings patches through to applySettingsPatch', async () => {
