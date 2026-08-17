@@ -231,6 +231,24 @@ async function resolveStandaloneAsset(target) {
   throw lastError || new Error('Unable to resolve python-build-standalone release asset')
 }
 
+function downloadCandidates(url) {
+  const candidates = [url]
+  try {
+    const parsed = new URL(url)
+    if (parsed.hostname === 'raw.githubusercontent.com') {
+      const [, owner, repository, ref, ...pathParts] = parsed.pathname.split('/')
+      if (owner && repository && ref && pathParts.length > 0) {
+        candidates.push(
+          `https://api.github.com/repos/${owner}/${repository}/contents/${pathParts.join('/')}?ref=${encodeURIComponent(ref)}`
+        )
+      }
+    }
+  } catch {
+    // Let fetch report malformed URLs with the original value.
+  }
+  return candidates
+}
+
 async function download(url, destination) {
   if (existsSync(destination) && statSync(destination).size > 1024 * 1024) {
     info(`Using cached ${basename(destination)}`)
@@ -239,12 +257,39 @@ async function download(url, destination) {
   mkdirSync(dirname(destination), { recursive: true })
   const headers = { 'user-agent': 'legalwork-office-runtime-builder' }
   const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN
-  if (token) headers.authorization = `Bearer ${token}`
-  info(`Downloading ${url}`)
-  const response = await fetch(url, { headers, redirect: 'follow' })
-  if (!response.ok) throw new Error(`download failed: ${response.status} ${response.statusText}`)
-  const bytes = Buffer.from(await response.arrayBuffer())
-  writeFileSync(destination, bytes)
+  let lastError = null
+  for (const candidate of downloadCandidates(url)) {
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      try {
+        info(`Downloading ${candidate}${attempt > 1 ? ` (attempt ${attempt}/3)` : ''}`)
+        const requestHeaders = { ...headers }
+        const hostname = new URL(candidate).hostname
+        if (hostname === 'api.github.com') {
+          requestHeaders.accept = 'application/vnd.github.raw+json'
+        }
+        if (token && (
+          hostname === 'github.com' ||
+          hostname.endsWith('.github.com') ||
+          hostname.endsWith('.githubusercontent.com')
+        )) {
+          requestHeaders.authorization = `Bearer ${token}`
+        }
+        const response = await fetch(candidate, { headers: requestHeaders, redirect: 'follow' })
+        if (!response.ok) {
+          throw new Error(`download failed: ${response.status} ${response.statusText}`)
+        }
+        const bytes = Buffer.from(await response.arrayBuffer())
+        writeFileSync(destination, bytes)
+        return
+      } catch (error) {
+        lastError = error
+        if (attempt < 3) {
+          await new Promise((resolve) => setTimeout(resolve, 1_000 * (2 ** (attempt - 1))))
+        }
+      }
+    }
+  }
+  throw lastError || new Error(`download failed: ${url}`)
 }
 
 async function prepareBundledFonts() {
