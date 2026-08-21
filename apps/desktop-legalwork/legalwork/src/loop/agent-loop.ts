@@ -3356,6 +3356,11 @@ export class AgentLoop {
       ...(reasoningOnlyRecoveryInstruction ? [reasoningOnlyRecoveryInstruction] : []),
       ...(pendingWorkRecoveryInstruction ? [pendingWorkRecoveryInstruction] : []),
       ...(webSearchFallbackInstruction ? [webSearchFallbackInstruction] : []),
+      // 当前模型支持图片输入且本轮确实把图片作为 image 传入时，明确告知模型
+      // 可直接读图，覆盖静态 system prompt 中"DeepSeek has no image vision"的旧表述。
+      ...(attachments.imageAttachments.length > 0
+        ? ['用户发送了图片，你具备图像视觉能力，可以直接查看图片内容，无需依赖 OCR 文字描述。']
+        : []),
       ...(deliveryFailureInstruction ? [deliveryFailureInstruction] : []),
       ...(turnBudgetWrapUp ? [TURN_BUDGET_WRAPUP_INSTRUCTION] : []),
       // 工具目录漂移提示只存在单步、下一步即消失，放易变段（history 后），

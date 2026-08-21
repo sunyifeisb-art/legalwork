@@ -334,7 +334,7 @@ export function Workbench(): ReactElement {
     useState<ComposerSkillSelection | null>(null)
   const [mode, setMode] = useState<'plan' | 'agent'>('agent')
   const [composerReasoningEffort, setComposerReasoningEffort] =
-    useState<ComposerReasoningEffort>('max')
+    useState<ComposerReasoningEffort>('high')
   const [runtimeInfo, setRuntimeInfo] = useState<CoreRuntimeInfoJson | null>(null)
   const [runtimeSkills, setRuntimeSkills] = useState<CoreRuntimeSkillJson[]>([])
   const [composerAttachments, setComposerAttachments] = useState<AttachmentReference[]>([])

@@ -17,7 +17,9 @@ export type AttachmentOcrResult = {
 type AttachmentTextExtractor = (filePath: string) => Promise<DocumentTextResult>
 
 export function shouldRunAttachmentOcr(modelId: string): boolean {
-  return modelId.trim().toLowerCase().includes('deepseek')
+  const normalized = modelId.trim().toLowerCase()
+  // 视觉模型可直接读图，无需 OCR 提取文字（kimi 等视觉模型同样不跑 OCR）。
+  return normalized.includes('deepseek') && !normalized.includes('vision')
 }
 
 export async function extractImageAttachmentOcr(

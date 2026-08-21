@@ -101,6 +101,9 @@ export const MODEL_CONTEXT_PROFILES: readonly ModelContextProfile[] = [
     'deepseek-chat',
     'deepseek-reasoner'
   ]),
+  // 多模态视觉理解实验模型：文本能力与 v4-flash 持平、计费一致，但支持图像输入，
+  // 图片作为 image 直接传给模型，不再走 OCR 提取文字。
+  deepseekV4Profile('deepseek-v4-flash-vision-exp', ['deepseek-v4-flash-vision-exp'], true),
   kimiCodeProfile(),
   mimoV25Profile('mimo-v2.5-pro', ['mimo-v2.5-pro'], false),
   mimoV25Profile('mimo-v2.5', ['mimo-v2.5'], true),
@@ -170,7 +173,8 @@ export function modelContextProfilesFromConfig(
 
 function deepseekV4Profile(
   canonicalModel: string,
-  modelIds: readonly string[]
+  modelIds: readonly string[],
+  imageInput = false
 ): ModelContextProfile {
   return {
     canonicalModel,
@@ -178,10 +182,10 @@ function deepseekV4Profile(
     contextWindowTokens: DEEPSEEK_V4_CONTEXT_WINDOW_TOKENS,
     softThreshold: DEEPSEEK_V4_SOFT_THRESHOLD,
     hardThreshold: DEEPSEEK_V4_HARD_THRESHOLD,
-    inputModalities: DEFAULT_MODEL_INPUT_MODALITIES,
+    inputModalities: imageInput ? ['text', 'image'] : DEFAULT_MODEL_INPUT_MODALITIES,
     outputModalities: DEFAULT_MODEL_OUTPUT_MODALITIES,
     supportsToolCalling: true,
-    messageParts: DEFAULT_MODEL_MESSAGE_PARTS
+    messageParts: imageInput ? ['text', 'image_url'] : DEFAULT_MODEL_MESSAGE_PARTS
   }
 }
 

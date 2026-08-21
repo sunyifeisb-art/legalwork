@@ -81,7 +81,7 @@ export function FloatingComposerModelPicker({
   composerModelGroups = [],
   canChangeModel,
   stretch = false,
-  composerReasoningEffort = 'max',
+  composerReasoningEffort = 'high',
   onComposerModelChange,
   onModelMenuOpen,
   onComposerReasoningEffortChange
@@ -410,18 +410,18 @@ export function FloatingComposerModelPicker({
           aria-expanded={menuOpen}
           aria-haspopup="menu"
           aria-label={t('composerModelControls')}
-          className={`flex h-9 min-w-0 flex-1 items-center justify-end gap-1 rounded-full py-2 pl-3 pr-1 text-[13px] font-medium outline-none transition ${
+          className={`flex h-9 min-w-0 flex-1 items-center gap-1 rounded-full py-2 pl-3 pr-1 text-[13px] font-medium outline-none transition ${
             canChangeModel
               ? 'text-current focus-visible:ring-2 focus-visible:ring-accent/25'
               : 'cursor-not-allowed text-ds-faint'
           }`}
         >
           <ModelBrandIcon brand={currentBrand} className={`ds-model-brand-dot ds-model-brand-${currentBrand}`} />
-          <span className="min-w-0 truncate text-right">
+          <span className="shrink-0 whitespace-nowrap">
             {modelLabel}
           </span>
           {reasoningEnabled ? (
-            <span className="shrink-0 text-[12px] font-semibold text-ds-faint">
+            <span className="ml-auto shrink-0 whitespace-nowrap text-[12px] font-semibold text-ds-faint">
               {currentReasoningLabel}
             </span>
           ) : null}
@@ -439,7 +439,7 @@ export function FloatingComposerModelPicker({
       className={`ds-composer-model-picker ds-no-drag relative h-9 shrink-0 items-center rounded-full transition ${
         canChangeModel ? 'text-ds-muted hover:bg-ds-hover hover:text-ds-ink' : 'text-ds-faint'
       } ${
-        compact ? 'max-w-[220px]' : 'max-w-[260px]'
+        compact ? 'max-w-[220px]' : 'max-w-[320px]'
       }`}
       ref={(node) => {
         pickerRef.current = node
@@ -458,13 +458,13 @@ export function FloatingComposerModelPicker({
         title={t('composerModelControls')}
       >
         <ModelBrandIcon brand={currentBrand} className={`ds-model-brand-dot ds-model-brand-${currentBrand}`} />
-        <span className="min-w-0 whitespace-nowrap">{modelLabel}</span>
+        <span className="shrink-0 whitespace-nowrap">{modelLabel}</span>
         {reasoningEnabled ? (
-          <span className="shrink-0 text-ds-faint">
+          <span className="ml-auto shrink-0 whitespace-nowrap text-ds-faint">
             {t(reasoningLabelKey(currentReasoning))}
           </span>
         ) : null}
-        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-ds-faint" strokeWidth={1.8} />
+        <ChevronDown className="ml-0.5 h-3.5 w-3.5 shrink-0 text-ds-faint" strokeWidth={1.8} />
       </button>
 
       {menuOpen && canChangeModel ? (
@@ -688,7 +688,7 @@ function PickerRow({
     >
       {brand ? <ModelBrandIcon brand={brand} className={`ds-model-brand-dot ds-model-brand-${brand}`} /> : null}
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[13px] font-semibold">{title}</span>
+        <span className="block break-words text-[13px] font-semibold">{title}</span>
       </span>
       {selected ? <Check className="h-4 w-4 shrink-0 text-accent" strokeWidth={2} /> : null}
     </button>
