@@ -60,6 +60,7 @@
   },
   "scripts": {
     "dev": "npm run build:legalwork && electron-vite dev",
+    "dev:launcher": "node ./scripts/install-dev-launcher.cjs",
     "build": "npm run build:legalwork && node ./scripts/generate-error-report-config.cjs && electron-vite build",
     "dev:quick": "npm run build && electron-vite preview",
     "build:legalwork": "node ./scripts/ensure-legalwork-install.cjs && npm --prefix legalwork run build",
