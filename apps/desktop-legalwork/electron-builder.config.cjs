@@ -248,7 +248,7 @@ module.exports = {
     // files under resources. Never list .exe/.dll here or Electron itself can
     // disappear from the 7z payload. The safe resource-only extensions below
     // avoid redundant compression without omitting top-level application files.
-    preCompressedFileExtensions: ['.pyd', '.node', '.asar', '.ttf'],
+    preCompressedFileExtensions: ['.pyd', '.node', '.asar', '.ttf', '.codexbin'],
     oneClick: false,
     allowToChangeInstallationDirectory: true,
     perMachine: false,

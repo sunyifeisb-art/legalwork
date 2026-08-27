@@ -35,3 +35,14 @@
 
   legalwork_process_closed:
 !macroend
+
+; electron-builder has already verified and signed these PE files. They use a
+; temporary unique extension only so NSIS can write them directly instead of
+; expanding them to $PLUGINSDIR and copying 400+ MB a second time.
+!macro customInstall
+  Rename "$INSTDIR\resources\codex-runtime\bin\codex.codexbin" "$INSTDIR\resources\codex-runtime\bin\codex.exe"
+  Rename "$INSTDIR\resources\codex-runtime\bin\codex-code-mode-host.codexbin" "$INSTDIR\resources\codex-runtime\bin\codex-code-mode-host.exe"
+  Rename "$INSTDIR\resources\codex-runtime\codex-path\rg.codexbin" "$INSTDIR\resources\codex-runtime\codex-path\rg.exe"
+  Rename "$INSTDIR\resources\codex-runtime\codex-resources\codex-command-runner.codexbin" "$INSTDIR\resources\codex-runtime\codex-resources\codex-command-runner.exe"
+  Rename "$INSTDIR\resources\codex-runtime\codex-resources\codex-windows-sandbox-setup.codexbin" "$INSTDIR\resources\codex-runtime\codex-resources\codex-windows-sandbox-setup.exe"
+!macroend

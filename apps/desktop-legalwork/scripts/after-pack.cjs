@@ -1,6 +1,6 @@
 const { execFileSync } = require('node:child_process')
 const { createHash } = require('node:crypto')
-const { chmodSync, cpSync, existsSync, lstatSync, readFileSync, readlinkSync, readdirSync, rmSync, statSync, symlinkSync, writeFileSync } = require('node:fs')
+const { chmodSync, cpSync, existsSync, lstatSync, readFileSync, readlinkSync, readdirSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync } = require('node:fs')
 const { dirname, isAbsolute, join, relative, resolve, sep } = require('node:path')
 
 const LEGALWORK_RUNTIME_REQUIRED_PATHS = [
@@ -53,6 +53,13 @@ const BUNDLED_PDF_FONT_NAMES = ['NotoSerifSC-Regular.ttf', 'NotoSerifSC-Bold.ttf
 const IMA_MCP_SCRIPT_RELATIVE_PATH = 'scripts/ima-mcp-server.py'
 const CANVAS_NATIVE_PACKAGE_PATTERN = /^canvas-(?:android|darwin|freebsd|linux|win32)-/
 const CODEX_NATIVE_PACKAGE_PATTERN = /^codex-(?:darwin|linux|win32)-(?:arm64|x64)$/
+const WINDOWS_CODEX_EXECUTABLES = [
+  join('bin', 'codex.exe'),
+  join('bin', 'codex-code-mode-host.exe'),
+  join('codex-path', 'rg.exe'),
+  join('codex-resources', 'codex-command-runner.exe'),
+  join('codex-resources', 'codex-windows-sandbox-setup.exe')
+]
 
 // legalwork 不使用相机 / 麦克风 / 蓝牙 / 相册。Electron 框架默认在 Info.plist 里塞了这些
 // 权限用途串，会导致 macOS 在相关 API 被触达时弹出无谓的权限请求（如相册访问）。
@@ -183,11 +190,9 @@ function pruneAndValidateCodexNativePackage(context) {
   }
   if (platform === 'win32') {
     const runtimeRoot = join(packedResourcesDir(context), 'codex-runtime')
-    assertExists(join(runtimeRoot, 'bin', 'codex.exe'), 'staged Windows Codex executable')
-    assertExists(join(runtimeRoot, 'bin', 'codex-code-mode-host.exe'), 'staged Windows Codex code-mode host')
-    assertExists(join(runtimeRoot, 'codex-path', 'rg.exe'), 'staged Windows Codex search executable')
-    assertExists(join(runtimeRoot, 'codex-resources', 'codex-command-runner.exe'), 'staged Windows Codex command runner')
-    assertExists(join(runtimeRoot, 'codex-resources', 'codex-windows-sandbox-setup.exe'), 'staged Windows Codex sandbox setup')
+    for (const relativePath of WINDOWS_CODEX_EXECUTABLES) {
+      assertExists(join(runtimeRoot, relativePath), `staged Windows Codex executable ${relativePath}`)
+    }
     return
   }
   const triple = {
@@ -200,6 +205,23 @@ function pruneAndValidateCodexNativePackage(context) {
     join(packageRoot, expected, 'vendor', triple, 'bin', 'codex'),
     `target Codex executable for ${expected}`
   )
+}
+
+/**
+ * electron-builder's NSIS archive normally expands to a temporary directory
+ * and is then copied to the installation directory. These five already-signed
+ * PE files are more than 400 MB, so that path writes them twice. Rename them
+ * after signing to a unique pre-compressed extension; NSIS writes them directly
+ * and customInstall restores .exe after all application files are present.
+ */
+function prepareWindowsCodexForDirectInstall(context) {
+  if (normalizePlatform(context.electronPlatformName) !== 'win32') return
+  const runtimeRoot = join(packedResourcesDir(context), 'codex-runtime')
+  for (const relativePath of WINDOWS_CODEX_EXECUTABLES) {
+    const source = join(runtimeRoot, relativePath)
+    assertExists(source, `signed Windows Codex executable ${relativePath}`)
+    renameSync(source, `${source.slice(0, -4)}.codexbin`)
+  }
 }
 
 function validateBundledPdfParserRuntime(context) {
@@ -588,6 +610,7 @@ async function afterPack(context) {
   prunePackedLegalworkDependencies(context)
   pruneIncompatibleCanvasNativePackages(context)
   pruneAndValidateCodexNativePackage(context)
+  prepareWindowsCodexForDirectInstall(context)
   restoreBundledOfficeCli(context)
   validateBundledLegalworkRuntime(context)
   validateBundledPdfParserRuntime(context)
@@ -625,6 +648,8 @@ exports._internals = {
   pruneIncompatibleCanvasNativePackages,
   expectedCodexNativePackage,
   pruneAndValidateCodexNativePackage,
+  prepareWindowsCodexForDirectInstall,
+  WINDOWS_CODEX_EXECUTABLES,
   validateBundledPdfParserRuntime,
   validateBundledAgentLoop,
   validateBundledOfficeRuntime,

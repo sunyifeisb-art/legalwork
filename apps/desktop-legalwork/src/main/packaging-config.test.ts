@@ -77,6 +77,7 @@ describe('electron-builder Legalwork packaging', () => {
     ]))
     expect(builderConfig.nsis.preCompressedFileExtensions).not.toContain('.exe')
     expect(builderConfig.nsis.preCompressedFileExtensions).not.toContain('.dll')
+    expect(builderConfig.nsis.preCompressedFileExtensions).toContain('.codexbin')
     expect(builderConfig.win.extraResources).toEqual(expect.arrayContaining([
       expect.objectContaining({
         from: 'vendor/codex-runtime/win-${arch}',
@@ -177,6 +178,10 @@ describe('electron-builder Legalwork packaging', () => {
     expect(existsSync(winPackageRoot)).toBe(false)
     expect(existsSync(macRoot)).toBe(false)
     expect(afterPack._internals.expectedCodexNativePackage(context)).toBe('codex-win32-x64')
+
+    afterPack._internals.prepareWindowsCodexForDirectInstall(context)
+    expect(existsSync(winBinary)).toBe(false)
+    expect(existsSync(winBinary.replace(/\.exe$/, '.codexbin'))).toBe(true)
   })
 
   it('rejects an installer that omits the PDF geometry fallback', () => {

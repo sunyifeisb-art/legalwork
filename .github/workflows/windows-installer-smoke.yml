@@ -13,7 +13,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     env:
-      CANDIDATE_URL: https://legalwork-1318565101.cos.ap-guangzhou.myqcloud.com/legalwork/test/win-installer-034.exe
+      CANDIDATE_URL: https://legalwork-1318565101.cos.ap-guangzhou.myqcloud.com/legalwork/test/win-installer-035.exe
       OLD_INSTALLER_URL: https://github.com/sunyifeisb-art/legalwork/releases/download/v0.3.28/legalwork-0.3.28-win-x64.exe
     steps:
       - name: Download installers
