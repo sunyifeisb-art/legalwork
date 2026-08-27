@@ -1,0 +1,67 @@
+name: Windows installer smoke test
+
+on:
+  push:
+    branches:
+      - codex/win-installer-fix
+
+permissions:
+  contents: read
+
+jobs:
+  installer-smoke:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      CANDIDATE_URL: https://legalwork-1318565101.cos.ap-guangzhou.myqcloud.com/legalwork/test/win-installer-031.exe
+      OLD_INSTALLER_URL: https://github.com/sunyifeisb-art/legalwork/releases/download/v0.3.28/legalwork-0.3.28-win-x64.exe
+    steps:
+      - name: Download installers
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Invoke-WebRequest -Uri $env:CANDIDATE_URL -OutFile "$env:RUNNER_TEMP\candidate.exe"
+          Invoke-WebRequest -Uri $env:OLD_INSTALLER_URL -OutFile "$env:RUNNER_TEMP\old.exe"
+
+      - name: Exercise fresh install, uninstall, and running-app upgrade
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          function Invoke-BoundedInstaller {
+            param(
+              [Parameter(Mandatory = $true)][string]$FilePath,
+              [Parameter(Mandatory = $true)][string[]]$Arguments,
+              [int]$TimeoutSeconds = 480
+            )
+            $process = Start-Process -FilePath $FilePath -ArgumentList $Arguments -PassThru
+            if (-not $process.WaitForExit($TimeoutSeconds * 1000)) {
+              & taskkill.exe /F /T /PID $process.Id | Out-Host
+              throw "Installer exceeded the ${TimeoutSeconds}s hard timeout: $FilePath"
+            }
+            if ($process.ExitCode -ne 0) {
+              throw "Installer exited with code $($process.ExitCode): $FilePath"
+            }
+          }
+
+          $freshDir = "$env:RUNNER_TEMP\legalwork-fresh"
+          Invoke-BoundedInstaller "$env:RUNNER_TEMP\candidate.exe" @('/S', "/D=$freshDir")
+          if (-not (Test-Path "$freshDir\legalwork.exe")) { throw 'Fresh install did not create legalwork.exe' }
+          if (-not (Test-Path "$freshDir\Uninstall legalwork.exe")) { throw 'Fresh install did not create the uninstaller' }
+
+          Invoke-BoundedInstaller "$freshDir\Uninstall legalwork.exe" @('/S', '/currentuser')
+          if (Test-Path "$freshDir\legalwork.exe") { throw 'Silent uninstall left legalwork.exe behind' }
+
+          $upgradeDir = "$env:RUNNER_TEMP\legalwork-upgrade"
+          Invoke-BoundedInstaller "$env:RUNNER_TEMP\old.exe" @('/S', "/D=$upgradeDir")
+          if (-not (Test-Path "$upgradeDir\legalwork.exe")) { throw 'v0.3.28 setup failed' }
+
+          Start-Process -FilePath "$upgradeDir\legalwork.exe" | Out-Null
+          Start-Sleep -Seconds 12
+          Invoke-BoundedInstaller "$env:RUNNER_TEMP\candidate.exe" @('/S', "/D=$upgradeDir")
+          if (-not (Test-Path "$upgradeDir\legalwork.exe")) { throw 'Upgrade removed legalwork.exe' }
+          if (Get-Process -Name legalwork -ErrorAction SilentlyContinue) {
+            throw 'Upgrade left a legalwork process running'
+          }
+
+          Write-Host 'Fresh install, uninstall, and running-app upgrade all completed within their hard timeouts.'

@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 
 const require = createRequire(import.meta.url)
@@ -70,6 +70,24 @@ afterEach(() => {
 })
 
 describe('electron-builder Legalwork packaging', () => {
+  it('bounds Windows process shutdown without PowerShell or WMI', () => {
+    const installerInclude = readFileSync(join(
+      dirname(require.resolve('../../electron-builder.config.cjs')),
+      'build',
+      'installer.nsh'
+    ), 'utf8')
+    const executableLines = installerInclude
+      .split(/\r?\n/)
+      .filter((line) => !line.trimStart().startsWith(';'))
+      .join('\n')
+
+    expect(builderConfig.nsis.include).toBe('build/installer.nsh')
+    expect(installerInclude).toContain('${nsProcess::FindProcess}')
+    expect(installerInclude).toContain('/TIMEOUT=10000')
+    expect(installerInclude).toContain('taskkill.exe')
+    expect(executableLines).not.toMatch(/powershell|Get-CimInstance|Win32_Process/i)
+  })
+
   it('includes Legalwork runtime dependencies in the packaged app', () => {
     expect(builderConfig.files).toEqual(expect.arrayContaining([
       'legalwork/dist/**/*',
