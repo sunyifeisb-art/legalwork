@@ -32,33 +32,53 @@ jobs:
             param(
               [Parameter(Mandatory = $true)][string]$FilePath,
               [Parameter(Mandatory = $true)][string[]]$Arguments,
+              [Parameter(Mandatory = $true)][string]$Label,
               [int]$TimeoutSeconds = 480
             )
+            $startedAt = Get-Date
+            Write-Host "[$Label] started at $($startedAt.ToString('o'))"
             $process = Start-Process -FilePath $FilePath -ArgumentList $Arguments -PassThru
             if (-not $process.WaitForExit($TimeoutSeconds * 1000)) {
               & taskkill.exe /F /T /PID $process.Id | Out-Host
-              throw "Installer exceeded the ${TimeoutSeconds}s hard timeout: $FilePath"
+              throw "[$Label] exceeded the ${TimeoutSeconds}s hard timeout: $FilePath"
             }
             if ($process.ExitCode -ne 0) {
-              throw "Installer exited with code $($process.ExitCode): $FilePath"
+              throw "[$Label] exited with code $($process.ExitCode): $FilePath"
             }
+            Write-Host "[$Label] launcher exited after $([math]::Round(((Get-Date) - $startedAt).TotalSeconds, 1))s"
+          }
+
+          function Wait-PathAbsent {
+            param(
+              [Parameter(Mandatory = $true)][string]$Path,
+              [Parameter(Mandatory = $true)][string]$Label,
+              [int]$TimeoutSeconds = 480
+            )
+            $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+            while (Test-Path $Path) {
+              if ((Get-Date) -ge $deadline) {
+                throw "[$Label] path still exists after ${TimeoutSeconds}s: $Path"
+              }
+              Start-Sleep -Seconds 2
+            }
+            Write-Host "[$Label] completed"
           }
 
           $freshDir = "$env:RUNNER_TEMP\legalwork-fresh"
-          Invoke-BoundedInstaller "$env:RUNNER_TEMP\candidate.exe" @('/S', "/D=$freshDir")
+          Invoke-BoundedInstaller -FilePath "$env:RUNNER_TEMP\candidate.exe" -Arguments @('/S', "/D=$freshDir") -Label 'fresh install'
           if (-not (Test-Path "$freshDir\legalwork.exe")) { throw 'Fresh install did not create legalwork.exe' }
           if (-not (Test-Path "$freshDir\Uninstall legalwork.exe")) { throw 'Fresh install did not create the uninstaller' }
 
-          Invoke-BoundedInstaller "$freshDir\Uninstall legalwork.exe" @('/S', '/currentuser')
-          if (Test-Path "$freshDir\legalwork.exe") { throw 'Silent uninstall left legalwork.exe behind' }
+          Invoke-BoundedInstaller -FilePath "$freshDir\Uninstall legalwork.exe" -Arguments @('/S', '/currentuser') -Label 'silent uninstall launcher'
+          Wait-PathAbsent -Path "$freshDir\legalwork.exe" -Label 'silent uninstall'
 
           $upgradeDir = "$env:RUNNER_TEMP\legalwork-upgrade"
-          Invoke-BoundedInstaller "$env:RUNNER_TEMP\old.exe" @('/S', "/D=$upgradeDir")
+          Invoke-BoundedInstaller -FilePath "$env:RUNNER_TEMP\old.exe" -Arguments @('/S', "/D=$upgradeDir") -Label 'v0.3.28 install'
           if (-not (Test-Path "$upgradeDir\legalwork.exe")) { throw 'v0.3.28 setup failed' }
 
           Start-Process -FilePath "$upgradeDir\legalwork.exe" | Out-Null
           Start-Sleep -Seconds 12
-          Invoke-BoundedInstaller "$env:RUNNER_TEMP\candidate.exe" @('/S', "/D=$upgradeDir")
+          Invoke-BoundedInstaller -FilePath "$env:RUNNER_TEMP\candidate.exe" -Arguments @('/S', "/D=$upgradeDir") -Label 'running-app upgrade'
           if (-not (Test-Path "$upgradeDir\legalwork.exe")) { throw 'Upgrade removed legalwork.exe' }
           if (Get-Process -Name legalwork -ErrorAction SilentlyContinue) {
             throw 'Upgrade left a legalwork process running'
