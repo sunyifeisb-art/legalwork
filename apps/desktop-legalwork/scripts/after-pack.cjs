@@ -382,16 +382,11 @@ function validateBundledOfficeRuntime(context) {
   }
   if (normalizePlatform(context.electronPlatformName) === 'win32') {
     if (context.arch !== 'x64' && Number(context.arch) !== 1) {
-      throw new Error('[after-pack] Fully bundled Windows runtime is supported only for x64')
+      throw new Error('[after-pack] Bundled Windows Office runtime is supported only for x64')
     }
-    if (manifest.dataComplianceReady !== true) {
-      throw new Error('[after-pack] Windows runtime is missing bundled data-compliance dependencies')
-    }
-    for (const moduleName of DATA_COMPLIANCE_RUNTIME_IMPORTS) {
-      assertExists(join(sitePackages, moduleName), `data compliance Python module ${moduleName}`)
-      if (!manifest.imports.includes(moduleName)) {
-        throw new Error(`[after-pack] Runtime manifest is missing data compliance import ${moduleName}`)
-      }
+    if (manifest.dataComplianceReady === true ||
+        DATA_COMPLIANCE_RUNTIME_IMPORTS.some((name) => manifest.imports.includes(name))) {
+      throw new Error('[after-pack] COS-hosted data-compliance dependencies leaked into the installer')
     }
   }
 }

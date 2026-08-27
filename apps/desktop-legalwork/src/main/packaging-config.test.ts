@@ -70,8 +70,8 @@ afterEach(() => {
 })
 
 describe('electron-builder Legalwork packaging', () => {
-  it('streams the large Windows payload directly into the install directory', () => {
-    expect(builderConfig.nsis.useZip).toBe(true)
+  it('uses the faster default 7z payload instead of the slow ZIP extractor', () => {
+    expect(builderConfig.nsis.useZip).toBeUndefined()
   })
 
   it('bounds Windows process shutdown without PowerShell or WMI', () => {
@@ -215,11 +215,10 @@ describe('electron-builder Legalwork packaging', () => {
   })
 
   it('includes data compliance resources in the packaged app', () => {
+    expect(builderConfig.extraResources).not.toEqual(expect.arrayContaining([
+      expect.objectContaining({ from: 'vendor/ocr-runtime' })
+    ]))
     expect(builderConfig.extraResources).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        from: 'vendor/ocr-runtime',
-        to: 'ocr-runtime'
-      }),
       expect.objectContaining({
         from: '../../ocr_agent.py',
         to: 'ocr_agent.py'
@@ -240,6 +239,12 @@ describe('electron-builder Legalwork packaging', () => {
       '**/vendor/data-compliance-review-codex/data-compliance-web/**/*',
       '**/vendor/data-compliance-review-codex/projects/data-compliance-ai-project-kit/**/*'
     ]))
+    const runtimeSource = readFileSync(join(
+      dirname(require.resolve('../../electron-builder.config.cjs')),
+      'src/main/data-compliance-runtime.ts'
+    ), 'utf8')
+    expect(runtimeSource).toContain('legalwork/compliance/env/${machine}')
+    expect(runtimeSource).toContain('legalwork-1318565101.cos.ap-guangzhou.myqcloud.com')
   })
 
   it('validates the packaged document OCR entrypoint and modules', () => {

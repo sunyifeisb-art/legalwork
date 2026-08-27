@@ -34,27 +34,11 @@ const { basename, delimiter, dirname, isAbsolute, join, resolve } = require('nod
 const DESKTOP_ROOT = resolve(__dirname, '..')
 const REPO_ROOT = resolve(DESKTOP_ROOT, '..', '..')
 const REQUIREMENTS = join(REPO_ROOT, 'skills', 'legal_document_formatting', 'requirements.txt')
-const DATA_COMPLIANCE_REQUIREMENTS = join(
-  DESKTOP_ROOT,
-  'vendor',
-  'data-compliance-review-codex',
-  'data-compliance-web',
-  'requirements.txt'
-)
 const VENDOR_ROOT = join(DESKTOP_ROOT, 'vendor', 'office-runtime')
 const FONT_VENDOR_ROOT = join(DESKTOP_ROOT, 'vendor', 'office-fonts')
 const CACHE_ROOT = join(DESKTOP_ROOT, '.cache', 'office-runtime')
 const PYTHON_LINE = '3.11'
 const REQUIRED_IMPORTS = ['docx', 'openpyxl', 'pptx', 'lxml', 'PIL', 'reportlab']
-const DATA_COMPLIANCE_REQUIRED_IMPORTS = [
-  'flask',
-  'fitz',
-  'openai',
-  'paddle',
-  'paddleocr',
-  'pypdf',
-  'pandas'
-]
 const RELEASE_REPOS = ['astral-sh/python-build-standalone', 'indygreg/python-build-standalone']
 const SUPPORTED_TARGETS = new Set(['mac-arm64', 'mac-x64', 'win-x64', 'win-ia32', 'linux-x64'])
 const FONTTOOLS_VERSION = '4.63.0'
@@ -164,10 +148,8 @@ function sitePackagesPath(runtimeRoot, platform) {
   fail(`Cannot locate site-packages in ${runtimeRoot}`)
 }
 
-function requiredImports(target) {
-  return target === 'win-x64'
-    ? [...new Set([...REQUIRED_IMPORTS, ...DATA_COMPLIANCE_REQUIRED_IMPORTS])]
-    : REQUIRED_IMPORTS
+function requiredImports() {
+  return REQUIRED_IMPORTS
 }
 
 function moduleFilesPresent(runtimeRoot, platform, target) {
@@ -175,7 +157,7 @@ function moduleFilesPresent(runtimeRoot, platform, target) {
   return requiredImports(target).every((name) => existsSync(join(site, name)))
 }
 
-function runtimeAlreadyValid(runtimeRoot, target, requirementsSha, dataComplianceRequirementsSha) {
+function runtimeAlreadyValid(runtimeRoot, target, requirementsSha) {
   const platform = platformFromTarget(target)
   if (!existsSync(join(runtimeRoot, 'runtime.json'))) return false
   if (!existsSync(join(runtimeRoot, pythonRelativePath(platform)))) return false
@@ -183,10 +165,7 @@ function runtimeAlreadyValid(runtimeRoot, target, requirementsSha, dataComplianc
     const marker = JSON.parse(readFileSync(join(runtimeRoot, 'runtime.json'), 'utf8'))
     return marker.target === target &&
       marker.requirementsSha256 === requirementsSha &&
-      (target !== 'win-x64' || (
-        marker.dataComplianceReady === true &&
-        marker.dataComplianceRequirementsSha256 === dataComplianceRequirementsSha
-      )) &&
+      marker.dataComplianceReady !== true &&
       marker.pythonLine === PYTHON_LINE &&
       moduleFilesPresent(runtimeRoot, platform, target)
   } catch {
@@ -478,9 +457,7 @@ function targetPythonEnv(runtimeRoot) {
 
 function installRequirements(runtimeRoot, platform, target) {
   const targetPython = join(runtimeRoot, pythonRelativePath(platform))
-  const requirements = target === 'win-x64'
-    ? [REQUIREMENTS, DATA_COMPLIANCE_REQUIREMENTS]
-    : [REQUIREMENTS]
+  const requirements = [REQUIREMENTS]
   const commonArgs = [
     '-m', 'pip', 'install', '--disable-pip-version-check', '--no-input',
     ...requirements.flatMap((path) => ['-r', path])
@@ -525,7 +502,7 @@ function verifyRuntime(runtimeRoot, platform, target) {
   }
 }
 
-async function prepareTarget(target, force, requirementsSha, dataComplianceRequirementsSha) {
+async function prepareTarget(target, force, requirementsSha) {
   const platform = platformFromTarget(target)
   const runtimeRoot = join(VENDOR_ROOT, target)
   // A prepared runtime can outlive the temporary extraction directory that
@@ -533,7 +510,7 @@ async function prepareTarget(target, force, requirementsSha, dataComplianceRequi
   // cache, otherwise every later release keeps repackaging the same broken
   // links even after the repair logic itself has shipped.
   if (!force) repairBundledSymlinks(runtimeRoot)
-  if (!force && runtimeAlreadyValid(runtimeRoot, target, requirementsSha, dataComplianceRequirementsSha)) {
+  if (!force && runtimeAlreadyValid(runtimeRoot, target, requirementsSha)) {
     info(`${target} Office runtime is already prepared.`)
     return
   }
@@ -559,10 +536,9 @@ async function prepareTarget(target, force, requirementsSha, dataComplianceRequi
       target,
       pythonLine: PYTHON_LINE,
       requirementsSha256: requirementsSha,
-      dataComplianceReady: target === 'win-x64',
-      dataComplianceRequirementsSha256: target === 'win-x64'
-        ? dataComplianceRequirementsSha
-        : undefined,
+      // The large Paddle/OCR compliance environment is versioned separately
+      // and downloaded from COS only when that feature is opened.
+      dataComplianceReady: false,
       sourceRepository: asset.repository,
       sourceRelease: asset.release,
       sourceAsset: asset.name,
@@ -577,16 +553,12 @@ async function prepareTarget(target, force, requirementsSha, dataComplianceRequi
 
 async function main() {
   if (!existsSync(REQUIREMENTS)) fail(`Missing Office requirements: ${REQUIREMENTS}`)
-  if (!existsSync(DATA_COMPLIANCE_REQUIREMENTS)) {
-    fail(`Missing data compliance requirements: ${DATA_COMPLIANCE_REQUIREMENTS}`)
-  }
   const args = parseArgs(process.argv.slice(2))
   await prepareBundledFonts()
   if (args.fontsOnly) return
   const requirementsSha = sha256File(REQUIREMENTS)
-  const dataComplianceRequirementsSha = sha256File(DATA_COMPLIANCE_REQUIREMENTS)
   for (const target of args.targets) {
-    await prepareTarget(target, args.force, requirementsSha, dataComplianceRequirementsSha)
+    await prepareTarget(target, args.force, requirementsSha)
   }
 }
 

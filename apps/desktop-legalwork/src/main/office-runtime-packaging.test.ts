@@ -100,7 +100,7 @@ describe('bundled Office runtime packaging contract', () => {
     expect(() => afterPack._internals.validateBundledOfficeRuntime(context)).toThrow(/openpyxl/)
   })
 
-  it('requires the complete data-compliance runtime in Windows x64 packages', () => {
+  it('keeps the COS-hosted data-compliance runtime out of Windows installers', () => {
     const root = tempRoot()
     const context = {
       appOutDir: join(root, 'win-x64'),
@@ -112,24 +112,22 @@ describe('bundled Office runtime packaging contract', () => {
     const python = afterPack._internals.officeRuntimePythonPath(context)
     const sitePackages = afterPack._internals.officeRuntimeSitePackagesPath(context)
     ensurePath(python)
-    for (const moduleName of [
-      ...afterPack.OFFICE_RUNTIME_IMPORTS,
-      ...afterPack.DATA_COMPLIANCE_RUNTIME_IMPORTS
-    ]) {
+    for (const moduleName of afterPack.OFFICE_RUNTIME_IMPORTS) {
       ensurePath(join(sitePackages, moduleName), true)
     }
     writeFileSync(join(resources, 'office-runtime', 'runtime.json'), JSON.stringify({
       pythonLine: afterPack.OFFICE_RUNTIME_PYTHON_LINE,
-      dataComplianceReady: true,
-      imports: [
-        ...afterPack.OFFICE_RUNTIME_IMPORTS,
-        ...afterPack.DATA_COMPLIANCE_RUNTIME_IMPORTS
-      ]
+      dataComplianceReady: false,
+      imports: afterPack.OFFICE_RUNTIME_IMPORTS
     }), 'utf8')
 
     expect(() => afterPack._internals.validateBundledOfficeRuntime(context)).not.toThrow()
-    rmSync(join(sitePackages, 'paddle'), { recursive: true, force: true })
-    expect(() => afterPack._internals.validateBundledOfficeRuntime(context)).toThrow(/paddle/)
+    writeFileSync(join(resources, 'office-runtime', 'runtime.json'), JSON.stringify({
+      pythonLine: afterPack.OFFICE_RUNTIME_PYTHON_LINE,
+      dataComplianceReady: true,
+      imports: [...afterPack.OFFICE_RUNTIME_IMPORTS, 'paddle']
+    }), 'utf8')
+    expect(() => afterPack._internals.validateBundledOfficeRuntime(context)).toThrow(/leaked/)
   })
 
   it('never runs npm against the completed package', () => {

@@ -232,11 +232,6 @@ module.exports = {
   },
   nsis: {
     include: 'build/installer.nsh',
-    // The default 7z path extracts the complete app to $PLUGINSDIR and then
-    // CopyFiles it into $INSTDIR.  This application contains a large Python
-    // runtime, so that path writes roughly 1.9 GB twice and appears frozen at
-    // 60-70%.  ZIP extraction streams directly into $INSTDIR.
-    useZip: true,
     oneClick: false,
     allowToChangeInstallationDirectory: true,
     perMachine: false,
