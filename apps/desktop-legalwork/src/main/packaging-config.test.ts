@@ -70,6 +70,10 @@ afterEach(() => {
 })
 
 describe('electron-builder Legalwork packaging', () => {
+  it('streams the large Windows payload directly into the install directory', () => {
+    expect(builderConfig.nsis.useZip).toBe(true)
+  })
+
   it('bounds Windows process shutdown without PowerShell or WMI', () => {
     const installerInclude = readFileSync(join(
       dirname(require.resolve('../../electron-builder.config.cjs')),

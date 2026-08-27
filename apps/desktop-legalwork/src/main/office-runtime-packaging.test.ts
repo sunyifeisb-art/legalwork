@@ -52,7 +52,12 @@ describe('bundled Office runtime packaging contract', () => {
       expect.objectContaining({
         from: 'vendor/office-runtime/${os}-${arch}',
         to: 'office-runtime',
-        filter: ['**/*']
+        filter: expect.arrayContaining([
+          '**/*',
+          '!**/__pycache__/**/*',
+          '!**/*.pyc',
+          '!**/tests/**/*'
+        ])
       }),
       expect.objectContaining({
         from: 'vendor/office-fonts',

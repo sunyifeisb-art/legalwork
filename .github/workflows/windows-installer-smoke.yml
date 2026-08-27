@@ -13,7 +13,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     env:
-      CANDIDATE_URL: https://legalwork-1318565101.cos.ap-guangzhou.myqcloud.com/legalwork/test/win-installer-031.exe
+      CANDIDATE_URL: https://legalwork-1318565101.cos.ap-guangzhou.myqcloud.com/legalwork/test/win-installer-032.exe
       OLD_INSTALLER_URL: https://github.com/sunyifeisb-art/legalwork/releases/download/v0.3.28/legalwork-0.3.28-win-x64.exe
     steps:
       - name: Download installers
@@ -68,6 +68,12 @@ jobs:
           Invoke-BoundedInstaller -FilePath "$env:RUNNER_TEMP\candidate.exe" -Arguments @('/S', "/D=$freshDir") -Label 'fresh install'
           if (-not (Test-Path "$freshDir\legalwork.exe")) { throw 'Fresh install did not create legalwork.exe' }
           if (-not (Test-Path "$freshDir\Uninstall legalwork.exe")) { throw 'Fresh install did not create the uninstaller' }
+          $python = "$freshDir\resources\office-runtime\python\python.exe"
+          if (-not (Test-Path $python)) { throw 'Fresh install is missing bundled Python' }
+          Invoke-BoundedInstaller -FilePath $python -Arguments @(
+            '-c',
+            'import docx, openpyxl, pptx, lxml, PIL, reportlab, flask, fitz, openai, paddle, paddleocr, pypdf, pandas'
+          ) -Label 'bundled Python imports' -TimeoutSeconds 180
 
           Invoke-BoundedInstaller -FilePath "$freshDir\Uninstall legalwork.exe" -Arguments @('/S', '/currentuser') -Label 'silent uninstall launcher'
           Wait-PathAbsent -Path "$freshDir\legalwork.exe" -Label 'silent uninstall'
