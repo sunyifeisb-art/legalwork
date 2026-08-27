@@ -13,7 +13,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     env:
-      CANDIDATE_URL: https://legalwork-1318565101.cos.ap-guangzhou.myqcloud.com/legalwork/test/win-installer-033.exe
+      CANDIDATE_URL: https://legalwork-1318565101.cos.ap-guangzhou.myqcloud.com/legalwork/test/win-installer-034.exe
       OLD_INSTALLER_URL: https://github.com/sunyifeisb-art/legalwork/releases/download/v0.3.28/legalwork-0.3.28-win-x64.exe
     steps:
       - name: Download installers
@@ -65,7 +65,7 @@ jobs:
           }
 
           $freshDir = "$env:RUNNER_TEMP\legalwork-fresh"
-          Invoke-BoundedInstaller -FilePath "$env:RUNNER_TEMP\candidate.exe" -Arguments @('/S', "/D=$freshDir") -Label 'fresh install' -TimeoutSeconds 240
+          Invoke-BoundedInstaller -FilePath "$env:RUNNER_TEMP\candidate.exe" -Arguments @('/S', "/D=$freshDir") -Label 'fresh install' -TimeoutSeconds 60
           if (-not (Test-Path "$freshDir\legalwork.exe")) { throw 'Fresh install did not create legalwork.exe' }
           if (-not (Test-Path "$freshDir\Uninstall legalwork.exe")) { throw 'Fresh install did not create the uninstaller' }
           $python = "$freshDir\resources\office-runtime\python\python.exe"
@@ -75,10 +75,15 @@ jobs:
           if (Test-Path "$freshDir\resources\office-runtime\python\Lib\site-packages\paddle") {
             throw 'Paddle was duplicated into installer instead of remaining on COS'
           }
+          $env:PYTHONHOME = "$freshDir\resources\office-runtime\python"
           Invoke-BoundedInstaller -FilePath $python -Arguments @(
             '-c',
             'import docx, openpyxl, pptx, lxml, PIL, reportlab'
           ) -Label 'bundled Python imports' -TimeoutSeconds 180
+          Remove-Item Env:PYTHONHOME
+          $codex = "$freshDir\resources\codex-runtime\bin\codex.exe"
+          if (-not (Test-Path $codex)) { throw 'Fresh install is missing Windows Codex runtime' }
+          Invoke-BoundedInstaller -FilePath $codex -Arguments @('--version') -Label 'Windows Codex runtime' -TimeoutSeconds 30
 
           Invoke-BoundedInstaller -FilePath "$freshDir\Uninstall legalwork.exe" -Arguments @('/S', '/currentuser') -Label 'silent uninstall launcher'
           Wait-PathAbsent -Path "$freshDir\legalwork.exe" -Label 'silent uninstall'
@@ -89,7 +94,7 @@ jobs:
 
           Start-Process -FilePath "$upgradeDir\legalwork.exe" | Out-Null
           Start-Sleep -Seconds 12
-          Invoke-BoundedInstaller -FilePath "$env:RUNNER_TEMP\candidate.exe" -Arguments @('/S', "/D=$upgradeDir") -Label 'running-app upgrade' -TimeoutSeconds 360
+          Invoke-BoundedInstaller -FilePath "$env:RUNNER_TEMP\candidate.exe" -Arguments @('/S', "/D=$upgradeDir") -Label 'running-app upgrade' -TimeoutSeconds 60
           if (-not (Test-Path "$upgradeDir\legalwork.exe")) { throw 'Upgrade removed legalwork.exe' }
           if (Get-Process -Name legalwork -ErrorAction SilentlyContinue) {
             throw 'Upgrade left a legalwork process running'

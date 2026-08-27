@@ -45,6 +45,9 @@ export function resolveCodexBinaryPath(explicitPath = ''): string | null {
   const candidates = [
     explicitPath,
     process.env.LEGALWORK_CODEX_BINARY ?? '',
+    app.isPackaged && process.platform === 'win32'
+      ? join(process.resourcesPath, 'codex-runtime', 'bin', 'codex.exe')
+      : '',
     join(appRoot, 'node_modules', '@openai', 'codex', 'bin', 'codex.js'),
     process.platform === 'darwin'
       ? '/Applications/ChatGPT.app/Contents/Resources/codex'

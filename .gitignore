@@ -56,6 +56,8 @@ apps/desktop-legalwork/vendor/office-runtime/win-x64/
 apps/desktop-legalwork/vendor/office-runtime/win-ia32/
 apps/desktop-legalwork/vendor/office-runtime/linux-x64/
 apps/desktop-legalwork/vendor/office-fonts/
+# Fetched at cross-build time from the exact @openai/codex optional package.
+apps/desktop-legalwork/vendor/codex-runtime/
 *.sqlite3
 *.sqlite3-shm
 *.sqlite3-wal

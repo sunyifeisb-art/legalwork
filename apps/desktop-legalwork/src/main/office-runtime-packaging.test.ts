@@ -75,6 +75,7 @@ describe('bundled Office runtime packaging contract', () => {
     expect(beforePack._internals.normalizeArch(1)).toBe('x64')
     expect(beforePack._internals.normalizeArch(0)).toBe('ia32')
     expect(beforePack._internals.normalizeArch(3)).toBe('arm64')
+    expect(beforePack._internals.CODEX_PACKAGE_BY_TARGET['win-x64']).toBe('@openai/codex-win32-x64')
   })
 
   it('requires Python plus Word Excel and PowerPoint libraries in the packaged app', () => {

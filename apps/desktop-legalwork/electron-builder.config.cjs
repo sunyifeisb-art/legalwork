@@ -149,6 +149,9 @@ module.exports = {
     'out/**/*',
     'package.json',
     'node_modules/@openai/codex*/**/*',
+    // Windows native Codex executables are staged as direct extraResources so
+    // NSIS writes the two large binaries once instead of unpacking + copying.
+    '!node_modules/@openai/codex-win32-*/**/*',
     'legalwork/dist/**/*',
     'legalwork/package.json',
     'legalwork/package-lock.json',
@@ -227,11 +230,25 @@ module.exports = {
   },
   win: {
     icon: './src/asset/img/legalwork.png',
+    extraResources: [
+      {
+        from: 'vendor/codex-runtime/win-${arch}',
+        to: 'codex-runtime',
+        filter: ['**/*']
+      }
+    ],
     // 4 个版本:win x64 + win ia32(32位),mac arm64 + mac x64
     target: [{ target: 'nsis', arch: ['x64', 'ia32'] }]
   },
   nsis: {
     include: 'build/installer.nsh',
+    // These large, already-compressed/runtime files are emitted directly by
+    // NSIS instead of entering electron-builder's atomic 7z temp-copy path.
+    // This option applies its exclusion globally but only restores matching
+    // files under resources. Never list .exe/.dll here or Electron itself can
+    // disappear from the 7z payload. The safe resource-only extensions below
+    // avoid redundant compression without omitting top-level application files.
+    preCompressedFileExtensions: ['.pyd', '.node', '.asar', '.ttf'],
     oneClick: false,
     allowToChangeInstallationDirectory: true,
     perMachine: false,

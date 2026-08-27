@@ -52,6 +52,7 @@ const BUNDLED_PDF_FONT_PREPARATION_VERSION = 2
 const BUNDLED_PDF_FONT_NAMES = ['NotoSerifSC-Regular.ttf', 'NotoSerifSC-Bold.ttf']
 const IMA_MCP_SCRIPT_RELATIVE_PATH = 'scripts/ima-mcp-server.py'
 const CANVAS_NATIVE_PACKAGE_PATTERN = /^canvas-(?:android|darwin|freebsd|linux|win32)-/
+const CODEX_NATIVE_PACKAGE_PATTERN = /^codex-(?:darwin|linux|win32)-(?:arm64|x64)$/
 
 // legalwork 不使用相机 / 麦克风 / 蓝牙 / 相册。Electron 框架默认在 Info.plist 里塞了这些
 // 权限用途串，会导致 macOS 在相关 API 被触达时弹出无谓的权限请求（如相册访问）。
@@ -157,6 +158,48 @@ function pruneIncompatibleCanvasNativePackages(context) {
       rmSync(join(packageRoot, entry.name), { recursive: true, force: true })
     }
   }
+}
+
+function expectedCodexNativePackage(context) {
+  const platform = normalizePlatform(context.electronPlatformName)
+  const arch = normalizeArch(context.arch)
+  if (platform === 'darwin' && (arch === 'arm64' || arch === 'x64')) return `codex-darwin-${arch}`
+  if (platform === 'win32' && arch === 'x64') return 'codex-win32-x64'
+  if (platform === 'linux' && arch === 'x64') return 'codex-linux-x64'
+  return null
+}
+
+function pruneAndValidateCodexNativePackage(context) {
+  const expected = expectedCodexNativePackage(context)
+  if (!expected) throw new Error('[after-pack] Unsupported Codex target platform/architecture')
+  const packageRoot = join(unpackedAppRoot(context), 'node_modules', '@openai')
+  if (!existsSync(packageRoot)) throw new Error('[after-pack] Missing @openai package directory')
+  const platform = normalizePlatform(context.electronPlatformName)
+  for (const entry of readdirSync(packageRoot, { withFileTypes: true })) {
+    if (!entry.isDirectory() || !CODEX_NATIVE_PACKAGE_PATTERN.test(entry.name)) continue
+    if (platform === 'win32' || entry.name !== expected) {
+      rmSync(join(packageRoot, entry.name), { recursive: true, force: true })
+    }
+  }
+  if (platform === 'win32') {
+    const runtimeRoot = join(packedResourcesDir(context), 'codex-runtime')
+    assertExists(join(runtimeRoot, 'bin', 'codex.exe'), 'staged Windows Codex executable')
+    assertExists(join(runtimeRoot, 'bin', 'codex-code-mode-host.exe'), 'staged Windows Codex code-mode host')
+    assertExists(join(runtimeRoot, 'codex-path', 'rg.exe'), 'staged Windows Codex search executable')
+    assertExists(join(runtimeRoot, 'codex-resources', 'codex-command-runner.exe'), 'staged Windows Codex command runner')
+    assertExists(join(runtimeRoot, 'codex-resources', 'codex-windows-sandbox-setup.exe'), 'staged Windows Codex sandbox setup')
+    return
+  }
+  const triple = {
+    'codex-darwin-arm64': 'aarch64-apple-darwin',
+    'codex-darwin-x64': 'x86_64-apple-darwin',
+    'codex-win32-x64': 'x86_64-pc-windows-msvc',
+    'codex-linux-x64': 'x86_64-unknown-linux-musl'
+  }[expected]
+  assertExists(
+    join(packageRoot, expected, 'vendor', triple, 'bin', 'codex'),
+    `target Codex executable for ${expected}`
+  )
 }
 
 function validateBundledPdfParserRuntime(context) {
@@ -544,6 +587,7 @@ function stripUnnecessaryMacPermissions(context) {
 async function afterPack(context) {
   prunePackedLegalworkDependencies(context)
   pruneIncompatibleCanvasNativePackages(context)
+  pruneAndValidateCodexNativePackage(context)
   restoreBundledOfficeCli(context)
   validateBundledLegalworkRuntime(context)
   validateBundledPdfParserRuntime(context)
@@ -579,6 +623,8 @@ exports._internals = {
   normalizeArch,
   expectedCanvasNativePackage,
   pruneIncompatibleCanvasNativePackages,
+  expectedCodexNativePackage,
+  pruneAndValidateCodexNativePackage,
   validateBundledPdfParserRuntime,
   validateBundledAgentLoop,
   validateBundledOfficeRuntime,

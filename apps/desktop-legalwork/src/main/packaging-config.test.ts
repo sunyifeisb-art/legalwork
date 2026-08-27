@@ -72,6 +72,18 @@ afterEach(() => {
 describe('electron-builder Legalwork packaging', () => {
   it('uses the faster default 7z payload instead of the slow ZIP extractor', () => {
     expect(builderConfig.nsis.useZip).toBeUndefined()
+    expect(builderConfig.nsis.preCompressedFileExtensions).toEqual(expect.arrayContaining([
+      '.asar', '.pyd', '.node'
+    ]))
+    expect(builderConfig.nsis.preCompressedFileExtensions).not.toContain('.exe')
+    expect(builderConfig.nsis.preCompressedFileExtensions).not.toContain('.dll')
+    expect(builderConfig.win.extraResources).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        from: 'vendor/codex-runtime/win-${arch}',
+        to: 'codex-runtime'
+      })
+    ]))
+    expect(builderConfig.files).toContain('!node_modules/@openai/codex-win32-*/**/*')
   })
 
   it('bounds Windows process shutdown without PowerShell or WMI', () => {
@@ -136,6 +148,35 @@ describe('electron-builder Legalwork packaging', () => {
     expect(existsSync(arm64Package)).toBe(true)
     expect(existsSync(x64Package)).toBe(false)
     expect(() => afterPack._internals.validateBundledPdfParserRuntime(context)).not.toThrow()
+  })
+
+  it('keeps only the Windows x64 Codex runtime in Windows packages', () => {
+    const root = tempRoot()
+    const context = {
+      appOutDir: join(root, 'win-x64'),
+      electronPlatformName: 'win32',
+      arch: 'x64',
+      packager: { appInfo: { productFilename: 'legalwork' } }
+    }
+    const openaiRoot = join(afterPack._internals.unpackedAppRoot(context), 'node_modules', '@openai')
+    const winPackageRoot = join(openaiRoot, 'codex-win32-x64')
+    const macRoot = join(openaiRoot, 'codex-darwin-arm64')
+    const runtimeRoot = join(afterPack._internals.packedResourcesDir(context), 'codex-runtime')
+    const winBinary = join(runtimeRoot, 'bin', 'codex.exe')
+    touch(join(winPackageRoot, 'vendor', 'x86_64-pc-windows-msvc', 'bin', 'codex.exe'))
+    touch(join(macRoot, 'vendor', 'aarch64-apple-darwin', 'bin', 'codex'))
+    touch(winBinary)
+    touch(join(runtimeRoot, 'bin', 'codex-code-mode-host.exe'))
+    touch(join(runtimeRoot, 'codex-path', 'rg.exe'))
+    touch(join(runtimeRoot, 'codex-resources', 'codex-command-runner.exe'))
+    touch(join(runtimeRoot, 'codex-resources', 'codex-windows-sandbox-setup.exe'))
+
+    afterPack._internals.pruneAndValidateCodexNativePackage(context)
+
+    expect(existsSync(winBinary)).toBe(true)
+    expect(existsSync(winPackageRoot)).toBe(false)
+    expect(existsSync(macRoot)).toBe(false)
+    expect(afterPack._internals.expectedCodexNativePackage(context)).toBe('codex-win32-x64')
   })
 
   it('rejects an installer that omits the PDF geometry fallback', () => {
