@@ -1,0 +1,109 @@
+name: Sync upstream and patch branch
+
+on:
+  schedule:
+    # 05:30 Asia/Tokyo every day (GitHub schedules use UTC).
+    - cron: '30 20 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: sync-upstream-and-patches
+  cancel-in-progress: false
+
+env:
+  UPSTREAM_REPOSITORY: sunyifeisb-art/legalwork
+  UPSTREAM_BRANCH: main
+  PATCH_BRANCH: fix/data-compliance-environment-reinstall
+  RELEASE_BRANCH: rch-release
+  SYNC_ISSUE_TITLE: Automated upstream sync needs attention
+
+jobs:
+  sync:
+    # Do not let this workflow push anywhere if the repository is copied again.
+    if: github.repository == 'rckiki-cyber/rchwork'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the fork
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Merge upstream and update the patch branch
+        id: sync
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git remote add upstream "https://github.com/${UPSTREAM_REPOSITORY}.git"
+          git fetch --prune upstream "${UPSTREAM_BRANCH}"
+          git fetch --prune origin main "${PATCH_BRANCH}" "${RELEASE_BRANCH}"
+
+          git checkout -B main origin/main
+          if ! git merge --no-edit "upstream/${UPSTREAM_BRANCH}"; then
+            git merge --abort
+            echo 'conflict=main' >> "${GITHUB_OUTPUT}"
+            echo '### Upstream sync conflict' >> "${GITHUB_STEP_SUMMARY}"
+            echo 'The fork main branch could not merge upstream/main.' >> "${GITHUB_STEP_SUMMARY}"
+            exit 0
+          fi
+          git push origin main
+
+          git checkout -B "${PATCH_BRANCH}" "origin/${PATCH_BRANCH}"
+          if ! git merge --no-edit main; then
+            git merge --abort
+            echo 'conflict=patch' >> "${GITHUB_OUTPUT}"
+            echo '### Patch branch conflict' >> "${GITHUB_STEP_SUMMARY}"
+            echo "${PATCH_BRANCH} could not merge the updated main branch." >> "${GITHUB_STEP_SUMMARY}"
+            exit 0
+          fi
+          git push origin "${PATCH_BRANCH}"
+
+          git checkout -B "${RELEASE_BRANCH}" "origin/${RELEASE_BRANCH}"
+          if ! git merge --no-edit "${PATCH_BRANCH}"; then
+            git merge --abort
+            echo 'conflict=release' >> "${GITHUB_OUTPUT}"
+            echo '### Release branch conflict' >> "${GITHUB_STEP_SUMMARY}"
+            echo "${RELEASE_BRANCH} could not merge the updated patch branch." >> "${GITHUB_STEP_SUMMARY}"
+            exit 0
+          fi
+          git push origin "${RELEASE_BRANCH}"
+          echo 'conflict=none' >> "${GITHUB_OUTPUT}"
+          echo '### Sync completed' >> "${GITHUB_STEP_SUMMARY}"
+          echo 'Main, the patch branch, and the release branch now include the latest upstream changes.' >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Open or update a conflict issue
+        if: steps.sync.outputs.conflict != 'none'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CONFLICT_KIND: ${{ steps.sync.outputs.conflict }}
+        shell: bash
+        run: |
+          run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          body="Automatic synchronization stopped because of a ${CONFLICT_KIND} merge conflict. No branch was force-pushed and the patch was not overwritten. Resolve the conflict manually, then rerun the workflow: ${run_url}"
+          issue_number="$(gh issue list --state open --search "${SYNC_ISSUE_TITLE} in:title" --json number --jq '.[0].number // empty')"
+          if [[ -n "${issue_number}" ]]; then
+            gh issue comment "${issue_number}" --body "${body}"
+          else
+            gh issue create --title "${SYNC_ISSUE_TITLE}" --body "${body}"
+          fi
+
+      - name: Close a resolved conflict issue
+        if: steps.sync.outputs.conflict == 'none'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          issue_number="$(gh issue list --state open --search "${SYNC_ISSUE_TITLE} in:title" --json number --jq '.[0].number // empty')"
+          if [[ -n "${issue_number}" ]]; then
+            gh issue close "${issue_number}" --comment 'Automatic synchronization is working again.'
+          fi
+
+      - name: Mark conflict runs as failed
+        if: steps.sync.outputs.conflict != 'none'
+        run: exit 1

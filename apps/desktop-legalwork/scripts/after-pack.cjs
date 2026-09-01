@@ -127,6 +127,11 @@ function prunePackedLegalworkDependencies(context) {
   assertExists(join(legalworkDir, 'package.json'), 'Legalwork package manifest')
   assertExists(join(legalworkDir, 'node_modules'), 'Legalwork node_modules')
 
+  // electron-builder's file filters already exclude Legalwork development
+  // dependencies. Never run npm in afterPack: it may access the registry,
+  // mutate the completed package, or fail on a damaged global npm cache.
+  // Packaging must be deterministic and fully offline once inputs exist.
+
   // Keep native SQLite on the app root dependency so electron-builder's
   // native-module rebuild owns the target arch and Electron ABI.
   assertExists(

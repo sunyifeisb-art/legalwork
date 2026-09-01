@@ -1173,6 +1173,11 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
       const result = await runtimeRequest('/data-compliance/environment', 'GET')
       if (!result.ok) {
         const parsed = JSON.parse(result.body || '{}') as { error?: string; fix?: string }
+        // status 0 is a transport/probe failure (for example, the backend is
+        // still starting or a cold Python import exceeded the request timeout).
+        // It is not evidence that the managed environment is missing. Starting
+        // an installer here can race the running Python process and fail while
+        // deleting loaded DLLs on Windows (EPERM: unlink libcrypto-3-x64.dll).
         if (result.status === 0) {
           return {
             ok: false,

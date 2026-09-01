@@ -99,6 +99,8 @@ function currentPlatformName() {
 
 function configuredTargetsForPlatform(platform) {
   if (platform === 'mac') return ['mac-x64', 'mac-arm64']
+  // The complete offline compliance runtime depends on native wheels that are
+  // published for Windows x64 only.
   if (platform === 'win') return ['win-x64']
   if (platform === 'linux') return ['linux-x64']
   fail(`Unsupported Office runtime platform: ${platform}`)

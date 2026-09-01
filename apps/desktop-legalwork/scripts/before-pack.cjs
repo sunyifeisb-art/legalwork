@@ -24,6 +24,10 @@ async function beforePack(context) {
   const platform = normalizePlatform(context.electronPlatformName)
   const arch = normalizeArch(context.arch)
   const projectDir = context.packager?.projectDir || join(__dirname, '..')
+  if (process.env.LEGALWORK_SKIP_OFFICE_RUNTIME === '1') {
+    console.log('[before-pack] Skipping Office runtime preparation (using existing bundled runtime).')
+    return
+  }
   const script = join(projectDir, 'scripts', 'prepare-office-runtime.cjs')
   console.log(`[before-pack] Preparing bundled Office runtime for ${platform}-${arch}...`)
   execFileSync(process.execPath, [script, '--platform', platform, '--arch', arch], {

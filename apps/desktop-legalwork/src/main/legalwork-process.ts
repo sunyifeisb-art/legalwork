@@ -803,11 +803,12 @@ export function resolveBundledCompliancePythonPath(input: {
   if (!python) return undefined
   const platform = input.platform ?? process.platform
   const arch = input.arch ?? process.arch
+  // PaddlePaddle's distributable Windows runtime is x64-only.
   if (platform !== 'win32' || arch !== 'x64') return undefined
-
   const runtimeRoot = dirname(dirname(python))
+  const manifestPath = join(runtimeRoot, 'runtime.json')
   try {
-    const manifest = JSON.parse(readFileSync(join(runtimeRoot, 'runtime.json'), 'utf8')) as {
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
       dataComplianceReady?: boolean
       imports?: unknown
     }

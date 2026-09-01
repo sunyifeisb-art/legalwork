@@ -259,7 +259,6 @@ jobs:
           upload_matching "Windows x64 installer" "windows-assets/legalwork-*-win-x64.exe"
           upload_matching "Linux AppImage" "linux-assets/legalwork-*.AppImage"
           upload_matching "macOS auto-update zip" "macos-assets/legalwork-*-mac-*.zip"
-          upload_matching "Windows 32-bit installer" "windows-assets/legalwork-*-win-ia32.exe"
           upload_matching "macOS auto-update blockmap" "macos-assets/legalwork-*-mac-*.blockmap"
           upload_matching "Windows auto-update blockmap" "windows-assets/legalwork-*-win-*.exe.blockmap"
           upload_matching "update metadata" "macos-assets/latest-mac.yml" "windows-assets/latest.yml" "linux-assets/latest-linux.yml"

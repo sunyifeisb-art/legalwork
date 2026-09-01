@@ -110,8 +110,11 @@ module.exports = {
       to: 'office-fonts',
       filter: ['NotoSerifSC-Regular.ttf', 'NotoSerifSC-Bold.ttf', 'OFL.txt', 'fonts.json']
     },
-    // ocr-runtime(paddle-models)已改为从腾讯云 COS 的合规环境包下载,不进安装包(瘦身)。
-    // OCR/脱敏首次用时由 data-compliance-runtime 从 COS 拉取,见 ensureComplianceBundle。
+    {
+      from: 'vendor/ocr-runtime',
+      to: 'ocr-runtime',
+      filter: ['**/*']
+    },
     {
       from: '../../ocr_agent.py',
       to: 'ocr_agent.py'
@@ -187,7 +190,7 @@ module.exports = {
     '!legalwork/node_modules/esbuild*/**/*',
     '!legalwork/node_modules/.bin/**/*'
   ],
-  artifactName: `legalwork-${artifactVersion}-\${os}-\${arch}.\${ext}`,
+  artifactName: `LegalWork-${artifactVersion}-RCH-\${os}-\${arch}.\${ext}`,
   publish: [
     {
       provider: 'github'
@@ -215,8 +218,10 @@ module.exports = {
   },
   win: {
     icon: './src/asset/img/legalwork.png',
-    // 4 个版本:win x64 + win ia32(32位),mac arm64 + mac x64
-    target: [{ target: 'nsis', arch: ['x64', 'ia32'] }]
+    // The fully bundled data-compliance stack (Paddle/Pandas/spaCy) publishes
+    // Windows wheels for x64, not ia32. Shipping ia32 would fall back to a
+    // first-run network install and violate the offline-install contract.
+    target: [{ target: 'nsis', arch: ['x64'] }]
   },
   nsis: {
     oneClick: false,

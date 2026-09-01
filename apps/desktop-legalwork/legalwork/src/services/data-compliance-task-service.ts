@@ -375,10 +375,17 @@ export class DataComplianceTaskService {
       }
     }
 
+    // ensurePythonEnvironment is the single source of truth for dependency
+    // installation and verification. Re-importing every core package here makes
+    // each status request start PaddleOCR again, which can exceed the desktop
+    // client's probe timeout and falsely trigger a destructive reinstall.
     return { ok: true, python: this.pythonBin }
   }
 
   private async ensurePythonEnvironment(): Promise<void> {
+    // Release builds can carry a verified, relocatable Python distribution
+    // containing every data-compliance dependency. Use it in place instead of
+    // creating a user venv and running pip on first launch.
     if (
       process.env.LEGALWORK_BUNDLED_COMPLIANCE_RUNTIME === '1' &&
       this.pythonBin === process.env.COMPLIANCEAI_PYTHON &&
@@ -412,6 +419,10 @@ export class DataComplianceTaskService {
 
       if (!existsSync(requirementsPath)) return
       if (existsSync(markerPath)) {
+        // This versioned marker is written only after every core import passes.
+        // Trust it on status probes: cold Paddle/PaddleOCR imports are expensive
+        // and concurrent renderer probes can otherwise time out and start a
+        // reinstall that tries to delete loaded Windows DLLs.
         return
       }
 

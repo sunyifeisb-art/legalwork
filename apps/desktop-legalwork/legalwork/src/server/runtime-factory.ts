@@ -401,6 +401,10 @@ export async function createLegalworkServeRuntime(
     if (mcpInitializationPromise) return mcpInitializationPromise
     mcpInitializationPromise = buildMcpToolProviders(options.capabilities?.mcp, {
       resolvePkulawFallbackToken: resolveBundledPkulawToken,
+      // Keep the provider's 30-second startup budget. LegalWork initializes
+      // nine PKULaw HTTP endpoints alongside stdio MCPs; constraining every
+      // HTTP handshake to five seconds makes otherwise healthy endpoints fail
+      // together during a cold start under CPU/network contention.
       ...(incrementalMcpRegistration ? {
         onServerSettled: ({ serverId, provider }) => {
           if (provider && !shuttingDown) {
