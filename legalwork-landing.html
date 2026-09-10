@@ -3549,12 +3549,13 @@ legalwork serve --data-dir ~/.legalwork</code></pre>
             text.textContent = `下载 ${tag || '最新版'} · ${profile.label}`;
             const dlCount = getTotalDownloadCount();
             const dlText = dlCount > 0 ? `<span class="dl-count">累计下载 ${dlCount.toLocaleString()}</span>` : '';
-            // 优先走腾讯云 COS 国内直连（无需梯子）；未配置 COS 时才回落 GitHub。
-            const cosUrl = buildCosUrl(asset.name);
-            const cosReady = cosUrl && !cosUrl.startsWith('https://download.example.com');
-            if (cosReady) {
-                meta.innerHTML = `腾讯云 CDN 国内直连 ${dlText} · <span style="color:var(--text-muted)">${asset.name}</span>`;
-                btn.href = cosUrl;
+            // Windows 改用便携 ZIP(解压即用,绕开 NSIS 安装器卡死);其余平台用 GitHub 官方包。
+            const ghZipUrl = /-win-/.test(asset.name)
+                ? asset.browser_download_url.replace(/\.exe$/i, '.zip')
+                : '';
+            if (ghZipUrl) {
+                meta.innerHTML = `便携版 ZIP(解压即用) ${dlText} · <span style="color:var(--text-muted)">${asset.name.replace(/\.exe$/i, '.zip')}</span>`;
+                btn.href = ghZipUrl;
             } else {
                 meta.innerHTML = `GitHub Release ${dlText} · <span style="color:var(--text-muted)">${asset.name}</span>`;
                 btn.href = asset.browser_download_url;
@@ -3580,18 +3581,11 @@ legalwork serve --data-dir ~/.legalwork</code></pre>
             }
             if (mirrorHint) mirrorHint.style.display = 'block';
 
-            // 腾讯云 COS 备用入口（与主下载同源）：主下载已优先 COS，这里仅在 COS 可用时展示。
+            // 腾讯云 COS 已停用(欠费);统一走 GitHub 下载。
             const cosBtn = document.getElementById('cosDownloadBtn');
             const cosHint = document.getElementById('cosHint');
-            if (cosBtn && cosReady) {
-                cosBtn.href = cosUrl;
-                cosBtn.target = '_blank';
-                cosBtn.style.display = 'inline-flex';
-                if (cosHint) cosHint.style.display = 'block';
-            } else if (cosBtn) {
-                cosBtn.style.display = 'none';
-                if (cosHint) cosHint.style.display = 'none';
-            }
+            if (cosBtn) cosBtn.style.display = 'none';
+            if (cosHint) cosHint.style.display = 'none';
         }
 
         function selectPlatform(platform) {
