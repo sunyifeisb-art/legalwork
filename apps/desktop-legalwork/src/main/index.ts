@@ -43,6 +43,7 @@ import {
 import { findAvailableLegalworkPort, resolveBundledOfficePythonPath } from './legalwork-process'
 import { ensureOfficeRuntimeHealthy } from './office-runtime-repair'
 import { configureLogger, logError, logWarn, pruneOnStartup, setLogErrorReporter } from './logger'
+import { isNonLatin1ResponseHeaderError } from './non-latin1-headers'
 import {
   configureErrorReporting,
   reportError,
@@ -984,18 +985,29 @@ function registerGlobalErrorHandlers(): void {
   const childProcessGonePolicy = new ChildProcessGoneReportPolicy()
   const report = (input: { category: string; message: string; stack?: string }): void => {
     // logError writes the local log AND (via the injected reporter) triggers
-    // the silent error report. Never let this path itself throw.
+    // the silent error report. Never let this path itself throw. The stack goes
+    // in `detail` so a crash that never reaches the reporter is still
+    // diagnosable from the local log alone.
     try {
-      logError(input.category, input.message)
+      logError(input.category, input.message, input.stack ? { stack: input.stack } : undefined)
     } catch {
       /* ignore */
     }
   }
 
   process.on('uncaughtException', (error) => {
+    const message = error instanceof Error ? error.message : String(error)
+    // Electron's network layer rejects non-Latin-1 response headers, and the
+    // throw happens inside Electron's own callback — it escapes the request's
+    // promise and lands here. Only that one request failed; the app itself is
+    // intact, so record it and keep running instead of taking the app down.
+    if (isNonLatin1ResponseHeaderError(error)) {
+      logWarn('uncaught-exception', `${message}（该请求已失败，应用继续运行）`)
+      return
+    }
     report({
       category: 'uncaught-exception',
-      message: error instanceof Error ? error.message : String(error),
+      message,
       stack: error instanceof Error ? error.stack : undefined
     })
     // State after an uncaught exception is unreliable. Exit explicitly (via

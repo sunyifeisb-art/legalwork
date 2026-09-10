@@ -12,6 +12,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { app } from 'electron'
 import { createHash, randomBytes } from 'node:crypto'
+import { installNonLatin1ResponseHeaderGuard } from './non-latin1-headers'
 
 const IMA_AUTH_FILE = 'ima-auth.json'
 const IMA_CREDS_FILE = 'ima-creds.json'   // MCP Server 读取的明文凭证
@@ -146,8 +147,19 @@ export function clearImaAuth(): void {
   }
 }
 
+/**
+ * IMA 网关会用中文回错误响应头（trpc-error-msg: 登录失败，请重新登录），而
+ * Electron 的网络层碰到非 Latin-1 响应头会抛异常并打崩应用。取 session 时统一
+ * 加护栏，让"登录过期"退化成一次普通的失败响应，由调用方按 code/msg 处理。
+ */
+function openImaSession(): Session {
+  const target = session.fromPartition(IMA_SESSION_PARTITION, { cache: true })
+  installNonLatin1ResponseHeaderGuard(target, ['https://ima.qq.com/*'])
+  return target
+}
+
 export async function clearImaLoginSession(): Promise<void> {
-  const imaSession = session.fromPartition(IMA_SESSION_PARTITION, { cache: true })
+  const imaSession = openImaSession()
   await Promise.allSettled([
     imaSession.clearStorageData({ storages: ['cookies', 'localstorage'] }),
     imaSession.clearCache()
@@ -509,7 +521,7 @@ export async function refreshImaAuth(): Promise<ImaAuthCheckResult> {
   if (!existing?.cookie || !existing?.bkn) {
     return { status: 'not_configured', message: 'IMA 未登录' }
   }
-  const imaSession = session.fromPartition(IMA_SESSION_PARTITION, { cache: true })
+  const imaSession = openImaSession()
   const result = await verifyImaAuth(existing, imaSession)
   if ('auth' in result) saveImaAuth(result.auth)
   return result

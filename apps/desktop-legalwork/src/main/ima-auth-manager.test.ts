@@ -2,7 +2,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const clearStorageData = vi.fn(async () => undefined)
 const clearCache = vi.fn(async () => undefined)
-const fromPartition = vi.fn(() => ({ clearStorageData, clearCache }))
+const onHeadersReceived = vi.fn()
+const fromPartition = vi.fn(() => ({
+  clearStorageData,
+  clearCache,
+  webRequest: { onHeadersReceived }
+}))
 
 vi.mock('electron', () => ({
   app: {
