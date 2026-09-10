@@ -28,7 +28,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-BASE_URL = "https://ima.qq.com/openapi/wiki/v1"
+OPENAPI_BASE_URL = "https://ima.qq.com/openapi"
+BASE_URL = f"{OPENAPI_BASE_URL}/wiki/v1"
 QA_URL = "https://ima.qq.com/cgi-bin/assistant/qa"
 REFRESH_PATH = "/cgi-bin/auth_login/refresh"
 INIT_SESSION_PATH = "/cgi-bin/session_logic/init_session"
@@ -140,25 +141,31 @@ def _resolve_knowledge_base_id(explicit_id=""):
         "或重新登录后再试。"
     )
 
-def api_call(path: str, payload: dict) -> dict:
+def openapi_call(group: str, path: str, payload: dict) -> dict:
     cid, key = _get_openapi_creds()
-    if not cid:
+    if not cid or not key:
         return {"error": "需要 IMA OpenAPI 凭证（ClientID+APIKey）才能使用此工具"}
-    url = f"{BASE_URL}/{path}"
+    url = f"{OPENAPI_BASE_URL}/{group}/v1/{path}"
     headers = {
         "ima-openapi-clientid": cid,
         "ima-openapi-apikey": key,
-        "Content-Type": "application/json",
+        "Content-Type": "application/json; charset=utf-8",
     }
-    req = urllib.request.Request(url, data=json.dumps(payload).encode(), headers=headers, method="POST")
+    body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    req = urllib.request.Request(url, data=body, headers=headers, method="POST")
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
             result = json.loads(resp.read().decode("utf-8"))
-            if result.get("code") != 0:
-                return {"error": result.get("msg", "unknown error")}
+            code = result.get("code", result.get("retcode", 0))
+            if code != 0:
+                return {"error": result.get("msg") or result.get("errmsg") or "unknown error", "code": code}
             return result.get("data", {})
     except Exception as e:
         return {"error": str(e)}
+
+
+def api_call(path: str, payload: dict) -> dict:
+    return openapi_call("wiki", path, payload)
 
 # ── Q&A (Cookie 模式) ──
 
@@ -1115,6 +1122,84 @@ def handle_get_knowledge_list(args: dict) -> dict:
     return {"folders": folders, "files": files, "is_end": result.get("is_end", True),
             "next_cursor": result.get("next_cursor", "")}
 
+
+def handle_create_note(args: dict) -> dict:
+    content = args.get("content", "")
+    if not isinstance(content, str) or not content.strip():
+        return {"error": "需要非空 content（Markdown）"}
+    payload = {"content_format": 1, "content": content}
+    folder_id = str(args.get("folder_id", "") or "").strip()
+    if folder_id:
+        payload["folder_id"] = folder_id
+    result = openapi_call("note", "import_doc", payload)
+    if "error" in result:
+        return result
+    return {"doc_id": result.get("doc_id", ""), "created": True}
+
+
+def handle_append_note(args: dict) -> dict:
+    doc_id = str(args.get("doc_id", "") or "").strip()
+    content = args.get("content", "")
+    if not doc_id:
+        return {"error": "需要 doc_id"}
+    if not isinstance(content, str) or not content.strip():
+        return {"error": "需要非空 content（Markdown）"}
+    result = openapi_call("note", "append_doc", {
+        "doc_id": doc_id,
+        "content_format": 1,
+        "content": content,
+    })
+    if "error" in result:
+        return result
+    return {"doc_id": result.get("doc_id", doc_id), "appended": True}
+
+
+def handle_add_note_to_knowledge_base(args: dict) -> dict:
+    kb_id = str(args.get("knowledge_base_id", "") or "").strip()
+    doc_id = str(args.get("doc_id", "") or "").strip()
+    title = str(args.get("title", "") or "").strip()
+    if not kb_id:
+        return {"error": "需要 knowledge_base_id"}
+    if not doc_id:
+        return {"error": "需要 doc_id"}
+    if not title:
+        return {"error": "需要 title"}
+    payload = {
+        "media_type": 11,
+        "title": title,
+        "knowledge_base_id": kb_id,
+        "note_info": {"content_id": doc_id},
+    }
+    folder_id = str(args.get("folder_id", "") or "").strip()
+    if folder_id:
+        payload["folder_id"] = folder_id
+    result = api_call("add_knowledge", payload)
+    if "error" in result:
+        return result
+    return {"media_id": result.get("media_id", ""), "doc_id": doc_id, "knowledge_base_id": kb_id}
+
+
+def handle_import_urls_to_knowledge_base(args: dict) -> dict:
+    kb_id = str(args.get("knowledge_base_id", "") or "").strip()
+    urls = args.get("urls", [])
+    if not kb_id:
+        return {"error": "需要 knowledge_base_id"}
+    if not isinstance(urls, list) or not urls or len(urls) > 10:
+        return {"error": "urls 必须是 1-10 个 URL 的数组"}
+    cleaned_urls = [str(url).strip() for url in urls if str(url).strip()]
+    if len(cleaned_urls) != len(urls):
+        return {"error": "urls 中不能包含空值"}
+    folder_id = str(args.get("folder_id", "") or "").strip() or kb_id
+    result = api_call("import_urls", {
+        "knowledge_base_id": kb_id,
+        "folder_id": folder_id,
+        "urls": cleaned_urls,
+    })
+    if "error" in result:
+        return result
+    return {"results": result.get("results", {}), "knowledge_base_id": kb_id, "folder_id": folder_id}
+
+
 def _ima_creds_dir():
     """返回 IMA 凭证所在目录（缓存文件写在这里，供 runtime 注入给 agent）。"""
     creds_path = os.environ.get("IMA_CREDS_FILE", "")
@@ -1514,6 +1599,37 @@ _OPENAPI_TOOLS = {
         "input_schema": {"type": "object", "properties": {
             "ids": {"type": "array", "items": {"type": "string"}, "description": "知识库 ID 列表"},
         }, "required": ["ids"]}, "handler": handle_get_knowledge_base,
+    },
+    "create_note": {
+        "description": "在 IMA 中新建一篇 Markdown 笔记。若最终要写入知识库，可随后调用 add_note_to_knowledge_base。",
+        "input_schema": {"type": "object", "properties": {
+            "content": {"type": "string", "description": "Markdown 笔记正文；建议首行使用 # 标题"},
+            "folder_id": {"type": "string", "description": "可选，目标笔记本 ID"},
+        }, "required": ["content"]}, "handler": handle_create_note,
+    },
+    "append_note": {
+        "description": "向已有 IMA 笔记末尾追加 Markdown 内容。该操作会修改现有笔记，必须明确提供目标 doc_id。",
+        "input_schema": {"type": "object", "properties": {
+            "doc_id": {"type": "string", "description": "目标笔记 ID"},
+            "content": {"type": "string", "description": "要追加的 Markdown 内容"},
+        }, "required": ["doc_id", "content"]}, "handler": handle_append_note,
+    },
+    "add_note_to_knowledge_base": {
+        "description": "把已有 IMA 笔记关联到指定知识库，从而将笔记内容写入该知识库。",
+        "input_schema": {"type": "object", "properties": {
+            "knowledge_base_id": {"type": "string", "description": "目标知识库 ID"},
+            "doc_id": {"type": "string", "description": "已有笔记 ID"},
+            "title": {"type": "string", "description": "知识库中显示的标题"},
+            "folder_id": {"type": "string", "description": "可选，知识库内目标文件夹 ID；省略则放根目录"},
+        }, "required": ["knowledge_base_id", "doc_id", "title"]}, "handler": handle_add_note_to_knowledge_base,
+    },
+    "import_urls_to_knowledge_base": {
+        "description": "把 1-10 个网页 URL 导入指定 IMA 知识库。folder_id 省略时自动使用知识库根目录。",
+        "input_schema": {"type": "object", "properties": {
+            "knowledge_base_id": {"type": "string", "description": "目标知识库 ID"},
+            "urls": {"type": "array", "items": {"type": "string"}, "description": "要导入的网页 URL，1-10 个"},
+            "folder_id": {"type": "string", "description": "可选，目标文件夹 ID"},
+        }, "required": ["knowledge_base_id", "urls"]}, "handler": handle_import_urls_to_knowledge_base,
     },
 }
 
