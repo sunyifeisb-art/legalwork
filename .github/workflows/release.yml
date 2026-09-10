@@ -165,11 +165,24 @@ jobs:
           LEGALWORK_ERROR_REPORT_GITHUB_LABEL: ${{ secrets.ERROR_REPORT_LABEL }}
         run: npm run dist:win
 
+      - name: Create Windows portable ZIP
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        shell: pwsh
+        run: |
+          $source = "dist/win-unpacked"
+          $zip = "dist/legalwork-${{ needs.create-release.outputs.version }}-win-x64.zip"
+          if (-not (Test-Path $source)) {
+            throw "Windows unpacked app directory not found: $source"
+          }
+          Compress-Archive -Path "$source/*" -DestinationPath $zip -Force
+          Write-Host "Created portable ZIP: $zip"
+
       - name: Upload Windows build artifact
         uses: actions/upload-artifact@v4
         with:
           name: windows-assets
           path: |
+            ${{ env.WORKING_DIRECTORY }}/dist/legalwork-*-win-*.zip
             ${{ env.WORKING_DIRECTORY }}/dist/legalwork-*-win-*.exe
             ${{ env.WORKING_DIRECTORY }}/dist/legalwork-*-win-*.exe.blockmap
             ${{ env.WORKING_DIRECTORY }}/dist/latest.yml
@@ -256,6 +269,7 @@ jobs:
           # GitHub shows only the first few assets before collapsing the list, so put DMG installers first.
           upload_matching "macOS Apple Silicon DMG" "macos-assets/legalwork-*-mac-arm64.dmg"
           upload_matching "macOS Intel DMG" "macos-assets/legalwork-*-mac-x64.dmg"
+          upload_matching "Windows x64 portable ZIP" "windows-assets/legalwork-*-win-x64.zip"
           upload_matching "Windows x64 installer" "windows-assets/legalwork-*-win-x64.exe"
           upload_matching "Linux AppImage" "linux-assets/legalwork-*.AppImage"
           upload_matching "macOS auto-update zip" "macos-assets/legalwork-*-mac-*.zip"
@@ -276,66 +290,3 @@ jobs:
           gh release edit "${{ needs.create-release.outputs.tag_name }}" \
             --draft=false \
             --repo "${{ github.repository }}"
-
-  publish-cos:
-    name: Publish Windows installer to Tencent COS
-    needs: [upload-release-assets]
-    runs-on: ubuntu-latest
-    env:
-      COS_SECRET_ID: ${{ secrets.COS_SECRET_ID }}
-      COS_SECRET_KEY: ${{ secrets.COS_SECRET_KEY }}
-    steps:
-      - name: Check COS credentials
-        id: cos
-        shell: bash
-        run: |
-          if [ -n "$COS_SECRET_ID" ] && [ -n "$COS_SECRET_KEY" ]; then
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "COS credentials are not configured; skipping COS publish."
-          fi
-
-      - name: Checkout
-        if: steps.cos.outputs.enabled == 'true'
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        if: steps.cos.outputs.enabled == 'true'
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: ${{ env.WORKING_DIRECTORY }}/package-lock.json
-
-      - name: Download build artifacts
-        if: steps.cos.outputs.enabled == 'true'
-        uses: actions/download-artifact@v4
-
-      - name: Install dependencies
-        if: steps.cos.outputs.enabled == 'true'
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: npm ci
-
-      # 把 Windows 安装包同步到腾讯云 COS(国内直下、无需梯子)。
-      # 复用 publish-r2.mjs(S3 兼容),经 R2_*/S3_* 环境变量指向 COS。
-      - name: Publish Windows installer to Tencent COS
-        if: steps.cos.outputs.enabled == 'true'
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        env:
-          S3_BUCKET: legalwork-1318565101
-          S3_ENDPOINT: https://cos.ap-guangzhou.myqcloud.com
-          S3_REGION: ap-guangzhou
-          S3_FORCE_PATH_STYLE: 'false'
-          S3_ACCESS_KEY_ID: ${{ secrets.COS_SECRET_ID }}
-          S3_SECRET_ACCESS_KEY: ${{ secrets.COS_SECRET_KEY }}
-          R2_PUBLIC_BASE_URL: https://legalwork-1318565101.cos.ap-guangzhou.myqcloud.com
-          R2_RELEASE_PREFIX: legalwork
-          RELEASE_CHANNEL: stable
-        shell: bash
-        run: |
-          set -euo pipefail
-          TAG="${{ needs.create-release.outputs.tag_name }}"
-          node scripts/publish-r2.mjs upload --platform win --tag "$TAG" --channel stable --dist "$GITHUB_WORKSPACE/windows-assets"
-          node scripts/publish-r2.mjs upload --platform mac --tag "$TAG" --channel stable --dist "$GITHUB_WORKSPACE/macos-assets"
-          node scripts/publish-r2.mjs promote --tag "$TAG" --channel stable --platforms win,mac
