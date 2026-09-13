@@ -486,7 +486,7 @@
   "firstRunBadge": "首次配置",
   "firstRunPreviewBadge": "引导预览",
   "firstRunTitle": "开始对话前，先完成这几项基础配置。",
-  "firstRunSubtitle": "先选择界面语言，填入模型服务 API Key，并按需配置兼容服务的 Base URL。",
+  "firstRunSubtitle": "先选择 ChatGPT 账号或 API Key；使用 API 时可选择模型供应商、服务地址、接口协议和默认模型。",
   "firstRunClose": "关闭",
   "firstRunSave": "保存并继续",
   "firstRunSaving": "正在保存配置…",

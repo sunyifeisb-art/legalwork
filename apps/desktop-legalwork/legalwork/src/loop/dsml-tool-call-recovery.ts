@@ -46,7 +46,7 @@ export function recoverDsmlToolCalls(
   // `tool_calls` name, omitting only the closing `>`. The invocations and
   // parameters are still complete and executable, so remove the protocol
   // frame through EOF after recovering them.
-  const wholeBlock = /<[^<>]*tool_calls[^<>]*>[\s\S]*?<\/[^<>]*tool_calls\s*(?:>|$)/gi
+  const wholeBlock = /<[^<>]*(?:tool_calls|calls)[^<>]*>[\s\S]*?<\/[^<>]*(?:tool_calls|calls)\s*(?:>|$)/gi
   const visibleText = text.replace(wholeBlock, '').trim()
   return { calls, visibleText }
 }
@@ -115,19 +115,20 @@ export function recoverJsonToolCalls(
 // `<...DSML...tool_calls>` 的完整块。归一化只作用于分隔符竖线，不影响正文。
 // Some gateways insert whitespace between the vertical bars while escaping
 // the marker, e.g. `<| |DSML| | tool_calls>`. Accept that spelling too; the
-// match still requires the DSML token plus a tool_calls tag, so ordinary prose
+// match still requires the DSML token plus a calls/tool_calls tag, so ordinary prose
 // is unaffected.
 const DSML_BAR = '\\|\\s*'
 const DSML_DELIM = `(?:${DSML_BAR}${DSML_BAR}|${DSML_BAR})?`
-// 匹配 `<|DSML||tool_calls>`、`<||DSML||tool_calls>` 及对应闭合标签的整块。
+const DSML_CALLS_TAG = '(?:tool_calls|calls)'
+// 匹配 `<|DSML||tool_calls>` / `<|DSML||calls>` 及对应闭合标签的整块。
 const DSML_TOOL_CALLS_BLOCK =
   new RegExp(
-    `<${DSML_DELIM}DSML${DSML_DELIM}\\s*tool_calls\\s*>[\\s\\S]*?` +
-    `<\\/${DSML_DELIM}DSML${DSML_DELIM}\\s*tool_calls\\s*(?:>|$)`,
+    `<${DSML_DELIM}DSML${DSML_DELIM}\\s*${DSML_CALLS_TAG}\\s*>[\\s\\S]*?` +
+    `<\\/${DSML_DELIM}DSML${DSML_DELIM}\\s*${DSML_CALLS_TAG}\\s*(?:>|$)`,
     'gi'
   )
 const DSML_TOOL_CALLS_UNCLOSED =
-  new RegExp(`<${DSML_DELIM}DSML${DSML_DELIM}\\s*tool_calls\\s*>[\\s\\S]*$`, 'gi')
+  new RegExp(`<${DSML_DELIM}DSML${DSML_DELIM}\\s*${DSML_CALLS_TAG}\\s*>[\\s\\S]*$`, 'gi')
 
 function normalizeDsmlVerticalBars(text: string): string {
   // U+FF5C（｜ 全角竖线）→ U+007C（| 半角竖线）
@@ -149,17 +150,17 @@ export function isPotentialDsmlToolCallStream(text: string): boolean {
   if (looksLikeDsmlToolCalls(normalized)) return true
 
   const allCompact = normalized.replace(/\s+/g, '')
-  if (/<\|{1,2}DSML\|{1,2}tool_calls>/i.test(allCompact)) return true
+  if (/<\|{1,2}DSML\|{1,2}(?:tool_calls|calls)>/i.test(allCompact)) return true
 
   const start = normalized.lastIndexOf('<')
   if (start < 0) return false
   const compact = normalized.slice(start).replace(/\s+/g, '')
-  const openTags = [
-    '<|DSML|tool_calls>',
-    '<|DSML||tool_calls>',
-    '<||DSML|tool_calls>',
-    '<||DSML||tool_calls>'
-  ]
+  const openTags = ['tool_calls', 'calls'].flatMap((tagName) => [
+    `<|DSML|${tagName}>`,
+    `<|DSML||${tagName}>`,
+    `<||DSML|${tagName}>`,
+    `<||DSML||${tagName}>`
+  ])
   if (openTags.some((tag) => tag.startsWith(compact))) return true
   return false
 }

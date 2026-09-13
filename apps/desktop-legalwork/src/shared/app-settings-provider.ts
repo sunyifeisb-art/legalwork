@@ -253,7 +253,7 @@ function normalizeModelProviderProfile(
     typeof input?.baseUrl === 'string' && input.baseUrl.trim()
       ? normalizeDeepseekBaseUrl(input.baseUrl)
       : preset?.baseUrl ?? DEFAULT_DEEPSEEK_BASE_URL
-  const models = normalizeProviderModels(input?.models, preset?.models)
+  const models = normalizeProviderModels(input?.models, preset?.models, id)
   const configuredEndpointFormat = typeof input?.endpointFormat === 'string' && input.endpointFormat.trim()
     ? input.endpointFormat.trim()
     : preset?.endpointFormat ?? inferEndpointFormatFromBaseUrl(baseUrl, id)
@@ -279,12 +279,26 @@ function shouldUseOpenAiResponses(id: string, baseUrl: string, endpointFormat: s
   }
 }
 
-function normalizeProviderModels(models: unknown, fallback: readonly string[] = []): string[] {
+function normalizeProviderModels(
+  models: unknown,
+  fallback: readonly string[] = [],
+  providerId = ''
+): string[] {
   if (!Array.isArray(models)) return [...fallback]
   const ids = new Set<string>()
   for (const model of models) {
     if (typeof model !== 'string') continue
-    const trimmed = model.trim()
+    let trimmed = model.trim()
+    if (providerId === 'deepseek') {
+      const normalized = trimmed.toLowerCase()
+      if (
+        normalized === 'deepseek-v4-flash' ||
+        normalized === 'deepseek-chat' ||
+        normalized === 'deepseek-reasoner'
+      ) {
+        trimmed = 'deepseek-flash'
+      }
+    }
     if (trimmed) ids.add(trimmed)
   }
   return [...ids].sort((a, b) => a.localeCompare(b))

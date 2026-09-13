@@ -357,7 +357,7 @@ function MessageTurn({
           <WorkMetaRow
             processing={isProcessing}
             stepCount={processBlocks.length}
-            summary={processSummary}
+            summary={processBlocks.length > 0 ? processSummary : undefined}
             durationMs={durationMs}
             reasoningDurationMs={reasoningDurationMs}
             expanded={workExpanded}
@@ -457,7 +457,13 @@ function LiveTurnProgressRow({
         )}
       </span>
       <span className={waitingForUserInput ? '' : 'ds-shiny-text'}>
-        {t(waitingForUserInput ? 'waitingForUserInput' : 'working')}
+        {t(
+          waitingForUserInput
+            ? 'waitingForUserInput'
+            : orbState === 'solving' || processBlocks.length === 0
+              ? 'thinkingNow'
+              : 'working'
+        )}
       </span>
     </div>
   )

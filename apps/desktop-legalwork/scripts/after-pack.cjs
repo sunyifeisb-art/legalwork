@@ -37,16 +37,6 @@ const DOCUMENT_OCR_REQUIRED_PATHS = [
 ]
 
 const OFFICE_RUNTIME_IMPORTS = ['docx', 'openpyxl', 'pptx', 'lxml', 'PIL', 'reportlab']
-const DATA_COMPLIANCE_RUNTIME_IMPORTS = [
-  'flask',
-  'fitz',
-  'odf',
-  'openai',
-  'paddle',
-  'paddleocr',
-  'pypdf',
-  'pandas'
-]
 const OFFICE_RUNTIME_PYTHON_LINE = '3.11'
 const BUNDLED_PDF_FONT_SOURCE_SHA256 = '050080d9255a86808f2945bffac582b31ef32bc36411ce29563b4961670c66f9'
 const BUNDLED_PDF_FONT_PREPARATION_VERSION = 2
@@ -382,17 +372,15 @@ function validateBundledOfficeRuntime(context) {
     throw new Error('[after-pack] Office runtime manifest is missing required Word/Excel/PPT imports')
   }
   if (normalizePlatform(context.electronPlatformName) === 'win32') {
-    if (context.arch !== 'x64' && Number(context.arch) !== 1) {
-      throw new Error('[after-pack] Fully bundled Windows runtime is supported only for x64')
+    const arch = normalizeArch(context.arch)
+    if (arch !== 'x64' && arch !== 'ia32') {
+      throw new Error(`[after-pack] Unsupported bundled Windows Office runtime architecture: ${arch}`)
     }
-    if (manifest.dataComplianceReady !== true) {
-      throw new Error('[after-pack] Windows runtime is missing bundled data-compliance dependencies')
+    if (manifest.target && manifest.target !== `win-${arch}`) {
+      throw new Error(`[after-pack] Windows Office runtime target mismatch: expected win-${arch}, got ${String(manifest.target)}`)
     }
-    for (const moduleName of DATA_COMPLIANCE_RUNTIME_IMPORTS) {
-      assertExists(join(sitePackages, moduleName), `data compliance Python module ${moduleName}`)
-      if (!manifest.imports.includes(moduleName)) {
-        throw new Error(`[after-pack] Runtime manifest is missing data compliance import ${moduleName}`)
-      }
+    if (manifest.dataComplianceReady === true) {
+      throw new Error('[after-pack] Windows Office runtime must not embed the separately downloaded data-compliance environment')
     }
   }
 }
@@ -567,7 +555,6 @@ exports.DATA_COMPLIANCE_REQUIRED_PATHS = DATA_COMPLIANCE_REQUIRED_PATHS
 exports.DATA_COMPLIANCE_OPTIONAL_PATHS = DATA_COMPLIANCE_OPTIONAL_PATHS
 exports.DOCUMENT_OCR_REQUIRED_PATHS = DOCUMENT_OCR_REQUIRED_PATHS
 exports.OFFICE_RUNTIME_IMPORTS = OFFICE_RUNTIME_IMPORTS
-exports.DATA_COMPLIANCE_RUNTIME_IMPORTS = DATA_COMPLIANCE_RUNTIME_IMPORTS
 exports.OFFICE_RUNTIME_PYTHON_LINE = OFFICE_RUNTIME_PYTHON_LINE
 exports.IMA_MCP_SCRIPT_RELATIVE_PATH = IMA_MCP_SCRIPT_RELATIVE_PATH
 exports._internals = {

@@ -172,7 +172,7 @@ def _assemble_ocr_text(blocks: List[Dict[str, Any]]) -> str:
 
 
 def _paddle_model_dirs() -> Dict[str, str]:
-    """Resolve bundled PaddleOCR v3 models without triggering downloads."""
+    """Resolve bundled PaddleOCR models without triggering downloads."""
     raw_root = (
         os.environ.get("LEGALWORK_PADDLEOCR_MODEL_ROOT")
         or os.environ.get("PADDLEOCR_MODEL_ROOT")
@@ -181,18 +181,55 @@ def _paddle_model_dirs() -> Dict[str, str]:
         return {}
 
     root = Path(raw_root).expanduser()
-    mapping = {
+    v6_mapping = {
         "doc_orientation_classify_model_dir": "PP-LCNet_x1_0_doc_ori",
         "doc_unwarping_model_dir": "UVDoc",
         "textline_orientation_model_dir": "PP-LCNet_x1_0_textline_ori",
         "text_detection_model_dir": "PP-OCRv6_medium_det",
         "text_recognition_model_dir": "PP-OCRv6_medium_rec",
     }
-    return {
+    v6_result = {
         argument: str(model_dir)
-        for argument, model_name in mapping.items()
+        for argument, model_name in v6_mapping.items()
         if (model_dir := root / model_name).is_dir()
     }
+    if (
+        "text_detection_model_dir" in v6_result
+        and "text_recognition_model_dir" in v6_result
+    ):
+        return v6_result
+
+    v4_mapping = {
+        "text_detection_model_dir": "PP-OCRv4_mobile_det",
+        "text_recognition_model_dir": "PP-OCRv4_mobile_rec",
+    }
+    return {
+        argument: str(model_dir)
+        for argument, model_name in v4_mapping.items()
+        if (model_dir := root / model_name).is_dir()
+    }
+
+
+def _paddle_model_options(model_dirs: Dict[str, str]) -> Dict[str, Any]:
+    options: Dict[str, Any] = dict(model_dirs)
+    det_dir = model_dirs.get("text_detection_model_dir")
+    rec_dir = model_dirs.get("text_recognition_model_dir")
+    if (
+        det_dir
+        and rec_dir
+        and Path(det_dir).name == "PP-OCRv4_mobile_det"
+        and Path(rec_dir).name == "PP-OCRv4_mobile_rec"
+    ):
+        options.update(
+            {
+                "text_detection_model_name": "PP-OCRv4_mobile_det",
+                "text_recognition_model_name": "PP-OCRv4_mobile_rec",
+                "use_doc_orientation_classify": False,
+                "use_doc_unwarping": False,
+                "use_textline_orientation": False,
+            }
+        )
+    return options
 
 
 class BaseOCRAdapter:
@@ -289,7 +326,7 @@ class PaddleOCRAdapter(BaseOCRAdapter):
                     "use_textline_orientation": True,
                 }
                 model_dirs = _paddle_model_dirs()
-                options.update(model_dirs)
+                options.update(_paddle_model_options(model_dirs))
                 if model_dirs:
                     options.pop("lang", None)
                 self._engine = PaddleOCR(**options)

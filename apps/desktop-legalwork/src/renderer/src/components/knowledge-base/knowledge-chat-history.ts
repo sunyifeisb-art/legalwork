@@ -28,6 +28,27 @@ export type KnowledgeChatHistory = {
 export const KNOWLEDGE_DIRECT_ANSWER_INSTRUCTION =
   '直接回答用户问题，不要在回答开头重复、改写或概括用户问题；不要把用户问题作为 Markdown 标题、加粗文本或引言单独输出。'
 
+// Defensive UI guard for already-persisted DeepSeek protocol frames. Runtime
+// recovery is the primary protection, but older turns may already contain the
+// serialized DSML `calls` / `tool_calls` wrapper in assistant text.
+export function stripKnowledgeDsmlProtocol(answer: string): string {
+  if (!answer.includes('DSML')) return answer
+  const normalized = answer.replace(/｜/g, '|')
+  const bar = '\\|\\s*'
+  const delim = `(?:${bar}${bar}|${bar})?`
+  const callsTag = '(?:tool_calls|calls)'
+  const complete = new RegExp(
+    `<${delim}DSML${delim}\\s*${callsTag}\\s*>[\\s\\S]*?` +
+    `<\\/${delim}DSML${delim}\\s*${callsTag}\\s*(?:>|$)`,
+    'gi'
+  )
+  const unclosed = new RegExp(
+    `<${delim}DSML${delim}\\s*${callsTag}\\s*>[\\s\\S]*$`,
+    'gi'
+  )
+  return normalized.replace(complete, '').replace(unclosed, '').trim()
+}
+
 export function markKnowledgeSourceReferences(answer: string): string {
   return answer.replace(
     /\[来源\s*(\d+)\](?!\()/g,
@@ -197,10 +218,11 @@ export function knowledgeChatHistoryFromBlocks(blocks: ChatBlock[]): KnowledgeCh
     } else if (block.kind === 'reasoning') {
       pendingReasoning = [pendingReasoning, block.text].filter(Boolean).join('\n\n')
     } else if (block.kind === 'assistant') {
+      const visibleAnswer = stripKnowledgeDsmlProtocol(block.text)
       messages.push({
         id: block.id,
         role: 'assistant',
-        content: stripRepeatedKnowledgeQuestionLead(block.text, latestUserQuestion),
+        content: stripRepeatedKnowledgeQuestionLead(visibleAnswer, latestUserQuestion),
         ...(pendingReasoning ? { reasoning: pendingReasoning } : {}),
         timestamp: block.createdAt ? new Date(block.createdAt).getTime() : Date.now()
       })

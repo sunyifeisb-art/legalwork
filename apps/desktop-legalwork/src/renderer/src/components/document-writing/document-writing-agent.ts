@@ -8,6 +8,7 @@ import {
   documentInvolvesLoanAmounts,
   loanAmountLedgerInstruction
 } from '../../../../shared/money-consistency'
+import { resolveAgentTaskModel } from '../../agent/agent-task-model'
 
 export type DocumentWritingStageId =
   | 'materials'
@@ -17,6 +18,14 @@ export type DocumentWritingStageId =
   | 'drafting'
 
 export type DocumentWritingStageStatus = 'pending' | 'running' | 'done' | 'error'
+
+/** Use the current Agent model; `auto` with no concrete runtime model means DeepSeek Flash. */
+export function resolveDocumentWritingModel(
+  composerModel: string | undefined,
+  runtimeModel?: string
+): string {
+  return resolveAgentTaskModel(composerModel, runtimeModel)
+}
 
 export type DocumentWritingStage = {
   id: DocumentWritingStageId

@@ -1,12 +1,13 @@
 const DSML_BAR = '\\|\\s*'
 const DSML_DELIM = `(?:${DSML_BAR}${DSML_BAR}|${DSML_BAR})?`
+const DSML_CALLS_TAG = '(?:tool_calls|calls)'
 const DSML_TOOL_CALLS_BLOCK = new RegExp(
-  `<${DSML_DELIM}DSML${DSML_DELIM}\\s*tool_calls\\s*>[\\s\\S]*?` +
-  `<\\/${DSML_DELIM}DSML${DSML_DELIM}\\s*tool_calls\\s*(?:>|$)`,
+  `<${DSML_DELIM}DSML${DSML_DELIM}\\s*${DSML_CALLS_TAG}\\s*>[\\s\\S]*?` +
+  `<\\/${DSML_DELIM}DSML${DSML_DELIM}\\s*${DSML_CALLS_TAG}\\s*(?:>|$)`,
   'gi'
 )
 const DSML_TOOL_CALLS_UNCLOSED = new RegExp(
-  `<${DSML_DELIM}DSML${DSML_DELIM}\\s*tool_calls\\s*>[\\s\\S]*$`,
+  `<${DSML_DELIM}DSML${DSML_DELIM}\\s*${DSML_CALLS_TAG}\\s*>[\\s\\S]*$`,
   'gi'
 )
 const INLINE_DOCUMENT_RESPONSE_BLOCK =

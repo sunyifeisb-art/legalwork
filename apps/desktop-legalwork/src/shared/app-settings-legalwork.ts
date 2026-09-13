@@ -26,7 +26,7 @@ import {
 } from './app-settings-provider'
 
 const LEGACY_COREAGENT_DATA_DIR = '~/.deepseekgui/coreagent'
-const LEGACY_LEGALWORK_DEFAULT_MODEL = 'deepseek-chat'
+const LEGACY_LEGALWORK_DEFAULT_MODELS = new Set(['deepseek-chat', 'deepseek-v4-flash'])
 const LEGACY_LOCAL_HTTP_DEFAULT_PORT = 7878
 
 type LegacyLocalHttpRuntimeSettingsV1 = {
@@ -79,7 +79,7 @@ function legacyReasoningRuntimeDefaults(): LegacyReasoningRuntimeSettingsV1 {
     autoStart: true,
     apiKey: '',
     baseUrl: DEFAULT_DEEPSEEK_BASE_URL,
-    model: LEGACY_LEGALWORK_DEFAULT_MODEL,
+    model: 'deepseek-chat',
     reasoningEffort: 'medium',
     editMode: 'auto'
   }
@@ -485,7 +485,7 @@ function upgradeLegacyLegalworkDefaultDataDir(value: unknown): string {
 
 function upgradeLegacyLegalworkDefaultModel(value: unknown, fallback: string): string {
   const model = nonEmptyStringOrFallback(value, fallback).trim()
-  return model === LEGACY_LEGALWORK_DEFAULT_MODEL ? DEFAULT_LEGALWORK_MODEL : model
+  return LEGACY_LEGALWORK_DEFAULT_MODELS.has(model.toLowerCase()) ? DEFAULT_LEGALWORK_MODEL : model
 }
 
 function upgradeLegacyLegalworkDefaultPort(value: unknown, fallback: number): number {

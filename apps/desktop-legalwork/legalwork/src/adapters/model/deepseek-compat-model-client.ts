@@ -535,6 +535,17 @@ export class DeepseekCompatModelClient implements ModelClient {
   }
 
   private itemsToMessages(items: TurnItem[], thinkingMode: boolean): ChatMessage[] {
+    // Tool calls are persisted as soon as their stream chunks arrive, while
+    // completed reasoning/text is persisted after the provider stream ends and
+    // tool results are written asynchronously. Some stores can therefore load
+    // one provider response as:
+    //   reasoning, call A, result A, call B, result B, ...
+    // even though A/B were emitted together by a single assistant message.
+    // DeepSeek thinking mode requires that exact assistant message (including
+    // its reasoning_content) to be replayed before *all* corresponding tool
+    // results. Restore the provider-time order within each turn before building
+    // wire messages so concurrent calls stay in one tool_calls block.
+    items = normalizeModelItemOrder(items)
     const out: ChatMessage[] = []
     for (let index = 0; index < items.length; index += 1) {
       const item = items[index]
@@ -1381,6 +1392,33 @@ export class DeepseekCompatModelClient implements ModelClient {
   }
 }
 
+function normalizeModelItemOrder(items: TurnItem[]): TurnItem[] {
+  if (items.length < 2) return items
+  const normalized = [...items]
+  let start = 0
+  let changed = false
+
+  while (start < normalized.length) {
+    const turnId = normalized[start]?.turnId
+    let end = start + 1
+    while (end < normalized.length && normalized[end]?.turnId === turnId) end += 1
+
+    const run = normalized.slice(start, end)
+    const decorated = run.map((item, index) => ({ item, index, time: Date.parse(item.createdAt) }))
+    if (decorated.every((entry) => Number.isFinite(entry.time))) {
+      decorated.sort((a, b) => a.time - b.time || a.index - b.index)
+      for (let offset = 0; offset < decorated.length; offset += 1) {
+        const next = decorated[offset]!.item
+        if (normalized[start + offset] !== next) changed = true
+        normalized[start + offset] = next
+      }
+    }
+    start = end
+  }
+
+  return changed ? normalized : items
+}
+
 function normalizeToolSpecs(tools: ModelToolSpec[]): ModelToolSpec[] {
   return [...tools]
     .map((tool) => ({
@@ -2161,9 +2199,11 @@ function isThinkingProducerModel(model: string | undefined): boolean {
   if (!normalized) return false
   return normalized === 'deepseek-v4-pro' ||
     normalized === 'deepseek-v4-flash' ||
+    normalized === 'deepseek-flash' ||
     normalized.includes('deepseek-reasoner') ||
     normalized.endsWith('/deepseek-v4-pro') ||
-    normalized.endsWith('/deepseek-v4-flash')
+    normalized.endsWith('/deepseek-v4-flash') ||
+    normalized.endsWith('/deepseek-flash')
 }
 
 // True when the model belongs to the DeepSeek family, on the official host or

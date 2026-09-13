@@ -4437,8 +4437,8 @@ describe('AgentLoop', () => {
 
     expect(resolveModelContextProfile('deepseek-v4-pro')?.contextWindowTokens).toBe(1_000_000)
     expect(resolveModelContextProfile('provider/deepseek-v4-flash')?.contextWindowTokens).toBe(1_000_000)
-    expect(resolveModelContextProfile('deepseek-chat')?.canonicalModel).toBe('deepseek-v4-flash')
-    expect(resolveModelContextProfile('deepseek-reasoner')?.canonicalModel).toBe('deepseek-v4-flash')
+    expect(resolveModelContextProfile('deepseek-chat')?.canonicalModel).toBe('deepseek-flash')
+    expect(resolveModelContextProfile('deepseek-reasoner')?.canonicalModel).toBe('deepseek-flash')
     expect(compactor.shouldCompact(smallItems, {
       model: 'deepseek-v4-flash', promptTokens: 899_999
     })).toBe(false)
@@ -5096,7 +5096,7 @@ describe('AgentLoop', () => {
 
     await h.loop.runTurn(h.threadId, turnId)
 
-    expect(seenModels).toEqual(['deepseek-v4-flash', 'deepseek-v4-pro'])
+    expect(seenModels).toEqual(['deepseek-flash', 'deepseek-v4-pro'])
   })
 
   it('keeps explicit turn reasoning effort when auto routing chooses the model', async () => {
@@ -5130,7 +5130,7 @@ describe('AgentLoop', () => {
 
     await h.loop.runTurn(h.threadId, turnId)
 
-    expect(seenModels).toEqual(['deepseek-v4-flash', 'deepseek-v4-pro'])
+    expect(seenModels).toEqual(['deepseek-flash', 'deepseek-v4-pro'])
   })
 
   it('falls back to a concrete heuristic model when auto router fails', async () => {
@@ -5163,7 +5163,7 @@ describe('AgentLoop', () => {
 
     await h.loop.runTurn(h.threadId, turnId)
 
-    expect(realRequestModel).toBe('deepseek-v4-flash')
+    expect(realRequestModel).toBe('deepseek-flash')
   })
 
   it('uses the latest compaction item as the effective history boundary', async () => {

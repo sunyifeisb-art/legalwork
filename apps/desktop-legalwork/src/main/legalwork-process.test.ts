@@ -360,10 +360,11 @@ describe('syncGuiManagedLegalworkConfig', () => {
       softThreshold: 900_000,
       hardThreshold: 950_000
     })
-    expect(parsed.models.profiles['deepseek-v4-flash'].contextCompaction).toMatchObject({
+    expect(parsed.models.profiles['deepseek-flash'].contextCompaction).toMatchObject({
       softThreshold: 900_000,
       hardThreshold: 950_000
     })
+    expect(parsed.models.profiles['deepseek-v4-flash']).toBeUndefined()
   })
 
   it('creates GUI-managed config with attachments enabled for image paste/upload', async () => {
@@ -401,8 +402,8 @@ describe('syncGuiManagedLegalworkConfig', () => {
         hardThreshold: 950_000
       }
     })
-    expect(parsed.models.profiles['deepseek-v4-flash']).toMatchObject({
-      aliases: ['deepseek-chat', 'deepseek-reasoner'],
+    expect(parsed.models.profiles['deepseek-flash']).toMatchObject({
+      aliases: ['deepseek-v4-flash', 'deepseek-chat', 'deepseek-reasoner'],
       contextWindowTokens: 1_000_000,
       contextCompaction: {
         softThreshold: 900_000,
@@ -783,7 +784,7 @@ describe('syncGuiManagedLegalworkConfig', () => {
         hardThreshold: 970_001
       }
     })
-    expect(parsed.models.profiles['deepseek-v4-flash']).toMatchObject({
+    expect(parsed.models.profiles['deepseek-flash']).toMatchObject({
       contextWindowTokens: 1_000_000,
       contextCompaction: {
         // A deliberate near-window override remains untouched.

@@ -52,10 +52,12 @@ function pricingTierForModel(model: string): keyof typeof DEEPSEEK_V4_PRICES | n
   if (
     normalized === 'deepseek-v4-flash' ||
     normalized === 'deepseek-v4-flash-vision-exp' ||
+    normalized === 'deepseek-flash' ||
     normalized === 'deepseek-chat' ||
     normalized === 'deepseek-reasoner' ||
     normalized.endsWith('/deepseek-v4-flash') ||
     normalized.endsWith('/deepseek-v4-flash-vision-exp') ||
+    normalized.endsWith('/deepseek-flash') ||
     normalized.endsWith('/deepseek-chat') ||
     normalized.endsWith('/deepseek-reasoner')
   ) {

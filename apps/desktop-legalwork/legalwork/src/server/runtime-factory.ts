@@ -80,6 +80,7 @@ import { defaultKnowledgeSourceRoots, FileKnowledgeStore } from '../knowledge/kn
 import { DelegationRuntime, FileDelegationStore } from '../delegation/delegation-runtime.js'
 import { createChildAgentExecutor } from '../delegation/child-agent-executor.js'
 import { reportToolErrorNow, reportInefficientTurnNow } from '../cli/tool-error-reporter.js'
+import { makeUserItem } from '../domain/item.js'
 
 export type LegalworkServeRuntimeOptions = {
   host: string
@@ -519,6 +520,42 @@ export async function createLegalworkServeRuntime(
     },
     runReview(input) {
       return reviewService.runReview(input)
+    },
+    async generateModelText(input) {
+      const threadId = ids.next('internal_model')
+      const turnId = ids.next('internal_turn')
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 120_000)
+      let text = ''
+      try {
+        for await (const chunk of modelClient.stream({
+          threadId,
+          turnId,
+          model: input.model?.trim() || options.model,
+          systemPrompt: input.systemPrompt,
+          prefix: [],
+          history: [makeUserItem({
+            id: ids.next('internal_user'),
+            threadId,
+            turnId,
+            text: input.userPrompt
+          })],
+          tools: [],
+          abortSignal: controller.signal,
+          stream: true,
+          maxTokens: input.maxTokens,
+          temperature: 0,
+          responseFormat: input.responseFormat,
+          reasoningEffort: input.reasoningEffort ?? 'off'
+        })) {
+          if (chunk.kind === 'assistant_text_delta') text += chunk.text
+          if (chunk.kind === 'error') throw new Error(chunk.message)
+        }
+        if (!text.trim()) throw new Error('model returned no text')
+        return { text }
+      } finally {
+        clearTimeout(timeout)
+      }
     },
     runtimeToken: options.runtimeToken,
     insecure: options.insecure,

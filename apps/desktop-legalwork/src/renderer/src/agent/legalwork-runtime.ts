@@ -170,6 +170,7 @@ export class LegalworkRuntimeProvider implements AgentProvider {
     workspace?: string
     title?: string
     mode?: LegalworkThreadMode
+    model?: string
   }): Promise<NormalizedThread> {
     const settings = await rendererRuntimeClient.getSettings()
     const runtime = getLegalworkRuntimeSettings(settings)
@@ -179,7 +180,7 @@ export class LegalworkRuntimeProvider implements AgentProvider {
       JSON.stringify({
         workspace: input.workspace || settings.workspaceRoot || '~',
         title: input.title,
-        model: runtime.model,
+        model: input.model?.trim() || runtime.model,
         mode: normalizeThreadMode(input.mode),
         approvalPolicy: runtime.approvalPolicy,
         sandboxMode: runtime.sandboxMode

@@ -15,18 +15,18 @@ describe('auto model router', () => {
       reasoningEffort: 'max'
     })
     expect(parseAutoRouteRecommendation('noise {"model":"v4-flash"} tail')).toEqual({
-      model: 'deepseek-v4-flash'
+      model: 'deepseek-flash'
     })
     expect(parseAutoRouteRecommendation('{"model":"auto"}')).toBeNull()
     expect(parseAutoRouteRecommendation('not json')).toBeNull()
   })
 
   it('defaults to flash unless input is strongly complex AND long', () => {
-    expect(autoModelHeuristic('hello')).toBe('deepseek-v4-flash')
+    expect(autoModelHeuristic('hello')).toBe('deepseek-flash')
     // Strong complex keyword alone is not enough (short input).
-    expect(autoModelHeuristic('please debug this failing migration')).toBe('deepseek-v4-flash')
+    expect(autoModelHeuristic('please debug this failing migration')).toBe('deepseek-flash')
     // Long but not strongly complex (e.g. a legal question) stays on flash.
-    expect(autoModelHeuristic('x'.repeat(501))).toBe('deepseek-v4-flash')
+    expect(autoModelHeuristic('x'.repeat(501))).toBe('deepseek-flash')
     // Strong signal + clearly long input routes to pro.
     expect(autoModelHeuristic(`${'x'.repeat(850)} debug the architecture migration`)).toBe('deepseek-v4-pro')
     // Chinese strong signal + long input.

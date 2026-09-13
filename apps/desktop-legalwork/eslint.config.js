@@ -17,6 +17,8 @@ export default tseslint.config(
       '**/node_modules/**',
       '**/out/**',
       '**/coverage/**',
+      '.tmp-*/**',
+      'dist-*/**',
       'vendor/**',
       '**/venv/**'
     ]

@@ -1,6 +1,12 @@
 import {
+  DEFAULT_MODEL_PROVIDER_ID,
   DEFAULT_GUI_UPDATE_CHANNEL,
   DEFAULT_UI_FONT_SCALE,
+  getBuiltinModelProviderPreset,
+  getModelProviderProfile,
+  getModelProviderSettings,
+  inferEndpointFormatFromBaseUrl,
+  legalworkSettingsPatch,
   defaultLegalworkRuntimeSettings,
   applyLegalworkRuntimePatch,
   computeLegalworkRuntimeCredentialPatch,
@@ -21,7 +27,8 @@ import {
   normalizeLearningIterationSettings,
   normalizeWriteSettings,
   type AppSettingsPatch,
-  type AppSettingsV1
+  type AppSettingsV1,
+  type ModelProviderProfileV1
 } from '@shared/app-settings'
 import type { GuiUpdateInfo } from '@shared/gui-update'
 
@@ -91,6 +98,85 @@ export function mergeSettings(current: AppSettingsV1, patch: SettingsPatch): App
       ...safeCurrent.guiUpdate,
       ...(patch.guiUpdate ?? {})
     }
+  }
+}
+
+export function modelProviderProfilePatch(
+  settings: AppSettingsV1,
+  nextProvider: ModelProviderProfileV1
+): AppSettingsPatch {
+  const provider = getModelProviderSettings(settings)
+  const providers = provider.providers.some((item) => item.id === nextProvider.id)
+    ? provider.providers.map((item) => item.id === nextProvider.id ? nextProvider : item)
+    : [...provider.providers, nextProvider]
+
+  return {
+    provider: nextProvider.id === DEFAULT_MODEL_PROVIDER_ID
+      ? {
+          apiKey: nextProvider.apiKey,
+          baseUrl: nextProvider.baseUrl,
+          providers
+        }
+      : { providers }
+  }
+}
+
+export function updateModelProviderProfilePatch(
+  settings: AppSettingsV1,
+  providerId: string,
+  patch: Partial<ModelProviderProfileV1>
+): AppSettingsPatch {
+  const activeProvider = getModelProviderProfile(settings, providerId)
+  return modelProviderProfilePatch(settings, { ...activeProvider, ...patch })
+}
+
+export function updateModelProviderBaseUrlPatch(
+  settings: AppSettingsV1,
+  providerId: string,
+  nextBaseUrl: string
+): AppSettingsPatch {
+  const activeProvider = getModelProviderProfile(settings, providerId)
+  const inferredFromPrevious = inferEndpointFormatFromBaseUrl(
+    activeProvider.baseUrl,
+    activeProvider.id
+  )
+  const userPickedManually = Boolean(
+    activeProvider.endpointFormat &&
+    activeProvider.endpointFormat !== inferredFromPrevious
+  )
+
+  return updateModelProviderProfilePatch(settings, providerId, {
+    baseUrl: nextBaseUrl,
+    ...(userPickedManually ? {} : {
+      endpointFormat: inferEndpointFormatFromBaseUrl(nextBaseUrl, activeProvider.id)
+    })
+  })
+}
+
+export function selectModelProviderPatch(
+  settings: AppSettingsV1,
+  providerId: string
+): AppSettingsPatch {
+  const legalwork = getLegalworkRuntimeSettings(settings)
+  const preset = getBuiltinModelProviderPreset(providerId)
+  const current = getModelProviderProfile(settings, providerId)
+  const nextProvider: ModelProviderProfileV1 = {
+    ...current,
+    id: preset?.id ?? current.id,
+    name: preset?.name ?? current.name,
+    baseUrl: current.baseUrl || preset?.baseUrl || '',
+    endpointFormat: current.endpointFormat || preset?.endpointFormat || 'chat_completions',
+    models: current.models.length > 0 ? current.models : preset?.models ?? []
+  }
+
+  const providerPatch = modelProviderProfilePatch(settings, nextProvider)
+  return {
+    ...providerPatch,
+    agents: legalworkSettingsPatch({
+      providerId: nextProvider.id,
+      model: nextProvider.models[0] || legalwork.model,
+      endpointFormat: nextProvider.endpointFormat ?? ''
+    })
   }
 }
 

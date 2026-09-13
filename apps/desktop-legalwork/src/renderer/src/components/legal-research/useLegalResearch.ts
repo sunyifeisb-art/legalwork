@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { resolveAgentTaskModel } from '../../agent/agent-task-model'
 import { getProvider } from '../../agent/registry'
+import { rendererRuntimeClient } from '../../agent/runtime-client'
 import type { ChatBlock, ThreadDeltaEvent, ThreadEventSink, ToolEventPayload } from '../../agent/types'
+import { useChatStore } from '../../store/chat-store'
 import { applyLegalResearchSummaryEdit } from './legal-research-records'
 import { buildImmediateResearchPlan } from './legal-research-plan'
 import {
@@ -91,6 +94,7 @@ function saveRecords(records: ResearchRecord[]): void {
 
 export function useLegalResearch() {
   const { t } = useTranslation('common')
+  const composerModel = useChatStore((state) => state.composerModel)
   const [records, setRecords] = useState<ResearchRecord[]>(loadRecords)
   const [activeRecordId, setActiveRecordId] = useState<string | null>(null)
   const [isResearching, setIsResearching] = useState(false)
@@ -172,6 +176,11 @@ export function useLegalResearch() {
 
       try {
         const provider = getProvider()
+        const settings = await rendererRuntimeClient.getSettings()
+        const researchModel = resolveAgentTaskModel(
+          composerModel,
+          settings.agents.legalwork.model
+        )
         // Research runs in a dedicated internal workspace so its threads are
         // excluded from the home agent's code-thread list (isCodeThread) and
         // never surface in the main conversation view.
@@ -180,7 +189,8 @@ export function useLegalResearch() {
         const thread = await provider.createThread({
           workspace: workspaceRoot,
           title: `${t('legalResearch')}: ${trimmedQuery.slice(0, 60)}`,
-          mode: 'agent'
+          mode: 'agent',
+          model: researchModel
         })
         threadId = thread.id
         persist((prev) => prev.map((record) =>
@@ -188,7 +198,8 @@ export function useLegalResearch() {
         ))
 
         const sendResult = await provider.sendUserMessage(threadId, buildResearchPrompt(trimmedQuery), {
-          mode: 'agent'
+          mode: 'agent',
+          model: researchModel
         })
         turnId = sendResult.turnId
 
@@ -573,7 +584,7 @@ export function useLegalResearch() {
         setIsResearching(false)
       }
     },
-    [isResearching, t, buildResearchPrompt, persist]
+    [isResearching, t, buildResearchPrompt, composerModel, persist]
   )
 
   const stopResearch = useCallback(() => {

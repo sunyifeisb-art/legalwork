@@ -144,6 +144,7 @@ export function buildHarness(): Harness {
     runTurn: (threadId, turnId) => {
       void loop.runTurn(threadId, turnId)
     },
+    generateModelText: async ({ userPrompt }) => ({ text: `generated:${userPrompt}` }),
     runtimeToken: 'tok-1',
     insecure: false,
     allocateSeq,

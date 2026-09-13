@@ -90,6 +90,46 @@ describe('LegalworkRuntimeProvider', () => {
     )
   })
 
+  it('uses an explicit model when creating an internal workflow thread', async () => {
+    const runtimeRequest = vi.fn(async () => ({
+      ok: true,
+      status: 201,
+      body: JSON.stringify({
+        id: 'thr_document',
+        title: 'Document',
+        workspace: '/tmp/document',
+        model: 'gpt-5.6',
+        mode: 'agent',
+        status: 'idle',
+        createdAt: 't0',
+        updatedAt: 't0',
+        turns: []
+      })
+    }))
+    installDsGui({ runtimeRequest })
+    const provider = new LegalworkRuntimeProvider()
+
+    await provider.createThread({
+      workspace: '/tmp/document',
+      title: 'Document',
+      mode: 'agent',
+      model: 'gpt-5.6'
+    })
+
+    expect(runtimeRequest).toHaveBeenCalledWith(
+      '/v1/threads',
+      'POST',
+      JSON.stringify({
+        workspace: '/tmp/document',
+        title: 'Document',
+        model: 'gpt-5.6',
+        mode: 'agent',
+        approvalPolicy: 'auto',
+        sandboxMode: 'danger-full-access'
+      })
+    )
+  })
+
   it('maps Legalwork thread items into chat blocks', async () => {
     installDsGui({
       runtimeRequest: vi.fn(async () => ({

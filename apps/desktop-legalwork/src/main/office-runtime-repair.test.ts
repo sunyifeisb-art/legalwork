@@ -20,11 +20,13 @@ describe('bundledOfficePythonEnv', () => {
   it('anchors to the python dir on Windows', () => {
     const env = bundledOfficePythonEnv('C:\\app\\office-runtime\\python\\python.exe', 'win32')
     expect(env.PYTHONHOME).toBe('C:\\app\\office-runtime\\python')
+    expect(env.PYTHONDONTWRITEBYTECODE).toBe('1')
   })
 
   it('anchors two levels up on Unix', () => {
     const env = bundledOfficePythonEnv('/app/office-runtime/python/bin/python3', 'darwin')
     expect(env.PYTHONHOME).toBe('/app/office-runtime/python')
+    expect(env.PYTHONDONTWRITEBYTECODE).toBe('1')
   })
 })
 

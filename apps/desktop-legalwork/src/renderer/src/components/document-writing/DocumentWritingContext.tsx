@@ -17,7 +17,9 @@ import {
   type UserTemplate
 } from '../../../../shared/user-templates'
 import { getProvider } from '../../agent/registry'
+import { rendererRuntimeClient } from '../../agent/runtime-client'
 import type { ThreadDeltaEvent, ThreadEventSink, ToolEventPayload } from '../../agent/types'
+import { useChatStore } from '../../store/chat-store'
 import {
   advanceDocumentWritingStage,
   assessDocumentWritingContent,
@@ -25,6 +27,7 @@ import {
   completeDocumentWritingStages,
   createDocumentWritingStages,
   documentWritingStageForTool,
+  resolveDocumentWritingModel,
   resolveDocumentWritingContent,
   updateDocumentWritingStages,
   type DocumentWritingStage,
@@ -200,6 +203,7 @@ async function fileToBase64(file: File): Promise<string> {
 
 export function DocumentWritingProvider({ children }: { children: ReactNode }): ReactElement {
   const { t } = useTranslation('common')
+  const composerModel = useChatStore((state) => state.composerModel)
   const [leftTab, setLeftTab] = useState<'templates' | 'history'>('templates')
   const [historyRefreshSignal, setHistoryRefreshSignal] = useState(0)
   const [activeCategory, setActiveCategory] = useState<TemplateCategory | 'all'>('all')
@@ -374,6 +378,11 @@ export function DocumentWritingProvider({ children }: { children: ReactNode }): 
 
     try {
       const provider = getProvider()
+      const settings = await rendererRuntimeClient.getSettings()
+      const documentModel = resolveDocumentWritingModel(
+        composerModel,
+        settings.agents.legalwork.model
+      )
       // Document-writing runs in a dedicated internal workspace so its scratch
       // threads never surface in the home conversation (same pattern as legal
       // research's research-workspace). The generated document is delivered
@@ -381,12 +390,14 @@ export function DocumentWritingProvider({ children }: { children: ReactNode }): 
       const thread = await provider.createThread({
         workspace: '~/.legalwork/document-workspace',
         title: `文书写作：${activeTemplate.name}`,
-        mode: 'agent'
+        mode: 'agent',
+        model: documentModel
       })
       const agentPrompt = buildDocumentWritingAgentPrompt(request)
       const loanAmountScenario = documentInvolvesLoanAmounts(agentPrompt)
       const sent = await provider.sendUserMessage(thread.id, agentPrompt, {
-        mode: 'agent'
+        mode: 'agent',
+        model: documentModel
       })
       activeRunRef.current = { threadId: thread.id, turnId: sent.turnId }
       let assistantText = ''
@@ -535,7 +546,7 @@ export function DocumentWritingProvider({ children }: { children: ReactNode }): 
         activeRunRef.current = null
       }
     }
-  }, [activeTemplate, fieldValues, instruction, saveCurrentToHistory, t, uploadedMaterials])
+  }, [activeTemplate, composerModel, fieldValues, instruction, saveCurrentToHistory, t, uploadedMaterials])
 
   const handleNewDocument = useCallback(() => {
     setActiveTemplateId(null)

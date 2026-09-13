@@ -45,7 +45,9 @@ type ChatCompletionMessage = {
 
 function shouldDisableThinkingForInlineCompletion(model: string): boolean {
   const normalized = model.trim().toLowerCase()
-  return normalized.startsWith('deepseek-v4') || normalized === 'deepseek-reasoner'
+  return normalized.startsWith('deepseek-v4') ||
+    normalized === 'deepseek-flash' ||
+    normalized === 'deepseek-reasoner'
 }
 
 const inlineCompletionDebugEntries: WriteInlineCompletionDebugEntry[] = []

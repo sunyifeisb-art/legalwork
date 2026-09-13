@@ -691,6 +691,137 @@ describe('DeepseekCompatModelClient', () => {
       .toEqual(['call_a', 'call_b'])
   })
 
+  it('reconstructs one thinking tool-call message when persisted concurrent calls are interleaved with results', async () => {
+    const sentBodies: Array<{ messages?: Array<Record<string, unknown>> }> = []
+    const response = {
+      id: 'r1',
+      model: 'deepseek-flash',
+      choices: [
+        {
+          index: 0,
+          finish_reason: 'stop',
+          message: { role: 'assistant', content: 'done' }
+        }
+      ],
+      usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 }
+    }
+    const fetchImpl: typeof fetch = async (_url, init) => {
+      sentBodies.push(JSON.parse(String(init?.body ?? '{}')))
+      return new Response(JSON.stringify(response), {
+        status: 200,
+        headers: { 'content-type': 'application/json' }
+      })
+    }
+    const client = new DeepseekCompatModelClient({
+      baseUrl: 'https://api.deepseek.com',
+      apiKey: 'k',
+      model: 'deepseek-flash',
+      fetchImpl,
+      nonStreaming: true
+    })
+    const request = buildRequest(new AbortController().signal)
+    request.model = 'deepseek-flash'
+
+    const reasoning = {
+      ...makeAssistantReasoningItem({
+        id: 'assistant_reasoning',
+        turnId: 'turn_1',
+        threadId: 'thr_1',
+        text: 'I need three sources before synthesizing the answer.',
+        status: 'completed'
+      }),
+      createdAt: '2026-09-13T12:25:32.149Z'
+    }
+    const callA = {
+      ...makeToolCallItem({
+        id: 'call_a',
+        turnId: 'turn_1',
+        threadId: 'thr_1',
+        callId: 'call_a',
+        toolName: 'mcp_search',
+        arguments: { query: 'a' }
+      }),
+      createdAt: '2026-09-13T12:25:32.122Z'
+    }
+    const resultA = {
+      ...makeToolResultItem({
+        id: 'result_a',
+        turnId: 'turn_1',
+        threadId: 'thr_1',
+        callId: 'call_a',
+        toolName: 'mcp_search',
+        output: 'a'
+      }),
+      createdAt: '2026-09-13T12:25:32.195Z'
+    }
+    const callB = {
+      ...makeToolCallItem({
+        id: 'call_b',
+        turnId: 'turn_1',
+        threadId: 'thr_1',
+        callId: 'call_b',
+        toolName: 'knowledge_legal_external_sources',
+        arguments: { query: 'b' }
+      }),
+      createdAt: '2026-09-13T12:25:32.134Z'
+    }
+    const resultB = {
+      ...makeToolResultItem({
+        id: 'result_b',
+        turnId: 'turn_1',
+        threadId: 'thr_1',
+        callId: 'call_b',
+        toolName: 'knowledge_legal_external_sources',
+        output: 'b'
+      }),
+      createdAt: '2026-09-13T12:25:36.719Z'
+    }
+    const callC = {
+      ...makeToolCallItem({
+        id: 'call_c',
+        turnId: 'turn_1',
+        threadId: 'thr_1',
+        callId: 'call_c',
+        toolName: 'knowledge_auto_retrieve',
+        arguments: { query: 'c' }
+      }),
+      createdAt: '2026-09-13T12:25:32.141Z'
+    }
+    const resultC = {
+      ...makeToolResultItem({
+        id: 'result_c',
+        turnId: 'turn_1',
+        threadId: 'thr_1',
+        callId: 'call_c',
+        toolName: 'knowledge_auto_retrieve',
+        output: 'c'
+      }),
+      createdAt: '2026-09-13T12:25:37.311Z'
+    }
+
+    // This is the exact shape observed from the failed real thread: the store
+    // returned reasoning first, followed by call/result pairs, despite all
+    // three calls having been emitted before reasoning completed.
+    request.history = [reasoning, callA, resultA, callB, resultB, callC, resultC]
+
+    for await (const _chunk of client.stream(request)) {
+      // drain
+    }
+
+    const messages = sentBodies[0]?.messages ?? []
+    const assistantToolMessages = messages.filter((message) => Array.isArray(message.tool_calls))
+    const toolMessages = messages.filter((message) => message.role === 'tool')
+
+    expect(assistantToolMessages).toHaveLength(1)
+    expect(assistantToolMessages[0]?.reasoning_content).toBe(
+      'I need three sources before synthesizing the answer.'
+    )
+    expect((assistantToolMessages[0]?.tool_calls as Array<{ id?: string }> | undefined)?.map((call) => call.id))
+      .toEqual(['call_a', 'call_b', 'call_c'])
+    expect(toolMessages.map((message) => message.tool_call_id))
+      .toEqual(['call_a', 'call_b', 'call_c'])
+  })
+
   it('uses a single space for empty thinking reasoning_content', async () => {
     const sentBodies: Array<{ messages?: Array<Record<string, unknown>> }> = []
     const response = {

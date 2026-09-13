@@ -9,6 +9,7 @@ import {
   defaultScheduleSettings,
   defaultWriteSettings,
   defaultKeyboardShortcuts,
+  normalizeModelProviderSettings,
   resolveLegalworkRuntimeSettings,
   type AppSettingsV1
 } from './app-settings'
@@ -53,6 +54,24 @@ function settings(): AppSettingsV1 {
 }
 
 describe('model provider settings', () => {
+  it('migrates legacy DeepSeek flash aliases out of the normal provider model list', () => {
+    const provider = normalizeModelProviderSettings({
+      providers: [{
+        id: 'deepseek',
+        name: 'DeepSeek',
+        apiKey: 'sk-test',
+        baseUrl: 'https://api.deepseek.com',
+        endpointFormat: 'chat_completions',
+        models: ['deepseek-chat', 'deepseek-reasoner', 'deepseek-v4-flash', 'deepseek-v4-pro']
+      }]
+    })
+
+    expect(provider.providers.find((item) => item.id === 'deepseek')?.models).toEqual([
+      'deepseek-flash',
+      'deepseek-v4-pro'
+    ])
+  })
+
   it('resolves Legalwork runtime credentials from the selected provider', () => {
     const runtime = resolveLegalworkRuntimeSettings(settings())
 

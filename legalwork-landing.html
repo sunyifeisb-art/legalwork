@@ -1987,7 +1987,7 @@
                     <div class="download-recommendation" id="downloadRecommendation">
                         <div>
                             <strong id="recommendedTitle">正在匹配最新安装包</strong>
-                            <span id="recommendedDetail">下载来源：GitHub Release</span>
+                            <span id="recommendedDetail">下载来源：腾讯云 COS</span>
                         </div>
                         <div class="download-chip" id="releaseChip">latest</div>
                     </div>
@@ -3016,6 +3016,14 @@ legalwork serve --data-dir ~/.legalwork</code></pre>
         // COS，URL 形如 <base>/legalwork/channels/<channel>/latest/<文件名>。
         const COS_BASE = 'https://legalwork-1318565101.cos.ap-guangzhou.myqcloud.com'; // 腾讯云 COS 默认域名(无需备案、国内直下);如需 CDN 加速,换成已备案的加速域名即可
         const COS_CHANNEL = 'stable'; // 发布默认 channel(与应用 DEFAULT_GUI_UPDATE_CHANNEL=stable、CI 构建的 LEGALWORK_UPDATE_CHANNEL=stable 一致)
+        const COS_INSTALLER_VERSION = '0.3.32';
+        const COS_INSTALLER_TAG = `v${COS_INSTALLER_VERSION}`;
+        const COS_PLATFORM_ASSETS = {
+            'mac-arm64': `legalwork-${COS_INSTALLER_VERSION}-mac-arm64.dmg`,
+            'mac-x64': `legalwork-${COS_INSTALLER_VERSION}-mac-x64.dmg`,
+            'win-x64': `legalwork-${COS_INSTALLER_VERSION}-win-x64.exe`,
+            'win-ia32': `legalwork-${COS_INSTALLER_VERSION}-win-ia32.exe`
+        };
         function buildCosUrl(assetName) {
             return assetName ? COS_BASE + '/legalwork/channels/' + COS_CHANNEL + '/latest/' + assetName : '';
         }
@@ -3498,6 +3506,9 @@ legalwork serve --data-dir ~/.legalwork</code></pre>
             const profile = platformProfiles[currentPlatform] || platformProfiles.source;
             const asset = findReleaseAsset(currentPlatform);
             const tag = releaseData?.tag_name || '';
+            const cosAssetName = COS_PLATFORM_ASSETS[currentPlatform] || '';
+            const cosAssetUrl = buildCosUrl(cosAssetName);
+            const displayTag = cosAssetName ? COS_INSTALLER_TAG : tag;
 
             const hideMirror = () => {
                 if (mirrorBtn) mirrorBtn.style.display = 'none';
@@ -3512,11 +3523,11 @@ legalwork serve --data-dir ~/.legalwork</code></pre>
                 p.classList.toggle('active', p.dataset.platform === currentPlatform);
             });
 
-            releaseChip.textContent = tag || 'latest';
+            releaseChip.textContent = displayTag || 'latest';
             if (detected) detected.textContent = profile.osLabel;
             recommendedTitle.textContent = `推荐：${profile.label}`;
-            recommendedDetail.textContent = tag
-                ? `${profile.recommendation} · 版本 ${tag}`
+            recommendedDetail.textContent = displayTag
+                ? `${profile.recommendation} · 版本 ${displayTag}${cosAssetName ? ' · 腾讯云 COS' : ''}`
                 : profile.recommendation;
             btn.classList.remove('is-disabled');
 
@@ -3526,6 +3537,16 @@ legalwork serve --data-dir ~/.legalwork</code></pre>
                 btn.href = repoUrl;
                 btn.removeAttribute('download');
                 btn.target = '_blank';
+                hideMirror();
+                return;
+            }
+
+            if (cosAssetUrl) {
+                text.textContent = `下载 ${COS_INSTALLER_TAG} · ${profile.label}`;
+                meta.innerHTML = `腾讯云 COS 直链 · <span style="color:var(--text-muted)">${cosAssetName}</span>`;
+                btn.href = cosAssetUrl;
+                btn.removeAttribute('download');
+                btn.removeAttribute('target');
                 hideMirror();
                 return;
             }
@@ -3549,17 +3570,8 @@ legalwork serve --data-dir ~/.legalwork</code></pre>
             text.textContent = `下载 ${tag || '最新版'} · ${profile.label}`;
             const dlCount = getTotalDownloadCount();
             const dlText = dlCount > 0 ? `<span class="dl-count">累计下载 ${dlCount.toLocaleString()}</span>` : '';
-            // Windows 改用便携 ZIP(解压即用,绕开 NSIS 安装器卡死);其余平台用 GitHub 官方包。
-            const ghZipUrl = /-win-/.test(asset.name)
-                ? asset.browser_download_url.replace(/\.exe$/i, '.zip')
-                : '';
-            if (ghZipUrl) {
-                meta.innerHTML = `便携版 ZIP(解压即用) ${dlText} · <span style="color:var(--text-muted)">${asset.name.replace(/\.exe$/i, '.zip')}</span>`;
-                btn.href = ghZipUrl;
-            } else {
-                meta.innerHTML = `GitHub Release ${dlText} · <span style="color:var(--text-muted)">${asset.name}</span>`;
-                btn.href = asset.browser_download_url;
-            }
+            meta.innerHTML = `GitHub Release ${dlText} · <span style="color:var(--text-muted)">${asset.name}</span>`;
+            btn.href = asset.browser_download_url;
             btn.removeAttribute('download');
             btn.removeAttribute('target');
 
@@ -3581,7 +3593,7 @@ legalwork serve --data-dir ~/.legalwork</code></pre>
             }
             if (mirrorHint) mirrorHint.style.display = 'block';
 
-            // 腾讯云 COS 已停用(欠费);统一走 GitHub 下载。
+            // Win/Mac 主下载已经直接走 COS；这里不再重复显示第二个 COS 按钮。
             const cosBtn = document.getElementById('cosDownloadBtn');
             const cosHint = document.getElementById('cosHint');
             if (cosBtn) cosBtn.style.display = 'none';

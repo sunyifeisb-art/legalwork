@@ -26,7 +26,7 @@ export const LEGALWORK_CONFIG_FILENAME = 'config.json'
 // Default to the cheap flash model: pro costs ~3x (3元/M vs 1元/M input) and
 // most agent/knowledge tasks do not need it. Users who explicitly choose pro
 // (per-thread or per-session) still get it — this only changes the default.
-export const DEFAULT_LEGALWORK_MODEL = 'deepseek-v4-flash'
+export const DEFAULT_LEGALWORK_MODEL = 'deepseek-flash'
 
 const PositiveInt = z.number().int().positive()
 const PositiveRatio = z.number().positive().max(1)

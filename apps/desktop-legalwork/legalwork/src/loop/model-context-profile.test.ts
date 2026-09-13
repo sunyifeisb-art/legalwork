@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { modelCapabilitiesForModel, contextThresholdsForModel } from './model-context-profile.js'
+import {
+  modelCapabilitiesForModel,
+  contextThresholdsForModel,
+  modelContextProfilesFromConfig,
+  resolveModelContextProfile
+} from './model-context-profile.js'
 
 describe('model context profiles', () => {
   it('uses nearly the full advertised DeepSeek 1M window before compacting', () => {
@@ -9,6 +14,30 @@ describe('model context profiles', () => {
     expect(contextThresholdsForModel('provider/deepseek-v4-flash')).toEqual({
       softThreshold: 900_000,
       hardThreshold: 950_000
+    })
+    expect(modelCapabilitiesForModel('deepseek-flash')).toMatchObject({
+      contextWindowTokens: 1_000_000
+    })
+    expect(resolveModelContextProfile('deepseek-v4-flash')?.canonicalModel).toBe('deepseek-flash')
+  })
+
+  it('merges a persisted legacy v4 flash profile into the current canonical profile', () => {
+    const profiles = modelContextProfilesFromConfig({
+      profiles: {
+        'deepseek-v4-flash': {
+          contextWindowTokens: 1_000_000,
+          contextCompaction: {
+            softThreshold: 880_000,
+            hardThreshold: 930_000
+          }
+        }
+      }
+    })
+    const profile = resolveModelContextProfile('deepseek-flash', profiles)
+    expect(profile).toMatchObject({
+      canonicalModel: 'deepseek-flash',
+      softThreshold: 880_000,
+      hardThreshold: 930_000
     })
   })
 

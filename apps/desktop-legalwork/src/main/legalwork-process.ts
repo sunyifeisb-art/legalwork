@@ -1,5 +1,5 @@
 import { app } from 'electron'
-import { spawn, type ChildProcess } from 'node:child_process'
+import { execFile, spawn, type ChildProcess } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { createServer } from 'node:net'
@@ -95,8 +95,8 @@ const DEFAULT_LEGALWORK_MODEL_PROFILES: Record<string, Record<string, unknown>> 
     supportsToolCalling: true,
     messageParts: ['text']
   },
-  'deepseek-v4-flash': {
-    aliases: ['deepseek-chat', 'deepseek-reasoner'],
+  'deepseek-flash': {
+    aliases: ['deepseek-v4-flash', 'deepseek-chat', 'deepseek-reasoner'],
     contextWindowTokens: 1_000_000,
     contextCompaction: {
       softThreshold: 900_000,
@@ -492,6 +492,8 @@ async function startLegalworkChildOnce(settings: AppSettingsV1): Promise<void> {
       PATH: runtimePath,
       ELECTRON_RUN_AS_NODE: '1',
       LEGALWORK_RUNTIME_TOKEN: runtime.runtimeToken,
+      LEGALWORK_RUNTIME_BASE_URL: `http://127.0.0.1:${runtime.port}`,
+      PYTHONDONTWRITEBYTECODE: '1',
       LEGALWORK_AUTH_MODE: runtime.authMode,
       LEGALWORK_CODEX_BINARY: (codexBinaryPath ?? runtime.codexBinaryPath) || process.env.LEGALWORK_CODEX_BINARY || '',
       LEGALWORK_CODEX_HOME: legalworkCodexHome,
@@ -1035,7 +1037,8 @@ function modelConfigForRuntime(existing: Record<string, unknown>): Record<string
   const existingProfiles = objectValue(existing.profiles)
   const profiles: Record<string, unknown> = { ...DEFAULT_LEGALWORK_MODEL_PROFILES }
   for (const [modelId, profile] of Object.entries(existingProfiles)) {
-    const defaultProfile = objectValue(DEFAULT_LEGALWORK_MODEL_PROFILES[modelId])
+    const canonicalModelId = modelId === 'deepseek-v4-flash' ? 'deepseek-flash' : modelId
+    const defaultProfile = objectValue(DEFAULT_LEGALWORK_MODEL_PROFILES[canonicalModelId])
     const existingProfile = objectValue(profile)
     const existingCompaction = objectValue(existingProfile.contextCompaction)
     const mergedCompaction = {
@@ -1051,7 +1054,7 @@ function modelConfigForRuntime(existing: Record<string, unknown>): Record<string
       (existingSoft === 40_000 && existingHard === 60_000) ||
       (existingSoft === 100_000 && existingHard === 130_000)
     if (
-      (modelId === 'deepseek-v4-pro' || modelId === 'deepseek-v4-flash') &&
+      (canonicalModelId === 'deepseek-v4-pro' || canonicalModelId === 'deepseek-flash') &&
       isPrematureDeepseekPair
     ) {
       Object.assign(mergedCompaction, objectValue(defaultProfile.contextCompaction))
@@ -1064,11 +1067,12 @@ function modelConfigForRuntime(existing: Record<string, unknown>): Record<string
     if (soft !== undefined && hard !== undefined && hard < soft) {
       mergedCompaction.hardThreshold = soft + 1
     }
-    profiles[modelId] = {
+    profiles[canonicalModelId] = {
       ...defaultProfile,
       ...existingProfile,
       contextCompaction: mergedCompaction
     }
+    if (canonicalModelId !== modelId) delete profiles[modelId]
   }
   return {
     ...existing,
@@ -1243,6 +1247,19 @@ export async function stopLegalworkChildAndWait(): Promise<void> {
   const stoppingChild = child
   const pid = child.pid
   const capture = childLogCapture
+  if (process.platform === 'win32' && pid) {
+    await terminateWindowsProcessTree(pid)
+    const exited = await waitForChildExit(stoppingChild, LEGALWORK_STOP_FORCE_MS)
+    if (!exited && stoppingChild.exitCode === null && stoppingChild.signalCode === null) {
+      throw new Error(`Windows LegalWork process tree did not exit after taskkill (pid=${pid})`)
+    }
+    if (child === stoppingChild) child = null
+    if (capture) {
+      childLogCapture = null
+      await capture.close()
+    }
+    return
+  }
   if (stoppingChild.exitCode === null && stoppingChild.signalCode === null) {
     try {
       stoppingChild.kill('SIGTERM')
@@ -1257,13 +1274,27 @@ export async function stopLegalworkChildAndWait(): Promise<void> {
     } catch {
       /* already gone */
     }
-    await waitForChildExit(stoppingChild, LEGALWORK_STOP_FORCE_MS)
+    const forceExited = await waitForChildExit(stoppingChild, LEGALWORK_STOP_FORCE_MS)
+    if (!forceExited && stoppingChild.exitCode === null && stoppingChild.signalCode === null) {
+      throw new Error(`LegalWork child did not exit after forced termination (pid=${pid ?? 'unknown'})`)
+    }
   }
   if (child === stoppingChild) child = null
   if (capture) {
     childLogCapture = null
     await capture.close()
   }
+}
+
+function terminateWindowsProcessTree(pid: number): Promise<void> {
+  return new Promise((resolve) => {
+    execFile(
+      'taskkill.exe',
+      ['/PID', String(pid), '/T', '/F'],
+      { windowsHide: true, timeout: 5_000 },
+      () => resolve()
+    )
+  })
 }
 
 function waitForChildExit(process: ChildProcess, timeoutMs: number): Promise<boolean> {

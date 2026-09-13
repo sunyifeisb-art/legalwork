@@ -11,7 +11,13 @@ import {
   defaultWriteSettings,
   type AppSettingsV1
 } from '@shared/app-settings'
-import { getCodexQuotaRemainingPercent, mergeSettings } from './settings-utils'
+import {
+  getCodexQuotaRemainingPercent,
+  mergeSettings,
+  selectModelProviderPatch,
+  updateModelProviderBaseUrlPatch,
+  updateModelProviderProfilePatch
+} from './settings-utils'
 
 function settings(providerId: string, model: string): AppSettingsV1 {
   const provider = defaultModelProviderSettings()
@@ -68,6 +74,50 @@ describe('mergeSettings', () => {
     )
     }
   )
+})
+
+describe('model provider settings helpers', () => {
+  it('switches provider and keeps the Legalwork runtime aligned with that provider', () => {
+    let current = settings('deepseek', 'deepseek-chat')
+    current = mergeSettings(current, updateModelProviderProfilePatch(current, 'claude', {
+      apiKey: 'sk-ant-test'
+    }))
+
+    const merged = mergeSettings(current, selectModelProviderPatch(current, 'claude'))
+    const claudeProvider = merged.provider.providers.find((provider) => provider.id === 'claude')
+
+    expect(merged.agents.legalwork.providerId).toBe('claude')
+    expect(merged.agents.legalwork.model).toBe(claudeProvider?.models[0])
+    expect(merged.agents.legalwork.apiKey).toBe('sk-ant-test')
+    expect(merged.agents.legalwork.baseUrl).toBe('https://api.anthropic.com/v1')
+    expect(merged.agents.legalwork.endpointFormat).toBe('messages')
+  })
+
+  it('auto-detects the protocol when the base URL changes and no manual override exists', () => {
+    const current = settings('deepseek', 'deepseek-chat')
+    const merged = mergeSettings(
+      current,
+      updateModelProviderBaseUrlPatch(current, 'deepseek', 'https://api.anthropic.com/v1')
+    )
+
+    expect(merged.provider.providers.find((provider) => provider.id === 'deepseek')?.endpointFormat).toBe('messages')
+    expect(merged.agents.legalwork.endpointFormat).toBe('messages')
+  })
+
+  it('preserves a manually selected protocol when the base URL changes', () => {
+    let current = settings('deepseek', 'deepseek-chat')
+    current = mergeSettings(current, updateModelProviderProfilePatch(current, 'deepseek', {
+      endpointFormat: 'responses'
+    }))
+
+    const merged = mergeSettings(
+      current,
+      updateModelProviderBaseUrlPatch(current, 'deepseek', 'https://api.anthropic.com/v1')
+    )
+
+    expect(merged.provider.providers.find((provider) => provider.id === 'deepseek')?.endpointFormat).toBe('responses')
+    expect(merged.agents.legalwork.endpointFormat).toBe('responses')
+  })
 })
 
 describe('getCodexQuotaRemainingPercent', () => {

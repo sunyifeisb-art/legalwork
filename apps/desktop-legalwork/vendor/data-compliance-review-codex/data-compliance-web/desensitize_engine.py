@@ -1856,13 +1856,25 @@ def _parse_agent_json(content: str) -> dict[str, Any]:
 
 
 def _agent_json_request(system_prompt: str, user_prompt: str) -> dict[str, Any]:
+    try:
+        from scripts.legalwork_agent_client import generate_model_text, runtime_model_available
+        if runtime_model_available():
+            model = os.environ.get('LEGALWORK_MODEL', '').strip() or 'deepseek-flash'
+            return _parse_agent_json(generate_model_text(
+                system_prompt,
+                user_prompt,
+                model=model,
+                max_tokens=4096,
+            ))
+    except ImportError:
+        pass
     api_key = os.environ.get('LEGALWORK_API_KEY', '').strip() or os.environ.get('DEEPSEEK_API_KEY', '').strip()
     if not api_key:
         raise RuntimeError('增强脱敏模式需要先在设置中配置可用的模型 API Key。')
     if OpenAI is None:
         raise RuntimeError('增强脱敏模式缺少智能模型运行依赖。')
     base_url = os.environ.get('LEGALWORK_BASE_URL', '').strip() or 'https://api.deepseek.com'
-    model = os.environ.get('LEGALWORK_MODEL', '').strip() or 'deepseek-chat'
+    model = os.environ.get('LEGALWORK_MODEL', '').strip() or 'deepseek-flash'
     client = OpenAI(api_key=api_key, base_url=base_url)
     response = client.chat.completions.create(
         model=model,
@@ -2051,6 +2063,12 @@ def _agent_subject_replacement_plan(
 
 
 def _agent_is_configured() -> bool:
+    try:
+        from scripts.legalwork_agent_client import runtime_model_available
+        if runtime_model_available():
+            return True
+    except ImportError:
+        pass
     api_key = os.environ.get('LEGALWORK_API_KEY', '').strip() or os.environ.get('DEEPSEEK_API_KEY', '').strip()
     return bool(api_key and OpenAI is not None)
 

@@ -6,6 +6,7 @@ import {
   findKnowledgeFileForChatContext,
   knowledgeChatHistoryFromBlocks,
   markKnowledgeSourceReferences,
+  stripKnowledgeDsmlProtocol,
   stripRepeatedKnowledgeQuestionLead
 } from './knowledge-chat-history'
 import { KnowledgeChatComposer, KnowledgeChatMessage } from './KnowledgeChatUI'
@@ -286,6 +287,28 @@ describe('knowledgeChatHistoryFromBlocks', () => {
     expect(knowledgeChatHistoryFromBlocks(blocks).messages[1]).toMatchObject({
       role: 'assistant',
       content: '这是一个实务经验分享文档。'
+    })
+  })
+
+  it('removes leaked DeepSeek DSML calls frames from current and stored knowledge answers', () => {
+    const leaked = [
+      '知识库回答正文。',
+      '<| |DSML| | calls>',
+      '<| |DSML| | invoke name="document_skill_execute">',
+      '<| |DSML| | parameter name="kind" string="true">docx</| |DSML| | parameter>',
+      '</| |DSML| | invoke>',
+      '</| |DSML| | calls>',
+      '回答结束。'
+    ].join('\n')
+
+    expect(stripKnowledgeDsmlProtocol(leaked)).toBe('知识库回答正文。\n\n回答结束。')
+    expect(knowledgeChatHistoryFromBlocks([{
+      kind: 'assistant',
+      id: 'assistant-dsml',
+      text: leaked
+    }]).messages[0]).toMatchObject({
+      role: 'assistant',
+      content: '知识库回答正文。\n\n回答结束。'
     })
   })
 

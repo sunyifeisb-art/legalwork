@@ -95,9 +95,10 @@ const LONGCAT_2_CONTEXT_WINDOW_TOKENS = 1_000_000
 
 export const MODEL_CONTEXT_PROFILES: readonly ModelContextProfile[] = [
   deepseekV4Profile('deepseek-v4-pro', ['deepseek-v4-pro']),
-  deepseekV4Profile('deepseek-v4-flash', [
+  deepseekV4Profile('deepseek-flash', [
+    'deepseek-flash',
+    // Back-compat aliases from older LegalWork/DeepSeek configurations.
     'deepseek-v4-flash',
-    // Back-compat aliases currently routed by DeepSeek to v4-flash modes.
     'deepseek-chat',
     'deepseek-reasoner'
   ]),
@@ -161,7 +162,7 @@ export function modelContextProfilesFromConfig(
   if (profileGroups.length === 0) return [...byCanonical.values()]
   for (const profiles of profileGroups) {
     for (const [modelId, rawProfile] of Object.entries(profiles)) {
-      const canonicalModel = normalizeModelId(modelId)
+      const canonicalModel = canonicalModelId(modelId)
       if (!canonicalModel) continue
       const current = byCanonical.get(canonicalModel)
       const next = mergeModelContextProfile(canonicalModel, current, rawProfile)
@@ -169,6 +170,11 @@ export function modelContextProfilesFromConfig(
     }
   }
   return [...byCanonical.values()]
+}
+
+function canonicalModelId(model: string | undefined): string {
+  const normalized = normalizeModelId(model)
+  return normalized === 'deepseek-v4-flash' ? 'deepseek-flash' : normalized
 }
 
 function deepseekV4Profile(

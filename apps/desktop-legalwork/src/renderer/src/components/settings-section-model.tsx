@@ -3,9 +3,7 @@ import {
   BUILTIN_MODEL_PROVIDER_PRESETS,
   DEFAULT_MODEL_PROVIDER_ID,
   getBuiltinModelProviderPreset,
-  getModelProviderProfile,
-  inferEndpointFormatFromBaseUrl,
-  legalworkSettingsPatch
+  getModelProviderProfile
 } from '@shared/app-settings'
 import type { CodexAuthStatus } from '@shared/ds-gui-api'
 import { CheckCircle2, Loader2, LogIn, LogOut, RefreshCw } from 'lucide-react'
@@ -15,7 +13,12 @@ import {
   SecretInput
 } from './settings-controls'
 import { ModelListPicker } from './settings-model-list-picker'
-import { getCodexQuotaRemainingPercent } from './settings-utils'
+import {
+  getCodexQuotaRemainingPercent,
+  selectModelProviderPatch,
+  updateModelProviderBaseUrlPatch,
+  updateModelProviderProfilePatch
+} from './settings-utils'
 
 function formatCodexQuotaDuration(minutes: number, locale: string): string {
   const language = locale.startsWith('zh') ? 'zh-CN' : 'en-US'
@@ -52,13 +55,9 @@ export function ModelSettingsSection({ ctx }: { ctx: Record<string, any> }): Rea
   const {
     t,
     form,
-    provider,
     legalwork,
     update,
     updateLegalwork,
-    updateSharedCredential,
-    sharedApiKey,
-    sharedBaseUrl,
     showApiKey,
     setShowApiKey,
     selectControlClass
@@ -68,52 +67,11 @@ export function ModelSettingsSection({ ctx }: { ctx: Record<string, any> }): Rea
   const activeProvider = getModelProviderProfile(form, activeProviderId)
   const activeProviderPreset = getBuiltinModelProviderPreset(activeProvider.id)
 
-  // ── Provider profile helpers (mirrors settings-section-general) ──
-  const buildProviderProfiles = (nextProvider: typeof activeProvider): typeof provider.providers => (
-    provider.providers.some((item: typeof activeProvider) => item.id === nextProvider.id)
-      ? provider.providers.map((item: typeof activeProvider) => item.id === nextProvider.id ? nextProvider : item)
-      : [...provider.providers, nextProvider]
-  )
-  const updateProviderProfiles = (nextProvider: typeof activeProvider): void => {
-    const nextProfiles = buildProviderProfiles(nextProvider)
-    update({
-      provider: nextProvider.id === DEFAULT_MODEL_PROVIDER_ID
-        ? {
-            apiKey: nextProvider.apiKey,
-            baseUrl: nextProvider.baseUrl,
-            providers: nextProfiles
-          }
-        : { providers: nextProfiles }
-    })
-  }
   const updateActiveProviderProfile = (patch: Partial<typeof activeProvider>): void => {
-    updateProviderProfiles({ ...activeProvider, ...patch })
+    update(updateModelProviderProfilePatch(form, activeProvider.id, patch))
   }
   const selectModelProvider = (providerId: string): void => {
-    const preset = getBuiltinModelProviderPreset(providerId)
-    const current = getModelProviderProfile(form, providerId)
-    const nextProvider = {
-      ...current,
-      id: preset?.id ?? current.id,
-      name: preset?.name ?? current.name,
-      baseUrl: current.baseUrl || preset?.baseUrl || '',
-      endpointFormat: current.endpointFormat || preset?.endpointFormat || 'chat_completions',
-      models: current.models.length > 0 ? current.models : preset?.models ?? []
-    }
-    update({
-      provider: nextProvider.id === DEFAULT_MODEL_PROVIDER_ID
-        ? {
-            apiKey: nextProvider.apiKey,
-            baseUrl: nextProvider.baseUrl,
-            providers: buildProviderProfiles(nextProvider)
-          }
-        : { providers: buildProviderProfiles(nextProvider) },
-      agents: legalworkSettingsPatch({
-        providerId: nextProvider.id,
-        model: nextProvider.models[0] || legalwork.model,
-        endpointFormat: nextProvider.endpointFormat
-      })
-    })
+    update(selectModelProviderPatch(form, providerId))
   }
 
   // ── ChatGPT-account auth status (mirrors settings-section-agents) ──
@@ -387,23 +345,7 @@ export function ModelSettingsSection({ ctx }: { ctx: Record<string, any> }): Rea
                   placeholder={t('baseUrlPlaceholder')}
                   value={activeProvider.baseUrl}
                   onChange={(e) => {
-                    const nextBaseUrl = e.target.value
-                    // Auto-infer the protocol from the endpoint unless the user
-                    // has manually chosen a protocol that differs from what the
-                    // previous base URL implied.
-                    const inferredFromPrevious = inferEndpointFormatFromBaseUrl(
-                      activeProvider.baseUrl,
-                      activeProvider.id
-                    )
-                    const userPickedManually =
-                      activeProvider.endpointFormat &&
-                      activeProvider.endpointFormat !== inferredFromPrevious
-                    updateActiveProviderProfile({
-                      baseUrl: nextBaseUrl,
-                      ...(userPickedManually ? {} : {
-                        endpointFormat: inferEndpointFormatFromBaseUrl(nextBaseUrl, activeProvider.id)
-                      })
-                    })
+                    update(updateModelProviderBaseUrlPatch(form, activeProvider.id, e.target.value))
                   }}
                 />
               }

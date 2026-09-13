@@ -85,6 +85,7 @@ import { isLegalworkHealthResponseBody } from './legalwork-health'
 import { FingerprintedSingleFlight } from './runtime/fingerprinted-single-flight'
 import { recoverUnhealthyOwnedRuntime } from './runtime/unhealthy-owned-runtime'
 import { isRuntimeProbePath } from './runtime/runtime-probe-path'
+import { parseRuntimeIdentity, runtimeModelMatches } from './runtime/runtime-identity'
 import { continueAppQuitAfterCleanup } from './continue-app-quit'
 import {
   ChildProcessGoneReportPolicy,
@@ -211,15 +212,11 @@ function emitClawChannelActivity(payload: { channelId: string; threadId: string 
   mainWindow.webContents.send('claw:channel-activity', payload)
 }
 
-const MANAGED_STOP_TIMEOUT_MS = 1_600
 const FORCE_QUIT_TIMEOUT_MS = 2_000
 
 async function stopManagedRuntimesForQuit(): Promise<void> {
   if (managedRuntimesStoppedForQuit) return
-  await Promise.race([
-    stopManagedRuntimes(),
-    new Promise<void>((resolve) => setTimeout(resolve, MANAGED_STOP_TIMEOUT_MS))
-  ])
+  await stopManagedRuntimes()
   managedRuntimesStoppedForQuit = true
 }
 
@@ -503,6 +500,33 @@ async function probeThreadApi(settings: AppSettingsV1): Promise<
   }
 }
 
+async function probeRuntimeIdentity(settings: AppSettingsV1): Promise<
+  | { ok: true; model: string }
+  | { ok: false; message: string }
+> {
+  const base = getRuntimeBaseUrlForSettings(settings)
+  const headers = runtimeAuthHeaders(settings)
+  headers.set('Accept', 'application/json')
+  try {
+    const res = await fetch(`${base}/v1/runtime/info`, {
+      headers,
+      signal: AbortSignal.timeout(RUNTIME_THREAD_API_PROBE_TIMEOUT_MS)
+    })
+    if (!res.ok) {
+      return { ok: false, message: `runtime info probe returned HTTP ${res.status}` }
+    }
+    const identity = parseRuntimeIdentity(JSON.parse(await res.text()))
+    return identity
+      ? { ok: true, model: identity.model }
+      : { ok: false, message: 'runtime info did not report a model id' }
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : String(error)
+    }
+  }
+}
+
 async function waitForLegalworkHealth(settings: AppSettingsV1, timeoutMs: number): Promise<boolean> {
   const base = getRuntimeBaseUrlForSettings(settings)
   const deadline = Date.now() + timeoutMs
@@ -649,16 +673,44 @@ async function ensureLegalworkRuntime(settings: AppSettingsV1): Promise<void> {
   const healthy = await waitForLegalworkHealth(settings, RUNTIME_EXISTING_HEALTH_FAST_MS)
   if (healthy) {
     const threadApi = await probeThreadApi(settings)
-    if (threadApi.ok) return
+    const identity = threadApi.ok ? await probeRuntimeIdentity(settings) : null
+    if (
+      threadApi.ok &&
+      identity?.ok &&
+      runtimeModelMatches(runtime.model, identity.model)
+    ) {
+      return
+    }
+    if (threadApi.ok && identity?.ok && !runtimeModelMatches(runtime.model, identity.model)) {
+      const mismatchMessage = `Legalwork runtime model mismatch: expected ${runtime.model}, running ${identity.model}.`
+      if (!adapter.isChildRunning()) {
+        throw runtimeJsonError('runtime_config_mismatch', mismatchMessage)
+      }
+      logWarn('runtime-ensure', 'Owned Legalwork child is healthy but uses a stale model; restarting it.', {
+        expectedModel: runtime.model,
+        actualModel: identity.model
+      })
+      await adapter.stopAndWait()
+    } else if (threadApi.ok && identity && !identity.ok) {
+      if (!adapter.isChildRunning()) {
+        throw runtimeJsonError('runtime_config_mismatch', identity.message)
+      }
+      logWarn('runtime-ensure', 'Owned Legalwork child is healthy but runtime identity could not be verified.', {
+        message: identity.message
+      })
+      await adapter.stopAndWait()
+    }
     // An externally managed runtime must not be terminated by this app. An
     // owned child, however, is unhealthy if its core API fails even while the
     // shallow /health endpoint still responds, so let it enter recovery below.
-    if (!adapter.isChildRunning()) {
+    if (!adapter.isChildRunning() && !threadApi.ok) {
       throw runtimeJsonError(threadApi.error, threadApi.message)
     }
-    logWarn('runtime-ensure', 'Owned Legalwork child passed health but failed the thread API probe.', {
-      message: threadApi.message
-    })
+    if (!threadApi.ok) {
+      logWarn('runtime-ensure', 'Owned Legalwork child passed health but failed the thread API probe.', {
+        message: threadApi.message
+      })
+    }
   }
 
   if (!hasModelAuth) {

@@ -221,7 +221,7 @@ function normalizedDocumentText(value: string): string {
   return value
     .normalize('NFKC')
     .replace(/<!--[^]*?-->/g, '')
-    .replace(/[\s#>*_\u0060~|\[\](){}]/g, '')
+    .replace(/[\s#>*_\u0060~|[\](){}]/g, '')
 }
 
 function normalizedRequirement(value: string): string {

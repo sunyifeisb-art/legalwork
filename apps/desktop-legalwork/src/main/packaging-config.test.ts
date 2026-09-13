@@ -70,17 +70,32 @@ afterEach(() => {
 })
 
 describe('electron-builder Legalwork packaging', () => {
-  it('uses electron-builder process detection for Windows upgrades', () => {
-    // Defining nsis.include with a customCheckAppRunning macro replaces the
-    // upstream process detection completely. The old override ignored failed
-    // taskkill/PowerShell exit codes and then attempted to overwrite locked
-    // files, producing the misleading "app cannot be closed" retry dialog.
+  it('does not inject a custom NSIS app-running hook', () => {
+    // A custom customCheckAppRunning hook that used nsProcess/taskkill caused
+    // the generated installer itself to crash with 0xC0000005 on Windows.
+    // Process-tree cleanup belongs to the application updater path instead.
     expect(builderConfig.nsis.include).toBeUndefined()
-    expect(existsSync(join(
+  })
+
+  it('keeps the data-compliance Python environment out of the bundled Office runtime', () => {
+    const source = readFileSync(join(
       dirname(require.resolve('../../electron-builder.config.cjs')),
-      'build',
-      'installer.nsh'
-    ))).toBe(false)
+      'scripts',
+      'prepare-office-runtime.cjs'
+    ), 'utf8')
+    expect(source).not.toContain('DATA_COMPLIANCE_REQUIREMENTS')
+    expect(source).not.toContain("'paddleocr'")
+    expect(source).toContain('dataComplianceReady: false')
+  })
+
+  it('waits for managed runtimes and kills the Windows runtime process tree before updating', () => {
+    const root = dirname(require.resolve('../../electron-builder.config.cjs'))
+    const indexSource = readFileSync(join(root, 'src/main/index.ts'), 'utf8')
+    const runtimeSource = readFileSync(join(root, 'src/main/legalwork-process.ts'), 'utf8')
+    expect(indexSource).not.toContain('MANAGED_STOP_TIMEOUT_MS')
+    expect(indexSource).toContain('await stopManagedRuntimes()')
+    expect(runtimeSource).toContain("'taskkill.exe'")
+    expect(runtimeSource).toContain("['/PID', String(pid), '/T', '/F']")
   })
 
   it('includes Legalwork runtime dependencies in the packaged app', () => {

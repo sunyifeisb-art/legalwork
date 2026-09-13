@@ -130,7 +130,7 @@ describe('requestWriteInlineCompletion', () => {
         kind: 'short',
         text: ' only a test'
       },
-      model: 'deepseek-v4-flash',
+      model: 'deepseek-flash',
       mode: 'short'
     })
     expect(fetchMock).toHaveBeenCalledTimes(1)
@@ -142,7 +142,7 @@ describe('requestWriteInlineCompletion', () => {
     })
     const body = JSON.parse(String(init.body)) as { prompt: string; suffix: string; max_tokens: number }
     expect(body).toMatchObject({
-      model: 'deepseek-v4-flash',
+      model: 'deepseek-flash',
       suffix: ' a test.',
       max_tokens: 64
     })
@@ -158,7 +158,7 @@ describe('requestWriteInlineCompletion', () => {
       ok: true,
       completion: ' only a test',
       mode: 'short',
-      model: 'deepseek-v4-flash'
+      model: 'deepseek-flash'
     })
   })
 
@@ -271,7 +271,7 @@ describe('requestWriteInlineCompletion', () => {
 
     const settings = createSettings({
       inheritModel: false,
-      model: 'deepseek-v4-flash'
+      model: 'deepseek-flash'
     })
     settings.provider.baseUrl = 'https://general.example/v1'
     settings.agents.legalwork.model = 'deepseek-chat'
@@ -283,12 +283,12 @@ describe('requestWriteInlineCompletion', () => {
 
     expect(result).toMatchObject({
       ok: true,
-      model: 'deepseek-v4-flash'
+      model: 'deepseek-flash'
     })
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
     expect(url).toContain('https://general.example')
     expect(JSON.parse(String(init.body))).toMatchObject({
-      model: 'deepseek-v4-flash'
+      model: 'deepseek-flash'
     })
   })
 

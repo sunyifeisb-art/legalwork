@@ -60,6 +60,14 @@ export type ServerRuntime = {
     target: ReviewTarget
     model?: string
   }): Promise<'completed' | 'failed' | 'aborted'> | void
+  generateModelText?(input: {
+    systemPrompt: string
+    userPrompt: string
+    model?: string
+    maxTokens?: number
+    reasoningEffort?: string
+    responseFormat?: 'json_object'
+  }): Promise<{ text: string }>
   runtimeToken: string
   insecure: boolean
   allocateSeq: (threadId: string) => number

@@ -73,6 +73,8 @@ import {
 import { isAuthorized, bearerToken } from '../auth.js'
 import { ERRORS } from './runtime-error.js'
 import type { ServerRuntime } from './server-runtime.js'
+import { readJsonBody } from '../read-json-body.js'
+import { jsonResponse } from '../response.js'
 
 /**
  * Build the full router used by the HTTP server. The router exposes:
@@ -356,6 +358,46 @@ export function buildRouter(runtime: ServerRuntime): Router {
   router.add('GET', '/v1/usage', async (request) => {
     if (!authorize(request, runtime)) return ERRORS.unauthorized()
     return usageJsonResponse(request, runtime)
+  })
+
+  // Internal, tool-free model call used by local feature workers such as
+  // compliance/desensitization. It deliberately reuses the runtime's active
+  // ModelClient so API-key and ChatGPT-account auth behave identically.
+  router.add('POST', '/v1/model/generate', async (request) => {
+    if (!authorize(request, runtime)) return ERRORS.unauthorized()
+    if (!runtime.generateModelText) return ERRORS.unavailable('model generation is not available')
+    const body = await readJsonBody(request)
+    if (!body.ok) return body.response
+    const value = body.value && typeof body.value === 'object'
+      ? body.value as Record<string, unknown>
+      : {}
+    const systemPrompt = typeof value.systemPrompt === 'string' ? value.systemPrompt.trim() : ''
+    const userPrompt = typeof value.userPrompt === 'string' ? value.userPrompt.trim() : ''
+    if (!systemPrompt || !userPrompt) {
+      return ERRORS.validation('systemPrompt and userPrompt are required')
+    }
+    if (systemPrompt.length > 40_000 || userPrompt.length > 120_000) {
+      return ERRORS.validation('model generation prompt is too large')
+    }
+    const maxTokens = typeof value.maxTokens === 'number' && Number.isFinite(value.maxTokens)
+      ? Math.min(8_192, Math.max(64, Math.floor(value.maxTokens)))
+      : undefined
+    const model = typeof value.model === 'string' && value.model.trim() ? value.model.trim() : undefined
+    const reasoningEffort = typeof value.reasoningEffort === 'string' && value.reasoningEffort.trim()
+      ? value.reasoningEffort.trim()
+      : undefined
+    try {
+      return jsonResponse(await runtime.generateModelText({
+        systemPrompt,
+        userPrompt,
+        model,
+        maxTokens,
+        reasoningEffort,
+        responseFormat: value.responseFormat === 'json_object' ? 'json_object' : undefined
+      }))
+    } catch (error) {
+      return ERRORS.internal(error instanceof Error ? error.message : String(error))
+    }
   })
 
   // Data compliance routes

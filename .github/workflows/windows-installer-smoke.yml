@@ -1,0 +1,132 @@
+name: Windows installer smoke
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/windows-installer-smoke.yml'
+      - 'apps/desktop-legalwork/build/installer.nsh'
+      - 'apps/desktop-legalwork/electron-builder.config.cjs'
+      - 'apps/desktop-legalwork/scripts/after-pack.cjs'
+      - 'apps/desktop-legalwork/scripts/before-pack.cjs'
+      - 'apps/desktop-legalwork/scripts/prepare-office-runtime.cjs'
+      - 'apps/desktop-legalwork/src/main/gui-updater.ts'
+      - 'apps/desktop-legalwork/src/main/index.ts'
+      - 'apps/desktop-legalwork/src/main/legalwork-process.ts'
+
+permissions:
+  contents: read
+
+jobs:
+  installer-smoke:
+    runs-on: windows-latest
+    timeout-minutes: 35
+    env:
+      WORKING_DIRECTORY: apps/desktop-legalwork
+      OLD_INSTALLER_URL: https://github.com/sunyifeisb-art/legalwork/releases/download/v0.3.28/legalwork-0.3.28-win-x64.exe
+
+    steps:
+      - name: Enable long paths
+        run: git config --global core.longpaths true
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/desktop-legalwork/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: npm ci
+
+      - name: Build candidate installer
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: npm run dist:win
+
+      - name: Exercise fresh install and running-app upgrade
+        shell: pwsh
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          function Invoke-BoundedProcess {
+            param(
+              [Parameter(Mandatory = $true)][string]$FilePath,
+              [string[]]$Arguments = @(),
+              [Parameter(Mandatory = $true)][string]$Label,
+              [int]$TimeoutSeconds = 180
+            )
+            $startedAt = Get-Date
+            $process = Start-Process -FilePath $FilePath -ArgumentList $Arguments -PassThru
+            if (-not $process.WaitForExit($TimeoutSeconds * 1000)) {
+              & taskkill.exe /F /T /PID $process.Id | Out-Host
+              throw "[$Label] exceeded ${TimeoutSeconds}s"
+            }
+            if ($process.ExitCode -ne 0) {
+              throw "[$Label] exited with code $($process.ExitCode)"
+            }
+            $elapsed = [math]::Round(((Get-Date) - $startedAt).TotalSeconds, 1)
+            Write-Host "[$Label] completed in ${elapsed}s"
+          }
+
+          $candidate = Get-ChildItem -Path dist -Filter 'legalwork-*-win-x64.exe' |
+            Sort-Object LastWriteTime -Descending |
+            Select-Object -First 1
+          if (-not $candidate) { throw 'Candidate Windows installer not found' }
+          Write-Host "Candidate: $($candidate.FullName) ($([math]::Round($candidate.Length / 1MB, 1)) MB)"
+
+          $oldInstaller = Join-Path $env:RUNNER_TEMP 'legalwork-0.3.28-win-x64.exe'
+          Invoke-WebRequest -Uri $env:OLD_INSTALLER_URL -OutFile $oldInstaller
+
+          $freshDir = Join-Path $env:RUNNER_TEMP 'legalwork-fresh'
+          Invoke-BoundedProcess -FilePath $candidate.FullName -Arguments @('/S', "/D=$freshDir") -Label 'fresh install'
+          $freshExe = Join-Path $freshDir 'legalwork.exe'
+          if (-not (Test-Path $freshExe)) { throw 'Fresh install did not create legalwork.exe' }
+
+          $runtimeRoot = Join-Path $freshDir 'resources\office-runtime'
+          $runtimeManifest = Get-Content (Join-Path $runtimeRoot 'runtime.json') -Raw | ConvertFrom-Json
+          if ($runtimeManifest.dataComplianceReady -ne $false) {
+            throw 'Data-compliance environment leaked into the Office runtime'
+          }
+          foreach ($module in @('paddle', 'paddleocr', 'pandas', 'fitz', 'flask')) {
+            if (Test-Path (Join-Path $runtimeRoot "python\Lib\site-packages\$module")) {
+              throw "Unexpected compliance module in installer: $module"
+            }
+          }
+
+          $python = Join-Path $runtimeRoot 'python\python.exe'
+          Invoke-BoundedProcess -FilePath $python -Arguments @(
+            '-c',
+            'import docx, openpyxl, pptx, lxml, PIL, reportlab'
+          ) -Label 'bundled Office runtime imports' -TimeoutSeconds 60
+
+          $freshUninstaller = Join-Path $freshDir 'Uninstall legalwork.exe'
+          Invoke-BoundedProcess -FilePath $freshUninstaller -Arguments @('/S', '/currentuser') -Label 'fresh uninstall'
+
+          $upgradeDir = Join-Path $env:RUNNER_TEMP 'legalwork-upgrade'
+          Invoke-BoundedProcess -FilePath $oldInstaller -Arguments @('/S', "/D=$upgradeDir") -Label 'v0.3.28 install' -TimeoutSeconds 480
+          $oldExe = Join-Path $upgradeDir 'legalwork.exe'
+          if (-not (Test-Path $oldExe)) { throw 'v0.3.28 install did not create legalwork.exe' }
+
+          Start-Process -FilePath $oldExe | Out-Null
+          Start-Sleep -Seconds 12
+          $runningBefore = @(Get-Process -Name legalwork -ErrorAction SilentlyContinue)
+          if ($runningBefore.Count -eq 0) { throw 'v0.3.28 did not remain running before upgrade' }
+          Write-Host "legalwork processes before upgrade: $($runningBefore.Count)"
+
+          Invoke-BoundedProcess -FilePath $candidate.FullName -Arguments @('/S', "/D=$upgradeDir") -Label 'running-app upgrade'
+          Start-Sleep -Seconds 2
+          $remaining = @(Get-Process -Name legalwork -ErrorAction SilentlyContinue)
+          if ($remaining.Count -ne 0) {
+            $remaining | Format-Table Id, ProcessName, Path -AutoSize | Out-Host
+            throw 'Upgrade left legalwork.exe processes running'
+          }
+          if (-not (Test-Path (Join-Path $upgradeDir 'legalwork.exe'))) {
+            throw 'Upgrade removed legalwork.exe'
+          }
+
+          Write-Host 'Fresh install, runtime validation, uninstall, and running-app upgrade all passed.'

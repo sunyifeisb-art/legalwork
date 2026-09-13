@@ -274,11 +274,15 @@ export type LearningIterationCounts = {
   sources: number
   threads: number
   knowledgeFiles: number
+  uploadedFiles: number
+  generatedFiles: number
   memoriesCreated: number
   memoriesUpdated: number
   memoriesDisabled: number
   skillsCreated: number
   skillsUpdated: number
+  knowledgeNotesCreated: number
+  knowledgeNotesUpdated: number
   rejected: number
 }
 

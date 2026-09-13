@@ -92,7 +92,7 @@ describe('upstream model picker list', () => {
     expect(ids).toEqual(expect.arrayContaining([
       'auto',
       'deepseek-v4-pro',
-      'deepseek-v4-flash',
+      'deepseek-flash',
       'settings-model',
       'legacy-model',
       'custom-model',

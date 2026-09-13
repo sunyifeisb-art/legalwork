@@ -1428,7 +1428,13 @@ function canonicalVerifiedDraftArguments(
 
 function safeAutomaticDocxOutputPath(fragment: string | undefined): string | undefined {
   const value = fragment?.trim()
-  if (!value || value.length > 180 || /[\\/\u0000-\u001f]/.test(value)) return undefined
+  const hasUnsafeCharacter = value
+    ? Array.from(value).some((character) => {
+        const codePoint = character.codePointAt(0) ?? 0
+        return character === '/' || character === '\\' || codePoint <= 0x1f
+      })
+    : false
+  if (!value || value.length > 180 || hasUnsafeCharacter) return undefined
   return /\.docx$/i.test(value) ? value : `${value}.docx`
 }
 
@@ -1622,7 +1628,8 @@ export function allowedToolNamesWithGuiStateTools(
   activeGoal: boolean,
   prompt = '',
   activeSkillIds: readonly string[] = [],
-  primaryLegalSource?: LegalResearchPrimarySource
+  primaryLegalSource?: LegalResearchPrimarySource,
+  threadTitle = ''
 ): readonly string[] | undefined {
   if (!allowedToolNames) return allowedToolNames
   const next = new Set(allowedToolNames)
@@ -1670,6 +1677,22 @@ export function allowedToolNamesWithGuiStateTools(
     next.add('mcp_call')
     next.add('mcp_ima_knowledge_base_research_ima')
   }
+  // The standalone document-writing feature owns its own dedicated thread.
+  // Its knowledge access must follow the feature boundary instead of relying
+  // on whether the user's drafting prompt happens to contain retrieval words.
+  // This matters when an activated Skill narrows the advertised tool catalog.
+  if (isDocumentWritingFeatureTitle(threadTitle)) {
+    next.add('knowledge_list_tree')
+    next.add('knowledge_auto_retrieve')
+    next.add('knowledge_search')
+    next.add('knowledge_read_file')
+    next.add('mcp_search')
+    next.add('mcp_call')
+    next.add('mcp_ima_knowledge_base_research_ima')
+    next.add('mcp_ima_knowledge_base_search_ima_catalog')
+    next.add('mcp_ima_knowledge_base_list_available_knowledge_bases')
+    next.add('mcp_ima_knowledge_base_ask')
+  }
   if (activeSkillIds.includes('open-kimi-ppt') && requestedDocumentArtifacts(prompt).includes('pptx')) {
     // PPTD is a local project workflow driven by the specialist Skill. A
     // second, restrictive Skill must not accidentally hide its basic file and
@@ -1704,15 +1727,33 @@ function isMainAgentWebFirstScope(input: {
 }
 
 /** 大功能 thread 的 title 前缀（独立功能入口创建，MCP 全量）。 */
+export function isDocumentWritingFeatureTitle(title: string): boolean {
+  return title.startsWith('文书写作:') || title.startsWith('文书写作：')
+}
+
 function isSpecializedFeatureTitle(title: string): boolean {
   return (
     title.startsWith('法律调研:') ||
     title.startsWith('法律调研：') ||
-    title.startsWith('文书写作:') ||
-    title.startsWith('文书写作：') ||
+    isDocumentWritingFeatureTitle(title) ||
     title.startsWith('知识库全局对话') ||
     title.startsWith('知识库：')
   )
+}
+
+export function documentWritingKnowledgeAccessInstruction(
+  hasImaKnowledgeBaseSnapshot: boolean
+): string {
+  return [
+    '<document_writing_knowledge_access>',
+    '你正在独立“文书写作”功能中。开始实质论证前，先调用 knowledge_list_tree 查看本地知识库根目录的一页结构，识别与当前案件、文书类型或争议焦点可能相关的知识库。只看目录，不要批量读取全文。',
+    hasImaKnowledgeBaseSnapshot
+      ? 'IMA 知识库目录已在系统上下文的 <ima_knowledge_bases> 中列出；结合库名判断相关性。需要进一步确认候选库时，可调用 mcp_ima_knowledge_base_search_ima_catalog。'
+      : '若系统上下文尚无 IMA 知识库目录，可调用 mcp_ima_knowledge_base_list_available_knowledge_bases 获取一次目录，或直接用 mcp_ima_knowledge_base_search_ima_catalog 按当前争点筛选候选库。',
+    '只有识别到可能有用的知识库时才取正文：本地优先用 knowledge_auto_retrieve/knowledge_search 缩小范围，再按需 knowledge_read_file；IMA 优先用 mcp_ima_knowledge_base_research_ima 自动选库研究，明确指定单库时可用 mcp_ima_knowledge_base_ask。若目录或目录检索已经出现与当前争点直接匹配的候选库，应至少从最相关的一处取得一次正文型检索结果形成上下文后再起草；若候选明显无关或只是重复现有材料/权威法源，可跳过。不要机械遍历所有库，也不要重复近似检索。',
+    '法律规范、司法解释和案例的权威性核验仍按当前配置的法律数据库执行；知识库用于补充内部材料、观点、模板经验与检索线索，不替代权威法源核验。',
+    '</document_writing_knowledge_access>'
+  ].join('\n')
 }
 
 /** 用户明确要求法律数据库检索或核实 → 该轮启用法律 MCP（默认不启用）。 */
@@ -2258,6 +2299,7 @@ export class AgentLoop {
       turnId
     })
     const planTurnActive = effectiveMode === 'plan' || Boolean(activePlanContext)
+    const documentWritingThread = isDocumentWritingFeatureTitle(thread?.title ?? '')
     // Learning-iteration threads analyze a bounded corpus with an explicit
     // "do not call any tools" instruction; the runtime owns validation and
     // publishing. Corpus words such as 知识库/检索/来源 must not be
@@ -2272,7 +2314,8 @@ export class AgentLoop {
       activeGoalInstruction !== null,
       routedSkillPrompt,
       skillResolution.activeSkillIds,
-      this.opts.primaryLegalSource
+      this.opts.primaryLegalSource,
+      thread?.title ?? ''
     )
     const toolContext: ToolHostContext = {
       threadId,
@@ -3362,6 +3405,9 @@ export class AgentLoop {
     const contextInstructions = [
       ...(activeGoalInstruction ? [activeGoalInstruction] : []),
       ...(activeTodoInstruction && !automaticPlan ? [activeTodoInstruction] : []),
+      ...(documentWritingThread
+        ? [documentWritingKnowledgeAccessInstruction(Boolean(imaKnowledgeBaseCache))]
+        : []),
       ...(officeWorkflowInstruction ? [officeWorkflowInstruction] : []),
       ...(artifactProgressInstruction ? [artifactProgressInstruction] : []),
       ...(explicitContractInstruction ? [explicitContractInstruction] : []),

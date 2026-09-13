@@ -89,6 +89,7 @@ function normalizeWriteInlineCompletionSettings(
 export function normalizeWriteInlineCompletionModel(value: unknown): string {
   const trimmed = typeof value === 'string' ? value.trim() : ''
   if (!trimmed || trimmed === 'auto') return DEFAULT_WRITE_INLINE_COMPLETION_MODEL
+  if (trimmed.toLowerCase() === 'deepseek-v4-flash') return DEFAULT_WRITE_INLINE_COMPLETION_MODEL
   return trimmed
 }
 
@@ -97,7 +98,7 @@ export function shouldInheritWriteInlineCompletionModel(
 ): boolean {
   if (typeof input?.inheritModel === 'boolean') return input.inheritModel
   const trimmed = typeof input?.model === 'string' ? input.model.trim() : ''
-  return !trimmed || trimmed === DEFAULT_WRITE_INLINE_COMPLETION_MODEL
+  return !trimmed || trimmed === DEFAULT_WRITE_INLINE_COMPLETION_MODEL || trimmed.toLowerCase() === 'deepseek-v4-flash'
 }
 
 function getNormalizedWriteInlineCompletionSettings(settings: AppSettingsV1): WriteInlineCompletionSettingsV1 {

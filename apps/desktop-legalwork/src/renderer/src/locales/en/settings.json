@@ -486,7 +486,7 @@
   "firstRunBadge": "Initial setup",
   "firstRunPreviewBadge": "Guide preview",
   "firstRunTitle": "Set up the essentials before you start chatting.",
-  "firstRunSubtitle": "Choose your language, add the model service API key, and optionally point the app at a compatible endpoint.",
+  "firstRunSubtitle": "Choose a ChatGPT account or API key. API setup can select the provider, endpoint, protocol, and default model.",
   "firstRunClose": "Close",
   "firstRunSave": "Save and continue",
   "firstRunSaving": "Saving configuration…",

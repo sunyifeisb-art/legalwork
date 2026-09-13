@@ -34,34 +34,11 @@ const { basename, delimiter, dirname, isAbsolute, join, resolve } = require('nod
 const DESKTOP_ROOT = resolve(__dirname, '..')
 const REPO_ROOT = resolve(DESKTOP_ROOT, '..', '..')
 const REQUIREMENTS = join(REPO_ROOT, 'skills', 'legal_document_formatting', 'requirements.txt')
-const DATA_COMPLIANCE_REQUIREMENTS = join(
-  DESKTOP_ROOT,
-  'vendor',
-  'data-compliance-review-codex',
-  'data-compliance-web',
-  'requirements.txt'
-)
 const VENDOR_ROOT = join(DESKTOP_ROOT, 'vendor', 'office-runtime')
 const FONT_VENDOR_ROOT = join(DESKTOP_ROOT, 'vendor', 'office-fonts')
 const CACHE_ROOT = join(DESKTOP_ROOT, '.cache', 'office-runtime')
 const PYTHON_LINE = '3.11'
 const REQUIRED_IMPORTS = ['docx', 'openpyxl', 'pptx', 'lxml', 'PIL', 'reportlab']
-const DATA_COMPLIANCE_REQUIRED_IMPORTS = [
-  'flask',
-  'fitz',
-  'odf',
-  'openai',
-  'paddle',
-  'paddleocr',
-  'pypdf',
-  'pandas'
-]
-// pip requires --only-binary=:all: when resolving wheels for a foreign
-// platform. odfpy publishes a platform-independent source distribution only,
-// so build it with the host Python and install it separately with --no-deps.
-const CROSS_PURE_PYTHON_REQUIREMENTS = new Map([
-  ['odfpy', 'odfpy>=1.4.1']
-])
 const RELEASE_REPOS = ['astral-sh/python-build-standalone', 'indygreg/python-build-standalone']
 const SUPPORTED_TARGETS = new Set(['mac-arm64', 'mac-x64', 'win-x64', 'win-ia32', 'linux-x64'])
 const FONTTOOLS_VERSION = '4.63.0'
@@ -171,10 +148,8 @@ function sitePackagesPath(runtimeRoot, platform) {
   fail(`Cannot locate site-packages in ${runtimeRoot}`)
 }
 
-function requiredImports(target) {
-  return target === 'win-x64'
-    ? [...new Set([...REQUIRED_IMPORTS, ...DATA_COMPLIANCE_REQUIRED_IMPORTS])]
-    : REQUIRED_IMPORTS
+function requiredImports() {
+  return REQUIRED_IMPORTS
 }
 
 function moduleFilesPresent(runtimeRoot, platform, target) {
@@ -182,7 +157,7 @@ function moduleFilesPresent(runtimeRoot, platform, target) {
   return requiredImports(target).every((name) => existsSync(join(site, name)))
 }
 
-function runtimeAlreadyValid(runtimeRoot, target, requirementsSha, dataComplianceRequirementsSha) {
+function runtimeAlreadyValid(runtimeRoot, target, requirementsSha) {
   const platform = platformFromTarget(target)
   if (!existsSync(join(runtimeRoot, 'runtime.json'))) return false
   if (!existsSync(join(runtimeRoot, pythonRelativePath(platform)))) return false
@@ -190,10 +165,7 @@ function runtimeAlreadyValid(runtimeRoot, target, requirementsSha, dataComplianc
     const marker = JSON.parse(readFileSync(join(runtimeRoot, 'runtime.json'), 'utf8'))
     return marker.target === target &&
       marker.requirementsSha256 === requirementsSha &&
-      (target !== 'win-x64' || (
-        marker.dataComplianceReady === true &&
-        marker.dataComplianceRequirementsSha256 === dataComplianceRequirementsSha
-      )) &&
+      marker.dataComplianceReady !== true &&
       marker.pythonLine === PYTHON_LINE &&
       moduleFilesPresent(runtimeRoot, platform, target)
   } catch {
@@ -239,6 +211,26 @@ async function resolveStandaloneAsset(target) {
     }
   }
   const matcher = assetMatcher(target)
+  if (existsSync(CACHE_ROOT)) {
+    const cached = readdirSync(CACHE_ROOT)
+      .filter((name) => matcher(name))
+      .filter((name) => {
+        try {
+          return statSync(join(CACHE_ROOT, name)).size > 1024 * 1024
+        } catch {
+          return false
+        }
+      })
+      .sort((a, b) => b.localeCompare(a))[0]
+    if (cached) {
+      return {
+        url: `cache://${cached}`,
+        name: cached,
+        release: 'cache',
+        repository: 'local-cache'
+      }
+    }
+  }
   let lastError = null
   for (const repository of RELEASE_REPOS) {
     try {
@@ -483,23 +475,9 @@ function targetPythonEnv(runtimeRoot) {
   return { ...process.env, PYTHONHOME: join(runtimeRoot, 'python') }
 }
 
-function crossBinaryRequirements(source, destination) {
-  const filtered = readFileSync(source, 'utf8')
-    .split(/\r?\n/)
-    .filter((line) => {
-      const match = line.trim().match(/^([A-Za-z0-9_.-]+)/)
-      if (!match) return true
-      return !CROSS_PURE_PYTHON_REQUIREMENTS.has(match[1].toLowerCase().replace(/[-_.]+/g, '-'))
-    })
-    .join('\n')
-  writeFileSync(destination, `${filtered}\n`, 'utf8')
-}
-
 function installRequirements(runtimeRoot, platform, target) {
   const targetPython = join(runtimeRoot, pythonRelativePath(platform))
-  const requirements = target === 'win-x64'
-    ? [REQUIREMENTS, DATA_COMPLIANCE_REQUIREMENTS]
-    : [REQUIREMENTS]
+  const requirements = [REQUIREMENTS]
   const commonArgs = [
     '-m', 'pip', 'install', '--disable-pip-version-check', '--no-input',
     ...requirements.flatMap((path) => ['-r', path])
@@ -519,37 +497,17 @@ function installRequirements(runtimeRoot, platform, target) {
   const site = sitePackagesPath(runtimeRoot, platform)
   mkdirSync(site, { recursive: true })
   info(`Installing binary wheels into ${target} runtime using builder Python`)
-  const crossRequirementsRoot = mkdtempSync(join(tmpdir(), 'legalwork-cross-requirements-'))
-  try {
-    const binaryRequirements = requirements.map((source, index) => {
-      const destination = join(crossRequirementsRoot, `requirements-${index}.txt`)
-      crossBinaryRequirements(source, destination)
-      return destination
-    })
-    execFileSync(hostPython, [
-      '-m', 'pip', 'install',
-      '--disable-pip-version-check', '--no-input',
-      '--only-binary=:all:',
-      '--platform', pipPlatform(target),
-      '--python-version', '311',
-      '--implementation', 'cp',
-      '--abi', 'cp311',
-      '--target', site,
-      ...binaryRequirements.flatMap((path) => ['-r', path])
-    ], { stdio: 'inherit', windowsHide: true })
-
-    if (CROSS_PURE_PYTHON_REQUIREMENTS.size > 0) {
-      info(`Installing pure-Python source packages into ${target} runtime`)
-      execFileSync(hostPython, [
-        '-m', 'pip', 'install',
-        '--disable-pip-version-check', '--no-input', '--no-deps',
-        '--target', site,
-        ...CROSS_PURE_PYTHON_REQUIREMENTS.values()
-      ], { stdio: 'inherit', windowsHide: true })
-    }
-  } finally {
-    rmSync(crossRequirementsRoot, { recursive: true, force: true })
-  }
+  execFileSync(hostPython, [
+    '-m', 'pip', 'install',
+    '--disable-pip-version-check', '--no-input',
+    '--only-binary=:all:',
+    '--platform', pipPlatform(target),
+    '--python-version', '311',
+    '--implementation', 'cp',
+    '--abi', 'cp311',
+    '--target', site,
+    ...requirements.flatMap((path) => ['-r', path])
+  ], { stdio: 'inherit', windowsHide: true })
 }
 
 function verifyRuntime(runtimeRoot, platform, target) {
@@ -564,7 +522,7 @@ function verifyRuntime(runtimeRoot, platform, target) {
   }
 }
 
-async function prepareTarget(target, force, requirementsSha, dataComplianceRequirementsSha) {
+async function prepareTarget(target, force, requirementsSha) {
   const platform = platformFromTarget(target)
   const runtimeRoot = join(VENDOR_ROOT, target)
   // A prepared runtime can outlive the temporary extraction directory that
@@ -572,7 +530,7 @@ async function prepareTarget(target, force, requirementsSha, dataComplianceRequi
   // cache, otherwise every later release keeps repackaging the same broken
   // links even after the repair logic itself has shipped.
   if (!force) repairBundledSymlinks(runtimeRoot)
-  if (!force && runtimeAlreadyValid(runtimeRoot, target, requirementsSha, dataComplianceRequirementsSha)) {
+  if (!force && runtimeAlreadyValid(runtimeRoot, target, requirementsSha)) {
     info(`${target} Office runtime is already prepared.`)
     return
   }
@@ -598,10 +556,7 @@ async function prepareTarget(target, force, requirementsSha, dataComplianceRequi
       target,
       pythonLine: PYTHON_LINE,
       requirementsSha256: requirementsSha,
-      dataComplianceReady: target === 'win-x64',
-      dataComplianceRequirementsSha256: target === 'win-x64'
-        ? dataComplianceRequirementsSha
-        : undefined,
+      dataComplianceReady: false,
       sourceRepository: asset.repository,
       sourceRelease: asset.release,
       sourceAsset: asset.name,
@@ -616,16 +571,12 @@ async function prepareTarget(target, force, requirementsSha, dataComplianceRequi
 
 async function main() {
   if (!existsSync(REQUIREMENTS)) fail(`Missing Office requirements: ${REQUIREMENTS}`)
-  if (!existsSync(DATA_COMPLIANCE_REQUIREMENTS)) {
-    fail(`Missing data compliance requirements: ${DATA_COMPLIANCE_REQUIREMENTS}`)
-  }
   const args = parseArgs(process.argv.slice(2))
   await prepareBundledFonts()
   if (args.fontsOnly) return
   const requirementsSha = sha256File(REQUIREMENTS)
-  const dataComplianceRequirementsSha = sha256File(DATA_COMPLIANCE_REQUIREMENTS)
   for (const target of args.targets) {
-    await prepareTarget(target, args.force, requirementsSha, dataComplianceRequirementsSha)
+    await prepareTarget(target, args.force, requirementsSha)
   }
 }
 

@@ -4,12 +4,14 @@ import {
   cp,
   mkdir,
   readFile,
+  realpath,
   readdir,
   rename,
   rm,
+  stat,
   writeFile
 } from 'node:fs/promises'
-import { basename, dirname, join } from 'node:path'
+import { basename, dirname, extname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import {
   containsSecret,
   containsSensitiveIdentifier
@@ -28,6 +30,7 @@ import type {
 } from '../shared/ds-gui-api'
 import type { JsonSettingsStore } from './settings-store'
 import { resolveLegalworkDataDir } from './legalwork-process'
+import { extractDocumentMaterial } from './services/document-material-service'
 import {
   latestAssistantText,
   parseJsonObject,
@@ -49,14 +52,21 @@ const MAX_MODEL_RESULT_ATTEMPTS = 2
 const MAX_SOURCE_CHARS = 120_000
 const MAX_THREADS = 40
 const MAX_KNOWLEDGE_FILES = 12
+const MAX_THREAD_FILES = 16
 const MAX_MEMORY_AND_SKILLS = 60
 const MAX_SINGLE_SOURCE_CHARS = 20_000
 const MAX_USER_MESSAGE_CHARS = 6_000
 const MAX_REPORT_MARKDOWN_CHARS = 8_000
 const MAX_MEMORY_PROPOSALS = 20
 const MAX_SKILL_PROPOSALS = 5
+const MAX_KNOWLEDGE_NOTE_PROPOSALS = 8
 const MAX_REJECTED_PROPOSALS = 30
+const MAX_LEARNING_NOTE_CHARS = 30_000
+const MAX_LOCAL_FILE_BYTES = 25 * 1024 * 1024
+const LEARNING_EXTRACTABLE_EXTENSIONS = new Set(['.pdf', '.docx', '.doc'])
 const LEARNING_THREAD_TITLE_PREFIX = '[Learning iteration]'
+const LEARNING_KNOWLEDGE_ROOT = '学习沉淀'
+const LEARNING_KNOWLEDGE_MARKER = '<!-- legalwork-learning-artifact -->'
 const RESULT_BEGIN = 'BEGIN_LEARNING_RESULT'
 const RESULT_END = 'END_LEARNING_RESULT'
 const AUTOMATIC_MEMORY_CATEGORIES = new Set([
@@ -69,11 +79,15 @@ const EMPTY_COUNTS: LearningIterationCounts = {
   sources: 0,
   threads: 0,
   knowledgeFiles: 0,
+  uploadedFiles: 0,
+  generatedFiles: 0,
   memoriesCreated: 0,
   memoriesUpdated: 0,
   memoriesDisabled: 0,
   skillsCreated: 0,
   skillsUpdated: 0,
+  knowledgeNotesCreated: 0,
+  knowledgeNotesUpdated: 0,
   rejected: 0
 }
 
@@ -93,13 +107,23 @@ export function shouldReportLearningIterationError(error: unknown): boolean {
   )
 }
 
-type SourceKind = 'thread' | 'memory' | 'knowledge' | 'skill'
+type SourceKind =
+  | 'thread'
+  | 'memory'
+  | 'knowledge'
+  | 'skill'
+  | 'uploaded-file'
+  | 'generated-file'
+  | 'process'
 
 const SOURCE_CHAR_RESERVES: Record<SourceKind, number> = {
-  thread: 70_000,
-  memory: 10_000,
-  knowledge: 30_000,
-  skill: 10_000
+  thread: 45_000,
+  memory: 8_000,
+  knowledge: 24_000,
+  skill: 8_000,
+  'uploaded-file': 16_000,
+  'generated-file': 16_000,
+  process: 8_000
 }
 
 type LearningSource = {
@@ -158,12 +182,22 @@ type SkillProposal = {
   evidence?: EvidenceRef[]
 }
 
+type KnowledgeNoteProposal = {
+  action: 'create' | 'update'
+  path: string
+  title: string
+  summary: string
+  content: string
+  evidence?: EvidenceRef[]
+}
+
 type LearningModelResult = {
   title: string
   summary: string
   reportMarkdown: string
   memories: MemoryProposal[]
   skills: SkillProposal[]
+  knowledgeNotes: KnowledgeNoteProposal[]
   rejected: Array<{ title: string; reason: string }>
 }
 
@@ -198,6 +232,13 @@ type RollbackSkillOperation = {
   afterHash: string
 }
 
+type RollbackKnowledgeOperation = {
+  action: 'delete-created' | 'restore'
+  path: string
+  beforeContent?: string
+  afterHash: string
+}
+
 type LearningManifest = {
   version: 1
   summary: LearningIterationRecordSummary
@@ -205,6 +246,7 @@ type LearningManifest = {
   rollback: {
     memories: RollbackMemoryOperation[]
     skills: RollbackSkillOperation[]
+    knowledge: RollbackKnowledgeOperation[]
   }
   modelResult?: LearningModelResult
 }
@@ -411,7 +453,30 @@ export class LearningIterationRuntime {
           return { ok: false, message: `Skill ${operation.id} 已在后续发生变化，回滚已停止。` }
         }
       }
+      for (const operation of manifest.rollback.knowledge) {
+        const current = await this.readKnowledgeFileOptional(settings, operation.path)
+        if (current === null || hashText(current) !== operation.afterHash) {
+          return { ok: false, message: `知识库文件 ${operation.path} 已在后续发生变化，回滚已停止。` }
+        }
+      }
 
+      for (const operation of [...manifest.rollback.knowledge].reverse()) {
+        if (operation.action === 'delete-created') {
+          await this.request(settings, `/v1/knowledge/file?path=${encodeURIComponent(operation.path)}`, 'DELETE')
+        } else if (operation.beforeContent !== undefined) {
+          await this.request(settings, '/v1/knowledge/file', 'POST', JSON.stringify({
+            path: operation.path,
+            content: operation.beforeContent,
+            encoding: 'utf8'
+          }))
+        }
+      }
+      for (const operation of [...manifest.rollback.skills].reverse()) {
+        await rm(operation.targetPath, { recursive: true, force: true })
+        if (operation.action === 'restore' && operation.backupPath) {
+          await cp(operation.backupPath, operation.targetPath, { recursive: true })
+        }
+      }
       for (const operation of [...manifest.rollback.memories].reverse()) {
         if (operation.action === 'delete-created') {
           await this.request(settings, `/v1/memory/${encodeURIComponent(operation.id)}`, 'DELETE')
@@ -424,11 +489,8 @@ export class LearningIterationRuntime {
           )
         }
       }
-      for (const operation of [...manifest.rollback.skills].reverse()) {
-        await rm(operation.targetPath, { recursive: true, force: true })
-        if (operation.action === 'restore' && operation.backupPath) {
-          await cp(operation.backupPath, operation.targetPath, { recursive: true })
-        }
+      if (manifest.rollback.knowledge.length > 0) {
+        await this.request(settings, '/v1/knowledge/sync', 'POST', '{}')
       }
 
       const rolledBackAt = this.now().toISOString()
@@ -580,7 +642,9 @@ export class LearningIterationRuntime {
       ...EMPTY_COUNTS,
       sources: inventory.sources.length,
       threads: inventory.sources.filter((source) => source.kind === 'thread').length,
-      knowledgeFiles: inventory.sources.filter((source) => source.kind === 'knowledge').length
+      knowledgeFiles: inventory.sources.filter((source) => source.kind === 'knowledge').length,
+      uploadedFiles: inventory.sources.filter((source) => source.kind === 'uploaded-file').length,
+      generatedFiles: inventory.sources.filter((source) => source.kind === 'generated-file').length
     }
     this.message = '正在理解、验证并构造候选记忆与 Skill'
     const corpus = renderCorpus(inventory.sources)
@@ -621,6 +685,8 @@ export class LearningIterationRuntime {
       sources: inventory.sources.length,
       threads: inventory.sources.filter((source) => source.kind === 'thread').length,
       knowledgeFiles: inventory.sources.filter((source) => source.kind === 'knowledge').length,
+      uploadedFiles: inventory.sources.filter((source) => source.kind === 'uploaded-file').length,
+      generatedFiles: inventory.sources.filter((source) => source.kind === 'generated-file').length,
       rejected: result.rejected.length + validated.rejectedCount
     }
     const rollback = await this.applyResult(settings, runDir, validated.result, inventory, counts)
@@ -634,7 +700,10 @@ export class LearningIterationRuntime {
       startedAt,
       finishedAt,
       reportPath: join(runDir, 'REPORT.md'),
-      canRollback: rollback.memories.length > 0 || rollback.skills.length > 0,
+      canRollback:
+        rollback.memories.length > 0 ||
+        rollback.skills.length > 0 ||
+        rollback.knowledge.length > 0,
       counts
     }
     const reportMarkdown = buildReport(validated.result, summary, inventory.sources, validated.rejectionReasons)
@@ -729,28 +798,49 @@ export class LearningIterationRuntime {
       const detail = await this.request(settings, `/v1/threads/${encodeURIComponent(thread.id)}`, 'GET')
       const detailObject = parseJsonObject(detail.body)
       const content = extractLearningThreadText(detailObject)
-      if (!content.trim()) continue
-      addChangedChunks(candidates, state, {
-        baseKey: `thread:${thread.id}`,
-        kind: 'thread',
-        title: thread.title?.trim() || thread.id,
-        baseFingerprint: hashJson({
-          updatedAt: thread.updatedAt,
-          title: thread.title,
-          status: thread.status
-        }),
-        content,
-        metadata: {
-          id: thread.id,
-          updatedAt: thread.updatedAt,
-          relation: thread.relation,
-          cursorKey: `thread-meta:${thread.id}`,
-          cursorFingerprint: hashJson({
-            updatedAt: thread.updatedAt,
-            title: thread.title,
-            status: thread.status
-          })
-        }
+      const cursorFingerprint = hashJson({
+        updatedAt: thread.updatedAt,
+        title: thread.title,
+        status: thread.status
+      })
+      const commonMetadata = {
+        id: thread.id,
+        updatedAt: thread.updatedAt,
+        relation: thread.relation,
+        cursorKey: `thread-meta:${thread.id}`,
+        cursorFingerprint,
+        cursorGroup: `thread-batch:${thread.id}`
+      }
+      if (content.trim()) {
+        addChangedChunks(candidates, state, {
+          baseKey: `thread:${thread.id}`,
+          kind: 'thread',
+          title: thread.title?.trim() || thread.id,
+          baseFingerprint: cursorFingerprint,
+          content,
+          metadata: commonMetadata
+        })
+      }
+
+      const processText = extractLearningProcessText(detailObject)
+      if (processText.trim()) {
+        addChangedChunks(candidates, state, {
+          baseKey: `process:${thread.id}`,
+          kind: 'process',
+          title: `${thread.title?.trim() || thread.id}·过程记录`,
+          baseFingerprint: cursorFingerprint,
+          content: processText,
+          metadata: commonMetadata
+        })
+      }
+      await this.collectThreadFileSources({
+        settings,
+        state,
+        candidates,
+        threadId: thread.id,
+        threadTitle: thread.title?.trim() || thread.id,
+        detail: detailObject,
+        commonMetadata
       })
     }
 
@@ -846,9 +936,16 @@ export class LearningIterationRuntime {
     )
     const selectedCountByBase = countSourcesByBase(sources)
     const candidateCountByBase = countSourcesByBase(candidates)
+    const selectedCountByCursorGroup = countSourcesByMetadata(sources, 'cursorGroup')
+    const candidateCountByCursorGroup = countSourcesByMetadata(candidates, 'cursorGroup')
     for (const source of sources) {
+      const cursorGroup = source.metadata?.cursorGroup
+      if (typeof cursorGroup === 'string') {
+        if (selectedCountByCursorGroup.get(cursorGroup) !== candidateCountByCursorGroup.get(cursorGroup)) continue
+      } else {
       const baseKey = typeof source.metadata?.baseKey === 'string' ? source.metadata.baseKey : source.key
       if (selectedCountByBase.get(baseKey) !== candidateCountByBase.get(baseKey)) continue
+      }
       const cursorKey = source.metadata?.cursorKey
       const cursorFingerprint = source.metadata?.cursorFingerprint
       if (typeof cursorKey === 'string' && typeof cursorFingerprint === 'string') {
@@ -856,6 +953,73 @@ export class LearningIterationRuntime {
       }
     }
     return { sources, pendingCount, memories, processedHashes, protectedSkillIds }
+  }
+
+  private async collectThreadFileSources(input: {
+    settings: AppSettingsV1
+    state: LearningState
+    candidates: LearningSource[]
+    threadId: string
+    threadTitle: string
+    detail: Record<string, unknown> | null
+    commonMetadata: Record<string, unknown>
+  }): Promise<void> {
+    const attachmentIds = extractLearningAttachmentIds(input.detail).slice(0, MAX_THREAD_FILES)
+    for (const attachmentId of attachmentIds) {
+      const response = await this.deps.runtimeRequest(
+        input.settings,
+        `/v1/attachments/${encodeURIComponent(attachmentId)}/content?thread_id=${encodeURIComponent(input.threadId)}`,
+        { method: 'GET' }
+      )
+      if (!response.ok) continue
+      const object = parseJsonObject(response.body)
+      const attachment = isRecord(object?.attachment) ? object.attachment : null
+      const localFilePath = typeof attachment?.localFilePath === 'string' ? attachment.localFilePath : ''
+      const name = typeof attachment?.name === 'string' ? attachment.name : attachmentId
+      const content = await readLearningFileText(localFilePath)
+      if (!content.trim()) continue
+      const fingerprint = typeof attachment?.hash === 'string'
+        ? attachment.hash
+        : hashText(content)
+      addChangedChunks(input.candidates, input.state, {
+        baseKey: `uploaded-file:${attachmentId}`,
+        kind: 'uploaded-file',
+        title: `${input.threadTitle}·用户上传·${name}`,
+        baseFingerprint: fingerprint,
+        content,
+        metadata: {
+          ...input.commonMetadata,
+          attachmentId,
+          fileName: name,
+          sourceOrigin: 'user-upload'
+        }
+      })
+    }
+
+    const generatedPaths = await resolveLearningGeneratedPaths(
+      input.detail,
+      input.settings.workspaceRoot
+    )
+    for (const filePath of generatedPaths.slice(0, MAX_THREAD_FILES)) {
+      const info = await stat(filePath).catch(() => null)
+      if (!info?.isFile() || info.size > MAX_LOCAL_FILE_BYTES) continue
+      const content = await readLearningFileText(filePath)
+      if (!content.trim()) continue
+      const relativePath = relative(resolve(input.settings.workspaceRoot), filePath).split(sep).join('/')
+      addChangedChunks(input.candidates, input.state, {
+        baseKey: `generated-file:${hashText(filePath)}`,
+        kind: 'generated-file',
+        title: `${input.threadTitle}·Agent 产出·${basename(filePath)}`,
+        baseFingerprint: hashJson({ path: relativePath, size: info.size, updatedAt: info.mtime.toISOString() }),
+        content,
+        metadata: {
+          ...input.commonMetadata,
+          path: relativePath,
+          fileName: basename(filePath),
+          sourceOrigin: 'agent-output'
+        }
+      })
+    }
   }
 
   private async analyzeWithLegalwork(
@@ -990,7 +1154,7 @@ export class LearningIterationRuntime {
     inventory: { memories: MemorySnapshot[] },
     counts: LearningIterationCounts
   ): Promise<LearningManifest['rollback']> {
-    const rollback: LearningManifest['rollback'] = { memories: [], skills: [] }
+    const rollback: LearningManifest['rollback'] = { memories: [], skills: [], knowledge: [] }
     const memoryById = new Map(inventory.memories.map((item) => [item.id, item]))
     try {
       for (const proposal of result.memories) {
@@ -1071,6 +1235,39 @@ export class LearningIterationRuntime {
         if (existed) counts.skillsUpdated += 1
         else counts.skillsCreated += 1
       }
+      const appliedKnowledgeNotes: KnowledgeNoteProposal[] = []
+      for (const proposal of result.knowledgeNotes) {
+        const beforeContent = await this.readKnowledgeFileOptional(settings, proposal.path)
+        if (proposal.action === 'create' && beforeContent !== null) {
+          counts.rejected += 1
+          continue
+        }
+        if (proposal.action === 'update' && (
+          beforeContent === null || !beforeContent.includes(LEARNING_KNOWLEDGE_MARKER)
+        )) {
+          counts.rejected += 1
+          continue
+        }
+        const content = renderLearningKnowledgeNote(proposal, this.activeRunId, this.now())
+        await this.request(settings, '/v1/knowledge/file', 'POST', JSON.stringify({
+          path: proposal.path,
+          content,
+          encoding: 'utf8'
+        }))
+        rollback.knowledge.push({
+          action: beforeContent === null ? 'delete-created' : 'restore',
+          path: proposal.path,
+          ...(beforeContent !== null ? { beforeContent } : {}),
+          afterHash: hashText(content)
+        })
+        if (beforeContent === null) counts.knowledgeNotesCreated += 1
+        else counts.knowledgeNotesUpdated += 1
+        appliedKnowledgeNotes.push(proposal)
+      }
+      result.knowledgeNotes = appliedKnowledgeNotes
+      if (rollback.knowledge.length > 0) {
+        await this.request(settings, '/v1/knowledge/sync', 'POST', '{}')
+      }
       return rollback
     } catch (error) {
       await this.rollbackApplied(settings, rollback).catch((rollbackError) => {
@@ -1086,6 +1283,26 @@ export class LearningIterationRuntime {
     settings: AppSettingsV1,
     rollback: LearningManifest['rollback']
   ): Promise<void> {
+    for (const operation of [...rollback.knowledge].reverse()) {
+      if (operation.action === 'delete-created') {
+        await this.request(settings, `/v1/knowledge/file?path=${encodeURIComponent(operation.path)}`, 'DELETE')
+      } else if (operation.beforeContent !== undefined) {
+        await this.request(settings, '/v1/knowledge/file', 'POST', JSON.stringify({
+          path: operation.path,
+          content: operation.beforeContent,
+          encoding: 'utf8'
+        }))
+      }
+    }
+    if (rollback.knowledge.length > 0) {
+      await this.request(settings, '/v1/knowledge/sync', 'POST', '{}')
+    }
+    for (const operation of [...rollback.skills].reverse()) {
+      await rm(operation.targetPath, { recursive: true, force: true })
+      if (operation.action === 'restore' && operation.backupPath) {
+        await cp(operation.backupPath, operation.targetPath, { recursive: true })
+      }
+    }
     for (const operation of [...rollback.memories].reverse()) {
       if (operation.action === 'delete-created') {
         await this.request(settings, `/v1/memory/${encodeURIComponent(operation.id)}`, 'DELETE')
@@ -1098,12 +1315,21 @@ export class LearningIterationRuntime {
         )
       }
     }
-    for (const operation of [...rollback.skills].reverse()) {
-      await rm(operation.targetPath, { recursive: true, force: true })
-      if (operation.action === 'restore' && operation.backupPath) {
-        await cp(operation.backupPath, operation.targetPath, { recursive: true })
-      }
-    }
+  }
+
+  private async readKnowledgeFileOptional(
+    settings: AppSettingsV1,
+    path: string
+  ): Promise<string | null> {
+    const response = await this.deps.runtimeRequest(
+      settings,
+      `/v1/knowledge/file?path=${encodeURIComponent(path)}`,
+      { method: 'GET' }
+    )
+    if (response.status === 404) return null
+    if (!response.ok) throw new Error(runtimeErrorMessage(response, `GET knowledge file failed: ${path}`))
+    const object = parseJsonObject(response.body)
+    return typeof object?.content === 'string' ? object.content : null
   }
 
   private async fetchMemories(settings: AppSettingsV1): Promise<MemorySnapshot[]> {
@@ -1182,7 +1408,30 @@ export class LearningIterationRuntime {
   }
 
   private async readManifest(runDir: string): Promise<LearningManifest> {
-    return JSON.parse(await readFile(join(runDir, 'manifest.json'), 'utf8')) as LearningManifest
+    const manifest = JSON.parse(await readFile(join(runDir, 'manifest.json'), 'utf8')) as LearningManifest
+    return {
+      ...manifest,
+      summary: {
+        ...manifest.summary,
+        counts: normalizeLearningCounts(manifest.summary.counts)
+      },
+      rollback: {
+        memories: manifest.rollback?.memories ?? [],
+        skills: manifest.rollback?.skills ?? [],
+        knowledge: manifest.rollback?.knowledge ?? []
+      },
+      ...(manifest.modelResult
+        ? {
+            modelResult: {
+              ...manifest.modelResult,
+              memories: manifest.modelResult.memories ?? [],
+              skills: manifest.modelResult.skills ?? [],
+              knowledgeNotes: manifest.modelResult.knowledgeNotes ?? [],
+              rejected: manifest.modelResult.rejected ?? []
+            }
+          }
+        : {})
+    }
   }
 
   private async writeManifest(runDir: string, manifest: LearningManifest): Promise<void> {
@@ -1216,7 +1465,7 @@ export class LearningIterationRuntime {
       version: 1,
       summary,
       sourceHashes: {},
-      rollback: { memories: [], skills: [] }
+      rollback: { memories: [], skills: [], knowledge: [] }
     })
   }
 
@@ -1284,6 +1533,15 @@ function defaultState(): LearningState {
   }
 }
 
+function normalizeLearningCounts(
+  counts: Partial<LearningIterationCounts> | undefined
+): LearningIterationCounts {
+  return {
+    ...EMPTY_COUNTS,
+    ...(counts ?? {})
+  }
+}
+
 function retryIsDue(state: LearningState, now: Date): boolean {
   const last = Date.parse(state.lastRetryAt)
   if (!Number.isFinite(last)) return true
@@ -1325,7 +1583,7 @@ function renderCorpus(sources: LearningSource[]): string {
   return [
     '# Legalwork 学习迭代输入',
     '',
-    '以下内容只用于提取稳定、可复用且可审计的记忆和工作方法。',
+    '以下内容只用于提取稳定、可复用且可审计的记忆、工作方法和知识库 Markdown。',
     '',
     ...sources.flatMap((source) => [
       `## ${source.kind} · ${source.key} · ${source.title}`,
@@ -1339,12 +1597,16 @@ function renderCorpus(sources: LearningSource[]): string {
 function buildLearningPrompt(corpus: string): string {
   return [
     'Use $legalwork-learning-iteration to analyze the bounded Legalwork interaction corpus below.',
-    'Do not call any tools — analyze the corpus purely in text. Do not write outside the response. Treat client facts as confidential source material, never as reusable skill content.',
+    'Do not call any tools — analyze the corpus purely in text. The host is authorized to publish your validated Markdown knowledge-note proposals into the local knowledge base with rollback protection. Do not write outside the response.',
+    'Treat client facts as confidential source material. Prefer distilled research notes, reusable checklists, templates, drafting guidance, and process lessons. Minimize personal identifiers and never copy credentials or secrets.',
     'Only propose automatic memories in profile, preference, workflow, or project. Never propose interest, matter, other, client identity, account identifiers, secrets, passwords, tokens, verification codes, or case facts for automatic storage.',
     'Thread sources contain only user-authored messages. Only thread sources may support memory candidates; knowledge and Skill sources may support reusable Skill candidates but never user memories.',
+    'Uploaded-file, generated-file, process, thread, and knowledge sources may support knowledgeNotes. A useful fact, synthesis, checklist, template, or process lesson may be proposed from one direct source when it is likely to help later.',
+    `knowledgeNotes must be Markdown files under “${LEARNING_KNOWLEDGE_ROOT}/”. Name every .md file after its concrete subject, such as “劳动合同解除审查要点.md” or “庭前材料核对清单.md”. Never use generic numbered names such as “迭代记录1.md”, “学习笔记2.md”, “未命名.md”, or date-only filenames.`,
+    'Create a knowledge note only when it adds retrieval value beyond the source: synthesize, structure, cross-reference, or turn process experience into a reusable guide. Do not duplicate a complete source file verbatim. Use update only for an existing learning note when new evidence materially improves it.',
     'Do not infer the user profession, expertise, identity, preference, or workflow from an assistant response, task topic, retrieved document, file name, or generated artifact. A profile/project candidate needs explicit first-person user statements from at least three independent threads.',
     'Apply the RIA-TV++-inspired workflow and triple verification. Preference/workflow memories need at least two independent thread sources; one thread is allowed only for an explicit user correction. Chunks from one base source count as one source.',
-    `Keep reportMarkdown under ${MAX_REPORT_MARKDOWN_CHARS} characters, propose at most ${MAX_MEMORY_PROPOSALS} memories and ${MAX_SKILL_PROPOSALS} Skills, and keep the report concise.`,
+    `Keep reportMarkdown under ${MAX_REPORT_MARKDOWN_CHARS} characters, propose at most ${MAX_MEMORY_PROPOSALS} memories, ${MAX_SKILL_PROPOSALS} Skills, and ${MAX_KNOWLEDGE_NOTE_PROPOSALS} Markdown knowledge notes, and keep the report concise.`,
     'Write title, summary, and reportMarkdown for the end user, not for developers. Use plain, friendly Chinese and focus on what the product learned, how the experience will improve, and what it will do differently next time.',
     'In reportMarkdown, use the sections “这次学到了什么”, “会带来哪些提升”, and “以后会怎样帮你”. Do not expose raw source keys, thread IDs, memory IDs, JSON field names, internal workflow names, validation framework names, test categories, or developer implementation details.',
     'Write every Skill name and description in clear Chinese as well; only its machine-readable id stays in lowercase English.',
@@ -1381,6 +1643,14 @@ function buildLearningPrompt(corpus: string): string {
         }],
         evidence: [{ sourceKey: 'thread:...' }]
       }],
+      knowledgeNotes: [{
+        action: 'create | update',
+        path: '学习沉淀/资料摘要/劳动合同解除审查要点.md',
+        title: '劳动合同解除审查要点',
+        summary: '一句话说明为什么以后值得检索',
+        content: '# 劳动合同解除审查要点\\n\\n经结构化的 Markdown 正文',
+        evidence: [{ sourceKey: 'uploaded-file:...' }]
+      }],
       rejected: [{ title: 'candidate', reason: 'why it failed validation' }]
     }, null, 2),
     RESULT_END,
@@ -1414,6 +1684,9 @@ export function parseLearningModelResult(text: string): LearningModelResult {
   const skills = Array.isArray(parsed.skills)
     ? parsed.skills.filter(isRecord).slice(0, MAX_SKILL_PROPOSALS) as SkillProposal[]
     : []
+  const knowledgeNotes = Array.isArray(parsed.knowledgeNotes)
+    ? parsed.knowledgeNotes.filter(isRecord).slice(0, MAX_KNOWLEDGE_NOTE_PROPOSALS) as KnowledgeNoteProposal[]
+    : []
   const rejected = Array.isArray(parsed.rejected)
     ? parsed.rejected
         .filter((item): item is { title: string; reason: string } =>
@@ -1429,6 +1702,7 @@ export function parseLearningModelResult(text: string): LearningModelResult {
       : '',
     memories,
     skills,
+    knowledgeNotes,
     rejected
   }
 }
@@ -1671,11 +1945,80 @@ function validateModelResult(
     proposal.evidence = evidence
     return valid
   })
+  const seenKnowledgePaths = new Set<string>()
+  const knowledgeNotes = result.knowledgeNotes.filter((proposal) => {
+    const path = normalizeLearningKnowledgePath(proposal.path)
+    const title = typeof proposal.title === 'string' ? singleLine(proposal.title).slice(0, 120) : ''
+    const summary = typeof proposal.summary === 'string' ? singleLine(proposal.summary).slice(0, 500) : ''
+    const content = typeof proposal.content === 'string' ? proposal.content.trim() : ''
+    const evidence = validEvidence(
+      proposal.evidence,
+      sourceByKey,
+      new Set(['thread', 'knowledge', 'uploaded-file', 'generated-file', 'process'])
+    ).filter((item) => {
+      const source = sourceByKey.get(item.sourceKey)
+      return source?.kind !== 'knowledge' || !String(source.metadata?.path ?? '').startsWith(`${LEARNING_KNOWLEDGE_ROOT}/`)
+    })
+    const valid =
+      (proposal.action === 'create' || proposal.action === 'update') &&
+      Boolean(path) &&
+      !seenKnowledgePaths.has(path) &&
+      title.length >= 4 &&
+      hasTopicSemantics(title) &&
+      !isGenericLearningNoteName(title) &&
+      summary.length >= 8 &&
+      content.length >= 80 &&
+      content.length <= MAX_LEARNING_NOTE_CHARS &&
+      evidence.length >= 1 &&
+      !containsSecret(content)
+    if (!valid) {
+      rejectionReasons.push(`知识库候选“${title || proposal.path || '未命名'}”未通过主题命名、内容或证据校验。`)
+      return false
+    }
+    proposal.path = path
+    proposal.title = title
+    proposal.summary = summary
+    proposal.content = content
+    proposal.evidence = evidence
+    seenKnowledgePaths.add(path)
+    return true
+  })
   return {
-    result: { ...result, memories, skills },
-    rejectedCount: result.memories.length - memories.length + result.skills.length - skills.length,
+    result: { ...result, memories, skills, knowledgeNotes },
+    rejectedCount:
+      result.memories.length - memories.length +
+      result.skills.length - skills.length +
+      result.knowledgeNotes.length - knowledgeNotes.length,
     rejectionReasons
   }
+}
+
+export function normalizeLearningKnowledgePath(value: string): string {
+  const raw = typeof value === 'string' ? value.trim().replaceAll('\\', '/') : ''
+  if (!raw || raw.includes('\0') || raw.startsWith('/') || /^[a-z]:\//i.test(raw)) return ''
+  const withRoot = raw.startsWith(`${LEARNING_KNOWLEDGE_ROOT}/`)
+    ? raw
+    : `${LEARNING_KNOWLEDGE_ROOT}/资料摘要/${raw}`
+  const parts = withRoot.split('/').map((part) => part.trim()).filter(Boolean)
+  if (parts.some((part) => part === '.' || part === '..')) return ''
+  const fileName = parts.at(-1) ?? ''
+  if (!fileName.toLowerCase().endsWith('.md')) return ''
+  const stem = fileName.slice(0, -3).trim()
+  if (stem.length < 4 || !hasTopicSemantics(stem) || isGenericLearningNoteName(stem)) return ''
+  const normalized = parts.join('/')
+  return normalized.length <= 500 ? normalized : ''
+}
+
+function isGenericLearningNoteName(value: string): boolean {
+  const stem = value.trim().replace(/\.md$/i, '')
+  return /^(?:(?:学习|迭代|知识|过程)(?:笔记|记录|沉淀|总结)?|笔记|记录|未命名|untitled|notes?|learning|iteration)[-_\s]*\d*$/i.test(stem) ||
+    /^\d{4}[-_.\u5e74]\d{1,2}(?:[-_.\u6708]\d{1,2}日?)?$/.test(stem)
+}
+
+function hasTopicSemantics(value: string): boolean {
+  const cjkCount = value.match(/[\u3400-\u9fff]/g)?.length ?? 0
+  const latinCount = value.match(/[a-z]/gi)?.length ?? 0
+  return cjkCount >= 4 || latinCount >= 6
 }
 
 function validEvidence(
@@ -1727,6 +2070,7 @@ function buildReport(
     `| 浏览并理解的内容 | ${summary.counts.sources} |`,
     `| 新增或更新的用户习惯 | ${memoryChangeCount(summary.counts)} |`,
     `| 新增或改进的工作方法 | ${skillChangeCount(summary.counts)} |`,
+    `| 写入或更新的知识库 Markdown | ${knowledgeNoteChangeCount(summary.counts)} |`,
     `| 因信息不够确定而未采纳 | ${summary.counts.rejected} |`,
     '',
     '## 以后会怎样帮你',
@@ -1736,7 +2080,7 @@ function buildReport(
     '## 隐私与控制',
     '',
     '- 只会记住经过多次确认、能长期帮助你的习惯和方法。',
-    '- 客户身份、案件事实、账号、密码和验证码不会被自动保存。',
+    '- 账号、密码、验证码和其他凭据不会被自动保存；资料中的身份信息会尽量最小化。',
     summary.canRollback
       ? '- 如果你不想保留本轮学习结果，可以随时回滚。'
       : '- 本轮没有修改需要回滚的内容。',
@@ -1750,6 +2094,10 @@ function memoryChangeCount(counts: LearningIterationCounts): number {
 
 function skillChangeCount(counts: LearningIterationCounts): number {
   return counts.skillsCreated + counts.skillsUpdated
+}
+
+function knowledgeNoteChangeCount(counts: LearningIterationCounts): number {
+  return counts.knowledgeNotesCreated + counts.knowledgeNotesUpdated
 }
 
 function buildUserReport(
@@ -1773,6 +2121,12 @@ function buildUserReport(
     title: skill.action === 'update' ? `改进了「${singleLine(skill.name)}」` : `学会了「${singleLine(skill.name)}」`,
     detail: userFacingSkillDescription(skill.description)
   }))
+  improvements.push(...(result?.knowledgeNotes ?? []).slice(0, 5).map((note) => ({
+    title: note.action === 'update'
+      ? `更新了「${singleLine(note.title)}」`
+      : `沉淀了「${singleLine(note.title)}」`,
+    detail: singleLine(note.summary)
+  })))
 
   if (learned.length > 0 && improvements.length === 0) {
     improvements.push({
@@ -1781,7 +2135,10 @@ function buildUserReport(
     })
   }
 
-  const accepted = memoryChangeCount(summary.counts) + skillChangeCount(summary.counts)
+  const accepted =
+    memoryChangeCount(summary.counts) +
+    skillChangeCount(summary.counts) +
+    knowledgeNoteChangeCount(summary.counts)
   const suppliedSummary = result?.summary?.trim()
   const overview = summary.status === 'rolled_back'
     ? '这轮学习结果已经回滚，之后的回答不会再使用本轮新增的习惯和方法。'
@@ -1794,6 +2151,9 @@ function buildUserReport(
   const nextTime = [
     ...(learned.length > 0 ? ['遇到相似任务时，优先按已经确认的偏好组织回答，减少重复沟通。'] : []),
     ...(improvements.length > 0 ? ['需要同类工作时，直接采用本轮验证过的方法，提高处理的一致性。'] : []),
+    ...(knowledgeNoteChangeCount(summary.counts) > 0
+      ? ['遇到相关问题时，会从本地知识库检索本轮沉淀的 Markdown 笔记。']
+      : []),
     ...(learned.length === 0 && improvements.length === 0
       ? ['继续观察后续使用习惯，只有在证据足够稳定时才会形成新的长期记忆。']
       : []),
@@ -1814,6 +2174,31 @@ function userFacingSkillDescription(value: string): string {
 
 function isUserFacingSummary(value: string): boolean {
   return !/(?:thread:|skill:|RIA|TV\+\+|候选|语料|来源标识|压力测试|模型分析|独立线程|三重验证|JSON|Markdown|分析了\s*\d+)/i.test(value)
+}
+
+function renderLearningKnowledgeNote(
+  proposal: KnowledgeNoteProposal,
+  runId: string,
+  now: Date
+): string {
+  const body = proposal.content
+    .replace(/^---[\s\S]*?---\s*/m, '')
+    .replaceAll(LEARNING_KNOWLEDGE_MARKER, '')
+    .trim()
+  return [
+    '---',
+    `title: ${JSON.stringify(proposal.title)}`,
+    `summary: ${JSON.stringify(proposal.summary)}`,
+    'generated_by: legalwork-learning-iteration',
+    `source_iteration: ${JSON.stringify(runId)}`,
+    `updated_at: ${JSON.stringify(now.toISOString())}`,
+    '---',
+    '',
+    LEARNING_KNOWLEDGE_MARKER,
+    '',
+    body,
+    ''
+  ].join('\n')
 }
 
 async function installGeneratedSkill(
@@ -1883,20 +2268,149 @@ function memoryComparable(memory: MemorySnapshot): Record<string, unknown> {
 }
 
 export function extractLearningThreadText(object: Record<string, unknown> | null): string {
-  const turns = Array.isArray(object?.turns) ? object.turns as Array<Record<string, unknown>> : []
   const lines: string[] = []
-  for (const turn of turns) {
-    const items = Array.isArray(turn.items) ? turn.items as Array<Record<string, unknown>> : []
-    for (const item of items) {
-      const kind = String(item.kind ?? '')
-      if (kind !== 'user_message') continue
-      const raw = typeof item.text === 'string' ? item.text.trim() : ''
-      const text = normalizeLearningUserText(raw)
-      if (!isMeaningfulLearningUserText(text)) continue
-      lines.push(`用户：${clipLearningUserText(text)}`)
+  for (const item of learningThreadItems(object)) {
+    const kind = String(item.kind ?? '')
+    if (kind !== 'user_message') continue
+    const raw = typeof item.text === 'string' ? item.text.trim() : ''
+    const text = normalizeLearningUserText(raw)
+    if (!isMeaningfulLearningUserText(text)) continue
+    lines.push(`用户：${clipLearningUserText(text)}`)
+  }
+  return lines.join('\n\n')
+}
+
+export function extractLearningProcessText(object: Record<string, unknown> | null): string {
+  const lines: string[] = []
+  for (const item of learningThreadItems(object)) {
+    const kind = String(item.kind ?? '')
+    if (kind === 'assistant_text') {
+      const text = typeof item.text === 'string' ? item.text.trim() : ''
+      if (text) lines.push(`Agent 交付说明：${text.slice(0, 4_000)}`)
+      continue
+    }
+    if (kind === 'tool_call') {
+      const toolName = typeof item.toolName === 'string' ? item.toolName : '未知工具'
+      const summary = typeof item.summary === 'string' ? item.summary.trim() : ''
+      lines.push(`过程步骤：${toolName}${summary ? `·${summary.slice(0, 500)}` : ''}`)
+      continue
+    }
+    if (kind === 'tool_result' && item.isError === true) {
+      const toolName = typeof item.toolName === 'string' ? item.toolName : '未知工具'
+      lines.push(`过程失败：${toolName}`)
     }
   }
   return lines.join('\n\n')
+}
+
+export function extractLearningAttachmentIds(object: Record<string, unknown> | null): string[] {
+  const ids = new Set<string>()
+  const turns = Array.isArray(object?.turns) ? object.turns as Array<Record<string, unknown>> : []
+  for (const turn of turns) {
+    for (const id of stringValues(turn.attachmentIds)) ids.add(id)
+  }
+  for (const item of learningThreadItems(object)) {
+    if (String(item.kind ?? '') !== 'user_message') continue
+    for (const id of stringValues(item.attachmentIds)) ids.add(id)
+  }
+  return [...ids]
+}
+
+export async function resolveLearningGeneratedPaths(
+  object: Record<string, unknown> | null,
+  workspaceRoot: string
+): Promise<string[]> {
+  const items = learningThreadItems(object)
+  const successfulCallIds = new Set(items
+    .filter((item) => item.kind === 'tool_result' && item.isError !== true)
+    .map((item) => typeof item.callId === 'string' ? item.callId : '')
+    .filter(Boolean))
+  const rawPaths = new Set<string>()
+  for (const item of items) {
+    if (item.kind !== 'tool_call' || item.toolKind !== 'file_change') continue
+    if (typeof item.toolName === 'string' && item.toolName.startsWith('knowledge_')) continue
+    const callId = typeof item.callId === 'string' ? item.callId : ''
+    if (successfulCallIds.size > 0 && callId && !successfulCallIds.has(callId)) continue
+    collectKnownFilePaths(item.arguments, rawPaths)
+    const result = items.find((candidate) => candidate.kind === 'tool_result' && candidate.callId === callId)
+    collectKnownFilePaths(result?.output, rawPaths)
+  }
+
+  const workspace = await realpath(resolve(workspaceRoot)).catch(() => resolve(workspaceRoot))
+  const resolvedPaths: string[] = []
+  for (const rawPath of rawPaths) {
+    const candidate = isAbsolute(rawPath) ? resolve(rawPath) : resolve(workspace, rawPath)
+    const actual = await realpath(candidate).catch(() => '')
+    if (!actual || !pathIsInside(actual, workspace) || isLearningInternalPath(actual, workspace)) continue
+    const extension = extname(actual).toLowerCase()
+    if (!isPlainTextExtension(extension) && !LEARNING_EXTRACTABLE_EXTENSIONS.has(extension)) continue
+    resolvedPaths.push(actual)
+  }
+  return [...new Set(resolvedPaths)]
+}
+
+function learningThreadItems(object: Record<string, unknown> | null): Array<Record<string, unknown>> {
+  const turns = Array.isArray(object?.turns) ? object.turns as Array<Record<string, unknown>> : []
+  const turnItems = turns.flatMap((turn) => (
+    Array.isArray(turn.items) ? turn.items.filter(isRecord) : []
+  ))
+  const topLevelItems = Array.isArray(object?.items) ? object.items.filter(isRecord) : []
+  return [...topLevelItems, ...turnItems]
+}
+
+function stringValues(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+    : []
+}
+
+function collectKnownFilePaths(value: unknown, output: Set<string>, depth = 0): void {
+  if (depth > 3 || !isRecord(value)) return
+  const singlePathKeys = new Set([
+    'path', 'filePath', 'file_path', 'outputPath', 'output_path', 'targetPath', 'target_path'
+  ])
+  const pathListKeys = new Set(['artifacts', 'files', 'paths', 'outputFiles', 'output_files'])
+  for (const [key, nested] of Object.entries(value)) {
+    if (singlePathKeys.has(key) && typeof nested === 'string' && nested.trim()) {
+      output.add(nested.trim())
+      continue
+    }
+    if (pathListKeys.has(key) && Array.isArray(nested)) {
+      for (const item of nested) {
+        if (typeof item === 'string' && item.trim()) output.add(item.trim())
+        else collectKnownFilePaths(item, output, depth + 1)
+      }
+      continue
+    }
+    if (isRecord(nested)) collectKnownFilePaths(nested, output, depth + 1)
+  }
+}
+
+function pathIsInside(path: string, root: string): boolean {
+  const rel = relative(root, path)
+  return rel !== '' && !rel.startsWith(`..${sep}`) && rel !== '..' && !isAbsolute(rel)
+}
+
+function isLearningInternalPath(path: string, workspace: string): boolean {
+  const rel = relative(workspace, path).split(sep).join('/')
+  return /(?:^|\/)(?:\.git|\.legalwork|node_modules|dist|build|\.tmp[^/]*)(?:\/|$)/i.test(rel)
+}
+
+async function readLearningFileText(filePath: string): Promise<string> {
+  if (!filePath) return ''
+  const info = await stat(filePath).catch(() => null)
+  if (!info?.isFile() || info.size > MAX_LOCAL_FILE_BYTES) return ''
+  const extension = extname(filePath).toLowerCase()
+  if (isPlainTextExtension(extension)) {
+    return readFile(filePath, 'utf8').catch(() => '')
+  }
+  if (LEARNING_EXTRACTABLE_EXTENSIONS.has(extension)) {
+    const dataBase64 = await readFile(filePath).then((buffer) => buffer.toString('base64')).catch(() => '')
+    if (!dataBase64) return ''
+    const result = await extractDocumentMaterial({ fileName: basename(filePath), dataBase64 })
+    return result.ok ? result.content : ''
+  }
+  return ''
 }
 
 function normalizeLearningUserText(text: string): string {
@@ -1961,7 +2475,10 @@ function selectLearningSources(candidates: LearningSource[]): LearningSource[] {
     thread: 0,
     memory: 0,
     knowledge: 0,
-    skill: 0
+    skill: 0,
+    'uploaded-file': 0,
+    'generated-file': 0,
+    process: 0
   }
   let totalChars = 0
 
@@ -2030,6 +2547,16 @@ function countSourcesByBase(sources: LearningSource[]): Map<string, number> {
   for (const source of sources) {
     const baseKey = typeof source.metadata?.baseKey === 'string' ? source.metadata.baseKey : source.key
     counts.set(baseKey, (counts.get(baseKey) ?? 0) + 1)
+  }
+  return counts
+}
+
+function countSourcesByMetadata(sources: LearningSource[], key: string): Map<string, number> {
+  const counts = new Map<string, number>()
+  for (const source of sources) {
+    const value = source.metadata?.[key]
+    if (typeof value !== 'string') continue
+    counts.set(value, (counts.get(value) ?? 0) + 1)
   }
   return counts
 }

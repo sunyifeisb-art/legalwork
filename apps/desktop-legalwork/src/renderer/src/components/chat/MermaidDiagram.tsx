@@ -216,7 +216,7 @@ function repairMermaidSource(source: string): string {
       const label = rawLabel.trim()
       // 已是合法 ID 或带引号/方括号的标签则不动。
       if (/^[A-Za-z0-9_-]+$/.test(label)) return line
-      if (/^[\["']/.test(label) || /[\]"']$/.test(label)) return line
+      if (/^[["']/.test(label) || /[\]"']$/.test(label)) return line
       // 含全角符号等易导致 Lexical error 的字符 → 用引号包裹并给个稳定 ID。
       const safeId = label.replace(/[^\w一-龥]/g, '_').replace(/^_+|_+$/g, '') || 's'
       return `${prefix}${safeId}["${label}"]${suffix}`

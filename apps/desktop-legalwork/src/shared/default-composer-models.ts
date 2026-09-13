@@ -2,7 +2,7 @@
 export const DEFAULT_COMPOSER_MODEL_IDS = [
   'auto',
   'deepseek-v4-pro',
-  'deepseek-v4-flash',
+  'deepseek-flash',
   'kimi-for-coding',
   'kimi-k2.7-code',
   'kimi-k2',

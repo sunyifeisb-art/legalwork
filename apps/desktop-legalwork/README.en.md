@@ -72,7 +72,7 @@ The result: Legalwork is built for real project work with long tasks, long sessi
 
 - **Desktop chat workbench**: multi-session chat with streamed replies, reasoning, tool calls, approval requests, and file changes in one place.
 - **Project workspaces**: choose a local directory for each task, organize sessions by workspace, preview files, open files in your editor, and pick Git branches.
-- **Learning iteration**: while the app is idle, incrementally learn from conversations, memory, knowledge, and Skill outcomes; validated changes are applied with reports and rollback.
+- **Learning iteration**: while the app is idle, incrementally learn from conversations, user uploads, Agent outputs, process experience, memory, knowledge, and Skill outcomes; durable material is saved to the local knowledge base as topic-named Markdown with reports and rollback.
 - **Plans and todos**: `/plan` creates editable plan files, while the right-side Plan panel syncs thread todos for trackable execution.
 - **Goals**: `/goal` sets a long-running objective for the current thread, with pause, resume, clear, and complete states so the agent can keep working toward the same outcome.
 - **Code review**: `/review` can inspect current uncommitted changes, a base branch diff, a commit, or custom review instructions, with findings shown as review cards.

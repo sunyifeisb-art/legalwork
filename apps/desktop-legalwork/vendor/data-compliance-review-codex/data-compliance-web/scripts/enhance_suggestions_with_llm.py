@@ -8,6 +8,8 @@ import sys
 import time
 from pathlib import Path
 
+from legalwork_agent_client import generate_model_text, runtime_model_available
+
 
 try:
     from openai import OpenAI
@@ -66,20 +68,30 @@ def build_user_prompt(item: dict) -> str:
     return "\n".join(lines)
 
 
-def enhance_item(client: OpenAI, model: str, item: dict) -> dict:
+def enhance_item(client: OpenAI | None, model: str, item: dict) -> dict:
     """Call LLM to enhance a single report item."""
     user_prompt = build_user_prompt(item)
     try:
-        response = client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_prompt},
-            ],
-            temperature=0.3,
-            max_tokens=2048,
-        )
-        content = response.choices[0].message.content or ""
+        if runtime_model_available():
+            content = generate_model_text(
+                SYSTEM_PROMPT,
+                user_prompt,
+                model=model,
+                max_tokens=2048,
+            )
+        else:
+            if client is None:
+                raise RuntimeError('未配置可用的模型调用方式。')
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": user_prompt},
+                ],
+                temperature=0.3,
+                max_tokens=2048,
+            )
+            content = response.choices[0].message.content or ""
         content = content.strip()
         # Remove markdown code fences if present
         if content.startswith("```json"):
@@ -112,7 +124,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--report", required=True)
     parser.add_argument("--output", required=True)
-    parser.add_argument("--model", default=os.environ.get("LEGALWORK_MODEL", "deepseek-chat"))
+    parser.add_argument("--model", default=os.environ.get("LEGALWORK_MODEL", "deepseek-flash"))
     parser.add_argument("--api-key", default=os.environ.get("LEGALWORK_API_KEY") or os.environ.get("DEEPSEEK_API_KEY", ""))
     parser.add_argument("--base-url", default=os.environ.get("LEGALWORK_BASE_URL", "https://api.deepseek.com"))
     args = parser.parse_args()
@@ -123,7 +135,8 @@ def main() -> int:
     data = json.loads(report_path.read_text(encoding="utf-8"))
 
     api_key = args.api_key.strip()
-    if not api_key:
+    use_runtime = runtime_model_available()
+    if not api_key and not use_runtime:
         # No API key configured: pass through unchanged but mark all as not enhanced
         for item in data.get("items", []):
             item["llm_enhanced"] = False
@@ -131,7 +144,7 @@ def main() -> int:
         print("[enhance_suggestions_with_llm] LEGALWORK_API_KEY / DEEPSEEK_API_KEY 未配置，跳过增强，保留原建议。")
         return 0
 
-    client = OpenAI(api_key=api_key, base_url=args.base_url)
+    client = None if use_runtime else OpenAI(api_key=api_key, base_url=args.base_url)
 
     items = data.get("items", [])
     total = len(items)

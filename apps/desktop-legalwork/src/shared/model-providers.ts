@@ -31,7 +31,7 @@ export const BUILTIN_MODEL_PROVIDER_PRESETS: BuiltinModelProviderPreset[] = [
     name: 'DeepSeek',
     region: 'cn',
     baseUrl: 'https://api.deepseek.com',
-    models: ['deepseek-v4-pro', 'deepseek-v4-flash', 'deepseek-chat', 'deepseek-reasoner'],
+    models: ['deepseek-v4-pro', 'deepseek-flash'],
     apiKeyPlaceholder: 'sk-...',
     endpointFormat: 'chat_completions'
   },

@@ -168,7 +168,7 @@ def _paddle_engine():
         'use_textline_orientation': True,
     }
     model_dirs = _paddle_model_dirs()
-    kwargs.update(model_dirs)
+    kwargs.update(_paddle_model_kwargs(model_dirs))
     if model_dirs:
         kwargs.pop('lang', None)
     try:
@@ -185,11 +185,15 @@ def _paddle_engine():
 
 
 def _candidate_paddle_model_roots() -> list[Path]:
-    roots: list[Path] = []
+    explicit_roots: list[Path] = []
     for key in PADDLE_MODEL_ROOT_ENV_KEYS:
         raw = os.environ.get(key)
         if raw:
-            roots.append(Path(raw).expanduser())
+            explicit_roots.append(Path(raw).expanduser())
+    if explicit_roots:
+        return explicit_roots
+
+    roots: list[Path] = []
     for root in _candidate_ocr_roots():
         roots.extend([
             root / 'paddle-models',
@@ -209,19 +213,54 @@ def _paddle_model_dir(name: str) -> str | None:
 
 
 def _paddle_model_dirs() -> dict[str, str]:
-    mapping = {
+    v6_mapping = {
         'doc_orientation_classify_model_dir': 'PP-LCNet_x1_0_doc_ori',
         'doc_unwarping_model_dir': 'UVDoc',
         'textline_orientation_model_dir': 'PP-LCNet_x1_0_textline_ori',
         'text_detection_model_dir': 'PP-OCRv6_medium_det',
         'text_recognition_model_dir': 'PP-OCRv6_medium_rec',
     }
-    result: dict[str, str] = {}
-    for key, name in mapping.items():
+    v6_result: dict[str, str] = {}
+    for key, name in v6_mapping.items():
         model_dir = _paddle_model_dir(name)
         if model_dir:
-            result[key] = model_dir
-    return result
+            v6_result[key] = model_dir
+    if (
+        'text_detection_model_dir' in v6_result
+        and 'text_recognition_model_dir' in v6_result
+    ):
+        return v6_result
+
+    v4_mapping = {
+        'text_detection_model_dir': 'PP-OCRv4_mobile_det',
+        'text_recognition_model_dir': 'PP-OCRv4_mobile_rec',
+    }
+    v4_result: dict[str, str] = {}
+    for key, name in v4_mapping.items():
+        model_dir = _paddle_model_dir(name)
+        if model_dir:
+            v4_result[key] = model_dir
+    return v4_result
+
+
+def _paddle_model_kwargs(model_dirs: dict[str, str]) -> dict:
+    kwargs = dict(model_dirs)
+    det_dir = model_dirs.get('text_detection_model_dir')
+    rec_dir = model_dirs.get('text_recognition_model_dir')
+    if (
+        det_dir
+        and rec_dir
+        and Path(det_dir).name == 'PP-OCRv4_mobile_det'
+        and Path(rec_dir).name == 'PP-OCRv4_mobile_rec'
+    ):
+        kwargs.update({
+            'text_detection_model_name': 'PP-OCRv4_mobile_det',
+            'text_recognition_model_name': 'PP-OCRv4_mobile_rec',
+            'use_doc_orientation_classify': False,
+            'use_doc_unwarping': False,
+            'use_textline_orientation': False,
+        })
+    return kwargs
 
 
 def _paddle_available() -> bool:

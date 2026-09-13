@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, realpath, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -29,10 +29,14 @@ vi.mock('./services/skill-service', () => ({
 
 import {
   createLearningIterationRuntime,
+  extractLearningAttachmentIds,
+  extractLearningProcessText,
   extractLearningThreadText,
   learningTurnFailureDetail,
+  normalizeLearningKnowledgePath,
   parseLearningModelResult,
   repairLearningModelJson,
+  resolveLearningGeneratedPaths,
   shouldReportLearningIterationError
 } from './learning-iteration-runtime'
 
@@ -235,7 +239,149 @@ describe('LearningIterationRuntime scheduling', () => {
   })
 })
 
+describe('LearningIterationRuntime knowledge publishing', () => {
+  it('publishes a topic-named Markdown note and rolls it back without touching user files', async () => {
+    const dataDir = await mkdtemp(join(tmpdir(), 'legalwork-learning-knowledge-'))
+    tempRoots.push(dataDir)
+    const appSettings = settings(dataDir)
+    const knowledge = new Map<string, string>()
+    const notePath = '学习沉淀/资料摘要/劳动合同解除审查要点.md'
+    const modelOutput = JSON.stringify({
+      title: '劳动合同解除要点沉淀',
+      summary: '已将劳动合同解除的审查要点沉淀到本地知识库。',
+      reportMarkdown: '',
+      memories: [],
+      skills: [],
+      knowledgeNotes: [{
+        action: 'create',
+        path: notePath,
+        title: '劳动合同解除审查要点',
+        summary: '用于后续快速核对劳动合同解除的合法性与程序。',
+        content: `# 劳动合同解除审查要点\n\n${'审查解除事由、证据链、通知程序与补偿计算。'.repeat(10)}`,
+        evidence: [{ sourceKey: 'thread:thr_source' }]
+      }],
+      rejected: []
+    })
+    const runtimeRequest = vi.fn(async (_settings: AppSettingsV1, path: string, init?: { method?: string; body?: string }) => {
+      if (path.startsWith('/v1/threads?')) {
+        return {
+          ok: true,
+          status: 200,
+          body: JSON.stringify({
+            threads: [{ id: 'thr_source', title: '劳动合同审查', status: 'idle', updatedAt: '2026-09-13T01:00:00.000Z' }]
+          })
+        }
+      }
+      if (path === '/v1/threads/thr_source') {
+        return {
+          ok: true,
+          status: 200,
+          body: JSON.stringify({
+            turns: [{ items: [{ kind: 'user_message', text: '请整理劳动合同解除的审查要点，以后还会用到。' }] }]
+          })
+        }
+      }
+      if (path === '/v1/threads' && init?.method === 'POST') {
+        return { ok: true, status: 201, body: JSON.stringify({ id: 'thr_learning' }) }
+      }
+      if (path === '/v1/threads/thr_learning/turns' && init?.method === 'POST') {
+        return { ok: true, status: 201, body: JSON.stringify({ turnId: 'turn_learning' }) }
+      }
+      if (path === '/v1/threads/thr_learning') {
+        return {
+          ok: true,
+          status: 200,
+          body: JSON.stringify({
+            turns: [{
+              id: 'turn_learning',
+              status: 'completed',
+              items: [{ kind: 'assistant_text', turnId: 'turn_learning', text: modelOutput }]
+            }]
+          })
+        }
+      }
+      if (path.startsWith('/v1/memory')) {
+        return { ok: true, status: 200, body: JSON.stringify({ memories: [] }) }
+      }
+      if (path === '/v1/knowledge/tree') {
+        return { ok: true, status: 200, body: JSON.stringify({ nodes: [] }) }
+      }
+      if (path.startsWith('/v1/knowledge/file?') && init?.method === 'GET') {
+        const requestedPath = new URL(`http://local${path}`).searchParams.get('path') ?? ''
+        const content = knowledge.get(requestedPath)
+        return content === undefined
+          ? { ok: false, status: 404, body: 'not found' }
+          : { ok: true, status: 200, body: JSON.stringify({ path: requestedPath, content, encoding: 'utf8' }) }
+      }
+      if (path === '/v1/knowledge/file' && init?.method === 'POST') {
+        const body = JSON.parse(init.body ?? '{}') as { path: string; content: string }
+        knowledge.set(body.path, body.content)
+        return { ok: true, status: 200, body: JSON.stringify({ path: body.path, sizeBytes: body.content.length }) }
+      }
+      if (path.startsWith('/v1/knowledge/file?') && init?.method === 'DELETE') {
+        const requestedPath = new URL(`http://local${path}`).searchParams.get('path') ?? ''
+        knowledge.delete(requestedPath)
+        return { ok: true, status: 200, body: JSON.stringify({ path: requestedPath }) }
+      }
+      if (path === '/v1/knowledge/sync' && init?.method === 'POST') {
+        return { ok: true, status: 200, body: '{}' }
+      }
+      return { ok: false, status: 404, body: 'not found' }
+    })
+    const runtime = createLearningIterationRuntime({
+      store: { load: vi.fn(async () => appSettings) } as never,
+      runtimeRequest,
+      getSystemIdleSeconds: () => 60 * 60,
+      getExternalBusy: async () => false,
+      logError: vi.fn()
+    })
+
+    await runtime.queue()
+    await vi.waitFor(async () => {
+      expect((await runtime.status()).message).toBe('学习迭代已完成并自动应用')
+    }, { timeout: 5_000 })
+
+    expect(knowledge.get(notePath)).toContain('# 劳动合同解除审查要点')
+    expect(knowledge.get(notePath)).toContain('legalwork-learning-artifact')
+    const records = await runtime.list()
+    expect(records.ok).toBe(true)
+    if (!records.ok) return
+    expect(records.records[0].counts.knowledgeNotesCreated).toBe(1)
+
+    const rollback = await runtime.rollback(records.records[0].id)
+    expect(rollback.ok).toBe(true)
+    expect(knowledge.has(notePath)).toBe(false)
+    runtime.stop()
+  })
+})
+
 describe('learning model result parsing', () => {
+  it('accepts topic-named Markdown knowledge notes and rejects generic filenames', () => {
+    const result = parseLearningModelResult(JSON.stringify({
+      title: '劳动合同学习沉淀',
+      summary: '形成可检索的主题笔记',
+      reportMarkdown: '',
+      memories: [],
+      skills: [],
+      knowledgeNotes: [{
+        action: 'create',
+        path: '学习沉淀/资料摘要/劳动合同解除审查要点.md',
+        title: '劳动合同解除审查要点',
+        summary: '用于以后快速检索解除审查的关键步骤',
+        content: `# 劳动合同解除审查要点\n\n${'具体审查内容。'.repeat(20)}`,
+        evidence: [{ sourceKey: 'thread:thr_1' }]
+      }],
+      rejected: []
+    }))
+
+    expect(result.knowledgeNotes).toHaveLength(1)
+    expect(normalizeLearningKnowledgePath('庭前材料核对清单.md')).toBe(
+      '学习沉淀/资料摘要/庭前材料核对清单.md'
+    )
+    expect(normalizeLearningKnowledgePath('学习沉淀/学习笔记2.md')).toBe('')
+    expect(normalizeLearningKnowledgePath('迭代记录1.md')).toBe('')
+  })
+
   it('does not upload recoverable model/configuration failures', () => {
     expect(shouldReportLearningIterationError(new Error('Insufficient Balance (HTTP 402)'))).toBe(false)
     expect(shouldReportLearningIterationError(new Error('Memory confidence must be at least 0.8 for automatic capture.'))).toBe(false)
@@ -460,6 +606,90 @@ describe('learning outcome report compatibility', () => {
 })
 
 describe('learning source hygiene', () => {
+  it('accepts only successful generated files inside the workspace', async () => {
+    const workspace = await mkdtemp(join(tmpdir(), 'legalwork-learning-files-'))
+    const outside = await mkdtemp(join(tmpdir(), 'legalwork-learning-outside-'))
+    tempRoots.push(workspace, outside)
+    const reportPath = join(workspace, '劳动合同审查报告.md')
+    const outsidePath = join(outside, '不应采集.md')
+    await writeFile(reportPath, '# 劳动合同审查报告', 'utf8')
+    await writeFile(outsidePath, '# 不应采集', 'utf8')
+    const detail = {
+      turns: [{
+        items: [
+          {
+            kind: 'tool_call',
+            callId: 'ok',
+            toolName: 'write_file',
+            toolKind: 'file_change',
+            arguments: { path: reportPath }
+          },
+          {
+            kind: 'tool_result',
+            callId: 'ok',
+            toolName: 'write_file',
+            toolKind: 'file_change',
+            output: { path: reportPath },
+            isError: false
+          },
+          {
+            kind: 'tool_call',
+            callId: 'outside',
+            toolName: 'write_file',
+            toolKind: 'file_change',
+            arguments: { path: outsidePath }
+          },
+          {
+            kind: 'tool_result',
+            callId: 'outside',
+            toolName: 'write_file',
+            toolKind: 'file_change',
+            output: { path: outsidePath },
+            isError: false
+          },
+          {
+            kind: 'tool_call',
+            callId: 'failed',
+            toolName: 'write_file',
+            toolKind: 'file_change',
+            arguments: { path: join(workspace, '失败文件.md') }
+          },
+          {
+            kind: 'tool_result',
+            callId: 'failed',
+            toolName: 'write_file',
+            toolKind: 'file_change',
+            output: {},
+            isError: true
+          }
+        ]
+      }]
+    }
+
+    expect(await resolveLearningGeneratedPaths(detail, workspace)).toEqual([await realpath(reportPath)])
+  })
+
+  it('collects attachment ids and bounded process knowledge without treating it as user memory evidence', () => {
+    const detail = {
+      turns: [{
+        attachmentIds: ['att_a'],
+        items: [
+          { kind: 'user_message', text: '请审查这份合同', attachmentIds: ['att_b'] },
+          { kind: 'tool_call', toolName: 'write_file', summary: '生成了审查清单' },
+          { kind: 'tool_result', toolName: 'write_file', isError: true },
+          { kind: 'assistant_text', text: '已交付审查报告。' },
+          { kind: 'assistant_reasoning', text: '不应采集的思维链。' }
+        ]
+      }]
+    }
+
+    expect(extractLearningAttachmentIds(detail)).toEqual(['att_a', 'att_b'])
+    const process = extractLearningProcessText(detail)
+    expect(process).toContain('过程步骤：write_file·生成了审查清单')
+    expect(process).toContain('Agent 交付说明：已交付审查报告。')
+    expect(process).not.toContain('思维链')
+  })
+
   it('keeps the real knowledge-base question and excludes RAG context and assistant output', () => {
     const detail = {
       turns: [{

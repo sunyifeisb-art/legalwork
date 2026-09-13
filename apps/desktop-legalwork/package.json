@@ -1,7 +1,7 @@
 {
   "name": "legalwork",
   "productName": "legalwork",
-  "version": "0.3.31",
+  "version": "0.3.32",
   "description": "Electron workbench for the Legalwork runtime (HTTP/SSE)",
   "main": "./out/main/index.cjs",
   "type": "module",
@@ -71,6 +71,8 @@
     "prepare:office-runtime:mac:x64": "node ./scripts/prepare-office-runtime.cjs --platform mac --arch x64",
     "prepare:office-runtime:win:x64": "node ./scripts/prepare-office-runtime.cjs --platform win --arch x64",
     "prepare:office-runtime:linux:x64": "node ./scripts/prepare-office-runtime.cjs --platform linux --arch x64",
+    "build:compliance:mac:arm64": "node ./scripts/build-compliance-bundle-mac.mjs --arch arm64",
+    "build:compliance:mac:x64": "node ./scripts/build-compliance-bundle-mac.mjs --arch x64",
     "dist": "npm run build && npx --yes electron-builder@26.8.1 --config electron-builder.config.cjs --publish never",
     "dist:mac": "rm -f dist/legalwork-*-mac-* dist/latest-mac.yml && npm run build && npm run dist:mac:x64:dmg && npm run dist:mac:x64:zip && npm run dist:mac:arm64:dmg && npm run dist:mac:arm64:zip && node ./scripts/generate-mac-latest.cjs dist",
     "dist:mac:signed": "rm -f dist/legalwork-*-mac-* dist/latest-mac.yml && MAC_SIGN=1 npm run dist:mac:x64 && MAC_SIGN=1 npm run dist:mac:arm64 && node ./scripts/generate-mac-latest.cjs dist",

@@ -69,6 +69,44 @@ describe('HTTP server', () => {
     expect(response.status).toBe(401)
   })
 
+  it('runs authenticated tool-free internal model generation', async () => {
+    const h = buildHarness()
+    const response = await dispatchRequest(
+      h.router,
+      new Request('http://localhost/v1/model/generate', {
+        method: 'POST',
+        headers: { authorization: 'Bearer tok-1', 'content-type': 'application/json' },
+        body: JSON.stringify({
+          systemPrompt: 'Return JSON only.',
+          userPrompt: 'hello',
+          responseFormat: 'json_object'
+        })
+      })
+    )
+
+    expect(response.status).toBe(200)
+    expect(await readJson(response)).toEqual({ text: 'generated:hello' })
+  })
+
+  it('requires auth and prompts for internal model generation', async () => {
+    const h = buildHarness()
+    const unauthorized = await dispatchRequest(
+      h.router,
+      new Request('http://localhost/v1/model/generate', { method: 'POST' })
+    )
+    expect(unauthorized.status).toBe(401)
+
+    const invalid = await dispatchRequest(
+      h.router,
+      new Request('http://localhost/v1/model/generate', {
+        method: 'POST',
+        headers: { authorization: 'Bearer tok-1', 'content-type': 'application/json' },
+        body: JSON.stringify({ systemPrompt: 'x' })
+      })
+    )
+    expect(invalid.status).toBe(400)
+  })
+
   it('returns structured validation errors for invalid JSON bodies', async () => {
     const h = buildHarness()
     const response = await dispatchRequest(

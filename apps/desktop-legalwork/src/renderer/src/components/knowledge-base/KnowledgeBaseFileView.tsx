@@ -19,6 +19,8 @@ import {
   legalworkThreadTurnsPath,
   legalworkThreadTurnPath
 } from '../../../../shared/legalwork-endpoints'
+import { resolveAgentTaskModel } from '../../agent/agent-task-model'
+import { rendererRuntimeClient } from '../../agent/runtime-client'
 import { useChatStore } from '../../store/chat-store'
 import { AnimatedWorkLogo } from '../chat/AnimatedWorkLogo'
 import { AssistantMarkdown } from '../chat/AssistantMarkdown'
@@ -526,20 +528,23 @@ export function KnowledgeBaseFileView({
   const composerModelGroups = useChatStore((s) => s.composerModelGroups)
   const setComposerModel = useChatStore((s) => s.setComposerModel)
   const loadComposerModels = useChatStore((s) => s.loadComposerModels)
-  const activeModel = composerModel.trim() || 'auto'
-  // Knowledge-base Q&A is cost-sensitive: when the user has not explicitly
-  // picked a model, default to the cheap DeepSeek flash instead of falling
-  // back to the runtime model (which defaults to pro and costs ~3x more).
-  const KNOWLEDGE_BASE_DEFAULT_MODEL = 'deepseek-v4-flash'
-  const effectiveModel =
-    activeModel && activeModel !== 'auto'
-      ? activeModel
-      : KNOWLEDGE_BASE_DEFAULT_MODEL
+  const [runtimeAgentModel, setRuntimeAgentModel] = useState('')
+  const effectiveModel = resolveAgentTaskModel(composerModel, runtimeAgentModel)
   const modelBrand = brandForModel(effectiveModel, composerModelGroups)
 
   useEffect(() => {
     void loadComposerModels()
   }, [loadComposerModels])
+
+  useEffect(() => {
+    let cancelled = false
+    void rendererRuntimeClient.getSettings().then((settings) => {
+      if (!cancelled) setRuntimeAgentModel(settings.agents.legalwork.model)
+    }).catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [composerModel])
 
   const pushOrUpdateToolMessage = useCallback((tool: KnowledgeToolMessageInput): void => {
     const id = `tool_${tool.itemId}`
@@ -627,6 +632,9 @@ export function KnowledgeBaseFileView({
     setLiveAssistant('')
 
     try {
+      const settings = await rendererRuntimeClient.getSettings()
+      const requestModel = resolveAgentTaskModel(composerModel, settings.agents.legalwork.model)
+      setRuntimeAgentModel(settings.agents.legalwork.model)
       setRetrieving(true)
       const retrievalQuery = `${question.trim()} ${node.name} ${node.path}`
       const retrieval = await requestJson<KnowledgeRetrievalResult>(
@@ -699,7 +707,7 @@ ${KNOWLEDGE_DIRECT_ANSWER_INSTRUCTION}
           {
             workspace,
             title: knowledgeFileChatTitle(node.name, question.trim()),
-            model: effectiveModel,
+            model: requestModel,
             mode: 'agent',
             relation: 'side'
           }
@@ -712,7 +720,7 @@ ${KNOWLEDGE_DIRECT_ANSWER_INSTRUCTION}
       const turnResponse = await requestJson<{ turnId: string }>(
         legalworkThreadTurnsPath(threadId),
         'POST',
-        { prompt, model: effectiveModel }
+        { prompt, model: requestModel }
       )
       const turnId = turnResponse.turnId
 
@@ -811,7 +819,7 @@ ${KNOWLEDGE_DIRECT_ANSWER_INSTRUCTION}
       if (chatAbortRef.current === abort) chatAbortRef.current = null
       setSending(false)
     }
-  }, [effectiveModel, fileContent, node, pendingQuote, pollTurnCompletion, pushOrUpdateToolMessage, sending, activeChatThreadId, onChatThreadsChange])
+  }, [composerModel, fileContent, node, pendingQuote, pollTurnCompletion, pushOrUpdateToolMessage, sending, activeChatThreadId, onChatThreadsChange])
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>): void => {
     if (e.key === 'Enter' && !e.shiftKey) {

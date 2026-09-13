@@ -1,19 +1,28 @@
 import { type CSSProperties, type ReactElement, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
+  BUILTIN_MODEL_PROVIDER_PRESETS,
+  DEFAULT_MODEL_PROVIDER_ID,
+  getBuiltinModelProviderPreset,
   getLegalworkRuntimeSettings,
   getModelProviderProfile,
-  getModelProviderSettings,
   isLegalworkModelAuthConfigured,
-  normalizeAppSettings,
-  withLegalworkRuntimeSettings,
+  legalworkSettingsPatch,
   type AppSettingsPatch,
   type AppSettingsV1
 } from '@shared/app-settings'
+import type { CodexAuthStatus } from '@shared/ds-gui-api'
 import { rendererRuntimeClient } from '../agent/runtime-client'
 import { applyTheme } from '../lib/apply-theme'
 import { useChatStore } from '../store/chat-store'
 import { CheckCircle2, Eye, EyeOff, ExternalLink, Loader2, LogIn, Sparkles, Sun, Moon, Monitor, X } from 'lucide-react'
+import { ModelListPicker } from './settings-model-list-picker'
+import {
+  mergeSettings,
+  selectModelProviderPatch,
+  updateModelProviderBaseUrlPatch,
+  updateModelProviderProfilePatch
+} from './settings-utils'
 
 type ThemePref = AppSettingsV1['theme']
 type SetupFormPatch = AppSettingsPatch
@@ -38,10 +47,13 @@ export function InitialSetupDialog(): ReactElement {
   const [showApiKey, setShowApiKey] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [codexLoggedIn, setCodexLoggedIn] = useState(false)
+  const [codexAuthStatus, setCodexAuthStatus] = useState<CodexAuthStatus | null>(null)
   const isPreview = initialSetupMode === 'preview'
-  const provider = form ? getModelProviderSettings(form) : null
   const runtime = form ? getLegalworkRuntimeSettings(form) : null
+  const activeProviderId = runtime?.providerId || DEFAULT_MODEL_PROVIDER_ID
+  const activeProvider = form ? getModelProviderProfile(form, activeProviderId) : null
+  const activeProviderPreset = activeProvider ? getBuiltinModelProviderPreset(activeProvider.id) : null
+  const codexLoggedIn = codexAuthStatus?.loggedIn === true
 
   useEffect(() => {
     let cancelled = false
@@ -56,33 +68,49 @@ export function InitialSetupDialog(): ReactElement {
     return () => { cancelled = true }
   }, [])
 
+  useEffect(() => {
+    if (runtime?.authMode !== 'chatgpt') return
+    let cancelled = false
+    void window.dsGui.getCodexAuthStatus(false)
+      .then((status) => {
+        if (!cancelled) setCodexAuthStatus(status)
+      })
+      .catch(() => undefined)
+    return () => { cancelled = true }
+  }, [runtime?.authMode])
+
   const updateForm = (patch: SetupFormPatch) => {
     if (!form) return
-    const next = normalizeAppSettings({
-      ...form,
-      ...patch,
-      provider: {
-        ...form.provider,
-        ...(patch.provider ?? {})
-      }
-    } as AppSettingsV1)
-    setForm(next)
+    setForm(mergeSettings(form, patch))
   }
 
-  const updateProvider = (patch: Partial<AppSettingsV1['provider']>): void => {
-    updateForm({ provider: patch })
+  const updateActiveProvider = (patch: Parameters<typeof updateModelProviderProfilePatch>[2]): void => {
+    if (!form || !activeProvider) return
+    updateForm(updateModelProviderProfilePatch(form, activeProvider.id, patch))
+  }
+
+  const selectModelProvider = (providerId: string): void => {
+    if (!form) return
+    updateForm(selectModelProviderPatch(form, providerId))
+  }
+
+  const updateActiveProviderModels = (models: string[]): void => {
+    if (!form || !activeProvider || !runtime) return
+    const providerPatch = updateModelProviderProfilePatch(form, activeProvider.id, { models })
+    const nextModel = models.includes(runtime.model) ? runtime.model : models[0]
+    updateForm({
+      ...providerPatch,
+      ...(nextModel ? { agents: legalworkSettingsPatch({ model: nextModel }) } : {})
+    })
   }
 
   const selectAuthMode = (authMode: 'api_key' | 'chatgpt'): void => {
     if (!form) return
-    setForm(withLegalworkRuntimeSettings(form, {
-      ...getLegalworkRuntimeSettings(form),
-      authMode
-    }))
+    updateForm({ agents: legalworkSettingsPatch({ authMode }) })
     setError(null)
     if (authMode === 'chatgpt') {
       void window.dsGui.getCodexAuthStatus(false).then((status) => {
-        setCodexLoggedIn(status.loggedIn)
+        setCodexAuthStatus(status)
       }).catch(() => undefined)
     }
   }
@@ -97,13 +125,14 @@ export function InitialSetupDialog(): ReactElement {
         setError(result.message)
         return
       }
-      setCodexLoggedIn(true)
+      setCodexAuthStatus(result.status)
       const model = result.status.models.find((item) => item.isDefault)?.id ?? result.status.models[0]?.id
-      setForm(withLegalworkRuntimeSettings(form, {
-        ...getLegalworkRuntimeSettings(form),
-        authMode: 'chatgpt',
-        ...(model ? { model } : {})
-      }))
+      updateForm({
+        agents: legalworkSettingsPatch({
+          authMode: 'chatgpt',
+          ...(model ? { model } : {})
+        })
+      })
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally {
@@ -136,6 +165,7 @@ export function InitialSetupDialog(): ReactElement {
     }
     if (getLegalworkRuntimeSettings(form).authMode === 'chatgpt' && !codexLoggedIn) {
       const status = await window.dsGui.getCodexAuthStatus(true)
+      setCodexAuthStatus(status)
       if (!status.loggedIn) {
         setError(t('codexAuthNotConnected'))
         return
@@ -144,18 +174,22 @@ export function InitialSetupDialog(): ReactElement {
     setSaving(true)
     setError(null)
     try {
-      // The first-run dialog edits the shared/default model-provider API key.
-      // The Legalwork runtime is configured to use a specific provider profile
-      // (providerId), so copy the active provider's key into the runtime's own
-      // apiKey override. This makes the configuration stick even when the
-      // runtime provider is not the default deepseek profile.
       const runtime = getLegalworkRuntimeSettings(form)
       const activeProvider = getModelProviderProfile(form, runtime.providerId)
-      const formWithAgentKey = withLegalworkRuntimeSettings(form, {
-        ...runtime,
-        apiKey: activeProvider.apiKey.trim() || runtime.apiKey.trim()
-      })
-      const next = await rendererRuntimeClient.setSettings(formWithAgentKey)
+      const formWithRuntimeModel = runtime.authMode === 'api_key'
+        ? mergeSettings(form, {
+            agents: legalworkSettingsPatch({
+              providerId: activeProvider.id,
+              apiKey: activeProvider.apiKey.trim(),
+              baseUrl: activeProvider.baseUrl.trim(),
+              endpointFormat: activeProvider.endpointFormat ?? '',
+              model: activeProvider.models.includes(runtime.model)
+                ? runtime.model
+                : activeProvider.models[0] || runtime.model
+            })
+          })
+        : form
+      const next = await rendererRuntimeClient.setSettings(formWithRuntimeModel)
       setForm(next)
       await applyI18n(next.locale)
       void reloadUiSettings()
@@ -190,7 +224,7 @@ export function InitialSetupDialog(): ReactElement {
     'w-full rounded-xl border border-slate-300/75 bg-white/88 px-4 py-3 text-[15px] text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] outline-none transition focus:border-[#1388ff]/70 focus:ring-2 focus:ring-[#1388ff]/15 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:shadow-none dark:focus:border-[#3aa0ff]/70 dark:focus:ring-[#3aa0ff]/15 dark:placeholder:text-slate-500'
   const labelClass = 'text-sm font-semibold text-slate-700 dark:text-slate-200'
   const apiKeyMaskStyle: MaskedInputStyle | undefined =
-    !showApiKey && provider?.apiKey ? { WebkitTextSecurity: 'disc' } : undefined
+    !showApiKey && activeProvider?.apiKey ? { WebkitTextSecurity: 'disc' } : undefined
 
   return (
     <div className="ds-no-drag fixed inset-0 z-50 overflow-y-auto bg-[#eef2fb]/45 p-3 backdrop-blur-[18px] dark:bg-black/62 dark:backdrop-blur-[22px] sm:p-6">
@@ -293,14 +327,20 @@ export function InitialSetupDialog(): ReactElement {
           </div>
 
           {runtime?.authMode === 'chatgpt' ? (
-            <div className="rounded-xl border border-slate-200/80 bg-slate-50/75 px-4 py-4 dark:border-white/10 dark:bg-white/[0.035]">
+            <div className="space-y-4 rounded-xl border border-slate-200/80 bg-slate-50/75 px-4 py-4 dark:border-white/10 dark:bg-white/[0.035]">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
+                <div className="min-w-0">
                   <div className="flex items-center gap-2 text-[13px] font-semibold text-slate-800 dark:text-slate-100">
-                    {codexLoggedIn ? <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-300" /> : null}
-                    {t(codexLoggedIn ? 'codexAuthConnected' : 'codexAuthNotConnected')}
+                    {codexLoggedIn ? <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-300" /> : null}
+                    <span>{t(codexLoggedIn ? 'codexAuthConnected' : 'codexAuthNotConnected')}</span>
                   </div>
-                  <p className="mt-1 text-[12.5px] leading-5 text-slate-500 dark:text-slate-400">{t('codexAuthHint')}</p>
+                  {codexLoggedIn ? (
+                    <p className="mt-1 truncate text-[12.5px] leading-5 text-slate-500 dark:text-slate-400">
+                      {[codexAuthStatus?.email, codexAuthStatus?.planType].filter(Boolean).join(' · ')}
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-[12.5px] leading-5 text-slate-500 dark:text-slate-400">{t('codexAuthHint')}</p>
+                  )}
                 </div>
                 {!codexLoggedIn ? (
                   <button
@@ -314,61 +354,135 @@ export function InitialSetupDialog(): ReactElement {
                   </button>
                 ) : null}
               </div>
+              {codexLoggedIn && codexAuthStatus?.models.length ? (
+                <div className="space-y-2.5 border-t border-slate-200/75 pt-4 dark:border-white/10">
+                  <label className={labelClass}>{t('legalworkModel')}</label>
+                  <select
+                    value={runtime.model}
+                    onChange={(e) => updateForm({ agents: legalworkSettingsPatch({ model: e.target.value }) })}
+                    className={fieldClass}
+                  >
+                    {!codexAuthStatus.models.some((model) => model.id === runtime.model) && runtime.model ? (
+                      <option value={runtime.model}>{runtime.model}</option>
+                    ) : null}
+                    {codexAuthStatus.models.map((model) => (
+                      <option key={model.id} value={model.id}>
+                        {model.displayName}{model.isDefault ? ` · ${t('codexModelDefault')}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : null}
             </div>
-          ) : <>
-          <div className="space-y-2.5 sm:space-y-3.5">
-            <label className={labelClass}>
-              {t('apiKey')}
-            </label>
-            <div className="relative">
+          ) : activeProvider ? <>
+            <div className="space-y-2.5 sm:space-y-3.5">
+              <label className={labelClass}>{t('modelProvider')}</label>
+              <select
+                value={activeProvider.id}
+                onChange={(e) => selectModelProvider(e.target.value)}
+                className={fieldClass}
+              >
+                {BUILTIN_MODEL_PROVIDER_PRESETS.map((preset) => (
+                  <option key={preset.id} value={preset.id}>{preset.name}</option>
+                ))}
+              </select>
+              <p className="text-[12.5px] leading-5 text-slate-500 dark:text-slate-400">{t('modelProviderDesc')}</p>
+            </div>
+
+            <div className="space-y-2.5 sm:space-y-3.5">
+              <label className={labelClass}>{t('apiKey')}</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={activeProvider.apiKey}
+                  onChange={(e) => updateActiveProvider({ apiKey: e.target.value })}
+                  placeholder={activeProviderPreset?.apiKeyPlaceholder ?? 'sk-...'}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  style={apiKeyMaskStyle}
+                  className={`${fieldClass} pr-12 font-mono placeholder:font-sans`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowApiKey((v) => !v)}
+                  className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-white/[0.06] dark:hover:text-slate-300"
+                >
+                  {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <div className="grid gap-3 rounded-xl border border-slate-200/80 bg-slate-50/75 px-4 py-3 text-[13px] text-slate-500 dark:border-white/10 dark:bg-white/[0.035] dark:text-slate-400 min-[560px]:grid-cols-[1fr_auto] min-[560px]:items-center">
+                <p className="min-w-0 leading-6">{t('firstRunBuyApiHint')}</p>
+                {activeProvider.id === DEFAULT_MODEL_PROVIDER_ID ? (
+                  <button
+                    type="button"
+                    onClick={handleOpenOfficialApiPage}
+                    className="inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-[#1388ff]/24 bg-[#1388ff]/[0.06] px-3 py-1.5 text-[12.5px] font-semibold text-[#1377df] transition hover:bg-[#1388ff]/[0.1] dark:border-[#3aa0ff]/22 dark:bg-[#3aa0ff]/[0.12] dark:text-[#88c8ff] dark:hover:bg-[#3aa0ff]/[0.18]"
+                  >
+                    <span className="min-w-0 text-center leading-tight">{t('firstRunBuyApiAction')}</span>
+                    <ExternalLink className="h-3.5 w-3.5" strokeWidth={1.9} />
+                  </button>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="space-y-2.5 sm:space-y-3.5">
+              <label className={labelClass}>{t('baseUrl')}</label>
               <input
                 type="text"
-                value={provider?.apiKey ?? ''}
-                onChange={(e) => updateProvider({ apiKey: e.target.value })}
-                placeholder="sk-..."
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
-                spellCheck={false}
-                style={apiKeyMaskStyle}
-                className={`${fieldClass} pr-12 font-mono placeholder:font-sans`}
+                value={activeProvider.baseUrl}
+                onChange={(e) => updateForm(updateModelProviderBaseUrlPatch(form, activeProvider.id, e.target.value))}
+                placeholder={activeProviderPreset?.baseUrl ?? t('baseUrlPlaceholder')}
+                className={fieldClass}
               />
-              <button
-                type="button"
-                onClick={() => setShowApiKey((v) => !v)}
-                className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-white/[0.06] dark:hover:text-slate-300"
-              >
-                {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
             </div>
-            <div className="grid gap-3 rounded-xl border border-slate-200/80 bg-slate-50/75 px-4 py-3 text-[13px] text-slate-500 dark:border-white/10 dark:bg-white/[0.035] dark:text-slate-400 min-[560px]:grid-cols-[1fr_auto] min-[560px]:items-center">
-              <p className="min-w-0 leading-6">
-                {t('firstRunBuyApiHint')}
-              </p>
-              <button
-                type="button"
-                onClick={handleOpenOfficialApiPage}
-                className="inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-[#1388ff]/24 bg-[#1388ff]/[0.06] px-3 py-1.5 text-[12.5px] font-semibold text-[#1377df] transition hover:bg-[#1388ff]/[0.1] dark:border-[#3aa0ff]/22 dark:bg-[#3aa0ff]/[0.12] dark:text-[#88c8ff] dark:hover:bg-[#3aa0ff]/[0.18]"
-              >
-                <span className="min-w-0 text-center leading-tight">{t('firstRunBuyApiAction')}</span>
-                <ExternalLink className="h-3.5 w-3.5" strokeWidth={1.9} />
-              </button>
-            </div>
-          </div>
 
-          <div className="space-y-2.5 sm:space-y-3.5">
-            <label className={labelClass}>
-              {t('baseUrl')}
-            </label>
-            <input
-              type="text"
-              value={provider?.baseUrl ?? ''}
-              onChange={(e) => updateProvider({ baseUrl: e.target.value })}
-              placeholder="https://api.deepseek.com"
-              className={fieldClass}
-            />
-          </div>
-          </>}
+            <div className="space-y-2.5 sm:space-y-3.5">
+              <label className={labelClass}>{t('endpointFormat')}</label>
+              <select
+                value={activeProvider.endpointFormat || 'chat_completions'}
+                onChange={(e) => updateActiveProvider({ endpointFormat: e.target.value })}
+                className={fieldClass}
+              >
+                <option value="chat_completions">{t('endpointFormatChat')}</option>
+                <option value="responses">{t('endpointFormatResponses')}</option>
+                <option value="messages">{t('endpointFormatMessages')}</option>
+              </select>
+              <p className="text-[12.5px] leading-5 text-slate-500 dark:text-slate-400">{t('endpointFormatDesc')}</p>
+            </div>
+
+            <div className="space-y-2.5 sm:space-y-3.5">
+              <label className={labelClass}>{t('modelProviderModels')}</label>
+              <ModelListPicker
+                providerId={activeProvider.id}
+                endpointFormat={activeProvider.endpointFormat}
+                baseUrl={activeProvider.baseUrl}
+                apiKey={activeProvider.apiKey}
+                models={activeProvider.models}
+                onChange={updateActiveProviderModels}
+                t={t}
+              />
+              <p className="text-[12.5px] leading-5 text-slate-500 dark:text-slate-400">{t('modelProviderModelsDesc')}</p>
+            </div>
+
+            <div className="space-y-2.5 sm:space-y-3.5">
+              <label className={labelClass}>{t('legalworkModel')}</label>
+              <select
+                value={runtime?.model ?? ''}
+                onChange={(e) => updateForm({ agents: legalworkSettingsPatch({ model: e.target.value }) })}
+                className={fieldClass}
+              >
+                {runtime?.model && !activeProvider.models.includes(runtime.model) ? (
+                  <option value={runtime.model}>{runtime.model}</option>
+                ) : null}
+                {activeProvider.models.map((model) => (
+                  <option key={model} value={model}>{model}</option>
+                ))}
+              </select>
+              <p className="text-[12.5px] leading-5 text-slate-500 dark:text-slate-400">{t('legalworkModelDesc')}</p>
+            </div>
+          </> : null}
         </div>
 
         <div className="shrink-0 space-y-3 border-t border-slate-200/72 bg-white/70 px-5 pb-4 pt-3.5 dark:border-white/10 dark:bg-white/[0.025] sm:space-y-4 sm:px-7 sm:pb-6 sm:pt-4">

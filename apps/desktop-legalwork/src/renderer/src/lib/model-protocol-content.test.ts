@@ -23,4 +23,15 @@ describe('stripModelProtocolContent', () => {
       '答案正文。\n<DSML tool_calls>\n<invoke name="bash">\n</invoke>\n</DSML tool_calls>'
     )).toBe('答案正文。')
   })
+
+  it('strips DeepSeek DSML calls frames used by the live provider', () => {
+    expect(stripModelProtocolContent([
+      '答案正文。',
+      '<| |DSML| | calls>',
+      '<| |DSML| | invoke name="document_skill_execute">',
+      '<| |DSML| | parameter name="kind" string="true">docx</| |DSML| | parameter>',
+      '</| |DSML| | invoke>',
+      '</| |DSML| | calls>'
+    ].join('\n'))).toBe('答案正文。')
+  })
 })

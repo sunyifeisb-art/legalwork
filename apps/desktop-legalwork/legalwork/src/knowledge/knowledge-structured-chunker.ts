@@ -45,7 +45,7 @@ export function chunkKnowledgeDocument(
   content: string,
   documentHash: string
 ): IndexedKnowledgeChunk[] {
-  const normalized = content.replace(/\r\n/g, '\n').replace(/\u0000/g, '')
+  const normalized = content.replace(/\r\n/g, '\n').split('\u0000').join('')
   const sections = splitStructuredSections(normalized)
   const chunks: IndexedKnowledgeChunk[] = []
   let chunkIndex = 0

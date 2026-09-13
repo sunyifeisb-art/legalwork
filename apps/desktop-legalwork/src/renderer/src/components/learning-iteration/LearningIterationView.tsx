@@ -82,7 +82,7 @@ function MetricCard({
 function CountSummary({ counts }: { counts: LearningIterationCounts }): ReactElement {
   const { t } = useTranslation('common')
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
       <MetricCard icon={<Database className="h-4 w-4" />} label={t('learningSources')} value={counts.sources} />
       <MetricCard
         icon={<MemoryStick className="h-4 w-4" />}
@@ -96,6 +96,12 @@ function CountSummary({ counts }: { counts: LearningIterationCounts }): ReactEle
         value={counts.skillsCreated + counts.skillsUpdated}
         detail={`+${counts.skillsCreated} · ↻${counts.skillsUpdated}`}
       />
+      <MetricCard
+        icon={<BookOpenCheck className="h-4 w-4" />}
+        label={t('learningKnowledgeNotes')}
+        value={counts.knowledgeNotesCreated + counts.knowledgeNotesUpdated}
+        detail={`+${counts.knowledgeNotesCreated} · ↻${counts.knowledgeNotesUpdated}`}
+      />
       <MetricCard icon={<ShieldCheck className="h-4 w-4" />} label={t('learningRejected')} value={counts.rejected} />
     </div>
   )
@@ -107,6 +113,10 @@ function learningChangeCount(counts: LearningIterationCounts): number {
 
 function skillChangeCount(counts: LearningIterationCounts): number {
   return counts.skillsCreated + counts.skillsUpdated
+}
+
+function knowledgeNoteChangeCount(counts: LearningIterationCounts): number {
+  return counts.knowledgeNotesCreated + counts.knowledgeNotesUpdated
 }
 
 function OutcomeBar({
@@ -140,8 +150,9 @@ function LearningOutcomeReport({ detail }: { detail: LearningIterationRecordDeta
   const { counts } = detail.summary
   const learnedCount = learningChangeCount(counts)
   const methodCount = skillChangeCount(counts)
-  const acceptedCount = learnedCount + methodCount
-  const chartMax = Math.max(counts.sources, learnedCount, methodCount, 1)
+  const knowledgeCount = knowledgeNoteChangeCount(counts)
+  const acceptedCount = learnedCount + methodCount + knowledgeCount
+  const chartMax = Math.max(counts.sources, learnedCount, methodCount, knowledgeCount, 1)
 
   return (
     <div className="space-y-4">
@@ -168,11 +179,12 @@ function LearningOutcomeReport({ detail }: { detail: LearningIterationRecordDeta
           </div>
         </div>
 
-        <div className="grid grid-cols-2 divide-x divide-y divide-ds-border-muted border-t border-ds-border-muted md:grid-cols-4 md:divide-y-0">
+        <div className="grid grid-cols-2 divide-x divide-y divide-ds-border-muted border-t border-ds-border-muted md:grid-cols-5 md:divide-y-0">
           {[
             { label: t('learningReviewedContent'), value: counts.sources, detail: t('learningReviewedContentHint') },
             { label: t('learningUnderstandsYou'), value: learnedCount, detail: t('learningUnderstandsYouHint') },
             { label: t('learningNewMethods'), value: methodCount, detail: t('learningNewMethodsHint') },
+            { label: t('learningKnowledgeNotes'), value: knowledgeCount, detail: t('learningKnowledgeNotesHint') },
             { label: t('learningCarefulFiltering'), value: counts.rejected, detail: t('learningCarefulFilteringHint') }
           ].map((item) => (
             <div key={item.label} className="px-5 py-4">
@@ -196,12 +208,14 @@ function LearningOutcomeReport({ detail }: { detail: LearningIterationRecordDeta
             aria-label={t('learningOutcomeChartAria', {
               sources: counts.sources,
               learned: learnedCount,
-              methods: methodCount
+              methods: methodCount,
+              knowledge: knowledgeCount
             })}
           >
             <OutcomeBar label={t('learningReviewedContent')} value={counts.sources} max={chartMax} tone="bg-accent" />
             <OutcomeBar label={t('learningUnderstandsYou')} value={learnedCount} max={chartMax} tone="bg-emerald-500" />
             <OutcomeBar label={t('learningNewMethods')} value={methodCount} max={chartMax} tone="bg-violet-500" />
+            <OutcomeBar label={t('learningKnowledgeNotes')} value={knowledgeCount} max={chartMax} tone="bg-amber-500" />
           </div>
           <p className="mt-5 text-[11px] leading-5 text-ds-faint">{t('learningOutcomeChartHint')}</p>
         </div>

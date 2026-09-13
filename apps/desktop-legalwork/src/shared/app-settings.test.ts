@@ -485,7 +485,7 @@ describe('legacy Legalwork defaults migration', () => {
     }))
   })
 
-  it('preserves a non-legacy Legalwork model override', () => {
+  it('migrates the legacy v4 flash model id to the current flash id', () => {
     const migrated = migrateLegacyAppSettings({
       version: 1,
       agents: {
@@ -498,7 +498,7 @@ describe('legacy Legalwork defaults migration', () => {
 
     expect(migrated.agents?.legalwork).toEqual(expect.objectContaining({
       dataDir: '/tmp/custom-legalwork',
-      model: 'deepseek-v4-flash'
+      model: 'deepseek-flash'
     }))
   })
 })
@@ -646,13 +646,13 @@ describe('write inline completion runtime config', () => {
     expect(resolveWriteInlineCompletionModel(state)).toBe('deepseek-chat')
   })
 
-  it('keeps an explicit flash override when write disables inheritance', () => {
+  it('normalizes a legacy explicit flash override when write disables inheritance', () => {
     const state = settings()
     state.agents.legalwork.model = 'deepseek-chat'
     state.write.inlineCompletion.inheritModel = false
     state.write.inlineCompletion.model = 'deepseek-v4-flash'
 
-    expect(resolveWriteInlineCompletionModel(state)).toBe('deepseek-v4-flash')
+    expect(resolveWriteInlineCompletionModel(state)).toBe('deepseek-flash')
   })
 
   it('preserves an explicit request model before any fallback', () => {

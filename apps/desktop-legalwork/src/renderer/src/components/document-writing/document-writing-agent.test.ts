@@ -4,11 +4,21 @@ import {
   createDocumentWritingStages,
   documentWritingStageForTool,
   excerptSourceText,
+  resolveDocumentWritingModel,
   resolveDocumentWritingContent
 } from './document-writing-agent'
 import { DOCUMENT_SUBJECT_FIELD_ID } from '../../../../shared/user-templates'
 
 describe('document-writing agent workflow', () => {
+  it('inherits the current Agent model and defaults API auto-routing to DeepSeek Flash', () => {
+    expect(resolveDocumentWritingModel('gpt-5.6')).toBe('gpt-5.6')
+    expect(resolveDocumentWritingModel(' deepseek-flash ')).toBe('deepseek-flash')
+    expect(resolveDocumentWritingModel('', 'kimi-for-coding')).toBe('kimi-for-coding')
+    expect(resolveDocumentWritingModel('auto', 'deepseek-flash')).toBe('deepseek-flash')
+    expect(resolveDocumentWritingModel('auto')).toBe('deepseek-flash')
+    expect(resolveDocumentWritingModel('')).toBe('deepseek-flash')
+  })
+
   it('keeps legal research optional while preserving source safeguards', () => {
     const prompt = buildDocumentWritingAgentPrompt({
       template: {

@@ -234,7 +234,7 @@ function normalizeModelId(model: string | undefined): string {
 function knownModelContextProfile(input: string | undefined): { modelLabel: string } | null {
   const normalized = normalizeModelId(input)
   if (!normalized) return null
-  const match = ['deepseek-v4-pro', 'deepseek-v4-flash', 'deepseek-chat', 'deepseek-reasoner']
+  const match = ['deepseek-v4-pro', 'deepseek-flash', 'deepseek-v4-flash', 'deepseek-chat', 'deepseek-reasoner']
     .find((modelId) => normalized === modelId || normalized.endsWith(`/${modelId}`))
   return match ? { modelLabel: match } : null
 }
@@ -896,7 +896,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                               <textarea
                                 className="min-h-24 w-full min-w-0 resize-y rounded-xl border border-ds-border bg-ds-card px-3 py-2 font-mono text-[12.5px] font-normal text-ds-ink shadow-sm focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/30"
                                 value={activeProvider.models.join('\n')}
-                                placeholder="deepseek-v4-pro&#10;deepseek-v4-flash"
+                                placeholder="deepseek-v4-pro&#10;deepseek-flash"
                                 onChange={(e) => updateModelProvider(activeProvider.id, {
                                   models: e.target.value.split('\n').map((item) => item.trim()).filter(Boolean)
                                 })}

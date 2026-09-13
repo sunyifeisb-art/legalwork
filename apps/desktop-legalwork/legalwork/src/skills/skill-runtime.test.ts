@@ -75,7 +75,7 @@ describe('SkillRuntime', () => {
       expect(runtime.diagnostics().skills).toContainEqual(expect.objectContaining({
         name: 'background-skill'
       }))
-    })
+    }, { timeout: 5_000 })
   })
 
   it('finds nested skills from legal work keywords without auto-injecting them', async () => {

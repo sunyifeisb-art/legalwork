@@ -130,6 +130,34 @@ describe('DSML full-width and mixed-format stripping', () => {
     expect(stripDsmlToolCalls(text)).toBe('')
   })
 
+  it('handles the live DeepSeek `calls` wrapper without leaking protocol text', () => {
+    const text = [
+      '知识库概览如下。',
+      '<| |DSML| | calls>',
+      '<| |DSML| | invoke name="document_skill_execute">',
+      '<| |DSML| | parameter name="kind" string="true">docx</| |DSML| | parameter>',
+      '<| |DSML| | parameter name="operation" string="true">from-markdown</| |DSML| | parameter>',
+      '<| |DSML| | parameter name="outputPath" string="true">知识库内容概览.docx</| |DSML| | parameter>',
+      '</| |DSML| | invoke>',
+      '</| |DSML| | calls>',
+      '以上为当前知识库内容。'
+    ].join('\n')
+
+    expect(looksLikeDsmlToolCalls(text)).toBe(true)
+    expect(recoverDsmlToolCalls(text, new Set(['document_skill_execute']))).toEqual({
+      calls: [{
+        toolName: 'document_skill_execute',
+        arguments: {
+          kind: 'docx',
+          operation: 'from-markdown',
+          outputPath: '知识库内容概览.docx'
+        }
+      }],
+      visibleText: '知识库概览如下。\n\n以上为当前知识库内容。'
+    })
+    expect(stripDsmlToolCalls(text)).toBe('知识库概览如下。\n\n以上为当前知识库内容。')
+  })
+
   it('recovers and strips the exact live frame whose final closing bracket is missing', () => {
     const text = [
       '<｜｜DSML｜｜tool_calls>',
@@ -159,6 +187,7 @@ describe('DSML full-width and mixed-format stripping', () => {
       '<｜｜DSML｜｜tool_calls>\n<｜｜DSML｜｜invoke name="bash"></｜｜DSML｜｜invoke>\n</｜｜DSML｜｜tool_calls'
     ]
     for (const value of chunks) expect(isPotentialDsmlToolCallStream(value)).toBe(true)
+    expect(isPotentialDsmlToolCallStream('<| |DSML| | calls>\n<| |DSML| | inv')).toBe(true)
     expect(isPotentialDsmlToolCallStream('< 5 是一个普通数学表达式')).toBe(false)
   })
 

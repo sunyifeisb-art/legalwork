@@ -111,7 +111,7 @@ export async function runClawScheduleMcpServerFromArgv(argv: string[]): Promise<
         time_of_day: z.string().optional().describe('24h time like 09:00, required when schedule_kind is `daily`'),
         every_minutes: z.number().int().min(1).max(10080).optional().describe('Interval in minutes, required when schedule_kind is `interval`'),
         workspace_root: z.string().optional().describe('Optional workspace directory override'),
-        model: z.string().optional().describe('Optional model id, e.g. auto / deepseek-v4-pro / deepseek-v4-flash'),
+        model: z.string().optional().describe('Optional model id, e.g. auto / deepseek-v4-pro / deepseek-flash'),
         reasoning_effort: z.enum(['off', 'low', 'medium', 'high', 'max']).optional().describe('Optional reasoning strength'),
         mode: z.enum(['agent', 'plan']).optional().describe('Execution mode'),
         enabled: z.boolean().optional().describe('Whether the task should be enabled immediately')

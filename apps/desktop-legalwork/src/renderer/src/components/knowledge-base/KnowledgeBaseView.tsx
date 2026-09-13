@@ -26,6 +26,8 @@ import {
   X
 } from 'lucide-react'
 import { getProvider } from '../../agent/registry'
+import { resolveAgentTaskModel } from '../../agent/agent-task-model'
+import { useChatStore } from '../../store/chat-store'
 import { AssistantMarkdown } from '../chat/AssistantMarkdown'
 import { resolveOrbState } from '../chat/orb-state'
 import { ThinkingOrbStatus } from '../chat/ThinkingOrbStatus'
@@ -52,6 +54,7 @@ import {
   KNOWLEDGE_DIRECT_ANSWER_INSTRUCTION,
   knowledgeChatHistoryFromBlocks,
   markKnowledgeSourceReferences,
+  stripKnowledgeDsmlProtocol,
   stripRepeatedKnowledgeQuestionLead
 } from './knowledge-chat-history'
 import { scheduleKnowledgeUploadFeedbackDismiss } from './knowledge-upload-feedback'
@@ -461,6 +464,7 @@ export function KnowledgeBaseView({
   onSelectThread,
   onChatThreadsChange
 }: KnowledgeBaseViewProps): ReactElement {
+  const composerModel = useChatStore((state) => state.composerModel)
   const [tree, setTree] = useState<TreeNode[]>([])
   const [currentPath, setCurrentPath] = useState('')
   const [query, setQuery] = useState('')
@@ -911,7 +915,7 @@ export function KnowledgeBaseView({
           ?.filter((item) => item.kind === 'assistant_text' && item.text)
           .map((item) => item.text ?? '')
           .join('\n\n') || ''
-        return { content: textItems, reasoning: reasoningItems }
+        return { content: stripKnowledgeDsmlProtocol(textItems), reasoning: reasoningItems }
       }
       if (turnData.status === 'failed') {
         throw new Error(turnData.error || 'AI 响应失败')
@@ -990,11 +994,11 @@ ${KNOWLEDGE_DIRECT_ANSWER_INSTRUCTION}
 
       // Reuse the active knowledge-chat thread if one exists; otherwise create a side thread.
       const workspace = await getWorkspaceRoot()
-      // Knowledge-base Q&A defaults to the cheap flash model. If the user has
-      // explicitly configured a model (e.g. pro), respect that choice.
+      // Follow the current main-Agent selection. When the composer is on auto,
+      // fall back to the concrete runtime model and finally DeepSeek Flash.
       const settings = await window.dsGui.getSettings()
       const configuredModel = settings?.agents?.legalwork?.model?.trim()
-      const threadModel = configuredModel || 'deepseek-v4-flash'
+      const threadModel = resolveAgentTaskModel(composerModel, configuredModel)
       let threadId = activeChatThreadId
       if (!threadId) {
         const threadResult = await requestJson<{ id: string }>(
@@ -1040,7 +1044,10 @@ ${KNOWLEDGE_DIRECT_ANSWER_INSTRUCTION}
                 setLiveReasoning(streamedReasoning)
               } else {
                 streamedAssistant += delta.text
-                setLiveAssistant(stripRepeatedKnowledgeQuestionLead(streamedAssistant, question))
+                setLiveAssistant(stripRepeatedKnowledgeQuestionLead(
+                  stripKnowledgeDsmlProtocol(streamedAssistant),
+                  question
+                ))
               }
             }
           },
@@ -1071,7 +1078,7 @@ ${KNOWLEDGE_DIRECT_ANSWER_INSTRUCTION}
       // Convert [来源 N] references to safe in-app hash links. Custom URL
       // protocols are rejected by the Markdown hardener and render [blocked].
       const markedUp = markKnowledgeSourceReferences(stripRepeatedKnowledgeQuestionLead(
-        assistantMsg.content || streamedAssistant,
+        stripKnowledgeDsmlProtocol(assistantMsg.content || streamedAssistant),
         question
       ))
       const finalReasoning = assistantMsg.reasoning.trim() || streamedReasoning.trim()
@@ -1096,7 +1103,7 @@ ${KNOWLEDGE_DIRECT_ANSWER_INSTRUCTION}
         setChatSending(false)
       }
     }
-  }, [chatSending, currentPath, activeChatThreadId, onChatThreadsChange, pollKnowledgeChat])
+  }, [chatSending, currentPath, activeChatThreadId, composerModel, onChatThreadsChange, pollKnowledgeChat])
 
   const clearChat = useCallback((): void => {
     chatAbortRef.current?.abort()

@@ -3,9 +3,16 @@ import { existsSync, createWriteStream, rmSync } from 'node:fs'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join, delimiter } from 'node:path'
 import { tmpdir } from 'node:os'
+import { Readable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
 import { app } from 'electron'
 import type { AppSettingsV1 } from '../shared/app-settings'
 import { resolveLegalworkRuntimeSettings } from '../shared/app-settings-provider'
+import {
+  complianceBundleUrl,
+  complianceBundleRuntimeDirName,
+  resolveComplianceBundleMachine
+} from './data-compliance-bundle-target'
 
 export type DataComplianceStatus =
   | {
@@ -140,8 +147,12 @@ const COMPLIANCE_BUNDLE_COS_BASE =
   'https://legalwork-1318565101.cos.ap-guangzhou.myqcloud.com'
 const COMPLIANCE_BUNDLE_MARKER = '.legalwork-compliance-ready'
 
-function complianceBundleRoot(): string {
-  return join(app.getPath('userData'), 'data-compliance', `runtime-v${COMPLIANCE_BUNDLE_VERSION}`)
+function complianceBundleRoot(machine: string = resolveComplianceBundleMachine()): string {
+  return join(
+    app.getPath('userData'),
+    'data-compliance',
+    complianceBundleRuntimeDirName(COMPLIANCE_BUNDLE_VERSION, machine)
+  )
 }
 
 function complianceBundlePython(bundleRoot: string = complianceBundleRoot()): string {
@@ -373,6 +384,7 @@ export class DataComplianceRuntime {
   private ensureAbortController: AbortController | null = null
   private installing = false
   private resolvedWebRoot: string | null = null
+  private agentSettingsFingerprint = ''
 
   constructor(
     private readonly appPath: string,
@@ -461,6 +473,10 @@ export class DataComplianceRuntime {
       this.ensurePromise = null
     }
 
+    await this.stopChildProcess()
+  }
+
+  private async stopChildProcess(): Promise<void> {
     if (!this.child) return
     const child = this.child
     this.child = null
@@ -482,6 +498,7 @@ export class DataComplianceRuntime {
     }, 1500)
 
     await exitPromise.finally(() => clearTimeout(timeout))
+    this.agentSettingsFingerprint = ''
   }
 
   async request(
@@ -575,6 +592,7 @@ export class DataComplianceRuntime {
       console.error('[data-compliance-runtime] webRoot does not exist:', this.webRoot)
       return this.status()
     }
+    await this.restartChildForChangedAgentSettings()
     if (await this.probe()) {
       return {
         ok: true,
@@ -672,11 +690,15 @@ export class DataComplianceRuntime {
 
   // 从腾讯云 COS 下载并解压合规环境包(内置 python + 依赖 + paddle-models)。方式B。
   private async ensureComplianceBundle(): Promise<void> {
-    if (complianceBundleReady()) return
-    const bundleRoot = complianceBundleRoot()
+    const machine = process.env.LEGALWORK_COMPLIANCE_MACHINE || resolveComplianceBundleMachine()
+    const bundleRoot = complianceBundleRoot(machine)
+    if (complianceBundleReady(bundleRoot)) return
     const marker = join(bundleRoot, COMPLIANCE_BUNDLE_MARKER)
-    const machine = process.env.LEGALWORK_COMPLIANCE_MACHINE || 'win-x64'
-    const url = `${COMPLIANCE_BUNDLE_COS_BASE}/legalwork/compliance/env/${machine}/legalwork-compliance-env-${machine}-v${COMPLIANCE_BUNDLE_VERSION}.tar.gz`
+    const url = complianceBundleUrl(
+      COMPLIANCE_BUNDLE_COS_BASE,
+      COMPLIANCE_BUNDLE_VERSION,
+      machine
+    )
     const logPath = join(this.logDir, 'data-compliance-runtime.log')
     const tarPath = join(tmpdir(), `legalwork-compliance-${machine}-v${COMPLIANCE_BUNDLE_VERSION}.tar.gz`)
     this.installing = true
@@ -684,7 +706,11 @@ export class DataComplianceRuntime {
       await mkdir(bundleRoot, { recursive: true })
       const res = await fetch(url)
       if (!res.ok) throw new Error(`下载合规环境包失败: HTTP ${res.status}`)
-      await writeFile(tarPath, Buffer.from(await res.arrayBuffer()))
+      if (!res.body) throw new Error('下载合规环境包失败: 响应体为空')
+      await pipeline(
+        Readable.fromWeb(res.body as Parameters<typeof Readable.fromWeb>[0]),
+        createWriteStream(tarPath)
+      )
       await new Promise<void>((resolve, reject) => {
         const child = spawn('tar', ['-xzf', tarPath, '-C', bundleRoot], { shell: false })
         child.on('error', reject)
@@ -701,6 +727,7 @@ export class DataComplianceRuntime {
       ).catch(() => {})
       throw error
     } finally {
+      rmSync(tarPath, { force: true })
       this.installing = false
     }
   }
@@ -800,25 +827,8 @@ export class DataComplianceRuntime {
     const logPath = join(this.logDir, 'data-compliance-runtime.log')
     const log = createWriteStream(logPath, { flags: 'a' })
 
-    const agentEnv: NodeJS.ProcessEnv = {}
-    if (this.getSettings) {
-      try {
-        const settings = await this.getSettings()
-        const runtime = resolveLegalworkRuntimeSettings(settings)
-        if (runtime.apiKey?.trim()) {
-          agentEnv.LEGALWORK_API_KEY = runtime.apiKey.trim()
-        }
-        if (runtime.baseUrl?.trim()) {
-          agentEnv.LEGALWORK_BASE_URL = runtime.baseUrl.trim()
-        }
-        if (runtime.model?.trim()) {
-          agentEnv.LEGALWORK_MODEL = runtime.model.trim()
-        }
-      } catch (error) {
-        // Best-effort: proceed without agent env if settings cannot be loaded.
-        console.warn('[data-compliance-runtime] failed to read agent settings:', error)
-      }
-    }
+    const agentConfig = await this.resolveAgentEnvironment()
+    const agentEnv = agentConfig.env
 
     const usesBundle = complianceBundleReady()
     const venvPython = usesBundle ? complianceBundlePython() : pythonExecutable()
@@ -860,5 +870,45 @@ export class DataComplianceRuntime {
       log.end()
     })
     this.child = child
+    this.agentSettingsFingerprint = agentConfig.fingerprint
+  }
+
+  private async restartChildForChangedAgentSettings(): Promise<void> {
+    if (!this.child || !this.getSettings) return
+    const next = await this.resolveAgentEnvironment()
+    if (!this.agentSettingsFingerprint || next.fingerprint === this.agentSettingsFingerprint) return
+    console.log('[data-compliance-runtime] agent model/provider settings changed; restarting worker')
+    await this.stopChildProcess()
+  }
+
+  private async resolveAgentEnvironment(): Promise<{
+    env: NodeJS.ProcessEnv
+    fingerprint: string
+  }> {
+    const env: NodeJS.ProcessEnv = {}
+    if (!this.getSettings) return { env, fingerprint: '' }
+    try {
+      const settings = await this.getSettings()
+      const runtime = resolveLegalworkRuntimeSettings(settings)
+      const apiKey = runtime.apiKey?.trim() ?? ''
+      const baseUrl = runtime.baseUrl?.trim() ?? ''
+      const model = runtime.model?.trim() ?? ''
+      if (apiKey) env.LEGALWORK_API_KEY = apiKey
+      if (baseUrl) env.LEGALWORK_BASE_URL = baseUrl
+      if (model) env.LEGALWORK_MODEL = model
+      return {
+        env,
+        fingerprint: JSON.stringify({
+          authMode: runtime.authMode,
+          apiKey,
+          baseUrl,
+          model
+        })
+      }
+    } catch (error) {
+      // Best-effort: proceed without agent env if settings cannot be loaded.
+      console.warn('[data-compliance-runtime] failed to read agent settings:', error)
+      return { env, fingerprint: '' }
+    }
   }
 }

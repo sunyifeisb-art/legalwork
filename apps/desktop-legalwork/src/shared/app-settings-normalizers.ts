@@ -56,6 +56,7 @@ export function normalizeImProvider(value: unknown): ClawImProvider {
 
 export function normalizeClawModel(value: unknown): ClawModel {
   const trimmed = typeof value === 'string' ? value.trim() : ''
+  if (trimmed.toLowerCase() === 'deepseek-v4-flash') return 'deepseek-flash'
   return trimmed || 'auto'
 }
 

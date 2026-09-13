@@ -25,7 +25,7 @@ export class DeepseekServerSearchProvider implements WebProvider {
   }) {
     this.apiKey = options?.apiKey?.trim() || undefined
     this.baseUrl = normalizeDeepseekServerSearchBaseUrl(options?.baseUrl)
-    this.model = options?.model ?? 'deepseek-v4-flash'
+    this.model = options?.model ?? 'deepseek-flash'
     this.nowIso = options?.nowIso ?? (() => new Date().toISOString())
   }
 

@@ -111,7 +111,13 @@ export function bundledOfficePythonEnv(
   python: string,
   platform: NodeJS.Platform = process.platform
 ): NodeJS.ProcessEnv {
-  return { ...process.env, PYTHONHOME: officeRuntimePythonHome(python, platform) }
+  return {
+    ...process.env,
+    PYTHONHOME: officeRuntimePythonHome(python, platform),
+    // The bundled interpreter lives inside the signed macOS app bundle.
+    // Refreshing __pycache__ there mutates sealed resources after first launch.
+    PYTHONDONTWRITEBYTECODE: '1'
+  }
 }
 
 /**
