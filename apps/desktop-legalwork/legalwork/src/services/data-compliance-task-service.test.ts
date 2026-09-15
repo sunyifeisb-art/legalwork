@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { chmod, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -22,10 +22,10 @@ afterEach(async () => {
 })
 
 describe('data compliance Python version helpers', () => {
-  it('requires Python 3.10 or newer', () => {
+  it('requires Python 3.11 or newer', () => {
     expect(parsePythonVersionOutput('Python 3.11.9')).toEqual({ major: 3, minor: 11, patch: 9 })
     expect(isSupportedDataCompliancePythonVersion('Python 3.9.18')).toBe(false)
-    expect(isSupportedDataCompliancePythonVersion('Python 3.10.0')).toBe(true)
+    expect(isSupportedDataCompliancePythonVersion('Python 3.10.0')).toBe(false)
     expect(isSupportedDataCompliancePythonVersion('Python 3.12.1')).toBe(true)
   })
 })
@@ -60,6 +60,30 @@ describe('data compliance environment checks', () => {
     }
 
     await expect(service.checkEnvironment()).resolves.toEqual({ ok: true, python: 'python' })
+  })
+
+  it.runIf(process.platform !== 'win32')('uses a ready COS compliance bundle before system Python', async () => {
+    const dataDir = await makeTempDir()
+    const webRoot = await makeTempDir()
+    const logDir = await makeTempDir()
+    const machine = `${process.platform === 'darwin' ? 'mac' : 'linux'}-${process.arch}`
+    const bundleRoot = join(dataDir, 'data-compliance', `runtime-v0.3.31-${machine}`)
+    const python = join(bundleRoot, 'python', 'bin', 'python3')
+    await mkdir(join(bundleRoot, 'python', 'lib', 'python3.11', 'site-packages'), { recursive: true })
+    await mkdir(join(bundleRoot, 'python', 'bin'), { recursive: true })
+    await writeFile(python, '#!/bin/sh\necho "Python 3.11.9"\n', 'utf-8')
+    await chmod(python, 0o755)
+    await writeFile(join(bundleRoot, '.legalwork-compliance-ready'), 'ready', 'utf-8')
+
+    const previous = process.env.LEGALWORK_COMPLIANCE_BUNDLE_ENABLED
+    process.env.LEGALWORK_COMPLIANCE_BUNDLE_ENABLED = '1'
+    try {
+      const service = new DataComplianceTaskService({ dataDir, webRoot, logDir })
+      await expect(service.checkEnvironment()).resolves.toEqual({ ok: true, python })
+    } finally {
+      if (previous === undefined) delete process.env.LEGALWORK_COMPLIANCE_BUNDLE_ENABLED
+      else process.env.LEGALWORK_COMPLIANCE_BUNDLE_ENABLED = previous
+    }
   })
 })
 

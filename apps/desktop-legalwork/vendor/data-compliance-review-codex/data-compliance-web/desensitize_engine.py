@@ -606,7 +606,7 @@ ORG_CONTEXT_MARKERS = (
     '一审法院依法扣划在', '依法扣划在', '除去其持有的', '申请评估拍卖', '申请拍卖',
     '案涉股权由', '股权由', '转让给', '持有的', '竞买人为', '买受人为', '系由',
     '保护申请人', '复议申请人', '被申请人', '申请执行人', '申请人', '利害关系人', '异议人',
-    '转发至', '拨付至', '支付至', '支付给', '发放给',
+    '转发至', '拨付至', '支付至', '支付给', '发放给', '后续由', '随后由', '之后由',
     '因与被上诉人', '与被上诉人', '因与', '以下简称', '下文简称', '简称',
     '上诉人', '被上诉人', '申请执行人',
     '被执行人', '原审第三人', '第三人', '原告', '被告', '甲方', '乙方', '丙方',
@@ -660,6 +660,16 @@ def _trim_org_surface(value: str, absolute_start: int) -> tuple[str, int, int]:
         marker_end = raw.rfind(marker)
         if marker_end >= 0 and marker_end + len(marker) < len(raw):
             cut = max(cut, marker_end + len(marker))
+    # Broad company-name regexes can span two subjects when ordinary prose joins
+    # them, e.g. “甲公司安排乙有限公司”. Keep the subject after the action verb;
+    # the first short company is detected independently by SHORT_ORG_PATTERN.
+    for match in re.finditer(
+        r'(?:律师事务所|有限责任公司|股份有限公司|集团有限公司|有限公司|公司|集团|银行|支行|分行)'
+        r'(?:安排|委托|要求|指定|通知|责令|授权)',
+        raw,
+    ):
+        if match.end() < len(raw):
+            cut = max(cut, match.end())
     if cut:
         raw = raw[cut:]
         absolute_start += cut
@@ -668,7 +678,7 @@ def _trim_org_surface(value: str, absolute_start: int) -> tuple[str, int, int]:
     if leading:
         raw = raw[leading.end():]
         absolute_start += leading.end()
-    connector = re.match(r'^(?:由|向|对|与|和|及|同|将|给)', raw)
+    connector = re.match(r'^(?:安排|委托|要求|指定|通知|责令|授权|由|向|对|与|和|及|同|将|给)', raw)
     if connector and connector.end() + 3 < len(raw):
         raw = raw[connector.end():]
         absolute_start += connector.end()

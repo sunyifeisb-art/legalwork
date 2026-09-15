@@ -498,6 +498,17 @@ async function startLegalworkChildOnce(settings: AppSettingsV1): Promise<void> {
       LEGALWORK_CODEX_BINARY: (codexBinaryPath ?? runtime.codexBinaryPath) || process.env.LEGALWORK_CODEX_BINARY || '',
       LEGALWORK_CODEX_HOME: legalworkCodexHome,
       LEGALWORK_COMPLIANCE_WEB_ROOT: webRoot,
+      // The runtime service owns data-compliance tasks. Enable its on-demand COS
+      // bundle path here so packaged clients use the prebuilt Python/OCR runtime
+      // instead of attempting a large first-use installation from PyPI.
+      ...(app.isPackaged ? {
+        LEGALWORK_COMPLIANCE_BUNDLE_ENABLED: '1',
+        LEGALWORK_COMPLIANCE_BUNDLE_VERSION:
+          process.env.LEGALWORK_COMPLIANCE_BUNDLE_VERSION || '0.3.31',
+        LEGALWORK_COMPLIANCE_COS_BASE:
+          process.env.LEGALWORK_COMPLIANCE_COS_BASE ||
+          'https://legalwork-1318565101.cos.ap-guangzhou.myqcloud.com'
+      } : {}),
       LEGALWORK_API_KEY: runtime.apiKey || process.env.LEGALWORK_API_KEY || '',
       LEGALWORK_BASE_URL: runtime.baseUrl || process.env.LEGALWORK_BASE_URL || '',
       LEGALWORK_MODEL: runtime.model || process.env.LEGALWORK_MODEL || '',

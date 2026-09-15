@@ -3197,8 +3197,8 @@ legalwork serve --data-dir ~/.legalwork</code></pre>
 
         // 腾讯云 COS/CDN 直链下载入口（国内可达）。发布脚本把安装包同步到
         // COS，URL 形如 <base>/legalwork/channels/<channel>/latest/<文件名>。
-        const COS_BASE = 'https://download.example.com'; // TODO: 改为你的已备案 CDN 域名
-        const COS_CHANNEL = 'frontier'; // 发布默认 channel（与 release.local.env 的 RELEASE_CHANNEL 一致）
+        const COS_BASE = 'https://legalwork-1318565101.cos.ap-guangzhou.myqcloud.com';
+        const COS_CHANNEL = 'stable';
         function buildCosUrl(assetName) {
             return assetName ? COS_BASE + '/legalwork/channels/' + COS_CHANNEL + '/latest/' + assetName : '';
         }
@@ -3681,6 +3681,8 @@ legalwork serve --data-dir ~/.legalwork</code></pre>
             const profile = platformProfiles[currentPlatform] || platformProfiles.source;
             const asset = findReleaseAsset(currentPlatform);
             const tag = releaseData?.tag_name || '';
+            const cosAssetName = asset?.name || '';
+            const cosAssetUrl = buildCosUrl(cosAssetName);
 
             const hideMirror = () => {
                 if (mirrorBtn) mirrorBtn.style.display = 'none';
@@ -3709,6 +3711,16 @@ legalwork serve --data-dir ~/.legalwork</code></pre>
                 btn.href = repoUrl;
                 btn.removeAttribute('download');
                 btn.target = '_blank';
+                hideMirror();
+                return;
+            }
+
+            if (cosAssetUrl) {
+                text.textContent = `下载 ${tag || '最新版'} · ${profile.label}`;
+                meta.innerHTML = `腾讯云 COS 直链 · <span style="color:var(--text-muted)">${cosAssetName}</span>`;
+                btn.href = cosAssetUrl;
+                btn.removeAttribute('download');
+                btn.removeAttribute('target');
                 hideMirror();
                 return;
             }
@@ -3755,19 +3767,11 @@ legalwork serve --data-dir ~/.legalwork</code></pre>
             }
             if (mirrorHint) mirrorHint.style.display = 'block';
 
-            // 腾讯云 CDN 直链下载（国内可达，发布脚本会把安装包同步到 COS）。
+            // 主下载按钮已优先使用 COS；没有可匹配资产时隐藏重复入口。
             const cosBtn = document.getElementById('cosDownloadBtn');
             const cosHint = document.getElementById('cosHint');
-            const cosUrl = buildCosUrl(asset.name);
-            if (cosBtn && cosUrl && !cosUrl.startsWith('https://download.example.com')) {
-                cosBtn.href = cosUrl;
-                cosBtn.target = '_blank';
-                cosBtn.style.display = 'inline-flex';
-                if (cosHint) cosHint.style.display = 'block';
-            } else if (cosBtn) {
-                cosBtn.style.display = 'none';
-                if (cosHint) cosHint.style.display = 'none';
-            }
+            if (cosBtn) cosBtn.style.display = 'none';
+            if (cosHint) cosHint.style.display = 'none';
         }
 
         function selectPlatform(platform) {

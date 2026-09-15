@@ -274,6 +274,17 @@ class DesensitizeEngineTests(unittest.TestCase):
         self.assertIn('关于申请人', redacted)
         self.assertIn('之后由财政部将补贴资金转发至公司所在地', redacted)
 
+    def test_org_alias_token_never_retains_short_company_after_action_prose(self) -> None:
+        source = (
+            '吉林天鸿建设有限公司安排吉林富强建筑工程有限公司提交材料，'
+            '后续由富强公司负责补正。'
+        )
+        redacted, _, mappings = sanitize_text_and_subjects(source, Desensitizer())
+        short_mapping = next(item for item in mappings if item.original == '富强公司')
+        self.assertNotIn(short_mapping.original, short_mapping.redacted)
+        self.assertNotIn('富强公司', redacted)
+        self.assertFalse(any('安排' in item.redacted for item in mappings))
+
     def test_decoratively_spaced_judicial_roles_still_redact_each_name(self) -> None:
         source = '审 判 长 陈东强 审 判 员 马丽 法 官 助 理 刘小玉 书 记 员 马抒祺'
         redacted, _, mappings = sanitize_text_and_subjects(source, Desensitizer())

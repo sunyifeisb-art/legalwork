@@ -11,9 +11,10 @@ import {
   rmSync,
   writeFileSync
 } from 'node:fs'
-import { copyFile, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { copyFile, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
 import { dirname, extname, isAbsolute, join, normalize, relative as pathRelative, resolve } from 'node:path'
 import { Readable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
 import {
   describePipIndexes,
   pipIndexArgs,
@@ -24,8 +25,12 @@ import {
 } from '../shared/python-install-sources.js'
 
 const DATA_COMPLIANCE_VENV_DIR_NAME = 'python-venv'
-const DATA_COMPLIANCE_CORE_DEPENDENCY_MARKER = '.legalwork-core-deps-v2-installed'
-const MIN_DATA_COMPLIANCE_PYTHON = { major: 3, minor: 10 }
+const DATA_COMPLIANCE_CORE_DEPENDENCY_MARKER = '.legalwork-core-deps-v3-installed'
+const DATA_COMPLIANCE_BUNDLE_MARKER = '.legalwork-compliance-ready'
+const DEFAULT_DATA_COMPLIANCE_BUNDLE_VERSION = '0.3.31'
+const DEFAULT_DATA_COMPLIANCE_BUNDLE_BASE_URL =
+  'https://legalwork-1318565101.cos.ap-guangzhou.myqcloud.com'
+const MIN_DATA_COMPLIANCE_PYTHON = { major: 3, minor: 11 }
 const MAX_DATA_COMPLIANCE_PYTHON = { major: 3, minor: 12 }
 const PYTHON_IMPORT_TIMEOUT_MS = 8_000
 const PYTHON_VERSION_TIMEOUT_MS = 3_000
@@ -143,6 +148,7 @@ export type DataComplianceFileKey =
 const CORE_REQUIRED_PYTHON_PACKAGES = [
   'flask',
   'docx',
+  'legacy_doc',
   'fitz',
   'openai',
   'openpyxl',
@@ -268,14 +274,17 @@ function isValidTaskId(taskId: string): boolean {
 }
 
 export class DataComplianceTaskService {
+  private readonly dataDir: string
   private readonly tasksDir: string
   private readonly venvDir: string
   private pythonBin: string | null = null
   private readonly webRoot: string
   private readonly logDir: string
   private readonly runningChildren = new Map<string, ReturnType<typeof spawn>>()
+  private bundleInstallPromise: Promise<string> | null = null
 
   constructor(input: { dataDir: string; webRoot: string; logDir: string }) {
+    this.dataDir = input.dataDir
     this.tasksDir = join(input.dataDir, 'data-compliance', 'tasks')
     this.venvDir = resolveDataComplianceVenvDir(input.dataDir)
     this.webRoot = input.webRoot
@@ -296,7 +305,137 @@ export class DataComplianceTaskService {
       : join(root, 'bin', 'python3')
   }
 
+  private complianceBundleMachine(): string {
+    if (process.platform === 'win32' && process.arch === 'x64') return 'win-x64'
+    if (process.platform === 'darwin' && process.arch === 'arm64') return 'mac-arm64'
+    if (process.platform === 'darwin' && process.arch === 'x64') return 'mac-x64'
+    if (process.platform === 'linux' && process.arch === 'x64') return 'linux-x64'
+    throw new Error(`当前平台暂不支持数据合规环境包：${process.platform}-${process.arch}`)
+  }
+
+  private complianceBundleVersion(): string {
+    return process.env.LEGALWORK_COMPLIANCE_BUNDLE_VERSION?.trim() ||
+      DEFAULT_DATA_COMPLIANCE_BUNDLE_VERSION
+  }
+
+  private complianceBundleRoot(): string {
+    const machine = this.complianceBundleMachine()
+    const version = this.complianceBundleVersion()
+    const directoryName = machine === 'win-x64'
+      ? `runtime-v${version}`
+      : `runtime-v${version}-${machine}`
+    return join(this.dataDir, 'data-compliance', directoryName)
+  }
+
+  private complianceBundlePythonPath(): string {
+    const root = this.complianceBundleRoot()
+    return process.platform === 'win32'
+      ? join(root, 'python', 'python.exe')
+      : join(root, 'python', 'bin', 'python3')
+  }
+
+  private tryComplianceBundlePythonPath(): string | null {
+    try {
+      return this.complianceBundlePythonPath()
+    } catch {
+      return null
+    }
+  }
+
+  private complianceBundleReady(): boolean {
+    const root = this.complianceBundleRoot()
+    return existsSync(join(root, DATA_COMPLIANCE_BUNDLE_MARKER)) &&
+      existsSync(this.complianceBundlePythonPath())
+  }
+
+  private isComplianceBundlePython(python: string | null): boolean {
+    if (!python) return false
+    const complianceBundlePython = this.tryComplianceBundlePythonPath()
+    return complianceBundlePython !== null && resolve(python) === resolve(complianceBundlePython)
+  }
+
+  private pythonEnvironment(python: string | null = this.pythonBin): NodeJS.ProcessEnv {
+    const env = buildDataCompliancePythonEnv()
+    if (!this.isComplianceBundlePython(python)) return env
+    const root = this.complianceBundleRoot()
+    const pythonRoot = join(root, 'python')
+    const sitePackages = process.platform === 'win32'
+      ? join(pythonRoot, 'Lib', 'site-packages')
+      : join(pythonRoot, 'lib', 'python3.11', 'site-packages')
+    return {
+      ...env,
+      PYTHONHOME: pythonRoot,
+      PYTHONPATH: sitePackages,
+      LEGALWORK_PADDLEOCR_MODEL_ROOT: join(root, 'paddle-models')
+    }
+  }
+
+  private async ensureComplianceBundle(): Promise<string> {
+    if (this.complianceBundleReady()) return this.complianceBundlePythonPath()
+    if (this.bundleInstallPromise) return this.bundleInstallPromise
+
+    this.bundleInstallPromise = this.downloadComplianceBundle().finally(() => {
+      this.bundleInstallPromise = null
+    })
+    return this.bundleInstallPromise
+  }
+
+  private async downloadComplianceBundle(): Promise<string> {
+    const machine = this.complianceBundleMachine()
+    const version = this.complianceBundleVersion()
+    const baseUrl = (
+      process.env.LEGALWORK_COMPLIANCE_COS_BASE?.trim() ||
+      DEFAULT_DATA_COMPLIANCE_BUNDLE_BASE_URL
+    ).replace(/\/+$/, '')
+    const url = `${baseUrl}/legalwork/compliance/env/${machine}/legalwork-compliance-env-${machine}-v${version}.tar.gz`
+    const bundleRoot = this.complianceBundleRoot()
+    const stagingRoot = `${bundleRoot}.install-${process.pid}`
+    const archivePath = join(this.dataDir, 'data-compliance', `.runtime-${machine}-v${version}.tar.gz`)
+
+    await mkdir(dirname(archivePath), { recursive: true })
+    await rm(stagingRoot, { recursive: true, force: true })
+    await mkdir(stagingRoot, { recursive: true })
+
+    try {
+      const response = await fetch(url)
+      if (!response.ok) throw new Error(`下载失败（HTTP ${response.status}）`)
+      if (!response.body) throw new Error('下载响应为空')
+      await pipeline(
+        Readable.fromWeb(response.body as Parameters<typeof Readable.fromWeb>[0]),
+        createWriteStream(archivePath)
+      )
+      const extracted = await this.runCommand('tar', ['-xzf', archivePath, '-C', stagingRoot], {
+        timeoutMs: 15 * 60 * 1000
+      })
+      if (extracted.exitCode !== 0) {
+        throw new Error(`环境包解压失败：${extracted.stderr || extracted.stdout || `exit ${extracted.exitCode}`}`)
+      }
+
+      const stagedPython = process.platform === 'win32'
+        ? join(stagingRoot, 'python', 'python.exe')
+        : join(stagingRoot, 'python', 'bin', 'python3')
+      if (!existsSync(stagedPython)) throw new Error('环境包缺少 Python 解释器')
+      await writeFile(join(stagingRoot, DATA_COMPLIANCE_BUNDLE_MARKER), nowIso(), 'utf-8')
+      await rm(bundleRoot, { recursive: true, force: true })
+      await rename(stagingRoot, bundleRoot)
+
+      const python = this.complianceBundlePythonPath()
+      if (!this.canRunPython(python)) {
+        await rm(bundleRoot, { recursive: true, force: true })
+        throw new Error('环境包中的 Python 无法运行或版本不受支持')
+      }
+      return python
+    } finally {
+      await rm(archivePath, { force: true })
+      await rm(stagingRoot, { recursive: true, force: true })
+    }
+  }
+
   private resolvePythonExecutable(): string | null {
+    const complianceBundlePython = this.tryComplianceBundlePythonPath()
+    if (complianceBundlePython && this.complianceBundleReady() && this.canRunPython(complianceBundlePython)) {
+      return complianceBundlePython
+    }
     const venvPython = this.venvPythonPath()
     if (this.canRunPython(venvPython)) return venvPython
     const standalonePython = this.standalonePythonPath()
@@ -330,7 +469,7 @@ export class DataComplianceTaskService {
   private canRunPython(command: string): boolean {
     try {
       const result = spawnSync(command, ['--version'], {
-        env: buildDataCompliancePythonEnv(),
+        env: this.pythonEnvironment(command),
         shell: false,
         encoding: 'utf8',
         stdio: ['ignore', 'pipe', 'pipe'],
@@ -345,11 +484,21 @@ export class DataComplianceTaskService {
   }
 
   async checkEnvironment(): Promise<DataComplianceEnvironmentCheckResult> {
+    let bundleError = ''
+    if (process.env.LEGALWORK_COMPLIANCE_BUNDLE_ENABLED === '1') {
+      try {
+        this.pythonBin = await this.ensureComplianceBundle()
+      } catch (error) {
+        bundleError = error instanceof Error ? error.message : String(error)
+      }
+    }
     this.pythonBin = this.resolvePythonExecutable()
     if (!this.pythonBin) {
       return {
         ok: false,
-        reason: '未找到 Python 3.10-3.12 解释器',
+        reason: bundleError
+          ? `COS 数据合规环境不可用，且未找到 Python 3.11-3.12 解释器：${bundleError}`
+          : '未找到 Python 3.11-3.12 解释器',
         fix: '请点击“重试”让 legalwork 自动安装内置 Python 3.11。'
       }
     }
@@ -379,6 +528,7 @@ export class DataComplianceTaskService {
   }
 
   private async ensurePythonEnvironment(): Promise<void> {
+    if (this.isComplianceBundlePython(this.pythonBin)) return
     if (
       process.env.LEGALWORK_BUNDLED_COMPLIANCE_RUNTIME === '1' &&
       this.pythonBin === process.env.COMPLIANCEAI_PYTHON &&
@@ -508,7 +658,7 @@ export class DataComplianceTaskService {
     return new Promise((resolve, reject) => {
       const child = spawn(command, args, {
         cwd: options.cwd,
-        env: buildDataCompliancePythonEnv(),
+        env: this.pythonEnvironment(command),
         windowsHide: true
       })
       let settled = false
@@ -766,7 +916,7 @@ export class DataComplianceTaskService {
       {
         cwd: this.webRoot,
         env: {
-          ...buildDataCompliancePythonEnv(),
+          ...this.pythonEnvironment(python),
           COMPLIANCEAI_PYTHON: python,
           COMPLIANCEAI_LOG_PATH: logPath,
           LEGALWORK_API_KEY: process.env.LEGALWORK_API_KEY ?? '',

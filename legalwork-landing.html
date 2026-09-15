@@ -3014,16 +3014,8 @@ legalwork serve --data-dir ~/.legalwork</code></pre>
 
         // 腾讯云 COS/CDN 直链下载入口（国内可达）。发布脚本把安装包同步到
         // COS，URL 形如 <base>/legalwork/channels/<channel>/latest/<文件名>。
-        const COS_BASE = 'https://legalwork-1318565101.cos.ap-guangzhou.myqcloud.com'; // 腾讯云 COS 默认域名(无需备案、国内直下);如需 CDN 加速,换成已备案的加速域名即可
-        const COS_CHANNEL = 'stable'; // 发布默认 channel(与应用 DEFAULT_GUI_UPDATE_CHANNEL=stable、CI 构建的 LEGALWORK_UPDATE_CHANNEL=stable 一致)
-        const COS_INSTALLER_VERSION = '0.3.32';
-        const COS_INSTALLER_TAG = `v${COS_INSTALLER_VERSION}`;
-        const COS_PLATFORM_ASSETS = {
-            'mac-arm64': `legalwork-${COS_INSTALLER_VERSION}-mac-arm64.dmg`,
-            'mac-x64': `legalwork-${COS_INSTALLER_VERSION}-mac-x64.dmg`,
-            'win-x64': `legalwork-${COS_INSTALLER_VERSION}-win-x64.exe`,
-            'win-ia32': `legalwork-${COS_INSTALLER_VERSION}-win-ia32.exe`
-        };
+        const COS_BASE = 'https://legalwork-1318565101.cos.ap-guangzhou.myqcloud.com';
+        const COS_CHANNEL = 'stable';
         function buildCosUrl(assetName) {
             return assetName ? COS_BASE + '/legalwork/channels/' + COS_CHANNEL + '/latest/' + assetName : '';
         }
@@ -3506,9 +3498,11 @@ legalwork serve --data-dir ~/.legalwork</code></pre>
             const profile = platformProfiles[currentPlatform] || platformProfiles.source;
             const asset = findReleaseAsset(currentPlatform);
             const tag = releaseData?.tag_name || '';
-            const cosAssetName = COS_PLATFORM_ASSETS[currentPlatform] || '';
+            // Release assets are the source of truth for filenames; the release
+            // workflow promotes those exact files to COS stable/latest.
+            const cosAssetName = asset?.name || '';
             const cosAssetUrl = buildCosUrl(cosAssetName);
-            const displayTag = cosAssetName ? COS_INSTALLER_TAG : tag;
+            const displayTag = tag;
 
             const hideMirror = () => {
                 if (mirrorBtn) mirrorBtn.style.display = 'none';
@@ -3542,7 +3536,7 @@ legalwork serve --data-dir ~/.legalwork</code></pre>
             }
 
             if (cosAssetUrl) {
-                text.textContent = `下载 ${COS_INSTALLER_TAG} · ${profile.label}`;
+                text.textContent = `下载 ${tag || '最新版'} · ${profile.label}`;
                 meta.innerHTML = `腾讯云 COS 直链 · <span style="color:var(--text-muted)">${cosAssetName}</span>`;
                 btn.href = cosAssetUrl;
                 btn.removeAttribute('download');
