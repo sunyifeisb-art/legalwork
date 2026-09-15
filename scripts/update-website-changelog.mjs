@@ -9,6 +9,21 @@ const apiUrl = `https://api.github.com/repos/${repository}/releases?per_page=100
 // Build website changelog data for end users: keep old versions, refresh matching tags,
 // and translate technical release notes into user-visible changes.
 const cumulativeReleaseOverrides = {
+  // 手写条目：从 markdown 正文自动提取会把小标题也当成亮点，这条是官网门面，
+  // 由人工整理成用户能直接看懂的更新内容。
+  'v0.3.34': {
+    summary: '本次更新包括：知识库调用、长任务反馈、默认设置。',
+    categories: ['知识库', '对话体验', '修复优化'],
+    highlights: [
+      'IMA 知识库工具不再被策略拦截：主对话和文档交付等步骤中始终可用。此前模型会回答"当前没有 IMA 工具"，只有在提问里点名 IMA 才会去用。',
+      'IMA 的推理过程会实时滚动显示，不再只转一个圈。',
+      '复杂任务的执行推理改为节流式实时显示，"在思考"和"卡住"能一眼区分。此前强制检索步骤会推理几十秒而界面全程静止。',
+      '模型长时间无响应时不再重发整个请求，避免最坏 45 秒空白，也避免把数万字的提示词重复计费。',
+      '默认模型改为明确的 deepseek-flash，不再显示"自动"。',
+      '外网 MCP（GitHub、Flint Chart 等）连不上时只提示"需要网络环境"，不再标红报错；鉴权类错误仍照常提示。',
+      '本次提供 Windows 64 位、macOS（Apple 芯片 / Intel 芯片）三个版本，不再提供 32 位 Windows 版本。'
+    ]
+  },
   'v0.2.2': {
     baseline: 'v0.1.8',
     summary: '从 v0.1.8 到 v0.2.2 的累计更新：知识库、法规检索、插件技能、对话工作台、附件处理、自动更新和安装稳定性均有明显升级。',

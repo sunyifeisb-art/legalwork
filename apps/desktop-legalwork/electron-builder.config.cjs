@@ -215,8 +215,10 @@ module.exports = {
   },
   win: {
     icon: './src/asset/img/legalwork.png',
-    // 4 个版本:win x64 + win ia32(32位),mac arm64 + mac x64
-    target: [{ target: 'nsis', arch: ['x64', 'ia32'] }]
+    // 发行版共 3 个:win x64 + mac arm64 + mac x64。用户 2026-09-16 明确不要
+    // win ia32(32 位)——`dist:win` 一直传 `--win nsis --x64`，命令行的 arch 会
+    // 覆盖这里的配置，所以此前写的 ia32 从未真正构建过，别再按"四个版本"预期。
+    target: [{ target: 'nsis', arch: ['x64'] }]
   },
   nsis: {
     oneClick: false,
