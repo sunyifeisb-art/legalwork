@@ -1,5 +1,6 @@
 Flask==3.0.0
 python-docx>=1.1.0,<2.0.0
+legacy-doc==0.2.1
 pypdf==6.10.0
 Werkzeug==3.0.1
 openai>=1.30.0

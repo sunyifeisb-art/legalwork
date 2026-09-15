@@ -599,7 +599,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
       const requirementsPath = join(webRoot, 'requirements.txt')
 
       // 1. Detect Python
-      sendProgress({ step: 'detecting', percent: 5, message: '正在检测 Python 3.10-3.12 环境…' })
+      sendProgress({ step: 'detecting', percent: 5, message: '正在检测 Python 3.11-3.12 环境…' })
       let pythonCmd = await firstSupportedStandalonePython(
         standaloneCandidates,
         async (candidate) => existsSync(candidate) && await isSupportedPythonExecutable(candidate)
@@ -622,7 +622,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
         sendProgress({
           step: 'error',
           percent: 0,
-          message: '未找到 Python 3.10-3.12，自动安装失败。请检查网络连接后重试，或使用内置 Python 3.11 安装包。'
+          message: '未找到 Python 3.11-3.12，自动安装失败。请检查网络连接后重试，或使用内置 Python 3.11 安装包。'
         })
         return false
       }
@@ -638,6 +638,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
         'openpyxl',
         'pptx',
         'pypdf',
+        'legacy_doc',
         'pandas',
         'PIL',
         'paddle',
@@ -1149,7 +1150,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     }
     const verify = await runCommand(pythonPath, ['--version'])
     if (verify.exitCode !== 0 || !isSupportedDataCompliancePythonVersion(`${verify.stdout}\n${verify.stderr}`)) {
-      throw new Error(`Python 验证失败，需要 Python 3.10-3.12，当前输出: ${verify.stderr || verify.stdout || '未知'}`)
+      throw new Error(`Python 验证失败，需要 Python 3.11-3.12，当前输出: ${verify.stderr || verify.stdout || '未知'}`)
     }
 
     sendProgress({ step: 'detecting', percent: 34, message: 'Python 已就绪' })
@@ -2506,7 +2507,7 @@ export function isSupportedDataCompliancePythonVersion(output: string): boolean 
   const version = parsePythonVersionOutput(output)
   if (!version) return false
   if (version.major !== 3) return false
-  return version.minor >= 10 && version.minor <= 12
+  return version.minor >= 11 && version.minor <= 12
 }
 
 async function isSupportedPythonExecutable(command: string, env?: NodeJS.ProcessEnv): Promise<boolean> {
@@ -2541,7 +2542,7 @@ function resolveNpxPath(): string {
   return 'npx'
 }
 
-/** Resolve a Python 3.10-3.12 executable available on the system for data compliance */
+/** Resolve a Python 3.11-3.12 executable available on the system for data compliance */
 async function resolvePythonForCompliance(env?: NodeJS.ProcessEnv): Promise<string | null> {
   const candidates = process.platform === 'win32'
     ? ['python', 'python3', 'py']

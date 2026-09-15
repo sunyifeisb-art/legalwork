@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process'
+import { createRequire } from 'node:module'
 import { promisify } from 'node:util'
 import { readFile } from 'node:fs/promises'
 import { inflateRawSync } from 'node:zlib'
@@ -162,7 +163,11 @@ async function extractPptxText(filePath: string): Promise<string> {
 }
 
 async function extractXlsxText(filePath: string): Promise<string> {
-  const { readFile: readXlsx, utils } = await import('xlsx')
+  // `xlsx` is CommonJS. Node's native ESM loader exposes it through `default`,
+  // so destructuring named exports from `await import('xlsx')` throws before
+  // any workbook is read. Load it through createRequire to keep extraction
+  // identical in tests, the local runtime, and the packaged Electron app.
+  const { readFile: readXlsx, utils } = createRequire(import.meta.url)('xlsx') as typeof import('xlsx')
   const workbook = readXlsx(filePath)
   const lines: string[] = []
   for (const sheetName of workbook.SheetNames) {

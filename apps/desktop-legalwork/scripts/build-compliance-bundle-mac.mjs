@@ -7,7 +7,7 @@ import { dirname, join, resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
 
 const projectDir = resolve(dirname(new URL(import.meta.url).pathname), '..')
-const defaultVersion = '0.3.30'
+const defaultVersion = '0.3.31'
 const bosBase = 'https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0'
 
 function parseArgs(argv) {
@@ -20,7 +20,7 @@ function parseArgs(argv) {
     else throw new Error(`Unknown argument: ${value}`)
   }
   if (!['arm64', 'x64'].includes(result.arch)) {
-    throw new Error('Usage: node scripts/build-compliance-bundle-mac.mjs --arch arm64|x64 [--version 0.3.30] [--output DIR]')
+    throw new Error('Usage: node scripts/build-compliance-bundle-mac.mjs --arch arm64|x64 [--version 0.3.31] [--output DIR]')
   }
   if (!/^\d+\.\d+\.\d+$/.test(result.version)) {
     throw new Error(`Invalid bundle version: ${result.version}`)

@@ -16,19 +16,16 @@ describe('knowledge QA mode', () => {
 
   it('removes all tools from ordinary knowledge QA turns', () => {
     expect(knowledgeQaToolSpecs(tools, {
-      title: '知识库全局对话 · 竞业限制',
-      planTurnActive: false
+      title: '知识库全局对话 · 竞业限制'
     })).toEqual([])
   })
 
-  it('keeps tools for normal agent threads and plan mode', () => {
+  it('keeps tools for normal threads but never for knowledge QA', () => {
     expect(knowledgeQaToolSpecs(tools, {
-      title: '普通法律研究',
-      planTurnActive: false
+      title: '普通法律研究'
     })).toEqual(tools)
     expect(knowledgeQaToolSpecs(tools, {
-      title: '知识库：判决书.pdf · 制定计划',
-      planTurnActive: true
-    })).toEqual(tools)
+      title: '知识库：判决书.pdf · 制定计划'
+    })).toEqual([])
   })
 })

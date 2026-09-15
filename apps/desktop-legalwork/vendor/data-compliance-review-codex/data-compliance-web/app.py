@@ -1110,19 +1110,15 @@ def _docx_preview_html(path: Path) -> str:
 def _doc_preview_html(path: Path) -> str:
     if path.suffix.lower() == '.docx':
         return _docx_preview_html(path)
-    if not shutil.which('textutil'):
-        raise RuntimeError('当前环境不支持 .doc 预览，请转换为 .docx 或 PDF')
-    run = subprocess.run(
-        ['textutil', '-convert', 'html', '-stdout', str(path)],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    if run.returncode != 0:
-        raise RuntimeError(run.stderr.strip() or 'textutil 转换 Word 失败')
-    body = re.search(r'<body[^>]*>(.*)</body>', run.stdout, re.I | re.S)
-    html = body.group(1) if body else run.stdout
-    return '<article class="word-page">' + html + '</article>'
+    text = read_text_best_effort(path)
+    paragraphs = [
+        f'<p>{html_lib.escape(line)}</p>'
+        for line in text.splitlines()
+        if line.strip()
+    ]
+    if not paragraphs:
+        raise RuntimeError('旧版 DOC 中未提取到可预览正文')
+    return '<article class="word-page">' + ''.join(paragraphs) + '</article>'
 
 
 @app.route('/api/task/<task_id>/preview-document')

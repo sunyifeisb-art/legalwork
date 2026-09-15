@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import zipfile
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import datetime
@@ -21,6 +22,7 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt
+from lxml import etree
 
 try:
     from openai import OpenAI
@@ -116,10 +118,17 @@ CHINESE_SURNAMES = set(
 CHINESE_SURNAMES.add('兰')
 
 PERSON_CONTEXT_PATTERN = re.compile(
-    r'(?:委托诉讼代理人|委托代理人|诉讼代理人|法定代表人|出庭负责人|负责人|联系人|姓名|'
+    r'(?:审理法官|委托诉讼代理人|委托代理人|诉讼代理人|法定代表人|出庭负责人|负责人|联系人|姓名|'
     r'审判长|审判员|人民陪审员|法官助理|书记员)'
-    r'[：:\s，,、]*((?:[\u4e00-\u9fa5][ \t]*){2,4})'
-    r'(?=\s*(?:[，,。；;、]|$|审判长|审判员|人民陪审员|法官助理|书记员|总经理|经理|局长|律师|男|女))'
+    r'[：: \t，,、]+((?:[\u4e00-\u9fa5][ \t]*){2,4})'
+    r'(?=[ \t]*(?:\r?\n|[，,。；;、]|$|审判长|审判员|人民陪审员|法官助理|书记员|总经理|经理|局长|律师|男|女))'
+)
+JUDICIAL_NAME_LIST_PATTERN = re.compile(
+    r'(?m)^\s*审理法官[：: \t]+(?P<names>[^\r\n]{2,80})$'
+)
+PERSON_ALIAS_PATTERN = re.compile(
+    r'(?:使用花名|花名为|别名|昵称|化名|曾用名|网名)[：: \t为叫作称]*'
+    r'(?P<name>[\u4e00-\u9fa5]{2,6})(?=[，,。；;\s]|$)'
 )
 PERSON_LIST_PATTERN = re.compile(
     r'(?<![\u4e00-\u9fa5])([\u4e00-\u9fa5]{2,4})(?:、|和|与)([\u4e00-\u9fa5]{2,4})(?![\u4e00-\u9fa5])'
@@ -131,8 +140,12 @@ PERSON_LIST_CONTEXT_PATTERN = re.compile(
 PERSON_ROLE_INLINE_PATTERN = re.compile(
     r'(?:委托诉讼代理人|委托代理人|诉讼代理人|法定代表人|出庭负责人|负责人|联系人|'
     r'副区长|区长|董事长|总经理|经理|审判长|审判员|人民陪审员|法官助理|书记员)'
-    r'[：:\s，,、的]*'
+    r'[：:\s，,、的]+'
     r'(?P<names>[\u4e00-\u9fa5]{2,4}(?:[、和与及]\s*[\u4e00-\u9fa5]{2,4})*)'
+)
+PERSON_ROLE_ATTACHED_PATTERN = re.compile(
+    r'(?:副区长|区长|董事长|总经理|经理|审判长|审判员|人民陪审员|法官助理|书记员|联系人)'
+    r'(?P<name>[\u4e00-\u9fa5]{2,4})(?=[，,。；;、\s]|$)'
 )
 PARTY_PERSON_PATTERN = re.compile(
     r'(?:原告|被告|第三人|上诉人|被上诉人|申请人|被申请人|申请执行人|被执行人)'
@@ -542,6 +555,22 @@ def _detect_person_subjects(text: str) -> list[Any]:
         original = match.group(1)
         add_name(original, match.start(1), match.end(1), 0.9, explicit_role=True)
 
+    for match in JUDICIAL_NAME_LIST_PATTERN.finditer(text):
+        names = match.group('names')
+        names_start = match.start('names')
+        for item in re.finditer(r'[\u4e00-\u9fa5]{2,4}(?=[ \t，,、；;]|$)', names):
+            add_name(
+                item.group(0),
+                names_start + item.start(),
+                names_start + item.end(),
+                0.92,
+                explicit_role=True,
+            )
+
+    for match in PERSON_ALIAS_PATTERN.finditer(text):
+        original = match.group('name')
+        add_name(original, match.start('name'), match.end('name'), 0.9, explicit_role=True)
+
     for match in PARTY_PERSON_PATTERN.finditer(text):
         original = match.group('name')
         add_name(original, match.start('name'), match.end('name'), 0.92)
@@ -561,6 +590,10 @@ def _detect_person_subjects(text: str) -> list[Any]:
             cursor = part.end()
         del cursor
 
+    for match in PERSON_ROLE_ATTACHED_PATTERN.finditer(text):
+        original = match.group('name')
+        add_name(original, match.start('name'), match.end('name'), 0.84, explicit_role=False)
+
     for name in sorted(known_names, key=len, reverse=True):
         pattern = r'\s*'.join(re.escape(char) for char in name)
         for match in re.finditer(pattern, text):
@@ -572,6 +605,8 @@ def _detect_person_subjects(text: str) -> list[Any]:
 ORG_CONTEXT_MARKERS = (
     '一审法院依法扣划在', '依法扣划在', '除去其持有的', '申请评估拍卖', '申请拍卖',
     '案涉股权由', '股权由', '转让给', '持有的', '竞买人为', '买受人为', '系由',
+    '保护申请人', '复议申请人', '被申请人', '申请执行人', '申请人', '利害关系人', '异议人',
+    '转发至', '拨付至', '支付至', '支付给', '发放给',
     '因与被上诉人', '与被上诉人', '因与', '以下简称', '下文简称', '简称',
     '上诉人', '被上诉人', '申请执行人',
     '被执行人', '原审第三人', '第三人', '原告', '被告', '甲方', '乙方', '丙方',
@@ -588,7 +623,7 @@ ORG_SURFACE_NOISE = {
 def _normalize_legal_role_spacing(text: str) -> str:
     """Collapse decorative spacing in legal role labels without touching body prose."""
     labels = (
-        '委托诉讼代理人', '委托代理人', '诉讼代理人', '法定代表人', '出庭负责人',
+        '审理法官', '委托诉讼代理人', '委托代理人', '诉讼代理人', '法定代表人', '出庭负责人',
         '负责人', '联系人', '审判长', '审判员', '人民陪审员', '法官助理', '书记员',
         '律师事务所', '有限责任公司', '股份有限公司', '集团有限公司',
     )
@@ -1232,7 +1267,13 @@ def looks_like_id_card(value: str) -> bool:
 
 
 def read_text_file(path: Path) -> str:
-    if path.suffix.lower() in {'.rtf', '.doc'} and shutil.which('textutil'):
+    if path.suffix.lower() == '.doc':
+        try:
+            return read_text(str(path), '')
+        except SystemExit as exc:
+            raise RuntimeError(str(exc)) from exc
+
+    if path.suffix.lower() == '.rtf' and shutil.which('textutil'):
         run = subprocess.run(
             ['textutil', '-convert', 'txt', '-stdout', str(path)],
             capture_output=True,
@@ -2283,6 +2324,39 @@ def _render_standard_output(markdown: str, output_file: Path, output_format: str
         _write_legal_docx(markdown, output_file)
 
 
+def _validate_output_artifact(output_file: Path, output_format: str) -> None:
+    """Reject truncated or extension-spoofed outputs before a task can succeed."""
+    if not output_file.exists() or output_file.stat().st_size == 0:
+        raise RuntimeError('脱敏输出文件为空。')
+
+    if output_format == 'docx':
+        try:
+            with zipfile.ZipFile(output_file) as archive:
+                names = set(archive.namelist())
+                if archive.testzip() is not None:
+                    raise RuntimeError('DOCX 压缩结构损坏。')
+                required = {'[Content_Types].xml', 'word/document.xml'}
+                if not required.issubset(names):
+                    raise RuntimeError('输出文件不是有效的 Word DOCX 文档。')
+            Document(str(output_file))
+        except (zipfile.BadZipFile, KeyError, ValueError) as exc:
+            raise RuntimeError('输出文件不是有效的 Word DOCX 文档。') from exc
+        return
+
+    if output_format == 'pdf':
+        if not output_file.read_bytes()[:5] == b'%PDF-':
+            raise RuntimeError('输出文件不是有效的 PDF 文档。')
+        return
+
+    if output_format in {'md', 'txt'}:
+        try:
+            text = output_file.read_text(encoding='utf-8')
+        except UnicodeDecodeError as exc:
+            raise RuntimeError('脱敏文本输出不是有效的 UTF-8。') from exc
+        if '\x00' in text or text.startswith(('ÐÏ\x11à', 'PK\x03\x04')):
+            raise RuntimeError('脱敏文本输出包含未解析的二进制文档数据。')
+
+
 def process_desensitization(
     *,
     task_id: str,
@@ -2311,7 +2385,7 @@ def process_desensitization(
     effective_format = output_format if output_format in {'md', 'docx', 'pdf', 'txt'} else 'docx'
     base_name = (document_name or Path(input_name).stem or '脱敏材料').rstrip('_').strip()
 
-    if suffix in DOC_EXTENSIONS and effective_format == 'docx':
+    if suffix == '.docx' and effective_format == 'docx' and redaction_mode == 'standard':
         # A 方案：docx 输入 + Word 输出 → 保格式原位替换。
         # 不再走“统一提取文字/OCR → markdown → 重建 docx”的压平流程，
         # 避免丢失原文档结构、页脚脚注、文本框、表格与段落格式。
@@ -2333,6 +2407,10 @@ def process_desensitization(
             output_file = named_output
     else:
         raw_text, used_ocr = _extract_source_text(input_path, is_text=is_text)
+        if suffix == '.doc':
+            warnings.append('旧版 .doc 已由内置解析器自动提取，并重新生成可编辑的标准文档。')
+        elif suffix == '.docx' and effective_format == 'docx' and redaction_mode == 'agent_enhanced':
+            warnings.append('增强脱敏已执行全文模型复检；为保证模型补识别结果完整落盘，输出按标准法律文档样式重新排版。')
         raw_text = _normalize_pdf_character_spacing(raw_text)
         redacted, text_findings, text_subjects = sanitize_text_and_subjects(
             raw_text,
@@ -2379,6 +2457,8 @@ def process_desensitization(
         output_stem = _safe_output_stem(f'{base_name}{marker}')
         output_file = work_dir / f'{output_stem}.{effective_format}'
         _render_standard_output(canonical_markdown, output_file, effective_format)
+
+    _validate_output_artifact(output_file, effective_format)
 
     if used_ocr:
         warnings.append('材料通过 OCR 提取文字后重新排版输出；系统已对识别结果执行全文脱敏和自动复检。')
@@ -2457,16 +2537,19 @@ def process_docx(
     all_subjects: list[SubjectMapping] = []
 
     if input_path.suffix.lower() == '.doc':
-        text = read_text_file(input_path)
+        text = normalize(read_text_file(input_path))
         redacted, findings, subjects = sanitize_text_and_subjects(
             text, engine, surface='doc', locator='全文'
         )
         all_findings.extend(findings)
         all_subjects.extend(subjects)
-        suffix = '.md' if output_format == 'md' else '.txt'
-        output_file = work_dir / f'desensitized_output{suffix}'
-        output_file.write_text(redacted, encoding='utf-8')
-        warnings.append('.doc 文件按纯文本兜底解析，复杂格式可能无法保留。')
+        if output_format == 'md':
+            output_file = work_dir / 'desensitized_output.md'
+            output_file.write_text(redacted, encoding='utf-8')
+        else:
+            output_file = work_dir / 'desensitized_output.docx'
+            _write_legal_docx(_canonicalize_markdown(redacted, input_path.stem), output_file)
+        warnings.append('旧版 .doc 已自动解析并重新生成标准 DOCX；正文内容已完整进入脱敏流程。')
         return output_file, all_findings, all_subjects
 
     document = Document(str(input_path))
@@ -2512,35 +2595,127 @@ def process_docx(
         output_file = work_dir / 'desensitized_output.md'
         output_file.write_text('\n'.join(md_lines).rstrip() + '\n', encoding='utf-8')
         return output_file, all_findings, all_subjects
-
-    for index, paragraph in enumerate(document.paragraphs, start=1):
-        if not paragraph.text:
-            continue
-        redacted, findings, subjects = sanitize_text_and_subjects(
-            paragraph.text, engine, surface='docx', locator=f'段落 {index}'
-        )
-        all_findings.extend(findings)
-        all_subjects.extend(subjects)
-        if findings or subjects:
-            paragraph.text = redacted
-
-    for table_index, table in enumerate(document.tables, start=1):
-        for row_index, row in enumerate(table.rows, start=1):
-            for col_index, cell in enumerate(row.cells, start=1):
-                if not cell.text:
-                    continue
-                locator = f'表格 {table_index} 行 {row_index} 列 {col_index}'
-                redacted, findings, subjects = sanitize_text_and_subjects(
-                    cell.text, engine, surface='docx_table', locator=locator
-                )
-                all_findings.extend(findings)
-                all_subjects.extend(subjects)
-                if findings or subjects:
-                    cell.text = redacted
-
     output_file = work_dir / 'desensitized_output.docx'
-    document.save(str(output_file))
+    output_file, story_findings, story_subjects = _redact_docx_story_parts(
+        input_path,
+        output_file,
+        engine,
+    )
+    all_findings.extend(story_findings)
+    all_subjects.extend(story_subjects)
+    warnings.append('DOCX 正文、表格、页眉页脚、批注、脚注/尾注及文本框已纳入全文脱敏。')
     return output_file, all_findings, all_subjects
+
+
+_WORD_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
+_WORD_TEXT = f'{{{_WORD_NS}}}t'
+_WORD_PARAGRAPH = f'{{{_WORD_NS}}}p'
+_XML_SPACE = '{http://www.w3.org/XML/1998/namespace}space'
+
+
+def _is_docx_story_part(name: str) -> bool:
+    return bool(re.fullmatch(
+        r'word/(?:document|header\d+|footer\d+|footnotes|endnotes|comments|glossary/document)\.xml',
+        name,
+    ))
+
+
+def _docx_paragraph_text(paragraph: Any) -> tuple[str, list[Any]]:
+    nodes = list(paragraph.iter(_WORD_TEXT))
+    return ''.join(node.text or '' for node in nodes), nodes
+
+
+def _apply_subject_mappings(text: str, mappings: list[SubjectMapping]) -> str:
+    redacted = text
+    ordered = sorted(
+        mappings,
+        key=lambda item: len(re.sub(r'\s+', '', item.original)),
+        reverse=True,
+    )
+    for mapping in ordered:
+        compact = re.sub(r'\s+', '', mapping.original)
+        if not compact:
+            continue
+        pattern = r'\s*'.join(re.escape(char) for char in compact)
+        redacted = re.sub(pattern, mapping.redacted, redacted)
+    return redacted
+
+
+def _replace_docx_paragraph_text(nodes: list[Any], original: str, replacement: str) -> None:
+    """Redistribute replacement text over existing runs to preserve styling as far as possible."""
+    cursor = 0
+    for index, node in enumerate(nodes):
+        original_length = len(node.text or '')
+        if index == len(nodes) - 1:
+            value = replacement[cursor:]
+        else:
+            value = replacement[cursor:cursor + original_length]
+        node.text = value
+        cursor += original_length
+        if value[:1].isspace() or value[-1:].isspace():
+            node.set(_XML_SPACE, 'preserve')
+        else:
+            node.attrib.pop(_XML_SPACE, None)
+
+
+def _redact_docx_story_parts(
+    input_path: Path,
+    output_file: Path,
+    engine: Desensitizer,
+) -> tuple[Path, list[Finding], list[SubjectMapping]]:
+    """Redact every Word story while retaining the original OOXML package."""
+    parser = etree.XMLParser(resolve_entities=False, no_network=True, recover=False)
+    story_roots: dict[str, Any] = {}
+    story_paragraphs: list[tuple[str, Any, str, list[Any]]] = []
+
+    with zipfile.ZipFile(input_path) as source:
+        for name in source.namelist():
+            if not _is_docx_story_part(name):
+                continue
+            root = etree.fromstring(source.read(name), parser=parser)
+            story_roots[name] = root
+            for paragraph in root.iter(_WORD_PARAGRAPH):
+                text, nodes = _docx_paragraph_text(paragraph)
+                if text.strip():
+                    story_paragraphs.append((name, paragraph, text, nodes))
+
+    full_text = '\n'.join(item[2] for item in story_paragraphs)
+    if not has_meaningful_text(full_text):
+        raise RuntimeError('无法从 DOCX 正文及附属区域提取到可脱敏文本。')
+
+    _redacted_full, findings, subject_mappings = sanitize_text_and_subjects(
+        full_text,
+        engine,
+        surface='docx_all_stories',
+        locator='全文（含页眉页脚、批注、脚注、尾注及文本框）',
+    )
+
+    for _name, _paragraph, original, nodes in story_paragraphs:
+        redacted = _apply_subject_mappings(original, subject_mappings)
+        redacted, _paragraph_findings = engine.sanitize_text(
+            redacted,
+            surface='docx_story',
+            locator='段落',
+        )
+        if redacted != original:
+            _replace_docx_paragraph_text(nodes, original, redacted)
+
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(input_path) as source, zipfile.ZipFile(
+        output_file,
+        'w',
+        compression=zipfile.ZIP_DEFLATED,
+    ) as target:
+        for info in source.infolist():
+            root = story_roots.get(info.filename)
+            data = (
+                etree.tostring(root, xml_declaration=True, encoding='UTF-8', standalone=True)
+                if root is not None
+                else source.read(info.filename)
+            )
+            target.writestr(info, data)
+
+    return output_file, findings, subject_mappings
 
 
 def process_pdf(

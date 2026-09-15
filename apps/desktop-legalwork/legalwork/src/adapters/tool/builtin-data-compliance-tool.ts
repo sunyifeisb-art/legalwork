@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises'
-import { basename, dirname, extname, join } from 'node:path'
+import { basename, dirname, extname, isAbsolute, join, resolve } from 'node:path'
 import { LocalToolHost, type LocalTool } from './local-tool-host.js'
 import { withToolBoundary } from './builtin-tool-utils.js'
 import type { DataComplianceTask, DataComplianceTaskService } from '../../services/data-compliance-task-service.js'
@@ -26,6 +26,12 @@ function mimeTypeFromPath(filePath: string): string {
 
 function actionLabel(action: string): string {
   return action === 'desensitize' ? '脱敏' : '合规审查'
+}
+
+function resolveToolPath(candidate: string, workspace: string): string {
+  const trimmed = candidate.trim()
+  if (isAbsolute(trimmed)) return trimmed
+  return resolve(workspace.trim() || process.cwd(), trimmed)
 }
 
 function formatTaskResult(task: DataComplianceTask | null): unknown {
@@ -142,7 +148,7 @@ export function createDataComplianceLocalTool(options: DataComplianceLocalToolOp
         },
         file_path: {
           type: 'string',
-          description: '待审查/脱敏的文件绝对路径，mode=file 时必填'
+          description: '待审查/脱敏的文件路径，可使用绝对路径或当前案件工作区的相对路径，mode=file 时必填'
         },
         document_name: {
           type: 'string',
@@ -202,11 +208,12 @@ export function createDataComplianceLocalTool(options: DataComplianceLocalToolOp
           if (!filePath.trim()) {
             return { output: { error: 'mode=file 时需要提供 file_path' }, isError: true }
           }
+          const resolvedFilePath = resolveToolPath(filePath, context.workspace)
           try {
-            const buffer = await readFile(filePath.trim())
+            const buffer = await readFile(resolvedFilePath)
             file = {
-              name: basename(filePath.trim()) || 'upload',
-              type: mimeTypeFromPath(filePath.trim()),
+              name: basename(resolvedFilePath) || 'upload',
+              type: mimeTypeFromPath(resolvedFilePath),
               dataBase64: buffer.toString('base64')
             }
           } catch (error) {
@@ -223,7 +230,9 @@ export function createDataComplianceLocalTool(options: DataComplianceLocalToolOp
 
         const explicitOutputDir =
           action === 'desensitize' && typeof args.output_dir === 'string'
-            ? args.output_dir.trim() || undefined
+            ? (args.output_dir.trim()
+                ? resolveToolPath(args.output_dir, context.workspace)
+                : undefined)
             : undefined
         // 脱敏默认输出目录 = 当前对话 workspace（项目文件夹）。
         // 用户未显式指定时，永远落到 workspace，而不是 worker 内部 taskDir。
@@ -233,7 +242,7 @@ export function createDataComplianceLocalTool(options: DataComplianceLocalToolOp
         if (action === 'desensitize' && !explicitOutputDir) {
           defaultOutputDir = context.workspace?.trim() || undefined
           if (!defaultOutputDir && mode === 'file' && typeof args.file_path === 'string' && args.file_path.trim()) {
-            defaultOutputDir = dirname(args.file_path.trim())
+            defaultOutputDir = dirname(resolveToolPath(args.file_path, context.workspace))
           }
         }
 

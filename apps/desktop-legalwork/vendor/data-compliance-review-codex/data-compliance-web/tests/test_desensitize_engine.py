@@ -1,8 +1,15 @@
 from __future__ import annotations
 
 import sys
+import re
+import tempfile
 import unittest
+import zipfile
 from pathlib import Path
+from unittest.mock import patch
+
+from docx import Document
+from openpyxl import Workbook
 
 
 WEB_ROOT = Path(__file__).resolve().parents[1]
@@ -14,12 +21,84 @@ from desensitize_engine import (  # noqa: E402
     SubjectMapping,
     _agent_subject_replacement_plan,
     _normalize_pdf_character_spacing,
+    _validate_output_artifact,
     _valid_agent_replacements,
+    process_desensitization,
     sanitize_text_and_subjects,
 )
+from scripts.preprocess_input import read_table_text  # noqa: E402
 
 
 class DesensitizeEngineTests(unittest.TestCase):
+    def test_legacy_doc_is_rebuilt_as_real_docx_instead_of_renamed_binary(self) -> None:
+        source_text = '委托诉讼代理人：张三，北京示例律师事务所律师。联系电话：13800138000。'
+        with tempfile.TemporaryDirectory() as temp_name:
+            root = Path(temp_name)
+            source = root / 'legacy.doc'
+            source.write_bytes(b'\xd0\xcf\x11\xe0' + b'\x00' * 256)
+            with patch('desensitize_engine.read_text', return_value=source_text), patch(
+                'desensitize_engine._agent_is_configured', return_value=False
+            ):
+                result = process_desensitization(
+                    task_id='legacy-doc-regression',
+                    input_path=source,
+                    document_name='legacy',
+                    work_dir=root / 'output',
+                    output_format='docx',
+                    redaction_mode='standard',
+                )
+
+            output = Path(result['output_file'])
+            self.assertTrue(zipfile.is_zipfile(output))
+            text = '\n'.join(paragraph.text for paragraph in Document(str(output)).paragraphs)
+            self.assertNotIn('张三', text)
+            self.assertNotIn('13800138000', text)
+            self.assertIn('张某', text)
+
+    def test_output_validation_rejects_binary_content_renamed_to_docx(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_name:
+            output = Path(temp_name) / 'fake.docx'
+            output.write_bytes(b'\xd0\xcf\x11\xe0' + b'\x00' * 128)
+            with self.assertRaisesRegex(RuntimeError, 'DOCX'):
+                _validate_output_artifact(output, 'docx')
+
+    def test_docx_headers_and_footers_are_included_in_local_redaction(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_name:
+            root = Path(temp_name)
+            source = root / 'stories.docx'
+            document = Document()
+            document.add_paragraph('正文不含个人信息。')
+            document.sections[0].header.paragraphs[0].text = '委托诉讼代理人：张三，律师。'
+            document.sections[0].footer.paragraphs[0].text = '联系电话：13800138000。'
+            document.save(str(source))
+
+            with patch('desensitize_engine._agent_is_configured', return_value=False):
+                result = process_desensitization(
+                    task_id='docx-story-regression',
+                    input_path=source,
+                    document_name='stories',
+                    work_dir=root / 'output',
+                    output_format='docx',
+                    redaction_mode='standard',
+                )
+
+            output = Document(str(result['output_file']))
+            header = output.sections[0].header.paragraphs[0].text
+            footer = output.sections[0].footer.paragraphs[0].text
+            self.assertNotIn('张三', header)
+            self.assertIn('张某', header)
+            self.assertNotIn('13800138000', footer)
+
+    def test_single_row_spreadsheet_header_is_not_mistaken_for_an_empty_sheet(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_name:
+            source = Path(temp_name) / 'single-row.xlsx'
+            workbook = Workbook()
+            workbook.active['A1'] = '联系电话：13800138000'
+            workbook.save(source)
+            extracted = read_table_text(source)
+            self.assertIn('13800138000', extracted)
+            self.assertNotIn('（空表）', extracted)
+
     def test_pdf_character_spacing_and_legal_subjects_are_normalized(self) -> None:
         source = (
             '上 诉 人 ： 河 南 联 洋 建 筑 工 程 有 限 公 司 ， 住 所 地 河 南 省 林 州 市 红 旗 渠 路 27号。\n'
@@ -66,6 +145,14 @@ class DesensitizeEngineTests(unittest.TestCase):
         redacted, findings, _ = sanitize_text_and_subjects(source, Desensitizer())
         self.assertEqual(redacted, source)
         self.assertEqual(findings, [])
+
+    def test_role_words_inside_prose_do_not_consume_following_verbs_as_a_name(self) -> None:
+        source = '内部联系人使用花名阿北，后文再次称阿北负责交接。'
+        redacted, _, mappings = sanitize_text_and_subjects(source, Desensitizer())
+        self.assertIn('联系人使用花名', redacted)
+        self.assertNotIn('使用花名', {item.original for item in mappings})
+        self.assertNotIn('阿北', redacted)
+        self.assertEqual(redacted.count('阿某'), 2)
 
     def test_agent_entity_types_use_program_replacement_policy(self) -> None:
         source = '杨俊生与小米科技有限公司签订合同。'
@@ -172,6 +259,21 @@ class DesensitizeEngineTests(unittest.TestCase):
             {'上饶银行股份有限公司', '江西省产交所股权登记结算有限公司'},
         )
 
+    def test_org_detection_trims_applicant_and_payment_prose(self) -> None:
+        source = (
+            '关于申请人远东福斯特新能源有限公司与被申请人某汽车公司的纠纷，'
+            '应在补助资金分配上依法保护申请人远东福斯特新能源有限公司。'
+            '之后由财政部将补贴资金转发至公司所在地的省财政厅。'
+        )
+        redacted, _, mappings = sanitize_text_and_subjects(source, Desensitizer())
+        originals = {item.original for item in mappings}
+        self.assertIn('远东福斯特新能源有限公司', originals)
+        self.assertNotIn('关于申请人远东福斯特新能源有限公司', originals)
+        self.assertNotIn('并在补助资金分配上依法保护申请人远东福斯特新能源有限公司', originals)
+        self.assertFalse(any('转发至公司' in original for original in originals))
+        self.assertIn('关于申请人', redacted)
+        self.assertIn('之后由财政部将补贴资金转发至公司所在地', redacted)
+
     def test_decoratively_spaced_judicial_roles_still_redact_each_name(self) -> None:
         source = '审 判 长 陈东强 审 判 员 马丽 法 官 助 理 刘小玉 书 记 员 马抒祺'
         redacted, _, mappings = sanitize_text_and_subjects(source, Desensitizer())
@@ -183,6 +285,18 @@ class DesensitizeEngineTests(unittest.TestCase):
         self.assertEqual(mapping['马抒祺'], '马某某')
         for original in mapping:
             self.assertNotIn(original, redacted)
+
+    def test_judicial_names_at_line_end_and_name_lists_are_redacted(self) -> None:
+        source = (
+            '审理法官： 仲伟珩 孙建国 林莹\n'
+            '审 判 员 林 莹\n'
+            '书 记 员 常 跃\n'
+        )
+        redacted, _, mappings = sanitize_text_and_subjects(source, Desensitizer())
+        mapping = {re.sub(r'\s+', '', item.original): item.redacted for item in mappings}
+        for name in ('仲伟珩', '孙建国', '林莹', '常跃'):
+            self.assertIn(name, mapping)
+            self.assertNotIn(name, re.sub(r'\s+', '', redacted))
 
 
 if __name__ == '__main__':

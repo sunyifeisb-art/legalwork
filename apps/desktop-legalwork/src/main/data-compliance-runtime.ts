@@ -62,12 +62,13 @@ export type DataComplianceSubmitPayload = {
 const PORT = 5100
 const BUNDLED_WEB_ROOT = join('vendor', 'data-compliance-review-codex', 'data-compliance-web')
 const DEPENDENCY_MARKER = '.legalwork-deps-installed'
-const MIN_PYTHON_VERSION = { major: 3, minor: 10 }
+const MIN_PYTHON_VERSION = { major: 3, minor: 11 }
 const MAX_PYTHON_VERSION = { major: 3, minor: 12 }
 const REQUIRED_PYTHON_IMPORTS = [
   'flask',
   'docx',
   'pypdf',
+  'legacy_doc',
   'openai',
   // presidio_analyzer / presidio_anonymizer / spacy / thinc 已从 requirements.txt 移除:
   // 发行版从未启用 presidio 路径,脱敏实际走中文正则 + RedactionDetector。
@@ -141,7 +142,7 @@ function pythonExecutable(venvRoot: string = runtimeVenvRoot()): string {
 // ── 合规环境包(COS 下载,方式B)──
 // 不再依赖系统 Python + PyPI 联网;首次用时从腾讯云 COS 下载解压,直接跑脱敏。
 const COMPLIANCE_BUNDLE_VERSION =
-  process.env.LEGALWORK_COMPLIANCE_BUNDLE_VERSION || '0.3.30'
+  process.env.LEGALWORK_COMPLIANCE_BUNDLE_VERSION || '0.3.31'
 const COMPLIANCE_BUNDLE_COS_BASE =
   process.env.LEGALWORK_COMPLIANCE_COS_BASE ||
   'https://legalwork-1318565101.cos.ap-guangzhou.myqcloud.com'
@@ -205,7 +206,7 @@ function findSystemPython(env: NodeJS.ProcessEnv = buildOcrRuntimeEnvironment())
     if (canRunSupportedPython(candidate, env)) return candidate
   }
 
-  throw new Error('未找到兼容的数据合规 Python 3.10-3.12 解释器。请重新运行安装，让 legalwork 自动安装内置 Python 3.11。')
+  throw new Error('未找到兼容的数据合规 Python 3.11-3.12 解释器。请重新运行安装，让 legalwork 自动安装内置 Python 3.11。')
 }
 
 function shellQuote(value: string): string {
@@ -766,7 +767,7 @@ export class DataComplianceRuntime {
       }
     }
     if (!canRunSupportedPython(python, env)) {
-      throw new Error('数据合规虚拟环境不是 Python 3.10-3.12，无法稳定安装 PaddleOCR 等依赖。')
+      throw new Error('数据合规虚拟环境不是 Python 3.11-3.12，无法稳定安装 PaddleOCR、旧版 DOC 解析等依赖。')
     }
     if (!existsSync(marker) || !(await this.hasRequiredPythonPackages(python, env))) {
       this.installing = true

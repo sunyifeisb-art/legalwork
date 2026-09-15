@@ -46,7 +46,7 @@ import { repairModelHistoryItems } from '../domain/model-history-repair.js'
 import type { TurnItem } from '../contracts/items.js'
 import type { ThreadGoal, ThreadTodoList } from '../contracts/threads.js'
 import { modelCapabilitiesForModel, type ContextCompactionConfig } from './model-context-profile.js'
-import type { SkillRuntime } from '../skills/skill-runtime.js'
+import type { SkillRuntime, SkillTurnResolution } from '../skills/skill-runtime.js'
 import type { AttachmentContent, AttachmentStore } from '../attachments/attachment-store.js'
 import {
   attachmentOcrInstruction,
@@ -1629,10 +1629,15 @@ export function allowedToolNamesWithGuiStateTools(
   prompt = '',
   activeSkillIds: readonly string[] = [],
   primaryLegalSource?: LegalResearchPrimarySource,
-  threadTitle = ''
+  threadTitle = '',
+  planTurnActive = false
 ): readonly string[] | undefined {
   if (!allowedToolNames) return allowedToolNames
   const next = new Set(allowedToolNames)
+  // Plan mode owns its final write through create_plan. A skill may narrow the
+  // catalog to its own shell/document tools, but it must never hide the plan
+  // tool and force the model to write the reserved plan path via generic write.
+  if (planTurnActive) next.add(CREATE_PLAN_TOOL_NAME)
   if (activeGoal) {
     next.add(GET_GOAL_TOOL_NAME)
     next.add(UPDATE_GOAL_TOOL_NAME)
@@ -2243,6 +2248,14 @@ export class AgentLoop {
     // Per-turn mode overrides the thread mode so the GUI can toggle
     // Plan/agent (and run Build as agent) without recreating the thread.
     const effectiveMode = turn?.mode ?? thread?.mode
+    const isKnowledgeQaThread = isKnowledgeQaThreadTitle(thread?.title)
+    const planTurnActive = !isKnowledgeQaThread &&
+      (effectiveMode === 'plan' || Boolean(activePlanContext))
+    // Knowledge-base side-panel turns already carry the renderer-produced RAG
+    // evidence in the user message. Keep that prompt available to the model,
+    // but never feed the whole evidence bundle into generic skill/workflow
+    // routing: source filenames and quoted document text can otherwise look
+    // like a request to generate a Word/PDF and make the model emit DSML.
     const modelRoute = await this.resolveTurnModel({
       threadId,
       turnId,
@@ -2271,7 +2284,8 @@ export class AgentLoop {
       modelCapabilities
     })
     const routedSkillPrompt = skillRoutingPrompt(turn?.prompt ?? '', healed.items, turnId)
-    const legalResearchWorkflow = isLegalResearchWorkflowPrompt(routedSkillPrompt)
+    const workflowPrompt = isKnowledgeQaThread ? '' : routedSkillPrompt
+    const legalResearchWorkflow = isLegalResearchWorkflowPrompt(workflowPrompt)
     const legalResearchPlanPublished = legalResearchWorkflow &&
       hasPublishedLegalResearchPlan(healed.items, turnId)
     const legalResearchPlanPending = legalResearchWorkflow && !legalResearchPlanPublished
@@ -2284,21 +2298,25 @@ export class AgentLoop {
     // accidentally widened this to isContextDependentPrompt(), causing an old
     // DOCX to satisfy the new request and stripping every tool from the model.
     const continuationPrompt = isContinuationOnlyPrompt(turn?.prompt?.trim() ?? '')
-    const skillResolution = this.opts.skillRuntime?.resolveTurn({
-      prompt: routedSkillPrompt,
-      workspace: thread?.workspace ?? ''
-    }) ?? {
+    const emptySkillResolution: SkillTurnResolution = {
       activeSkillIds: [],
       activations: [],
       instructions: [],
       injectedBytes: 0
     }
-    const memories = await this.retrieveMemories({
-      prompt: turn?.prompt ?? '',
-      workspace: thread?.workspace ?? '',
-      turnId
-    })
-    const planTurnActive = effectiveMode === 'plan' || Boolean(activePlanContext)
+    const skillResolution = isKnowledgeQaThread
+      ? emptySkillResolution
+      : this.opts.skillRuntime?.resolveTurn({
+          prompt: workflowPrompt,
+          workspace: thread?.workspace ?? ''
+        }) ?? emptySkillResolution
+    const memories = isKnowledgeQaThread
+      ? []
+      : await this.retrieveMemories({
+          prompt: turn?.prompt ?? '',
+          workspace: thread?.workspace ?? '',
+          turnId
+        })
     const documentWritingThread = isDocumentWritingFeatureTitle(thread?.title ?? '')
     // Learning-iteration threads analyze a bounded corpus with an explicit
     // "do not call any tools" instruction; the runtime owns validation and
@@ -2312,10 +2330,11 @@ export class AgentLoop {
     const allowedToolNames = allowedToolNamesWithGuiStateTools(
       skillResolution.allowedToolNames,
       activeGoalInstruction !== null,
-      routedSkillPrompt,
+      workflowPrompt,
       skillResolution.activeSkillIds,
       this.opts.primaryLegalSource,
-      thread?.title ?? ''
+      thread?.title ?? '',
+      planTurnActive
     )
     const toolContext: ToolHostContext = {
       threadId,
@@ -2330,7 +2349,7 @@ export class AgentLoop {
       ...(allowedToolNames ? { allowedToolNames } : {}),
       webFirstMcpScope: isMainAgentWebFirstScope({
         threadTitle: thread?.title ?? '',
-        routedSkillPrompt,
+        routedSkillPrompt: workflowPrompt,
         activeSkillIds: skillResolution.activeSkillIds
       }),
       approvalPolicy,
@@ -2390,7 +2409,7 @@ export class AgentLoop {
         ? CREATE_PLAN_TOOL_NAME
         : undefined
     const frameworkAttachmentRequested =
-      /(?:按|按照|依照|采用).{0,12}(?:框架|思路|提纲)|(?:框架|思路|提纲).{0,12}(?:重组|重构|改写|论证)/s.test(routedSkillPrompt)
+      /(?:按|按照|依照|采用).{0,12}(?:框架|思路|提纲)|(?:框架|思路|提纲).{0,12}(?:重组|重构|改写|论证)/s.test(workflowPrompt)
     const extractedAttachmentTexts = attachments.documentMaps.filter(
       (entry) => entry.status === 'extracted' && entry.text
     )
@@ -2405,14 +2424,14 @@ export class AgentLoop {
       : ''
     const explicitTaskContract = documentTaskContract(
       frameworkAttachmentText
-        ? `${routedSkillPrompt}\n\n<user_framework_attachment>\n${frameworkAttachmentText}\n</user_framework_attachment>`
-        : routedSkillPrompt
+        ? `${workflowPrompt}\n\n<user_framework_attachment>\n${frameworkAttachmentText}\n</user_framework_attachment>`
+        : workflowPrompt
     )
-    const requestedArtifacts = isLearningIterationThread
+    const requestedArtifacts = isLearningIterationThread || isKnowledgeQaThread
       ? []
-      : requestedDocumentArtifacts(routedSkillPrompt)
+      : requestedDocumentArtifacts(workflowPrompt)
     const requiredPresentationScenario = requestedArtifacts.includes('pptx')
-      ? presentationScenarioFor(routedSkillPrompt)
+      ? presentationScenarioFor(workflowPrompt)
       : undefined
     const completedArtifacts = successfulDocumentArtifacts(
       healed.items,
@@ -2467,12 +2486,8 @@ export class AgentLoop {
     const desensitizationAttemptCount = healed.items.filter((item) =>
       item.turnId === turnId && item.kind === 'tool_result' && item.toolName === 'data_compliance'
     ).length
-    // Knowledge-base UI threads already carry a renderer-produced RAG bundle
-    // in their prompt. They must not enter the generic forced local-retrieval
-    // gate, especially because their model tool catalog is intentionally empty.
-    const isKnowledgeQaThread = isKnowledgeQaThreadTitle(thread?.title) && !planTurnActive
-    const localKnowledgeRequested = !isLearningIterationThread &&
-      requestsLocalKnowledgeRetrieval(routedSkillPrompt)
+    const localKnowledgeRequested = !isLearningIterationThread && !isKnowledgeQaThread &&
+      requestsLocalKnowledgeRetrieval(workflowPrompt)
     const localKnowledgeSatisfied = localKnowledgeRequested &&
       hasUsableLocalKnowledgeEvidence(
         healed.items,
@@ -2515,9 +2530,9 @@ export class AgentLoop {
       localKnowledgeRequested &&
       !localKnowledgeSatisfied &&
       !localKnowledgeRequiredToolName
-    const factContract = isLearningIterationThread
+    const factContract = isLearningIterationThread || isKnowledgeQaThread
       ? EMPTY_FACT_CONTRACT
-      : factVerificationContract(routedSkillPrompt, { primaryLegalSource: this.opts.primaryLegalSource })
+      : factVerificationContract(workflowPrompt, { primaryLegalSource: this.opts.primaryLegalSource })
     const factProgress = factVerificationProgress(healed.items, turnId, factContract)
     const webSearchFallbackActive = this.webSearchFallbackTurns.has(turnId)
     const webSearchRequired =
@@ -2525,7 +2540,7 @@ export class AgentLoop {
       !planTurnActive &&
       !legalResearchWorkflow &&
       !webSearchFallbackActive &&
-      requiresWebSearch(routedSkillPrompt)
+      requiresWebSearch(workflowPrompt)
     const primaryLegalDatabaseEvidenceReady = legalResearchWorkflow &&
       hasUsablePrimaryLegalDatabaseEvidence(healed.items, turnId)
     const legalResearchSynthesisReady = primaryLegalDatabaseEvidenceReady &&
@@ -2613,8 +2628,8 @@ export class AgentLoop {
       localKnowledgeSatisfied &&
       !knowledgePdfReadsSatisfied &&
       !knowledgePdfReadRequiredToolName
-    const imaKnowledgeRequested = !isLearningIterationThread &&
-      requestsImaKnowledgeRetrieval(routedSkillPrompt)
+    const imaKnowledgeRequested = !isLearningIterationThread && !isKnowledgeQaThread &&
+      requestsImaKnowledgeRetrieval(workflowPrompt)
     const imaKnowledgeSatisfied = imaKnowledgeRequested &&
       hasSuccessfulImaEvidence(
         healed.items,
@@ -2636,7 +2651,7 @@ export class AgentLoop {
     if (deferDocumentForImaRecovery) {
       this.imaRecoveryPasses.set(turnId, imaRecoveryPassCount + 1)
     }
-    const bareResearchTopic = !webSearchRequired && !isLearningIterationThread && isBareResearchTopicPrompt(
+    const bareResearchTopic = !webSearchRequired && !isLearningIterationThread && !isKnowledgeQaThread && isBareResearchTopicPrompt(
       latestUserMessageText(healed.items, turnId) || turn?.prompt || ''
     )
     const turnBudgetWrapUp = this.armTurnBudgetWrapUp(turnId)
@@ -2645,11 +2660,10 @@ export class AgentLoop {
     const scopedToolSpecs = isLearningIterationThread
       ? []
       : knowledgeQaToolSpecs(toolSpecs, {
-          title: thread?.title,
-          planTurnActive
+          title: thread?.title
         })
     const imaRouteAction = resolveImaRouteAction({
-      prompt: routedSkillPrompt,
+      prompt: workflowPrompt,
       tools: scopedToolSpecs,
       items: healed.items,
       turnId,
@@ -2688,9 +2702,9 @@ export class AgentLoop {
       !imaKnowledgeSatisfied &&
       imaToolAdvertised &&
       !deferDocumentForImaRecovery &&
-      !(hasCompletedImaResearchAttempt(healed.items, turnId) && !imaMandatedByPrompt(routedSkillPrompt))
+      !(hasCompletedImaResearchAttempt(healed.items, turnId) && !imaMandatedByPrompt(workflowPrompt))
     const academicCitationVerificationRequested =
-      requestsAcademicCitationVerification(routedSkillPrompt) &&
+      requestsAcademicCitationVerification(workflowPrompt) &&
       (localKnowledgeRequested || imaKnowledgeRequested)
     const academicCitationVerified = academicCitationVerificationRequested &&
       hasSuccessfulAcademicCitationVerification(healed.items, turnId)
@@ -2817,7 +2831,7 @@ export class AgentLoop {
       'evidence.ima',
       imaKnowledgeRequested &&
         imaToolAdvertised &&
-        !(hasCompletedImaResearchAttempt(healed.items, turnId) && !imaMandatedByPrompt(routedSkillPrompt)),
+        !(hasCompletedImaResearchAttempt(healed.items, turnId) && !imaMandatedByPrompt(workflowPrompt)),
       imaKnowledgeSatisfied
     )
     registerAcceptanceGate('evidence.case', caseResearchRequested, caseResearchSatisfied)
@@ -2881,7 +2895,7 @@ export class AgentLoop {
         presentationDeliveryAttempts >= workflowAttemptLimit('presentation-delivery'))
     const automaticPlan = !planTurnActive
       ? buildAutomaticTaskPlan({
-          prompt: routedSkillPrompt,
+          prompt: workflowPrompt,
           signals: {
             requestedArtifacts,
             completedArtifacts: new Set(completedArtifacts),
@@ -2938,7 +2952,7 @@ export class AgentLoop {
         const callId = this.opts.ids.next('call_fresh_web_search')
         const provider = toolProviderMetadata.get('web_search')
         const toolKind = toolKinds.get('web_search')
-        const searchArguments = { query: buildWebSearchQuery(routedSkillPrompt), limit: 8 }
+        const searchArguments = { query: buildWebSearchQuery(workflowPrompt), limit: 8 }
         const call: ToolCallLike = {
           callId,
           toolName: 'web_search',
@@ -2993,7 +3007,7 @@ export class AgentLoop {
       const provider = toolProviderMetadata.get(caseResearchRequiredToolName)
       const toolKind = toolKinds.get(caseResearchRequiredToolName)
       const argumentsForCaseResearch = {
-        query: automaticCaseResearchQuery(routedSkillPrompt),
+        query: automaticCaseResearchQuery(workflowPrompt),
         limit: Math.max(5, (explicitTaskContract.minimumCaseCount ?? 2) * 3)
       }
       const call: ToolCallLike = {

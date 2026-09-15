@@ -1,4 +1,5 @@
 import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { createRequire } from 'node:module'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { describe, expect, it } from 'vitest'
@@ -40,6 +41,29 @@ describe('text extractor', () => {
   it('marks PowerPoint formats as extractable', () => {
     expect(EXTRACTABLE_EXTENSIONS.has('.pptx')).toBe(true)
     expect(EXTRACTABLE_EXTENSIONS.has('.ppt')).toBe(true)
+  })
+
+  it('extracts rows from a real xlsx workbook through CommonJS interop', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'legalwork-xlsx-'))
+    try {
+      const xlsxPath = join(root, '案件时间轴.xlsx')
+      const xlsx = createRequire(import.meta.url)('xlsx') as typeof import('xlsx')
+      const workbook = xlsx.utils.book_new()
+      xlsx.utils.book_append_sheet(workbook, xlsx.utils.aoa_to_sheet([
+        ['日期', '事项', '证据'],
+        ['2026-01-15', '签订保证合同', '合同原件'],
+        ['2026-03-20', '发出催告函', '送达回证']
+      ]), '时间轴')
+      xlsx.writeFile(workbook, xlsxPath)
+
+      const result = await extractDocumentText(xlsxPath)
+
+      expect(result.text).toContain('签订保证合同')
+      expect(result.text).toContain('发出催告函')
+      expect(result.text).toContain('送达回证')
+    } finally {
+      await rm(root, { recursive: true, force: true })
+    }
   })
 
   it('rejects long but garbled PDF text so OCR can take over', () => {

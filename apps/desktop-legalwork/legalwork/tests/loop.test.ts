@@ -541,6 +541,20 @@ describe('AgentLoop', () => {
     expect(shouldHideRetrievalToolFailure('read')).toBe(false)
   })
 
+  it('keeps create_plan advertised through a restrictive Skill allowlist in Plan mode', () => {
+    const allowed = allowedToolNamesWithGuiStateTools(
+      ['bash', 'write', 'document_skill_execute'],
+      false,
+      '为案件材料制定审查计划',
+      ['ocr-extraction', 'litigation-prep'],
+      undefined,
+      '案件审查计划',
+      true
+    )
+
+    expect(allowed).toContain(CREATE_PLAN_TOOL_NAME)
+  })
+
   it('builds a bounded search query without routed follow-up control text', () => {
     const prompt = [
       '2026年法考报名政策和考试时间',
@@ -1536,12 +1550,20 @@ describe('AgentLoop', () => {
 
   it('answers renderer-grounded knowledge QA without forcing a second retrieval tool', async () => {
     const requests: ModelRequest[] = []
+    let skillResolutionCalls = 0
     const knowledgeTool = LocalToolHost.defineTool({
       name: 'knowledge_auto_retrieve',
       description: 'retrieve local knowledge',
       inputSchema: { type: 'object', properties: {} },
       policy: 'auto',
       execute: async () => ({ output: { sources: [], contextText: '' } })
+    })
+    const documentTool = LocalToolHost.defineTool({
+      name: 'document_skill_execute',
+      description: 'generate a document',
+      inputSchema: { type: 'object', properties: {} },
+      policy: 'auto',
+      execute: async () => ({ output: '/tmp/should-not-be-created.docx' })
     })
     const h = makeHarness({
       provider: 'knowledge-direct-answer',
@@ -1551,7 +1573,20 @@ describe('AgentLoop', () => {
         yield { kind: 'assistant_text_delta', text: '知识库中共有十二个文件。' }
         yield { kind: 'completed', stopReason: 'stop' }
       }
-    }, { tools: [knowledgeTool] })
+    }, {
+      tools: [knowledgeTool, documentTool],
+      skillRuntime: {
+        resolveTurn: () => {
+          skillResolutionCalls += 1
+          return {
+            activeSkillIds: ['legal-document-formatting'],
+            activations: [],
+            instructions: ['Call document_skill_execute and generate a Word file.'],
+            injectedBytes: 64
+          }
+        }
+      } as never
+    })
     await h.threadStore.upsert(createThreadRecord({
       id: h.threadId,
       title: '知识库全局对话 · 有什么文件',
@@ -1561,16 +1596,18 @@ describe('AgentLoop', () => {
     const { turnId } = await h.turns.startTurn({
       threadId: h.threadId,
       request: {
-        prompt: '请基于以下从知识库中检索到的相关内容回答：知识库有什么文件？\n\nRAG 检索上下文：共十二个文件。'
+        prompt: '请基于以下从知识库中检索到的相关内容回答：知识库有什么文件？\n\nRAG 检索上下文：来源包括《互联网平台企业涉税信息报送规定.pdf》，正文提到生成 Word 报告。'
       }
     })
 
     const status = await h.loop.runTurn(h.threadId, turnId)
 
     expect(status).toBe('completed')
+    expect(skillResolutionCalls).toBe(0)
     expect(requests).toHaveLength(1)
     expect(requests[0]?.tools).toEqual([])
     expect(requests[0]?.requiredToolName).toBeUndefined()
+    expect(requests[0]?.contextInstructions?.join('\n') ?? '').not.toContain('document_skill_execute')
   })
 
   it('does not force local retrieval or block the model response when evidence is unavailable', async () => {
@@ -4203,6 +4240,73 @@ describe('AgentLoop', () => {
           operation: 'draft'
         })
       }
+    } finally {
+      await rm(workspace, { recursive: true, force: true })
+    }
+  })
+
+  it('does not let an activated Skill hide create_plan from a GUI plan turn', async () => {
+    const workspace = await mkdtemp(join(tmpdir(), 'legalwork-loop-plan-skill-allowlist-'))
+    const observedToolLists: string[][] = []
+    try {
+      const h = makeHarness(
+        {
+          provider: 'planner',
+          model: 'planner',
+          async *stream(request: ModelRequest): AsyncIterable<ModelStreamChunk> {
+            observedToolLists.push(request.tools.map((tool) => tool.name))
+            if (request.requiredToolName === CREATE_PLAN_TOOL_NAME) {
+              yield {
+                kind: 'tool_call_complete',
+                callId: 'call_plan_restricted',
+                toolName: CREATE_PLAN_TOOL_NAME,
+                arguments: {
+                  markdown: '# Restricted skill plan',
+                  operation: 'draft',
+                  source_request: '审核案件材料'
+                }
+              }
+              yield { kind: 'completed', stopReason: 'tool_calls' }
+              return
+            }
+            yield { kind: 'assistant_text_delta', text: '计划已保存。' }
+            yield { kind: 'completed', stopReason: 'stop' }
+          }
+        },
+        {
+          tools: buildDefaultLocalTools(),
+          skillRuntime: {
+            resolveTurn: () => ({
+              activeSkillIds: ['ocr-extraction', 'litigation-prep'],
+              activations: [],
+              instructions: [],
+              allowedToolNames: ['bash', 'write', 'document_skill_execute'],
+              injectedBytes: 0
+            })
+          } as never
+        }
+      )
+      await bootstrapThread(h, {
+        workspace,
+        request: {
+          prompt: '为案件材料制定审查计划',
+          mode: 'plan',
+          guiPlan: {
+            operation: 'draft',
+            workspaceRoot: workspace,
+            relativePath: '.legalworksdd/plan/restricted.md',
+            planId: 'restricted-plan',
+            sourceRequest: '审核案件材料'
+          }
+        }
+      })
+
+      const status = await h.loop.runTurn(h.threadId, h.turnId)
+
+      expect(status).toBe('completed')
+      expect(observedToolLists[0]).toEqual([CREATE_PLAN_TOOL_NAME])
+      await expect(readFile(join(workspace, '.legalworksdd/plan/restricted.md'), 'utf8'))
+        .resolves.toBe('# Restricted skill plan')
     } finally {
       await rm(workspace, { recursive: true, force: true })
     }

@@ -34,6 +34,11 @@ from desensitize_engine import (
     write_retention_note,
 )
 
+try:
+    from scripts.preprocess_input import read_text as read_input_text
+except ModuleNotFoundError:  # pragma: no cover - package import path
+    from web.scripts.preprocess_input import read_text as read_input_text
+
 # 可配置路径（由调用方设置）
 BASE_DIR = Path(__file__).parent
 WORKSPACE_ROOT = Path(__file__).resolve().parent.parent
@@ -242,13 +247,10 @@ def validate_output_dir(output_dir: str) -> Path | None:
 
 
 def read_text_best_effort(path: Path) -> str:
-    data = path.read_bytes()
-    for encoding in ('utf-8', 'utf-8-sig', 'gb18030', 'latin-1'):
-        try:
-            return data.decode(encoding)
-        except UnicodeDecodeError:
-            continue
-    return data.decode('utf-8', errors='replace')
+    try:
+        return read_input_text(str(path), '')
+    except SystemExit as exc:
+        raise RuntimeError(str(exc)) from exc
 
 
 def line_snippet(lines: list[str], line_no: int, radius: int = 1) -> str:
@@ -1265,16 +1267,42 @@ def run_desensitize_pipeline(
                         f'正在处理第 {index}/{len(input_files)} 份材料：{original_name}',
                         detail={'current': index, 'total': len(input_files), 'file': original_name},
                     )
-                    result = process_desensitization(
-                        task_id=f'{task_id}_{index}',
-                        input_path=file_path,
-                        document_name=Path(original_name).stem or document_name,
-                        work_dir=item_dir,
-                        is_text=False,
-                        output_dir=None,
-                        output_format=output_format,
-                        redaction_mode=redaction_mode,
-                    )
+                    try:
+                        result = process_desensitization(
+                            task_id=f'{task_id}_{index}',
+                            input_path=file_path,
+                            document_name=Path(original_name).stem or document_name,
+                            work_dir=item_dir,
+                            is_text=False,
+                            output_dir=None,
+                            output_format=output_format,
+                            redaction_mode=redaction_mode,
+                        )
+                    except Exception as enhanced_error:
+                        if redaction_mode != 'agent_enhanced':
+                            raise
+                        result = process_desensitization(
+                            task_id=f'{task_id}_{index}',
+                            input_path=file_path,
+                            document_name=Path(original_name).stem or document_name,
+                            work_dir=item_dir,
+                            is_text=False,
+                            output_dir=None,
+                            output_format=output_format,
+                            redaction_mode='standard',
+                        )
+                        fallback_report = result['report']
+                        fallback_report.setdefault('warnings', []).append(
+                            f'增强模型调用异常，已自动切换本地脱敏并完成输出：{enhanced_error}'
+                        )
+                        Path(result['report_json']).write_text(
+                            json.dumps(fallback_report, ensure_ascii=False, indent=2),
+                            encoding='utf-8',
+                        )
+                        Path(result['report_md']).write_text(
+                            render_report_markdown(fallback_report),
+                            encoding='utf-8',
+                        )
                     report = result['report']
                     summary = report.get('summary', {}) if isinstance(report, dict) else {}
                     file_findings = int(summary.get('total_findings') or 0)
@@ -1435,17 +1463,60 @@ def run_desensitize_pipeline(
         error_detail = traceback.format_exc()
         print(f"ERROR in desensitize task {task_id}: {error_detail}", file=sys.stderr)
         if redaction_mode == 'agent_enhanced':
-            task['status'] = 'failed'
-            task['error'] = str(e)
-            task['error_detail'] = error_detail
-            task['completed_at'] = datetime.now().isoformat()
-            task['progress'] = {
-                'step': 4,
-                'total_steps': 4,
-                'message': '脱敏处理失败，请检查模型配置或材料格式。',
-                'status': 'error',
-                'percent': 100,
-            }
-            save_task_state(task_id)
+            # Enhanced mode is additive. A model/API failure must never prevent the
+            # deterministic local engine from producing a usable redacted file.
+            try:
+                fallback_result = process_desensitization(
+                    task_id=task_id,
+                    input_path=Path(input_path),
+                    document_name=document_name,
+                    work_dir=work_dir,
+                    is_text=is_text,
+                    output_dir=output_dir,
+                    output_format=output_format,
+                    redaction_mode='standard',
+                )
+                fallback_report = fallback_result['report']
+                warning = f'增强模型调用异常，已自动切换本地脱敏并完成输出：{e}'
+                fallback_report.setdefault('warnings', []).append(warning)
+                Path(fallback_result['report_json']).write_text(
+                    json.dumps(fallback_report, ensure_ascii=False, indent=2),
+                    encoding='utf-8',
+                )
+                Path(fallback_result['report_md']).write_text(
+                    render_report_markdown(fallback_report),
+                    encoding='utf-8',
+                )
+                task['status'] = 'completed'
+                task['completed_at'] = datetime.now().isoformat()
+                task['error_detail'] = error_detail
+                task['result'] = {
+                    'desensitized_output': str(fallback_result['output_file']),
+                    'desensitization_report': str(fallback_result['report_json']),
+                    'desensitization_report_md': str(fallback_result['report_md']),
+                    'retention_note': str(fallback_result['retention_note']),
+                    'subject_mapping_md': str(fallback_result['subject_mapping_md']),
+                    'subject_mapping_json': str(fallback_result['subject_mapping_json']),
+                }
+                if output_dir:
+                    task['result']['output_dir'] = str(output_dir)
+                task['progress'] = {
+                    'step': 4,
+                    'total_steps': 4,
+                    'message': f'增强模型不可用，已自动完成本地脱敏：命中 {fallback_report.get("summary", {}).get("total_findings", 0)} 处敏感信息',
+                    'status': 'completed',
+                    'percent': 100,
+                }
+                save_task_state(task_id)
+            except Exception as fallback_error:
+                complete_desensitize_with_fallback(
+                    task_id,
+                    task,
+                    work_dir,
+                    input_path,
+                    document_name,
+                    fallback_error,
+                    output_dir,
+                )
         else:
             complete_desensitize_with_fallback(task_id, task, work_dir, input_path, document_name, e, output_dir)

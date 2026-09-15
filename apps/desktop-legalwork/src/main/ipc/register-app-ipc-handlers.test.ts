@@ -112,7 +112,7 @@ describe('registerAppIpcHandlers', () => {
     expect(applySettingsPatch).not.toHaveBeenCalled()
   })
 
-  it('requires Python 3.10 or newer for data compliance installs', async () => {
+  it('requires Python 3.11 or newer for data compliance installs', async () => {
     const {
       isSupportedDataCompliancePythonVersion,
       parsePythonVersionOutput
@@ -120,7 +120,7 @@ describe('registerAppIpcHandlers', () => {
 
     expect(parsePythonVersionOutput('Python 3.11.9')).toEqual({ major: 3, minor: 11, patch: 9 })
     expect(isSupportedDataCompliancePythonVersion('Python 3.9.18')).toBe(false)
-    expect(isSupportedDataCompliancePythonVersion('Python 3.10.0')).toBe(true)
+    expect(isSupportedDataCompliancePythonVersion('Python 3.10.0')).toBe(false)
     expect(isSupportedDataCompliancePythonVersion('Python 3.11.9')).toBe(true)
   })
 

@@ -3,10 +3,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import shutil
 import sys
+import tempfile
+import zipfile
+from xml.etree import ElementTree
 from pathlib import Path
 
 from docx import Document
@@ -30,6 +34,11 @@ try:
     from pypdf import PdfReader
 except Exception:  # pragma: no cover - fallback handled at runtime
     PdfReader = None
+
+try:
+    from legacy_doc import extract_text as extract_legacy_doc
+except Exception:  # pragma: no cover - optional outside the packaged runtime
+    extract_legacy_doc = None
 
 TABLE_EXTENSIONS = {'.csv', '.tsv', '.xlsx', '.xls', '.ods'}
 PRESENTATION_EXTENSIONS = {'.pptx'}
@@ -117,35 +126,168 @@ def read_image_text(path: Path) -> str:
 def read_office_text(path: Path) -> str:
     if path.suffix.lower() == '.docx':
         try:
-            document = Document(str(path))
-            text = '\n\n'.join(iter_docx_text(document)).strip()
-        except Exception as exc:
+            text = read_docx_story_text(path)
+        except Exception:
             text = ''
         if text:
             return text
         if path.suffix.lower() != '.doc':
             raise SystemExit('无法从 DOCX 中提取文本，请确认文件内容有效')
 
-    if not shutil.which('textutil'):
-        raise SystemExit('当前环境不支持 .doc 解析，请先将文件另存为 .docx 或 .pdf')
+    return read_legacy_doc_text(path)
 
-    try:
-        run = subprocess.run(
-            ['textutil', '-convert', 'txt', '-stdout', str(path)],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-    except Exception as exc:
-        raise SystemExit(f'无法调用文档解析工具: {exc}') from exc
 
-    if run.returncode != 0:
-        message = run.stderr.strip() or f'textutil failed with exit code {run.returncode}'
-        raise SystemExit(message)
-    text = run.stdout.strip()
-    if not text:
-        raise SystemExit('无法从文档中提取文本，请确认文件内容有效')
-    return text
+def _is_docx_story_part(name: str) -> bool:
+    return bool(re.fullmatch(
+        r'word/(?:document|header\d+|footer\d+|footnotes|endnotes|comments|glossary/document)\.xml',
+        name,
+    ))
+
+
+def read_docx_story_text(path: Path) -> str:
+    """Read body, tables, headers, footers, notes, comments and text boxes."""
+    namespace = '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}'
+    paragraphs: list[str] = []
+    with zipfile.ZipFile(path) as archive:
+        for name in archive.namelist():
+            if not _is_docx_story_part(name):
+                continue
+            root = ElementTree.fromstring(archive.read(name))
+            for paragraph in root.iter(f'{namespace}p'):
+                text = ''.join(node.text or '' for node in paragraph.iter(f'{namespace}t')).strip()
+                if text:
+                    paragraphs.append(text)
+    return '\n\n'.join(paragraphs).strip()
+
+
+def _clean_legacy_doc_text(text: str) -> str:
+    """Remove Word field instructions while retaining their visible result text."""
+    text = text.replace('\r\n', '\n').replace('\r', '\n').replace('\u2028', '\n')
+    text = re.sub(
+        r'\bHYPERLINK\s+"[^"]*"(?:\s+\\[A-Za-z]+\s+"[^"]*")*\s*',
+        '',
+        text,
+        flags=re.IGNORECASE,
+    )
+    text = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', text)
+    text = re.sub(r'\n{4,}', '\n\n\n', text)
+    return text.strip()
+
+
+def _find_soffice() -> str | None:
+    explicit = os.environ.get('LEGALWORK_SOFFICE', '').strip()
+    candidates = [
+        explicit,
+        shutil.which('soffice'),
+        shutil.which('libreoffice'),
+        '/Applications/LibreOffice.app/Contents/MacOS/soffice',
+        '/usr/bin/libreoffice',
+        r'C:\Program Files\LibreOffice\program\soffice.exe',
+        r'C:\Program Files (x86)\LibreOffice\program\soffice.exe',
+    ]
+    return next((str(candidate) for candidate in candidates if candidate and Path(candidate).exists()), None)
+
+
+def _decode_extractor_output(data: bytes) -> str:
+    for encoding in ('utf-8', 'utf-8-sig', 'gb18030', 'utf-16'):
+        try:
+            value = data.decode(encoding)
+        except UnicodeDecodeError:
+            continue
+        if has_meaningful_text(value):
+            return value
+    return data.decode('utf-8', errors='replace')
+
+
+def read_legacy_doc_text(path: Path) -> str:
+    """Extract Word 97-2003 text without ever decoding OLE bytes as plain text."""
+    data = path.read_bytes()
+    errors: list[str] = []
+
+    # Packaged Windows/macOS/Linux runtime path: safe, dependency-free parser.
+    if extract_legacy_doc is not None:
+        try:
+            result = extract_legacy_doc(data)
+            text = _clean_legacy_doc_text(result.text)
+            if has_meaningful_text(text):
+                return text
+            errors.append('legacy-doc 未提取到有效正文')
+        except Exception as exc:
+            errors.append(f'legacy-doc: {exc}')
+
+    # Full document converter fallback. Useful for uncommon old Word variants.
+    soffice = _find_soffice()
+    if soffice:
+        try:
+            with tempfile.TemporaryDirectory(prefix='legalwork-legacy-doc-') as temp_name:
+                temp_dir = Path(temp_name)
+                source = temp_dir / 'input.doc'
+                source.write_bytes(data)
+                profile = temp_dir / 'lo-profile'
+                run = subprocess.run(
+                    [
+                        soffice,
+                        '--headless',
+                        f'-env:UserInstallation={profile.as_uri()}',
+                        '--convert-to',
+                        'txt:Text (encoded):UTF8',
+                        '--outdir',
+                        str(temp_dir),
+                        str(source),
+                    ],
+                    capture_output=True,
+                    check=False,
+                    timeout=120,
+                )
+                converted = temp_dir / 'input.txt'
+                if run.returncode == 0 and converted.exists():
+                    text = _clean_legacy_doc_text(_decode_extractor_output(converted.read_bytes()))
+                    if has_meaningful_text(text):
+                        return text
+                errors.append(f'LibreOffice exit={run.returncode}')
+        except Exception as exc:
+            errors.append(f'LibreOffice: {exc}')
+
+    # Native macOS fallback.
+    textutil = shutil.which('textutil')
+    if textutil:
+        try:
+            run = subprocess.run(
+                [textutil, '-convert', 'txt', '-stdout', str(path)],
+                capture_output=True,
+                check=False,
+                timeout=120,
+            )
+            if run.returncode == 0:
+                text = _clean_legacy_doc_text(_decode_extractor_output(run.stdout))
+                if has_meaningful_text(text):
+                    return text
+            errors.append(f'textutil exit={run.returncode}')
+        except Exception as exc:
+            errors.append(f'textutil: {exc}')
+
+    # Optional command-line fallbacks for managed enterprise environments.
+    for command in ('antiword', 'catdoc'):
+        executable = shutil.which(command)
+        if not executable:
+            continue
+        try:
+            run = subprocess.run(
+                [executable, str(path)],
+                capture_output=True,
+                check=False,
+                timeout=120,
+            )
+            if run.returncode == 0:
+                text = _clean_legacy_doc_text(_decode_extractor_output(run.stdout))
+                if has_meaningful_text(text):
+                    return text
+            errors.append(f'{command} exit={run.returncode}')
+        except Exception as exc:
+            errors.append(f'{command}: {exc}')
+
+    detail = '；'.join(errors[-4:]) or '没有可用解析器'
+    raise SystemExit(f'无法从旧版 DOC 中提取可脱敏正文：{detail}')
 
 
 def read_table_text(path: Path) -> str:
@@ -168,10 +310,18 @@ def read_table_text(path: Path) -> str:
     parts: list[str] = []
     for sheet_name, frame in sheets.items():
         parts.append(f'【表格：{sheet_name}】')
-        if frame.empty:
+        columns = [str(column) for column in frame.columns]
+        visible_columns = [
+            column for column in columns
+            if column.strip() and not column.startswith('Unnamed:')
+        ]
+        # pandas treats the first row as column names. Those cells are user data
+        # too and must enter the redaction scan, especially for one-row sheets.
+        if visible_columns:
+            parts.append('列名：' + ' | '.join(visible_columns))
+        if frame.empty and not visible_columns:
             parts.append('（空表）')
             continue
-        columns = [str(column) for column in frame.columns]
         for row_index, row in frame.iterrows():
             cells = []
             for column in columns:

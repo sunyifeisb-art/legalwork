@@ -13,14 +13,15 @@ export function isKnowledgeQaThreadTitle(title: string | undefined): boolean {
  * Knowledge-base UI threads already contain a renderer-produced evidence
  * bundle. Giving those turns the full Agent tool catalog creates a second RAG
  * pass (and often another model step) over evidence that is already present.
- * Keep Plan mode untouched; ordinary knowledge QA becomes a direct generation
- * request with no tools.
+ * Knowledge QA is always a direct generation request with no tools. The
+ * knowledge side panel does not expose an agent workflow, so even a stale or
+ * malformed Plan-mode value must not reopen the Skill/tool path.
  */
 export function knowledgeQaToolSpecs(
   tools: readonly ModelToolSpec[],
-  input: { title?: string; planTurnActive: boolean }
+  input: { title?: string }
 ): ModelToolSpec[] {
-  if (input.planTurnActive || !isKnowledgeQaThreadTitle(input.title)) {
+  if (!isKnowledgeQaThreadTitle(input.title)) {
     return [...tools]
   }
   return []
