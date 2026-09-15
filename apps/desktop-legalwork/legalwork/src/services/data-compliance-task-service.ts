@@ -127,7 +127,7 @@ export type DataComplianceStoredInputFile = {
 
 export type DataComplianceEnvironmentCheckResult =
   | { ok: true; python: string }
-  | { ok: false; reason: string; fix?: string }
+  | { ok: false; reason: string; fix?: string; installing?: boolean }
 
 export type DataComplianceFileKey =
   | 'report'
@@ -282,6 +282,7 @@ export class DataComplianceTaskService {
   private readonly logDir: string
   private readonly runningChildren = new Map<string, ReturnType<typeof spawn>>()
   private bundleInstallPromise: Promise<string> | null = null
+  private bundleInstallError = ''
 
   constructor(input: { dataDir: string; webRoot: string; logDir: string }) {
     this.dataDir = input.dataDir
@@ -371,12 +372,21 @@ export class DataComplianceTaskService {
   }
 
   private async ensureComplianceBundle(): Promise<string> {
-    if (this.complianceBundleReady()) return this.complianceBundlePythonPath()
+    if (this.complianceBundleReady()) {
+      this.bundleInstallError = ''
+      return this.complianceBundlePythonPath()
+    }
     if (this.bundleInstallPromise) return this.bundleInstallPromise
 
-    this.bundleInstallPromise = this.downloadComplianceBundle().finally(() => {
-      this.bundleInstallPromise = null
-    })
+    this.bundleInstallError = ''
+    this.bundleInstallPromise = this.downloadComplianceBundle()
+      .catch((error: unknown) => {
+        this.bundleInstallError = error instanceof Error ? error.message : String(error)
+        throw error
+      })
+      .finally(() => {
+        this.bundleInstallPromise = null
+      })
     return this.bundleInstallPromise
   }
 
@@ -486,10 +496,31 @@ export class DataComplianceTaskService {
   async checkEnvironment(): Promise<DataComplianceEnvironmentCheckResult> {
     let bundleError = ''
     if (process.env.LEGALWORK_COMPLIANCE_BUNDLE_ENABLED === '1') {
-      try {
-        this.pythonBin = await this.ensureComplianceBundle()
-      } catch (error) {
-        bundleError = error instanceof Error ? error.message : String(error)
+      if (this.complianceBundleReady()) {
+        this.pythonBin = this.complianceBundlePythonPath()
+        this.bundleInstallError = ''
+      } else if (this.bundleInstallPromise) {
+        return {
+          ok: false,
+          installing: true,
+          reason: '正在下载并准备数据合规环境，首次使用需要几分钟。'
+        }
+      } else if (!this.bundleInstallError) {
+        // The bundle is hundreds of megabytes. Do not make this health-check GET
+        // wait for download/extraction: desktop requests time out after 15 seconds
+        // and used to show a false "environment unavailable" error even though
+        // installation was still progressing successfully in the background.
+        void this.ensureComplianceBundle().catch(() => {
+          // The next status probe reports the recorded error and falls back to
+          // the regular Python installer when possible.
+        })
+        return {
+          ok: false,
+          installing: true,
+          reason: '正在下载并准备数据合规环境，首次使用需要几分钟。'
+        }
+      } else {
+        bundleError = this.bundleInstallError
       }
     }
     this.pythonBin = this.resolvePythonExecutable()

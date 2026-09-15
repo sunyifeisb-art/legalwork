@@ -241,7 +241,12 @@ export async function checkDataComplianceEnvironment(
   if (check.ok) {
     return jsonResponse({ ok: true, python: check.python })
   }
-  return jsonResponse({ ok: false, error: check.reason, fix: check.fix }, 503)
+  return jsonResponse({
+    ok: false,
+    error: check.reason,
+    fix: check.fix,
+    installing: check.installing === true
+  }, 503)
 }
 
 export async function getDataComplianceInputFile(

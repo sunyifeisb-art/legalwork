@@ -1,9 +1,6 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
   workflow_dispatch:
     inputs:
       tag_name:
@@ -156,20 +153,6 @@ jobs:
             ${{ env.WORKING_DIRECTORY }}/dist/latest-mac.yml
           if-no-files-found: error
 
-      - name: Upload macOS assets to COS archive
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        env:
-          S3_BUCKET: ${{ secrets.S3_BUCKET }}
-          S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}
-          S3_REGION: ${{ secrets.S3_REGION }}
-          S3_FORCE_PATH_STYLE: ${{ secrets.S3_FORCE_PATH_STYLE }}
-          S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
-          S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
-          R2_PUBLIC_BASE_URL: ${{ secrets.R2_PUBLIC_BASE_URL }}
-          R2_RELEASE_PREFIX: legalwork
-          RELEASE_CHANNEL: stable
-        run: npm run r2:upload -- --platform mac --tag "${{ needs.create-release.outputs.tag_name }}" --channel stable --dist dist
-
   build-windows:
     name: Build Windows
     needs: create-release
@@ -241,20 +224,6 @@ jobs:
             ${{ env.WORKING_DIRECTORY }}/dist/latest.yml
           if-no-files-found: error
 
-      - name: Upload Windows assets to COS archive
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        env:
-          S3_BUCKET: ${{ secrets.S3_BUCKET }}
-          S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}
-          S3_REGION: ${{ secrets.S3_REGION }}
-          S3_FORCE_PATH_STYLE: ${{ secrets.S3_FORCE_PATH_STYLE }}
-          S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
-          S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
-          R2_PUBLIC_BASE_URL: ${{ secrets.R2_PUBLIC_BASE_URL }}
-          R2_RELEASE_PREFIX: legalwork
-          RELEASE_CHANNEL: stable
-        run: npm run r2:upload -- --platform win --tag "${{ needs.create-release.outputs.tag_name }}" --channel stable --dist dist
-
   build-linux:
     name: Build Linux
     needs: create-release
@@ -293,20 +262,6 @@ jobs:
             ${{ env.WORKING_DIRECTORY }}/dist/legalwork-*.AppImage
             ${{ env.WORKING_DIRECTORY }}/dist/latest-linux.yml
           if-no-files-found: error
-
-      - name: Upload Linux assets to COS archive
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        env:
-          S3_BUCKET: ${{ secrets.S3_BUCKET }}
-          S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}
-          S3_REGION: ${{ secrets.S3_REGION }}
-          S3_FORCE_PATH_STYLE: ${{ secrets.S3_FORCE_PATH_STYLE }}
-          S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
-          S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
-          R2_PUBLIC_BASE_URL: ${{ secrets.R2_PUBLIC_BASE_URL }}
-          R2_RELEASE_PREFIX: legalwork
-          RELEASE_CHANNEL: stable
-        run: npm run r2:upload -- --platform linux --tag "${{ needs.create-release.outputs.tag_name }}" --channel stable --dist dist
 
   upload-release-assets:
     name: Upload release assets
@@ -373,20 +328,6 @@ jobs:
           upload_matching "Windows auto-update blockmap" "windows-assets/legalwork-*-win-*.exe.blockmap"
           upload_matching "update metadata" "macos-assets/latest-mac.yml" "windows-assets/latest.yml" "linux-assets/latest-linux.yml"
 
-      - name: Promote COS stable/latest
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        env:
-          S3_BUCKET: ${{ secrets.S3_BUCKET }}
-          S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}
-          S3_REGION: ${{ secrets.S3_REGION }}
-          S3_FORCE_PATH_STYLE: ${{ secrets.S3_FORCE_PATH_STYLE }}
-          S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
-          S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
-          R2_PUBLIC_BASE_URL: ${{ secrets.R2_PUBLIC_BASE_URL }}
-          R2_RELEASE_PREFIX: legalwork
-          RELEASE_CHANNEL: stable
-        run: npm run r2:promote -- --tag "${{ needs.create-release.outputs.tag_name }}" --channel stable --platforms mac,win,linux
-
   publish-release:
     name: Publish release
     needs: [create-release, upload-release-assets]
@@ -399,3 +340,47 @@ jobs:
           gh release edit "${{ needs.create-release.outputs.tag_name }}" \
             --draft=false \
             --repo "${{ github.repository }}"
+
+  publish-cos:
+    name: Sync published release to Tencent COS
+    needs: [create-release, build-macos, build-windows, build-linux, publish-release]
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ${{ env.WORKING_DIRECTORY }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: npm ci
+
+      - name: Download published build artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Upload all platforms and promote stable/latest
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        env:
+          S3_BUCKET: ${{ secrets.S3_BUCKET }}
+          S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}
+          S3_REGION: ${{ secrets.S3_REGION }}
+          S3_FORCE_PATH_STYLE: ${{ secrets.S3_FORCE_PATH_STYLE }}
+          S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
+          S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+          R2_PUBLIC_BASE_URL: ${{ secrets.R2_PUBLIC_BASE_URL }}
+          R2_RELEASE_PREFIX: legalwork
+          RELEASE_CHANNEL: stable
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${{ needs.create-release.outputs.tag_name }}"
+          node scripts/publish-r2.mjs upload --platform mac --tag "$TAG" --channel stable --dist "$GITHUB_WORKSPACE/macos-assets"
+          node scripts/publish-r2.mjs upload --platform win --tag "$TAG" --channel stable --dist "$GITHUB_WORKSPACE/windows-assets"
+          node scripts/publish-r2.mjs upload --platform linux --tag "$TAG" --channel stable --dist "$GITHUB_WORKSPACE/linux-assets"
+          node scripts/publish-r2.mjs promote --tag "$TAG" --channel stable --platforms mac,win,linux

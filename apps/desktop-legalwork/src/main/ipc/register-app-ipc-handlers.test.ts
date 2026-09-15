@@ -144,6 +144,29 @@ describe('registerAppIpcHandlers', () => {
     expect(runtimeRequest).toHaveBeenCalledTimes(1)
   })
 
+  it('preserves the runtime bundle installation state without starting a second installer', async () => {
+    const { registerAppIpcHandlers } = await import('./register-app-ipc-handlers')
+    const runtimeRequest = vi.fn(async () => ({
+      ok: false,
+      status: 503,
+      body: JSON.stringify({
+        error: '正在下载并准备数据合规环境，首次使用需要几分钟。',
+        installing: true
+      })
+    }))
+
+    registerAppIpcHandlers(registerOptions({ runtimeRequest: runtimeRequest as never }))
+
+    await expect(handlers.get('data-compliance:status')?.({})).resolves.toEqual({
+      ok: false,
+      running: false,
+      installing: true,
+      baseUrl: '',
+      message: '正在下载并准备数据合规环境，首次使用需要几分钟。'
+    })
+    expect(runtimeRequest).toHaveBeenCalledTimes(1)
+  })
+
   it('passes valid settings patches through to applySettingsPatch', async () => {
     const { registerAppIpcHandlers } = await import('./register-app-ipc-handlers')
     const applySettingsPatch = vi.fn(async () => settings())

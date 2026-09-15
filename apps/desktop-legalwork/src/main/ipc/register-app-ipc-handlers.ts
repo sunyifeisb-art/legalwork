@@ -1173,7 +1173,16 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     try {
       const result = await runtimeRequest('/data-compliance/environment', 'GET')
       if (!result.ok) {
-        const parsed = JSON.parse(result.body || '{}') as { error?: string; fix?: string }
+        const parsed = JSON.parse(result.body || '{}') as { error?: string; fix?: string; installing?: boolean }
+        if (parsed.installing) {
+          return {
+            ok: false,
+            running: false,
+            installing: true,
+            baseUrl: '',
+            message: parsed.error || '正在下载并准备数据合规环境，首次使用需要几分钟。'
+          }
+        }
         if (result.status === 0) {
           return {
             ok: false,

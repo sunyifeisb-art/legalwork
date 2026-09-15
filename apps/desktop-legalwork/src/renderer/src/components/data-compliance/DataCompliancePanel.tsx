@@ -1613,7 +1613,12 @@ export function DataCompliancePanel({
     try {
       const status = await window.dsGui.getDataComplianceStatus()
       setServerStatus(status)
-      if (!status.ok) {
+      if (status.ok) {
+        setInstallProgress((prev) => prev.kind === 'installing' ? { kind: 'done' } : prev)
+        setNotice((current) => current?.tone === 'error' && /环境|Python|服务.*不可用|检测.*失败/.test(current.text)
+          ? null
+          : current)
+      } else {
         if (status.installing) {
           setNotice(null)
           setInstallProgress((prev) =>
@@ -1643,6 +1648,16 @@ export function DataCompliancePanel({
       setStatusBusy(false)
     }
   }, [])
+
+  useEffect(() => {
+    if (!serverStatus?.installing) return
+    const timer = window.setInterval(() => {
+      void ensureServer().catch((error: unknown) => {
+        console.error('[DataCompliancePanel] environment status poll failed:', error)
+      })
+    }, 3_000)
+    return () => window.clearInterval(timer)
+  }, [ensureServer, serverStatus?.installing])
 
   useEffect(() => {
     const input = folderInputRef.current

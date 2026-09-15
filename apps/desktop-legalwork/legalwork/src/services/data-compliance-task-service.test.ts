@@ -85,6 +85,42 @@ describe('data compliance environment checks', () => {
       else process.env.LEGALWORK_COMPLIANCE_BUNDLE_ENABLED = previous
     }
   })
+
+  it('reports a missing COS compliance bundle as installing without blocking the probe', async () => {
+    const dataDir = await makeTempDir()
+    const webRoot = await makeTempDir()
+    const logDir = await makeTempDir()
+    const service = new DataComplianceTaskService({ dataDir, webRoot, logDir })
+    let finishInstall!: (python: string) => void
+    const pendingInstall = new Promise<string>((resolve) => {
+      finishInstall = resolve
+    })
+    const internals = service as unknown as {
+      complianceBundleReady: () => boolean
+      ensureComplianceBundle: () => Promise<string>
+    }
+    let installStarted = false
+    internals.complianceBundleReady = () => false
+    internals.ensureComplianceBundle = () => {
+      installStarted = true
+      return pendingInstall
+    }
+
+    const previous = process.env.LEGALWORK_COMPLIANCE_BUNDLE_ENABLED
+    process.env.LEGALWORK_COMPLIANCE_BUNDLE_ENABLED = '1'
+    try {
+      await expect(service.checkEnvironment()).resolves.toEqual({
+        ok: false,
+        installing: true,
+        reason: '正在下载并准备数据合规环境，首次使用需要几分钟。'
+      })
+      expect(installStarted).toBe(true)
+    } finally {
+      finishInstall('python')
+      if (previous === undefined) delete process.env.LEGALWORK_COMPLIANCE_BUNDLE_ENABLED
+      else process.env.LEGALWORK_COMPLIANCE_BUNDLE_ENABLED = previous
+    }
+  })
 })
 
 describe('data compliance task creation', () => {
