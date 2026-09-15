@@ -537,7 +537,18 @@ describe('syncGuiManagedLegalworkConfig', () => {
     if (!tempRoot) throw new Error('temp root not initialized')
     const configPath = join(tempRoot, 'config.json')
     const module = await import('./legalwork-process')
-    const appPath = '/Applications/legalwork.app/Contents/Resources/app.asar'
+    const appPath = join(tempRoot, 'legalwork.app', 'Contents', 'Resources', 'app.asar')
+    const officeCliBinary = join(
+      appPath.replace(/app\.asar$/, 'app.asar.unpacked'),
+      'legalwork',
+      'node_modules',
+      '@officecli',
+      'officecli',
+      'vendor',
+      'officecli'
+    )
+    mkdirSync(join(officeCliBinary, '..'), { recursive: true })
+    writeFileSync(officeCliBinary, '', 'utf8')
 
     await module.syncGuiManagedLegalworkConfig(tempRoot, defaultLegalworkRuntimeSettings(), {
       officecli: {
@@ -547,9 +558,7 @@ describe('syncGuiManagedLegalworkConfig', () => {
     })
 
     const parsed = JSON.parse(readFileSync(configPath, 'utf8')) as any
-    expect(parsed.capabilities.mcp.servers.officecli.command).toBe(
-      join('/Applications/legalwork.app/Contents/Resources/app.asar.unpacked', 'legalwork', 'node_modules', '@officecli', 'officecli', 'vendor', 'officecli')
-    )
+    expect(parsed.capabilities.mcp.servers.officecli.command).toBe(officeCliBinary)
     expect(parsed.capabilities.mcp.servers.officecli.args).toEqual(['mcp'])
     // 禁用 OfficeCLI 自更新与 resident 常驻进程：Windows 上后台子进程会弹"命令提示符"窗口。
     expect(parsed.capabilities.mcp.servers.officecli.env).toMatchObject({

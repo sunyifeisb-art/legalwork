@@ -90,7 +90,7 @@ describe('rewriteNpxFilesystemMcpServer', () => {
     }, LAUNCH)).toBeNull()
   })
 
-  it('builds a packaged-app command via the helper binary', () => {
+  it('builds a packaged-app command for the current platform', () => {
     const packagedLaunch: ClawScheduleMcpLaunchConfig = {
       appPath: '/Applications/legalwork.app/Contents/Resources/app.asar',
       execPath: '/Applications/legalwork.app/Contents/MacOS/legalwork',
@@ -104,7 +104,9 @@ describe('rewriteNpxFilesystemMcpServer', () => {
     expect(rewritten).toMatchObject({
       enabled: true,
       transport: 'stdio',
-      command: '/Applications/legalwork.app/Contents/Frameworks/legalwork Helper.app/Contents/MacOS/legalwork Helper',
+      command: process.platform === 'darwin'
+        ? '/Applications/legalwork.app/Contents/Frameworks/legalwork Helper.app/Contents/MacOS/legalwork Helper'
+        : packagedLaunch.execPath,
       args: [
         '/Applications/legalwork.app/Contents/Resources/app.asar/out/main/filesystem-mcp-node-entry.cjs',
         '/Users/xiangyang/'

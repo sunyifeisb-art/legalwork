@@ -349,8 +349,8 @@ describe('installGuiUpdate', () => {
       chmodSync(join(appPath, executableRelativePath), 0o755)
     }
 
+    createTestApp(targetApp, '0.1.0')
     if (canRunMacInstaller) {
-      createTestApp(targetApp, '0.1.0')
       createTestApp(updateApp, '0.2.0')
       execFileSync('codesign', ['--force', '--deep', '--sign', '-', updateApp])
       execFileSync(
