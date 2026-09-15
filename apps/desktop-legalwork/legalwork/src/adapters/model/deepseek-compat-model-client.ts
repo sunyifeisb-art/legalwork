@@ -34,6 +34,10 @@ export type DeepseekCompatConfig = {
   nonStreaming?: boolean
   /** Maximum idle time between streaming chunks before the turn fails. */
   streamIdleTimeoutMs?: number
+  /** Maximum wait for the first streaming chunk before retrying the request. */
+  streamStartTimeoutMs?: number
+  /** Number of transparent retries allowed before the first chunk is received. */
+  streamStartMaxRetries?: number
   /** Optional model capability resolver used for provider-specific reasoning translation. */
   modelCapabilities?: (model: string) => ModelCapabilityMetadata
 }
@@ -136,6 +140,19 @@ type StreamReadResult =
 // AgentLoop's 150s hard guard so a dead connection still terminates, while
 // avoiding the repeatable false failures captured in production trajectories.
 const DEFAULT_STREAM_IDLE_TIMEOUT_MS = 120_000
+// A healthy streaming endpoint yields the first chunk in well under a second,
+// even for 25K-token prompts with tools and high reasoning effort (measured
+// 0.26-0.52s). The window only has to outlast a provider that is genuinely
+// slow to start, not a normal one: at 15s x 3 attempts the previous values
+// produced a guaranteed 45s of total silence, and each replayed attempt
+// re-billed the whole prompt (tens of thousands of tokens) for nothing.
+//
+// Retrying is still allowed before the first chunk only — once any model
+// output arrives, replaying the request could duplicate tools or files. With a
+// 90s window a single attempt is enough to absorb provider-side stalls, so
+// retries stay at 0; the agent loop's 150s hard guard remains the outer net.
+const DEFAULT_STREAM_START_TIMEOUT_MS = 90_000
+const DEFAULT_STREAM_START_MAX_RETRIES = 0
 const DEFAULT_MESSAGES_MAX_TOKENS = 4096
 
 /**
@@ -170,6 +187,59 @@ export class DeepseekCompatModelClient implements ModelClient {
       yield { kind: 'error', message: 'request was aborted before start' }
       return
     }
+    const stream = request.stream ?? !this.config.nonStreaming
+    if (!stream) {
+      yield* this.streamOnce(request)
+      return
+    }
+    const startTimeoutMs = normalizeStreamStartTimeoutMs(this.config.streamStartTimeoutMs)
+    const maxRetries = normalizeStreamStartMaxRetries(this.config.streamStartMaxRetries)
+    for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
+      if (request.abortSignal.aborted) return
+      const attemptController = new AbortController()
+      const abortAttempt = (): void => attemptController.abort()
+      request.abortSignal.addEventListener('abort', abortAttempt, { once: true })
+      const iterator = this.streamOnce({
+        ...request,
+        abortSignal: attemptController.signal
+      })[Symbol.asyncIterator]()
+      try {
+        const first = await readFirstModelChunk(iterator, request.abortSignal, startTimeoutMs)
+        if (first.kind === 'aborted') {
+          abortAttempt()
+          closeModelIterator(iterator)
+          return
+        }
+        if (first.kind === 'timeout' || first.kind === 'empty' || first.kind === 'error') {
+          abortAttempt()
+          closeModelIterator(iterator)
+          if (attempt < maxRetries) continue
+          const detail = first.kind === 'error'
+            ? `: ${first.message}`
+            : first.kind === 'empty'
+              ? ': provider returned an empty stream'
+              : ''
+          yield {
+            kind: 'error',
+            message: `model stream produced no first chunk after ${maxRetries + 1} attempts${detail}`,
+            code: 'model_stream_start_timeout'
+          }
+          return
+        }
+        yield first.value
+        for (;;) {
+          const next = await iterator.next()
+          if (next.done || request.abortSignal.aborted) return
+          yield next.value
+        }
+      } finally {
+        request.abortSignal.removeEventListener('abort', abortAttempt)
+      }
+    }
+  }
+
+  private async *streamOnce(request: ModelRequest): AsyncIterable<ModelStreamChunk> {
+    if (request.abortSignal.aborted) return
     const endpointFormat = this.endpointFormat()
     const url = buildModelEndpointUrl(this.config.baseUrl, endpointFormat)
     const stream = request.stream ?? !this.config.nonStreaming
@@ -2291,6 +2361,70 @@ function normalizeStreamIdleTimeoutMs(value: number | undefined): number {
   if (value === undefined) return DEFAULT_STREAM_IDLE_TIMEOUT_MS
   if (!Number.isFinite(value)) return DEFAULT_STREAM_IDLE_TIMEOUT_MS
   return Math.max(0, Math.floor(value))
+}
+
+function normalizeStreamStartTimeoutMs(value: number | undefined): number {
+  if (value === undefined) return DEFAULT_STREAM_START_TIMEOUT_MS
+  if (!Number.isFinite(value)) return DEFAULT_STREAM_START_TIMEOUT_MS
+  return Math.max(1, Math.floor(value))
+}
+
+function normalizeStreamStartMaxRetries(value: number | undefined): number {
+  if (value === undefined) return DEFAULT_STREAM_START_MAX_RETRIES
+  if (!Number.isFinite(value)) return DEFAULT_STREAM_START_MAX_RETRIES
+  return Math.max(0, Math.min(5, Math.floor(value)))
+}
+
+type FirstModelChunkResult =
+  | { kind: 'chunk'; value: ModelStreamChunk }
+  | { kind: 'timeout' }
+  | { kind: 'aborted' }
+  | { kind: 'empty' }
+  | { kind: 'error'; message: string }
+
+async function readFirstModelChunk(
+  iterator: AsyncIterator<ModelStreamChunk>,
+  signal: AbortSignal,
+  timeoutMs: number
+): Promise<FirstModelChunkResult> {
+  if (signal.aborted) return { kind: 'aborted' }
+  let timeout: ReturnType<typeof setTimeout> | undefined
+  let removeAbortListener = (): void => undefined
+  const next: Promise<FirstModelChunkResult> = iterator.next().then(
+    (result): FirstModelChunkResult => result.done
+      ? { kind: 'empty' }
+      : { kind: 'chunk', value: result.value },
+    (error: unknown): FirstModelChunkResult => ({
+      kind: 'error',
+      message: error instanceof Error ? error.message : String(error)
+    })
+  )
+  const aborted = new Promise<FirstModelChunkResult>((resolve) => {
+    const onAbort = (): void => resolve({ kind: 'aborted' })
+    signal.addEventListener('abort', onAbort, { once: true })
+    removeAbortListener = () => signal.removeEventListener('abort', onAbort)
+  })
+  const timedOut = new Promise<FirstModelChunkResult>((resolve) => {
+    timeout = setTimeout(() => resolve({ kind: 'timeout' }), timeoutMs)
+  })
+  try {
+    return await Promise.race([next, aborted, timedOut])
+  } finally {
+    if (timeout) clearTimeout(timeout)
+    removeAbortListener()
+  }
+}
+
+function closeModelIterator(iterator: AsyncIterator<ModelStreamChunk>): void {
+  try {
+    const result = iterator.return?.()
+    if (result && typeof result.then === 'function') {
+      void result.then(undefined, () => undefined)
+    }
+  } catch {
+    // Best effort only. The per-attempt controller is the authoritative
+    // cancellation path, and cleanup must never block a retry.
+  }
 }
 
 async function readStreamChunk(

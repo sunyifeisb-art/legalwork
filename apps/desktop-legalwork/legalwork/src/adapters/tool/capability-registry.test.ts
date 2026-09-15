@@ -67,4 +67,52 @@ describe('CapabilityRegistry web-first scope（主对话优先 web_search、法�
     expect(names).toContain('mcp_pkulaw_law_search_search')
     expect(names).toContain('mcp_yuandian_law_query')
   })
+
+  it('webFirstMcpScope=true 时 IMA 知识库工具仍始终注入，不随法律 MCP 一起被拦', () => {
+    const registry = new CapabilityRegistry([
+      {
+        id: 'mcp:ima-knowledge-base',
+        kind: 'mcp',
+        enabled: true,
+        available: true,
+        tools: [tool('mcp_ima_knowledge_base_research_ima'), tool('mcp_ima_knowledge_base_ask')]
+      },
+      {
+        id: 'mcp',
+        kind: 'mcp',
+        enabled: true,
+        available: true,
+        tools: [tool('mcp_pkulaw_law_search_search')]
+      }
+    ])
+    const names = registry.listTools(baseContext({ webFirstMcpScope: true })).map((t) => t.name)
+    expect(names).toContain('mcp_ima_knowledge_base_research_ima')
+    expect(names).toContain('mcp_ima_knowledge_base_ask')
+    expect(names).not.toContain('mcp_pkulaw_law_search_search')
+  })
+
+  it('技能白名单收窄工具目录时 IMA 工具仍然保留', () => {
+    const registry = new CapabilityRegistry([
+      {
+        id: 'mcp:ima-knowledge-base',
+        kind: 'mcp',
+        enabled: true,
+        available: true,
+        tools: [tool('mcp_ima_knowledge_base_research_ima')]
+      },
+      {
+        id: 'builtin',
+        kind: 'built-in',
+        enabled: true,
+        available: true,
+        tools: [tool('read'), tool('write')]
+      }
+    ])
+    const names = registry
+      .listTools(baseContext({ allowedToolNames: ['read'] }))
+      .map((t) => t.name)
+    expect(names).toContain('mcp_ima_knowledge_base_research_ima')
+    expect(names).toContain('read')
+    expect(names).not.toContain('write')
+  })
 })

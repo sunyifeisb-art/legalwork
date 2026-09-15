@@ -8,7 +8,7 @@ import {
   makeToolResultItem,
   makeUserItem
 } from '../src/domain/item.js'
-import type { ModelRequest } from '../src/ports/model-client.js'
+import type { ModelRequest, ModelStreamChunk } from '../src/ports/model-client.js'
 
 function buildRequest(abortSignal: AbortSignal): ModelRequest {
   return {
@@ -274,7 +274,7 @@ describe('DeepseekCompatModelClient', () => {
       fetchImpl,
       nonStreaming: true
     })
-    const chunks = []
+    const chunks: ModelStreamChunk[] = []
     for await (const chunk of client.stream(buildRequest(new AbortController().signal))) {
       chunks.push(chunk)
     }
@@ -1300,6 +1300,136 @@ describe('DeepseekCompatModelClient', () => {
       code: 'stream_idle_timeout'
     })
     expect(chunks.find((chunk) => chunk.kind === 'completed')).toBeUndefined()
+  })
+
+  it('retries the original streaming request when the provider never sends a first chunk', async () => {
+    const attemptSignals: AbortSignal[] = []
+    const sentBodies: string[] = []
+    let attempts = 0
+    const fetchImpl: typeof fetch = async (_url, init) => {
+      attempts += 1
+      const signal = init?.signal as AbortSignal
+      attemptSignals.push(signal)
+      sentBodies.push(String(init?.body ?? ''))
+      if (attempts < 3) {
+        return await new Promise<Response>((_resolve, reject) => {
+          signal.addEventListener('abort', () => {
+            reject(new DOMException('aborted', 'AbortError'))
+          }, { once: true })
+        })
+      }
+      const body = new ReadableStream<Uint8Array>({
+        start(controller) {
+          const encoder = new TextEncoder()
+          controller.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":"任务已启动"}}]}\n\n'))
+          controller.enqueue(encoder.encode('data: {"choices":[{"delta":{},"finish_reason":"stop"}]}\n\n'))
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+          controller.close()
+        }
+      })
+      return new Response(body, {
+        status: 200,
+        headers: { 'content-type': 'text/event-stream' }
+      })
+    }
+    const client = new DeepseekCompatModelClient({
+      baseUrl: 'https://example.com/beta',
+      apiKey: 'k',
+      model: 'deepseek-chat',
+      fetchImpl,
+      streamStartTimeoutMs: 5,
+      streamStartMaxRetries: 2
+    })
+    const request = buildRequest(new AbortController().signal)
+    request.history = [makeUserItem({
+      id: 'u_original',
+      threadId: 'thr_1',
+      turnId: 'turn_1',
+      text: '生成复杂法律调研报告 Word'
+    })]
+    const chunks: ModelStreamChunk[] = []
+
+    for await (const chunk of client.stream(request)) chunks.push(chunk)
+
+    expect(attempts).toBe(3)
+    expect(attemptSignals.slice(0, 2).every((signal) => signal.aborted)).toBe(true)
+    expect(new Set(sentBodies).size).toBe(1)
+    expect(sentBodies[0]).toContain('生成复杂法律调研报告 Word')
+    expect(chunks.find((chunk) => chunk.kind === 'assistant_text_delta')).toMatchObject({
+      text: '任务已启动'
+    })
+    expect(chunks.find((chunk) => chunk.kind === 'error')).toBeUndefined()
+  })
+
+  it('does not retry after any model output has arrived', async () => {
+    let attempts = 0
+    const encoder = new TextEncoder()
+    const fetchImpl: typeof fetch = async () => {
+      attempts += 1
+      const body = new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":"partial"}}]}\n\n'))
+        }
+      })
+      return new Response(body, {
+        status: 200,
+        headers: { 'content-type': 'text/event-stream' }
+      })
+    }
+    const client = new DeepseekCompatModelClient({
+      baseUrl: 'https://example.com/beta',
+      apiKey: 'k',
+      model: 'deepseek-chat',
+      fetchImpl,
+      streamStartTimeoutMs: 5,
+      streamStartMaxRetries: 2,
+      streamIdleTimeoutMs: 5
+    })
+    const chunks: ModelStreamChunk[] = []
+
+    for await (const chunk of client.stream(buildRequest(new AbortController().signal))) {
+      chunks.push(chunk)
+    }
+
+    expect(attempts).toBe(1)
+    expect(chunks.find((chunk) => chunk.kind === 'error')).toMatchObject({
+      code: 'stream_idle_timeout'
+    })
+  })
+
+  it('cancels a silent startup immediately without retrying when the user interrupts', async () => {
+    let attempts = 0
+    let attemptSignal: AbortSignal | undefined
+    const fetchImpl: typeof fetch = async (_url, init) => {
+      attempts += 1
+      attemptSignal = init?.signal as AbortSignal
+      return await new Promise<Response>((_resolve, reject) => {
+        attemptSignal?.addEventListener('abort', () => {
+          reject(new DOMException('aborted', 'AbortError'))
+        }, { once: true })
+      })
+    }
+    const client = new DeepseekCompatModelClient({
+      baseUrl: 'https://example.com/beta',
+      apiKey: 'k',
+      model: 'deepseek-chat',
+      fetchImpl,
+      streamStartTimeoutMs: 60_000,
+      streamStartMaxRetries: 2
+    })
+    const controller = new AbortController()
+    const chunks: ModelStreamChunk[] = []
+    const drain = (async () => {
+      for await (const chunk of client.stream(buildRequest(controller.signal))) chunks.push(chunk)
+    })()
+
+    await new Promise((resolve) => setTimeout(resolve, 5))
+    controller.abort()
+    await drain
+
+    expect(attempts).toBe(1)
+    expect(attemptSignal?.aborted).toBe(true)
+    expect(chunks).toEqual([])
   })
 
   it('keeps full AgentLoop history even when legacy historyLimit is configured', async () => {

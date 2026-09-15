@@ -92,6 +92,7 @@ import {
 import { pruneLongTextMiddle } from '../adapters/tool/truncate.js'
 import { LEGALWORK_SYSTEM_PROMPT } from '../prompt/legalwork-system-prompt.js'
 import { resolveImaRouteAction, shouldAutoRouteToIma } from './ima-knowledge-router.js'
+import { isImaKnowledgeBaseTool } from '../shared/ima-tools.js'
 import {
   hasDiscoveredPrimaryLegalDatabaseTool,
   hasCompleteLegalResearchReport,
@@ -320,6 +321,13 @@ const PLAN_READ_ONLY_TOOL_NAMES = new Set([
  */
 export const MODEL_STREAM_HARD_TIMEOUT_MS_ENV = 'LEGALWORK_MODEL_STREAM_HARD_TIMEOUT_MS'
 export const DEFAULT_MODEL_STREAM_HARD_TIMEOUT_MS = 150_000
+
+/**
+ * Forced-tool steps flush accumulated reasoning to the UI at most this often.
+ * Per-token streaming there produced multi-thousand-event UI backlogs, but
+ * muting it entirely left long forced steps looking like a hung turn.
+ */
+export const FORCED_REASONING_FLUSH_MS = 500
 
 export function resolveModelStreamHardTimeoutMs(env: NodeJS.ProcessEnv = process.env): number {
   const raw = env[MODEL_STREAM_HARD_TIMEOUT_MS_ENV]?.trim()
@@ -3316,9 +3324,16 @@ export class AgentLoop {
     // the final report. Stripping the catalog here made DeepSeek-compatible
     // models answer "继续补充获取民法典条文" and stop, leaving the turn with a
     // stage broadcast and no report.
+    // IMA 工具与 read 一样不参与强制步骤的工具收窄。收窄到只剩
+    // document_skill_execute + read 时，模型够不到 IMA，只能对用户说
+    // "当前没有 IMA 工具"——用户的长期要求恰恰是文书类任务要自动查本地与 IMA
+    // 知识库，而不是等用户点名。放开 IMA 让模型在该步也能自主检索。
     const requestToolSpecs = requiredToolName
       ? visibleScopedToolSpecs.filter(
-          (tool) => tool.name === requiredToolName || BASE_WORK_TOOL_NAMES.has(tool.name)
+          (tool) =>
+            tool.name === requiredToolName ||
+            BASE_WORK_TOOL_NAMES.has(tool.name) ||
+            isImaKnowledgeBaseTool(tool.name)
         )
       : turnBudgetWrapUp
         ? turnBudgetCompletionToolSpecs(visibleScopedToolSpecs)
@@ -3547,6 +3562,8 @@ export class AgentLoop {
     const reasoningSignatureAccumulator: { value: string } = { value: '' }
     let textItemId = ''
     let reasoningItemId = ''
+    let emittedReasoningLength = 0
+    let lastForcedReasoningFlushAt = 0
     const completedToolCalls: ToolCallLike[] = []
     const selectedKnowledgePdfPaths = new Set(readKnowledgePdfPaths)
     const maximumRequiredToolCalls = request.requiredToolName === 'knowledge_read_file'
@@ -3639,22 +3656,40 @@ export class AgentLoop {
         case 'assistant_reasoning_delta':
           reasoningAccumulator.value += chunk.text
           // Per-token reasoning from every forced workflow step was the main
-          // source of multi-thousand-event UI backlogs on complex tasks.
-          if (!request.requiredToolName) {
-            reasoningItemId ||= this.opts.ids.next('item_reasoning')
-            await this.opts.events.record({
-              kind: 'assistant_reasoning_delta',
-              threadId,
-              turnId,
-              itemId: reasoningItemId,
-              item: makeAssistantReasoningItem({
-                id: reasoningItemId,
-                turnId,
+          // source of multi-thousand-event UI backlogs on complex tasks, so
+          // those steps used to stream nothing at all. That made a forced step
+          // that reasons for 30-60s (a legal-research evidence gate on a large
+          // prompt) indistinguishable from a hung turn: the user saw only a
+          // static "thinking" indicator and interrupted. Throttle instead of
+          // muting — forced steps flush the reasoning accumulated since the
+          // last flush at most once per window, so the UI always shows progress
+          // while the event count stays bounded.
+          if (
+            request.requiredToolName &&
+            Date.now() - lastForcedReasoningFlushAt < FORCED_REASONING_FLUSH_MS
+          ) {
+            break
+          }
+          lastForcedReasoningFlushAt = Date.now()
+          {
+            const pendingReasoning = reasoningAccumulator.value.slice(emittedReasoningLength)
+            if (pendingReasoning) {
+              emittedReasoningLength = reasoningAccumulator.value.length
+              reasoningItemId ||= this.opts.ids.next('item_reasoning')
+              await this.opts.events.record({
+                kind: 'assistant_reasoning_delta',
                 threadId,
-                text: chunk.text,
-                status: 'running'
+                turnId,
+                itemId: reasoningItemId,
+                item: makeAssistantReasoningItem({
+                  id: reasoningItemId,
+                  turnId,
+                  threadId,
+                  text: pendingReasoning,
+                  status: 'running'
+                })
               })
-            })
+            }
           }
           break
         case 'assistant_reasoning_signature_delta':

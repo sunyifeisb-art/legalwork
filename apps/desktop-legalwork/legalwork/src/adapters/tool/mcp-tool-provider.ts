@@ -25,6 +25,7 @@ import {
   createPkulawConnectionCandidates,
   resolveBundledPkulawToken
 } from './pkulaw-fallback-auth.js'
+import { isImaKnowledgeBaseProvider } from '../../shared/ima-tools.js'
 
 export type McpToolDescriptor = {
   name: string
@@ -300,6 +301,9 @@ export async function buildMcpToolProviders(
       },
       isServerTrusted: isMcpServerTrusted
     }))
+    // IMA 知识库工具不参与折叠：工具搜索模式下其余 MCP 工具只剩 mcp_search /
+    // mcp_call 调度入口，但 IMA 必须保持直连，模型才能随时自主检索知识库。
+    providers.push(...directProviders.filter((provider) => isImaKnowledgeBaseProvider(provider.id)))
   } else {
     providers.push(...directProviders)
   }

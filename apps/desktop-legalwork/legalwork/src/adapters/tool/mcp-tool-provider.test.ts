@@ -407,6 +407,52 @@ describe('buildMcpToolProviders', () => {
     }
   })
 
+  it('keeps IMA knowledge-base tools directly advertised when tool search collapses the rest', async () => {
+    const config = mcpConfig('ima-knowledge-base')
+    config.search = {
+      ...config.search,
+      enabled: true,
+      mode: 'auto',
+      autoThresholdToolCount: 1
+    }
+    config.servers['pkulaw-law-keyword'] = {
+      enabled: true,
+      transport: 'streamable-http',
+      url: 'https://apim-gateway.pkulaw.com/mcp-law',
+      headers: {},
+      env: {},
+      args: [],
+      trustScope: 'user',
+      trustedWorkspaceRoots: [],
+      timeoutMs: 30_000
+    }
+    const built = await buildMcpToolProviders(config, {
+      clientFactory: async (serverId): Promise<McpClientLike> => ({
+        listTools: async () => ({
+          tools: serverId === 'ima-knowledge-base'
+            ? [
+                { name: 'research_ima', inputSchema: { type: 'object' } },
+                { name: 'ask', inputSchema: { type: 'object' } }
+              ]
+            : [{ name: 'search_law', inputSchema: { type: 'object' } }]
+        }),
+        callTool: async () => ({}),
+        close: async () => undefined
+      })
+    })
+
+    expect(built.search.active).toBe(true)
+    const providerIds = built.providers.map((provider) => provider.id)
+    expect(providerIds).toContain('mcp:search')
+    expect(providerIds).toContain('mcp:ima-knowledge-base')
+    expect(providerIds).not.toContain('mcp:pkulaw-law-keyword')
+    const imaProvider = built.providers.find((provider) => provider.id === 'mcp:ima-knowledge-base')
+    expect(imaProvider?.tools.map((tool) => tool.name)).toEqual([
+      'mcp_ima_knowledge_base_research_ima',
+      'mcp_ima_knowledge_base_ask'
+    ])
+  })
+
   it('rebuilds split OfficeCLI add arguments with the active task document', async () => {
     const calls: Array<{ name: string; arguments: Record<string, unknown> }> = []
     const client: McpClientLike = {

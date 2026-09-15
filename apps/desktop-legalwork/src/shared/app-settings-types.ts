@@ -22,7 +22,9 @@ export type ClawTaskStatus = ScheduleTaskStatus
 export type ClawModel = ScheduleModel
 
 export const DEFAULT_DEEPSEEK_BASE_URL = 'https://api.deepseek.com'
-export const DEFAULT_CLAW_MODEL = 'auto'
+// DS 模型默认用 deepseek-flash：'auto' 会让界面显示"自动"、实际落到哪个模型
+// 要看运行时，用户希望默认就是明确的 flash。'auto' 仍保留为可选值。
+export const DEFAULT_CLAW_MODEL = 'deepseek-flash'
 export const CLAW_MODEL_IDS = ['auto', 'deepseek-v4-pro', 'deepseek-flash'] as const
 export const DEFAULT_SCHEDULE_MODEL = DEFAULT_CLAW_MODEL
 export const SCHEDULE_MODEL_IDS = CLAW_MODEL_IDS

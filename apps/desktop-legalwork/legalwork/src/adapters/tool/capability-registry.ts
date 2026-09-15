@@ -8,6 +8,7 @@ import {
   OFFICECLI_TOOL_NAME,
   isOfficeFallbackGranted
 } from './office-fallback-policy.js'
+import { isImaKnowledgeBaseTool } from '../../shared/ima-tools.js'
 
 export type CapabilityToolRecord = {
   provider: ToolProviderPolicy
@@ -119,6 +120,11 @@ export class CapabilityRegistry {
     // boundary, then request_office_fallback grants a turn-scoped exception.
     if (toolName === OFFICECLI_TOOL_NAME && !isOfficeFallbackGranted(context)) {
       return false
+    }
+    // IMA 知识库工具始终可用：不受 web-first 收窄、也不受技能白名单收窄。
+    // IMA 是用户自己的知识库，模型随时可以自主检索，不应该需要用户先"点名"。
+    if (isImaKnowledgeBaseTool(toolName)) {
+      return true
     }
     // 主对话 web-first：默认不注入任何 MCP 工具（含 mcp_search/mcp_call 调度入口），
     // 网络检索一律用 web_search。实测发现只要注入 mcp 调度入口，模型就积极用它而非

@@ -2540,9 +2540,16 @@ describe('AgentLoop', () => {
     expect(items.some((item) =>
       item.kind === 'assistant_text' && item.text.includes('交付成功')
     )).toBe(true)
-    expect(events.some((event) =>
-      event.kind === 'assistant_text_delta' || event.kind === 'assistant_reasoning_delta'
-    )).toBe(false)
+    // 强制工具步骤不得把模型的过程正文当成可见回答渲染出来（否则会在必需工具
+    // 被拒绝前先冒出一句"已完成"）。推理增量不再一并吞掉：长时间强制步骤（如
+    // 法律调研的证据闸门）会推理几十秒，全部静音会让用户以为卡死，因此改为节流
+    // 输出，这里断言它确实流出、而正文增量仍被拦下。
+    expect(events.some((event) => event.kind === 'assistant_text_delta')).toBe(false)
+    const reasoningDeltas = events.filter((event) => event.kind === 'assistant_reasoning_delta')
+    expect(reasoningDeltas.length).toBeGreaterThan(0)
+    expect(reasoningDeltas.map((event) =>
+      'text' in event.item ? event.item.text : ''
+    ).join('')).toContain('准备完成任务')
     expect(items.some((item) =>
       item.kind === 'error' && item.code === 'required_tool_missing'
     )).toBe(false)
@@ -3933,6 +3940,52 @@ describe('AgentLoop', () => {
     expect(result).toMatchObject({ kind: 'tool_result', isError: true, toolName: 'read' })
     expect(result?.kind === 'tool_result' ? JSON.stringify(result.output) : '')
       .toContain('not advertised by active tool policy')
+  })
+
+  it('keeps IMA knowledge-base tools advertised during a forced document step', async () => {
+    const define = (name: string) => LocalToolHost.defineTool({
+      name,
+      description: name,
+      inputSchema: { type: 'object', properties: {} },
+      policy: 'auto',
+      execute: async () => ({ output: { status: 'ok' } })
+    })
+    let asserted = false
+    const h = makeHarness({
+      provider: 'request-tool-policy',
+      model: 'request-tool-policy',
+      async *stream(request): AsyncIterable<ModelStreamChunk> {
+        if (!asserted) {
+          asserted = true
+          expect(request.requiredToolName).toBe('document_skill_execute')
+          const names = request.tools.map((tool) => tool.name)
+          // 强制交付步骤原先把工具收窄到只剩 document_skill_execute + read，
+          // 模型因此对用户说"没有 IMA 工具"。IMA 必须保留。
+          expect(names).toContain('document_skill_execute')
+          expect(names).toContain('mcp_ima_knowledge_base_research_ima')
+          yield {
+            kind: 'tool_call_complete',
+            callId: 'call_doc',
+            toolName: 'document_skill_execute',
+            arguments: {}
+          }
+          yield { kind: 'completed', stopReason: 'tool_calls' }
+          return
+        }
+        yield { kind: 'assistant_text_delta', text: '已完成。' }
+        yield { kind: 'completed', stopReason: 'stop' }
+      }
+    }, {
+      tools: [
+        define('document_skill_execute'),
+        define('mcp_ima_knowledge_base_research_ima')
+      ]
+    })
+    await bootstrapThread(h, { request: { prompt: '请生成一份 Word 报告给我' } })
+
+    await h.loop.runTurn(h.threadId, h.turnId)
+
+    expect(asserted).toBe(true)
   })
 
   it('does not let a provider bypass a forced document step by calling bash', async () => {

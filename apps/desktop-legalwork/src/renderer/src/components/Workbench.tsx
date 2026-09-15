@@ -3,6 +3,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/react/shallow'
 import { parseClawCommand } from '@shared/claw-commands'
+import { DEFAULT_CLAW_MODEL } from '@shared/app-settings'
 import {
   findKeyboardShortcutCommand,
   keyboardEventToShortcut,
@@ -1073,7 +1074,7 @@ export function Workbench(): ReactElement {
         }
         setInput('')
         const replyText = t('clawModelCurrent', {
-          model: activeClawChannel?.model ?? 'auto'
+          model: activeClawChannel?.model ?? DEFAULT_CLAW_MODEL
         })
         appendLocalClawTurn(v, replyText)
         void mirrorClawCommand(v, replyText)

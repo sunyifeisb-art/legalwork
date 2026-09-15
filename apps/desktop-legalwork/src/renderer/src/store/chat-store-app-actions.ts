@@ -1,4 +1,5 @@
 import type i18next from 'i18next'
+import { DEFAULT_LEGALWORK_MODEL } from '@shared/app-settings'
 import type { AppSettingsV1 } from '@shared/app-settings'
 import type { ModelProviderModelGroup } from '@shared/ds-gui-api'
 import { rendererRuntimeClient } from '../agent/runtime-client'
@@ -153,6 +154,11 @@ export function createAppActions(options: CreateAppActionsOptions): Pick<
             model = readStoredComposerModel(pick)
           }
           if (model !== '' && !allowed.has(model)) model = ''
+          // 默认不再是"自动"：没存过、或存的已不可用时，落到明确的
+          // deepseek-flash。'auto' 仍可在选择器里手动选。
+          if (model === '' && allowed.has(DEFAULT_LEGALWORK_MODEL)) {
+            model = DEFAULT_LEGALWORK_MODEL
+          }
           if (model !== state.composerModel) persistComposerModel(model)
           return {
             composerPickList: pick,

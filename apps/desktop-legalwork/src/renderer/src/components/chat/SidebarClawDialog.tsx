@@ -17,6 +17,7 @@ import {
   Trash2,
   X
 } from 'lucide-react'
+import { DEFAULT_CLAW_MODEL } from '@shared/app-settings'
 import type {
   ClawImAgentProfileV1,
   ClawImChannelV1,
@@ -129,7 +130,7 @@ export function ClawAddImDialog({
   const [activeStep, setActiveStep] = useState<ClawDialogStep>('defaults')
   const [advancedSettingsOpen, setAdvancedSettingsOpen] = useState(false)
   const [officialInstallTarget, setOfficialInstallTarget] = useState<ClawInstallTarget>('feishu')
-  const [channelModel, setChannelModel] = useState<string>('auto')
+  const [channelModel, setChannelModel] = useState<string>(DEFAULT_CLAW_MODEL)
   const [channelWorkspaceRoot, setChannelWorkspaceRoot] = useState('')
   const [channelEnabled, setChannelEnabled] = useState(true)
   const [showSecret, setShowSecret] = useState(false)

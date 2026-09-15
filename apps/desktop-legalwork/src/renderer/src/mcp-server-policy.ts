@@ -9,7 +9,9 @@
 
 export const LENIENT_MCP_SERVER_IDS = ['context7', 'playwright']
 
-export const NETWORK_DEPENDENT_MCP_SERVER_IDS = ['github']
+// 需要外网才能起来的服务。绝大多数用户用不到它们，连不上时只在该项显示
+// "需要网络环境"，绝不标红、不计入错误数。
+export const NETWORK_DEPENDENT_MCP_SERVER_IDS = ['github', 'flint-chart']
 
 export function isLenientMcpServer(id: string): boolean {
   return LENIENT_MCP_SERVER_IDS.includes(id)
@@ -19,11 +21,17 @@ export function isNetworkDependentMcpServer(id: string): boolean {
   return NETWORK_DEPENDENT_MCP_SERVER_IDS.includes(id)
 }
 
-/** 是否为网络类错误（超时 / DNS / 连接被拒等）。匹配要求宽松，宁可多识别为网络问题也不误报为红色。 */
+/**
+ * 是否为网络类错误（超时 / DNS / 连接被拒 / 连接中断等）。
+ *
+ * 匹配要求宽松：宁可多识别为网络问题，也不要把"没挂梯子"误报成红色故障。
+ * `-32000 Connection closed` 是 stdio/npx 类服务在无外网时的典型表现（进程起来
+ * 又立刻断），早期正则只认 -32001 超时，导致 github 这类服务照旧标红。
+ */
 export function isNetworkError(text: string): boolean {
   const normalized = text.trim()
   if (!normalized) return false
-  return /timeout|timed out|-32001|ECONNREFUSED|ENOTFOUND|EHOSTUNREACH|ETIMEDOUT|socket hang up|fetch failed|getaddrinfo|network/i.test(
+  return /timeout|timed out|-3200[01]|ECONNREFUSED|ECONNRESET|ENOTFOUND|EHOSTUNREACH|ETIMEDOUT|EPIPE|socket hang up|fetch failed|getaddrinfo|network|connection closed|connection reset|premature close|transport closed|not connected/i.test(
     normalized
   )
 }
