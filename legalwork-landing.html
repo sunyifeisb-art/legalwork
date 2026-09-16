@@ -3537,7 +3537,14 @@ legalwork serve --data-dir ~/.legalwork</code></pre>
 
             if (cosAssetUrl) {
                 text.textContent = `下载 ${tag || '最新版'} · ${profile.label}`;
-                meta.innerHTML = `腾讯云 COS 直链 · <span style="color:var(--text-muted)">${cosAssetName}</span>`;
+                // 主下载切到 COS 后这里会提前 return，走不到下面 GitHub 分支的
+                // 累计下载量渲染，所以同一份统计也要在这里补一次，否则页面上
+                // 看不到累计下载数。
+                const cosDlCount = getTotalDownloadCount();
+                const cosDlText = cosDlCount > 0
+                    ? ` · <span class="dl-count">累计下载 ${cosDlCount.toLocaleString()}</span>`
+                    : '';
+                meta.innerHTML = `腾讯云 COS 直链${cosDlText} · <span style="color:var(--text-muted)">${cosAssetName}</span>`;
                 btn.href = cosAssetUrl;
                 btn.removeAttribute('download');
                 btn.removeAttribute('target');
